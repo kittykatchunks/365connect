@@ -1,0 +1,949 @@
+        <!-- Moment.js 2.24.0 (local first, CDN fallback) -->
+        <script src="lib/moment-with-locales-2.24.0.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js';"></script>
+    <!-- SIP.js 0.21.2 (local first, CDN fallback) -->
+    <script src="lib/sip-0.21.2.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/sip.js@0.21.2/dist/sip-0.21.2.min.js';"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocab365Connect</title>
+    
+    <!-- Cache Control -->
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Expires" content="0"/>
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://dtd6jl0d42sve.cloudfront.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://dtd6jl0d42sve.cloudfront.net; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://dtd6jl0d42sve.cloudfront.net; img-src 'self' data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://dtd6jl0d42sve.cloudfront.net; connect-src 'self' http://localhost:8989 http://127.0.0.1:8989 https://server1-388.phantomapi.net https://dtd6jl0d42sve.cloudfront.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net wss://server1-388.phantomapi.net:8089;">
+
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- External Stylesheets with CDN + Local Fallback -->
+    
+        <!-- Normalize.css 8.0.1 (local first, CDN fallback) -->
+        <link rel="stylesheet" href="lib/normalize-v8.0.1.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css';" />
+
+        <!-- Roboto Font (local first, CDN fallback) -->
+        <link rel="stylesheet preload prefetch" type="text/css" as="style" href="lib/fonts/font_roboto/roboto.css" onerror="this.onerror=null;this.href='https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap';" />
+
+        <!-- Font Awesome 6.5.1 (local first, CDN fallback) -->
+        <link rel="stylesheet" href="lib/font_awesome_6.5.1/css/all.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';" />
+
+        <!-- Croppie CSS 2.6.4 (local first, CDN fallback) -->
+        <link rel="stylesheet" href="lib/croppie.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/croppie@2.6.4/croppie.min.css';" />
+
+        <!-- jQuery UI CSS 1.13.2 (local first, CDN fallback) -->
+        <link rel="stylesheet" href="lib/jquery-ui-1.13.2.min.css" onerror="this.onerror=null;this.href='https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.min.css';" />
+
+        <!-- jQuery 3.6.1 (local first, CDN fallback) -->
+        <script src="lib/jquery-3.6.1.min.js" onerror="this.onerror=null;this.src='https://code.jquery.com/jquery-3.6.1.min.js';"></script>
+
+        <!-- jQuery UI JS 1.13.2 (local first, CDN fallback) -->
+        <script src="lib/jquery-ui-1.13.2.min.js" onerror="this.onerror=null;this.src='https://code.jquery.com/ui/1.13.2/jquery-ui.min.js';"></script>
+    
+    <!-- Application Stylesheets -->
+    <link rel="stylesheet" type="text/css" href="css/phone.css">
+</head>
+
+<body>
+    <!-- Main Application Container -->
+    <div id="appContainer" class="main-container">
+        
+        <!-- Left Panel - Contacts/Navigation -->
+        <div id="leftPanel" class="left-panel">
+            
+            <!-- Header with logo and register button -->
+            <div class="panel-header">
+                <div class="app-logo">
+                    <img src="images/logo-light.webp" class="logo-light" alt="Autocab365Connect" onerror="this.style.display='none'" />
+                    <img src="images/logo-dark.webp" class="logo-dark" alt="Autocab365Connect" onerror="this.style.display='none'" />
+                    <!-- <span class="app-title">365Connect</span> -->
+                </div>
+                <!-- Replace connection status with register button -->
+                <div class="register-status">
+                    <button id="registerBtn" class="register-button register-disconnected">
+                        <i class="fa fa-power-off"></i>
+                        <span class="register-text">REGISTER</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <button id="navDial" class="nav-tab active" data-view="dial">
+                    <i class="fa fa-phone"></i> <span data-translate="dial">Dial</span>
+                </button>
+                <button id="navContacts" class="nav-tab" data-view="contacts">
+                    <i class="fa fa-users"></i> <span data-translate="contacts">Contacts</span>
+                </button>
+                <button id="navActivity" class="nav-tab" data-view="activity">
+                    <i class="far fa-clock"></i> <span data-translate="activity">Activity</span>
+                </button>
+                <button id="navBlank1" class="nav-tab disabled" data-view="blank1">
+                    <i class="fa fa-building"></i> <span data-translate="company_numbers">Company Numbers</span>
+                </button>
+                <button id="navBlank2" class="nav-tab disabled" data-view="blank2">
+                    <i class="fa fa-circle-o"></i> <span>-</span>
+                </button>
+                <button id="navSettings" class="nav-tab" data-view="settings">
+                    <i class="fa fa-cog"></i> <span data-translate="settings">Settings</span>
+                </button>
+            </div>
+            
+            <!-- Contacts Controls - Only show for contacts -->
+            <div id="contactsControlsContainer" class="contacts-controls-container hidden" data-view="contacts">
+                <!-- Top row: Add Contact (left) + Import/Export (right) -->
+                <div class="contacts-top-controls">
+                    <button id="addContactBtn" class="btn-primary add-contact-btn">
+                        <i class="fa fa-plus"></i> <span data-translate="add_contact">Add Contact</span>
+                    </button>
+                    <div class="contacts-import-export">
+                        <button id="deleteAllContactsBtn" class="btn-danger delete-all-btn" data-translate-title="deleteAllContacts" title="Delete all contacts">
+                            <i class="fa fa-trash"></i> <span data-translate="delete_all">Delete All</span>
+                        </button>
+                        <button id="importContactsBtn" class="btn-secondary import-btn" data-translate-title="importContactsFromCSV" title="Import contacts from CSV">
+                            <i class="fa fa-upload"></i> <span data-translate="import">Import</span>
+                        </button>
+                        <button id="exportContactsBtn" class="btn-secondary export-btn" data-translate-title="exportContactsToCSV" title="Export contacts to CSV">
+                            <i class="fa fa-download"></i> <span data-translate="export">Export</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Search bar below -->
+                <div class="contacts-search-wrapper">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="contactSearchInput" data-translate-placeholder="search_contacts" placeholder="Search contacts..." />
+                        <button id="clearContactSearch" class="clear-search-btn">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Hidden file input for CSV import -->
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
+            </div>
+
+            <!-- Search Bar - Only show for other tabs that need it -->
+            <div id="searchContainer" class="search-container hidden" data-view="activity">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" data-translate-placeholder="search" placeholder="Search..." />
+                    <button id="clearSearch" class="clear-search-btn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Agent Keys - Only show for dial -->
+            <div id="agentKeysContainer" class="agent-keys-container hidden" data-view="dial">
+                <div class="agent-keys-wrapper">
+                    <div class="agent-keys-grid">
+                        <button id="loginBtn" class="agent-key login-idle uppercase">
+                            <i class="fa fa-sign-in"></i>
+                            <span class="agent-text">Login</span>
+                        </button>
+                        <button id="queueBtn" class="agent-key queue-idle uppercase">
+                            <i class="fa fa-users"></i>
+                            <span class="agent-text">Queue</span>
+                        </button>
+                        <button id="pauseBtn" class="agent-key pause-idle uppercase">
+                            <i class="fa fa-pause"></i>
+                            <span class="agent-text">Pause</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Areas -->
+            <div id="contactArea" class="content-area active">
+                <div class="contacts-container">
+                    <div id="contactsList" class="contacts-list">
+                        <div class="no-contacts-message">
+                            <i class="fa fa-users"></i>
+                            <h3 data-translate="no_contacts_yet">No contacts yet</h3>
+                            <p data-translate="add_first_contact">Add your first contact to get started</p>
+                            <button class="btn-primary" onclick="App.managers.contacts?.showAddContactModal()" data-translate="add_contact">Add Contact</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dialArea" class="content-area hidden">
+                                <!-- Left BLF Keys -->
+                <div class="blf-keys-left">
+                    <div id="blf-left-dial" class="blf-buttons-dial">
+                        <!-- BLF buttons will be dynamically added here -->
+                    </div>
+                </div>
+                                <div class="dial-container">
+
+
+                <div id="dial-center-panel" class="dial-center-panel">
+                    <!-- SIP Status Display -->
+                    <div id="sipStatusDisplay" class="sip-status-display">
+                        <!-- Top Line: Device -->
+                        <div class="status-row status-top">
+                            <div class="status-item">
+                                <span class="status-label" data-translate="device">Device:</span>
+                                <span id="sipExtension" class="status-value">--</span>
+                            </div>
+                            <div class="status-item voicemail-item">
+                                <span id="voicemailCount" class="voicemail-count hidden">0</span>
+                                <span class="voicemail-text hidden" data-translate="new">NEW</span>
+                                <i id="voicemailIcon" class="fas fa-voicemail voicemail-icon" data-translate-title="voicemail" title="Voicemail" onclick="dialVoicemail()"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Middle: Dial Input (when no call) / Call Information (when active) -->
+                        <div id="dialInputRow" class="status-row dial-input-row">
+                            <div class="status-item full-width">
+                                <div class="dial-input-wrapper">
+                                    <input type="tel" id="dialInput" data-translate-placeholder="enter_number" placeholder="Enter number..." autocomplete="off" />
+                                    <button id="clearDial" class="clear-dial-btn">
+                                        <i class="fa fa-backspace"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="callStatusRow" class="status-row call-status hidden">
+                            <div class="status-item full-width">
+                                <div class="call-info-display">
+                                    <div class="call-main-info">
+                                        <span id="callerNumber" class="caller-number">--</span>
+                                        <span id="callerName" class="caller-name hidden">--</span>
+                                    </div>
+                                    <div class="call-secondary-info">
+                                        <span id="callDirection" class="call-direction">--</span>
+                                        <span id="callDuration" class="call-duration">00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottom Line: Agent Status -->
+                        <div class="status-row status-bottom">
+                            <div class="status-item">
+                                <span class="status-label" data-translate="agent">Agent:</span>
+                                <span id="agentStatus" class="status-value agent-logged-out">Logged Out</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CLI Selector (Company Number Selection) -->
+                    <div id="cliSelectorContainer" class="cli-selector-container hidden">
+                        <div class="cli-selector-content">
+                            <select id="cliCompanySelect" class="cli-company-select">
+                                <option value="" data-translate="select_company_cli">Select Company CLI</option>
+                            </select>
+                            <button id="cliConfirmBtn" class="cli-confirm-btn">
+                                <span id="cliConfirmNumber"></span>
+                            </button>
+                            <div id="cliCurrentNumber" class="cli-current-number"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Dialpad Container with BLF Keys -->
+                    <!--div class="dialpad-with-blf-container"-->
+                    <!-- Main Dialpad -->
+                        <div class="dialpad-container">
+                            <button class="dialpad-key" data-digit="1">
+                                <span class="digit">1</span>
+                                <span class="letters"></span>
+                            </button>
+                            <button class="dialpad-key" data-digit="2">
+                                <span class="digit">2</span>
+                                <span class="letters">ABC</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="3">
+                                <span class="digit">3</span>
+                                <span class="letters">DEF</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="4">
+                                <span class="digit">4</span>
+                                <span class="letters">GHI</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="5">
+                                <span class="digit">5</span>
+                                <span class="letters">JKL</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="6">
+                                <span class="digit">6</span>
+                                <span class="letters">MNO</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="7">
+                                <span class="digit">7</span>
+                                <span class="letters">PQRS</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="8">
+                                <span class="digit">8</span>
+                                <span class="letters">TUV</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="9">
+                                <span class="digit">9</span>
+                                <span class="letters">WXYZ</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="*">
+                                <span class="digit">*</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="0">
+                                <span class="digit">0</span>
+                                <span class="letters">+</span>
+                            </button>
+                            <button class="dialpad-key" data-digit="#">
+                                <span class="digit">#</span>
+                            </button>
+                        <!--/div-->                
+                    </div>
+                    
+                    <div class="dial-actions">
+                        <button id="callBtn" class="btn-success call-button uppercase" data-translate-title="dial_number" title="Dial Number">
+                            <i class="fa fa-phone"></i> <span data-translate="call">CALL</span>
+                        </button>
+                        <button id="hangupBtn" class="btn-danger call-button uppercase" data-translate-title="hang_up" title="Hang Up">
+                            <i class="fa fa-phone"></i> <span data-translate="end">END</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Call Control Buttons (shown when call is active) -->
+                    <div id="callControls" class="call-controls hidden">
+                        <button id="muteBtn" class="btn-control" data-translate-title="muteUnmute" title="Mute/Unmute">
+                            <i class="fa fa-microphone"></i>
+                            <span class="btn-label">MUTE</span>
+                        </button>
+                        <button id="holdBtn" class="btn-control" data-translate-title="holdUnhold" title="Hold/Unhold">
+                            <i class="fa fa-pause"></i>
+                            <span class="btn-label">HOLD</span>
+                        </button>
+                        <button id="transferBtn" class="btn-control" data-translate-title="transferCall" title="Transfer Call">
+                            <i class="fa fa-exchange"></i>
+                            <span class="btn-label">TRANSFER</span>
+                        </button>
+                        <button id="endCallBtn" class="btn-danger call-button" data-translate-title="endCall" title="End Call">
+                            <i class="fa fa-phone"></i> END
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Right BLF Keys -->
+                <div class="blf-keys-right">
+                    <div id="blf-right-dial" class="blf-buttons-dial">
+                        <!-- BLF buttons will be dynamically added here -->
+                    </div>
+                </div>
+                </div>
+            
+            <div id="activityArea" class="content-area hidden">
+                <div class="activity-container">
+                    <div class="activity-header">
+                        <h3 data-translate="call_history">Call History</h3>
+                        <div class="activity-controls">
+                            <button id="clearHistory" class="btn-danger clear-history-btn">
+                                <i class="fa fa-trash"></i> <span data-translate="clear_all">Clear All</span>
+                            </button>
+                            <button id="refreshHistory" class="btn-primary refresh-history-btn">
+                                <i class="fa fa-refresh"></i> <span data-translate="refresh">Refresh</span>
+                            </button>
+                        </div>
+                    </div>                                                                              
+                    
+                    <!-- Call history list -->
+                    <div id="historyContainer" class="history-container">
+                        <div class="no-history-message">
+                            <i class="fa fa-phone-square"></i>
+                            <h3 data-translate="no_call_history">No Call History</h3>
+                            <p data-translate="call_history_will_appear">Your call history will appear here after you make or receive calls.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="blank1Area" class="content-area hidden">
+                <div class="company-numbers-container">
+                    <!-- Company Numbers Controls -->
+                    <div class="company-numbers-controls">
+                        <div class="company-numbers-top-controls">
+                            <button id="addCompanyNumberBtn" class="btn-primary add-company-btn">
+                                <i class="fa fa-plus"></i> <span data-translate="add_company_number">Add Company Number</span>
+                            </button>
+                            <div class="company-numbers-import-export">
+                                <button id="deleteAllCompanyNumbersBtn" class="btn-danger delete-all-btn" data-translate-title="deleteAllCompanyNumbers" title="Delete all company numbers">
+                                    <i class="fa fa-trash"></i> Delete All
+                                </button>
+                                <button id="importCompanyNumbersBtn" class="btn-secondary import-btn" data-translate-title="importCompanyNumbersFromCSV" title="Import company numbers from CSV">
+                                    <i class="fa fa-upload"></i> Import
+                                </button>
+                                <button id="exportCompanyNumbersBtn" class="btn-secondary export-btn" title="Export company numbers to CSV">
+                                    <i class="fa fa-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Company Numbers List -->
+                    <div id="companyNumbersList" class="company-numbers-list">
+                        <div class="no-company-numbers-message">
+                            <i class="fa fa-building"></i>
+                            <h3 data-translate="no_company_numbers_yet">No company numbers yet</h3>
+                            <p data-translate="add_company_numbers_cli">Add company numbers to enable CLI selection</p>
+                        </div>
+                    </div>
+                    <!-- Hidden file input for CSV import -->
+                    <input type="file" id="companyNumbersCsvFileInput" accept=".csv" class="hidden" />
+                </div>
+            </div>
+
+            <div id="blank2Area" class="content-area hidden">
+                <div class="blank-container">
+                    <div class="blank-content">
+                        <i class="fa fa-circle-o blank-icon"></i>
+                        <h3 data-translate="reserved_tab">Reserved Tab</h3>
+                        <p data-translate="reserved_for_future">This tab is reserved for future functionality.</p>
+                    </div>
+                </div>
+            </div>
+                    
+            <div id="settingsArea" class="content-area hidden">
+                <div class="settings-container">
+                    <form id="settingsForm">
+                        <div class="accordion" id="settingsAccordion">
+                            
+                            <!-- Connection Settings Accordion -->
+                            <div class="accordion-item">
+                                <button type="button" class="accordion-header" data-target="connectionSettings">
+                                    <div class="header-title">
+                                        <i class="fa fa-plug header-icon"></i>
+                                        <span data-translate="connection">Connection</span>
+                                    </div>
+                                    <i class="fa fa-chevron-right accordion-icon"></i>
+                                </button>
+                                <div id="connectionSettings" class="accordion-content active">
+                                    <div class="accordion-body">
+                                        <div class="setting-item">
+                                            <label data-translate="phantom_server_id">Phantom Server ID:</label>
+                                            <input type="text" 
+                                                id="PhantomID" 
+                                                name="PhantomID" 
+                                                data-translate-placeholder="three_four_digit_phantom" placeholder="3 or 4 digit PhantomID" />
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="username">Username:</label>
+                                            <input type="text" 
+                                                id="SipUsername" 
+                                                name="SipUsername" 
+                                                data-translate-placeholder="username" placeholder="username" />
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="password">Password:</label>
+                                            <input type="password" 
+                                                id="SipPassword" 
+                                                name="SipPassword" 
+                                                data-translate-placeholder="password" placeholder="password" />
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="vm_access">VM Access:</label>
+                                            <input type="text" 
+                                                id="VmAccess" 
+                                                name="VmAccess" 
+                                                data-translate-placeholder="vm_access_code" placeholder="VM access code" 
+                                                value="*97" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interface Settings Accordion -->
+                            <div class="accordion-item">
+                                <button type="button" class="accordion-header" data-target="interfaceSettings">
+                                    <div class="header-title">
+                                        <i class="fa fa-desktop header-icon"></i>
+                                        <span data-translate="interface">Interface</span>
+                                    </div>
+                                    <i class="fa fa-chevron-right accordion-icon"></i>
+                                </button>
+                                <div id="interfaceSettings" class="accordion-content">
+                                    <div class="accordion-body">
+                                        <div class="setting-item">
+                                            <label>Theme Mode:</label>
+                                            <div class="theme-toggle-control">
+                                                <select id="ThemeMode" name="ThemeMode">
+                                                    <option value="auto">Auto (System)</option>
+                                                    <option value="light">Light Mode</option>
+                                                    <option value="dark">Dark Mode</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="BlfEnabled" 
+                                                    name="BlfEnabled" />
+                                                Enable BLF Buttons
+                                            </label>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>Tab Visibility:</label>
+                                            <!-- <label style="margin-bottom: var(--spacing-sm); font-weight: 600; color: var(--text-color-secondary);">Tab Visibility:</label> -->
+                                            <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-left: var(--spacing-md);">
+                                                <label>
+                                                    <input type="checkbox" 
+                                                        id="ShowContactsTab" 
+                                                        name="ShowContactsTab" 
+                                                        checked />
+                                                    Show Contacts Tab
+                                                </label>
+                                                <label>
+                                                    <input type="checkbox" 
+                                                        id="ShowActivityTab" 
+                                                        name="ShowActivityTab" 
+                                                        checked />
+                                                    Show Activity Tab
+                                                </label>
+                                                <label>
+                                                    <input type="checkbox" 
+                                                        id="ShowBlank1Tab" 
+                                                        name="ShowBlank1Tab" />
+                                                    Show Company Numbers Tab
+                                                </label>
+                                                <label class="hidden">
+                                                    <input type="checkbox" 
+                                                        id="ShowBlank2Tab" 
+                                                        name="ShowBlank2Tab" />
+                                                    Show Second Blank Tab
+                                                </label>
+                                            </div>
+                                            <div class="setting-help-text">
+                                                Control which navigation tabs are visible. Dial and Settings tabs are always shown.
+                                            </div>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="OnscreenNotifications" 
+                                                    name="OnscreenNotifications" 
+                                                    checked />
+                                                Onscreen Notifications
+                                            </label>
+                                            <div class="setting-help-text">
+                                                Enable or disable toast notifications displayed within the application.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Call Settings Accordion -->
+                            <div class="accordion-item">
+                                <button type="button" class="accordion-header" data-target="callSettings">
+                                    <div class="header-title">
+                                        <i class="fa fa-phone header-icon"></i>
+                                        <span data-translate="call">Call</span>
+                                    </div>
+                                    <i class="fa fa-chevron-right accordion-icon"></i>
+                                </button>
+                                <div id="callSettings" class="accordion-content">
+                                    <div class="accordion-body">
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="AutoAnswerEnabled" 
+                                                    name="AutoAnswerEnabled" />
+                                                Auto Answer
+                                            </label>
+                                        </div>
+                                        <div class="setting-item hidden">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="CallWaitingEnabled" 
+                                                    name="CallWaitingEnabled" />
+                                                Call Waiting
+                                            </label>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="IncomingCallNotifications" 
+                                                    name="IncomingCallNotifications" />
+                                                Incoming Call Notifications
+                                            </label>
+                                            <div class="setting-help-text">
+                                                Show system notifications for incoming calls
+                                                <span id="notificationStatus" class="notification-status"></span>
+                                            </div>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="PreferBlindTransfer" 
+                                                    name="PreferBlindTransfer" />
+                                                Prefer Blind Transfer
+                                            </label>
+                                            <small class="setting-help-text">When enabled, BLF buttons and Enter key in transfer modal will perform blind transfers instead of attended transfers</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Audio Settings Accordion -->
+                            <div class="accordion-item">
+                                <button type="button" class="accordion-header" data-target="audioSettings">
+                                    <div class="header-title">
+                                        <i class="fa fa-volume-up header-icon"></i>
+                                        <span data-translate="audio">Audio</span>
+                                    </div>
+                                    <i class="fa fa-chevron-right accordion-icon"></i>
+                                </button>
+                                <div id="audioSettings" class="accordion-content">
+                                    <div class="accordion-body">
+                                        <div class="setting-item">
+                                            <label data-translate="speaker">Speaker:</label>
+                                            <div class="audio-device-control">
+                                                <select id="audioSpeakerDevice" name="audioSpeakerDevice">
+                                                    <option value="default" data-translate="defaultSpeaker">Default Speaker</option>
+                                                </select>
+                                                <button type="button" class="audio-test-btn" onclick="testAudioDevice('speaker')" title="Test Speaker">
+                                                    <i class="fa fa-play-circle"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="microphone">Microphone:</label>
+                                            <div class="micro-device-control">
+                                                <select id="audioMicrophoneDevice" name="audioMicrophoneDevice">
+                                                    <option value="default" data-translate="defaultMicrophone">Default Microphone</option>
+                                                </select>
+                                                <div class="micro-test-btn">
+                                                </div>
+                                            </div>
+                                            <div class="microphone-level-container">
+                                                <div class="microphone-level-bar">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="ringer">Ringer:</label>
+                                            <div class="audio-device-control">
+                                                <select id="audioRingerDevice" name="audioRingerDevice">
+                                                    <option value="default" data-translate="defaultRinger">Default Ringer</option>
+                                            </select>
+                                                <button type="button" class="audio-test-btn" onclick="testAudioDevice('ringer')" title="Test Ringer">
+                                                    <i class="fa fa-play-circle"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="ringtone">Ringtone:</label>
+                                            <div class="audio-device-control">
+                                                <select id="audioRingtoneFile" name="audioRingtoneFile">
+                                                    <option value="Alert.mp3" data-translate="alert">Alert</option>
+                                                    <option value="Ringtone_1.mp3" data-translate="ringtone1">Ringtone 1</option>
+                                                    <option value="Ringtone_2.mp3" data-translate="ringtone2">Ringtone 2</option>
+                                                    <option value="Ringtone_3.mp3" data-translate="ringtone3">Ringtone 3</option>
+                                                    <option value="Ringtone_4.mp3" data-translate="ringtone4">Ringtone 4</option>
+                                                    <option value="Ringtone_5.mp3" data-translate="ringtone5">Ringtone 5</option>
+                                                    <option value="Ringtone_6.mp3" data-translate="ringtone6">Ringtone 6</option>
+                                                </select>
+                                                <button type="button" class="audio-test-btn" onclick="testRingtone()" title="Test Ringtone">
+                                                    <i class="fa fa-play-circle"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Features Settings Accordion -->
+                            <div class="accordion-item">
+                                <button type="button" class="accordion-header" data-target="featuresSettings">
+                                    <div class="header-title">
+                                        <i class="fa fa-star header-icon"></i>
+                                        <span data-translate="features">Features</span>
+                                    </div>
+                                    <i class="fa fa-chevron-right accordion-icon"></i>
+                                </button>
+                                <div id="featuresSettings" class="accordion-content">
+                                    <div class="accordion-body">
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="BusylightEnabled" 
+                                                    name="BusylightEnabled" />
+                                                <span data-translate="enableBusylight">Enable Busylight</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diagnostics/Debugging Settings Accordion -->
+                            <div class="accordion-item">
+                                <button type="button" class="accordion-header" data-target="diagnosticsSettings">
+                                    <div class="header-title">
+                                        <i class="fa fa-bug header-icon"></i>
+                                        <span data-translate="diagnostics_debugging">Diagnostics/Debugging</span>
+                                    </div>
+                                    <i class="fa fa-chevron-right accordion-icon"></i>
+                                </button>
+                                <div id="diagnosticsSettings" class="accordion-content">
+                                    <div class="accordion-body">
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="SipMessagesEnabled" 
+                                                    name="SipMessagesEnabled" />
+                                                <span data-translate="sipMessages">SIP Messages</span>
+                                            </label>
+                                            <small class="setting-help-text" data-translate="sipMessagesHelp">Enable detailed SIP message logging in browser console</small>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>
+                                                <input type="checkbox" 
+                                                    id="VerboseLoggingEnabled" 
+                                                    name="VerboseLoggingEnabled" />
+                                                <span data-translate="verboseLogging">Verbose Logging</span>
+                                            </label>
+                                            <small class="setting-help-text" data-translate="verboseLoggingHelp">Enable detailed application logging and debugging information</small>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="iceGatheringTimeout">ICE Gathering Timeout (ms):</label>
+                                            <input type="number" 
+                                                id="IceGatheringTimeout" 
+                                                name="IceGatheringTimeout" 
+                                                min="100" 
+                                                max="10000" 
+                                                step="100"
+                                                value="500" />
+                                            <small class="setting-help-text" data-translate="iceGatheringTimeoutHelp">WebRTC ICE candidate gathering timeout in milliseconds (100-10000ms)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div class="settings-actions">
+                            <button type="button" id="saveSettingsBtn" class="btn-primary" data-translate="saveSettings">Save Settings</button>
+                            <button type="button" id="resetSettingsBtn" class="btn-secondary" data-translate="resetToDefaults">Reset to Defaults</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>    
+
+
+        
+    </div>
+    
+    <!-- Welcome Overlay for First-Time Setup -->
+    <div id="welcomeOverlay" class="welcome-overlay hidden">
+        <div class="welcome-blur-background"></div>
+        <div class="welcome-content">
+            <div class="welcome-icon">⚙️</div>
+            <h2 data-translate="welcome_setup_required">Setup Required</h2>
+            <p data-translate="welcome_message">To use Autocab365Connect, you need to configure your connection settings first.</p>
+            <p data-translate="welcome_instruction">Please enter your Phantom Server ID, Username, and Password in the Connection settings below.</p>
+            <button id="welcomeOkayBtn" class="btn-primary welcome-okay-btn">
+                <span data-translate="okay">Okay</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+    
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="modal-overlay hidden"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h2 data-translate="loadingAutocab365Connect">Loading Autocab365 Connect</h2>
+            <p id="loadingStatus" data-translate="initializing">Initializing...</p>
+            <div class="loading-progress">
+                <div id="loadingBar" class="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Application Configuration & Initialization -->
+    <script type="text/javascript" src="js/app-config.js"></script>
+    
+    <!-- External Dependencies with CDN + Local Fallback -->
+    
+    <!-- jQuery 3.6.1 -->
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" 
+            integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" 
+            crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="lib/jquery-3.6.1.min.js"><\/script>')</script>
+    
+    <!-- jQuery UI 1.13.2 -->
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" 
+            integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" 
+            crossorigin="anonymous"></script>
+    <script>window.jQuery.ui || document.write('<script src="lib/jquery-ui-1.13.2.min.js"><\/script>')</script>
+    
+    <!-- SIP.js 0.21.2 (local first) -->
+    <script src="lib/sip-0.21.2.min.js"></script>
+    
+    <!-- Croppie 2.6.4 -->
+    <script src="https://cdn.jsdelivr.net/npm/croppie@2.6.4/croppie.min.js" 
+            crossorigin="anonymous"></script>
+    <script>window.Croppie || document.write('<script src="lib/croppie-2.6.4.min.js"><\/script>')</script>
+    
+    <!-- Moment.js 2.24.0 with locales -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment-with-locales.min.js" 
+            crossorigin="anonymous"></script>
+    <script>window.moment || document.write('<script src="lib/moment-with-locales-2.24.0.min.js"><\/script>')</script>
+    
+    <!-- Core Application Files -->
+    <script type="text/javascript" src="js/language-manager.js"></script>
+    <script type="text/javascript" src="js/browser-cache.js"></script>
+    <script type="text/javascript" src="js/sidebar-manager.js"></script>
+    <script type="text/javascript" src="js/sip-session-manager.js"></script>
+    <script type="text/javascript" src="js/ui-state-manager.js"></script>
+    <script type="text/javascript" src="js/busylight-manager.js"></script>
+    <script type="text/javascript" src="js/audio-settings-manager.js"></script>
+    <script type="text/javascript" src="js/api-phantom.js"></script>
+    <script type="text/javascript" src="js/call-history-manager.js"></script>
+    <script type="text/javascript" src="js/call-history-ui.js"></script>
+    <script type="text/javascript" src="js/contacts-manager.js"></script>
+    <script type="text/javascript" src="js/company-numbers-manager.js"></script>
+    <script type="text/javascript" src="js/blf-button-manager.js"></script>
+    <script type="text/javascript" src="js/agent-buttons.js"></script>
+    <script type="text/javascript" src="js/phone.js"></script>
+    
+    <!-- Application Startup -->
+    <script type="text/javascript" src="js/app-startup.js"></script>
+    
+    <!-- Settings Accordion and Tab Visibility Manager -->
+    <script type="text/javascript" src="js/settings-accordion.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script type="text/javascript">
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function(registration) {
+                        console.log('✓ Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.warn('❌ Service Worker registration failed:', error);
+                    });
+            });
+        } else {
+            console.warn('Service Workers are not supported in this browser');
+        }
+    </script>
+    
+    <!-- Keyboard Input Handler for Dial Tab -->
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add keyboard event listener for dial tab
+            document.addEventListener('keydown', function(event) {
+                // Check if dial tab is currently active
+                const dialTab = document.querySelector('#navDial');
+                const isDialTabActive = dialTab && dialTab.classList.contains('active');
+                
+                if (!isDialTabActive) {
+                    return; // Only handle keyboard input when dial tab is focused
+                }
+                
+                // Check if any modal is currently open (not hidden)
+                const openModals = document.querySelectorAll('.modal-overlay:not(.hidden)');
+                const isModalOpen = openModals.length > 0;
+                
+                if (isModalOpen) {
+                    return; // Don't interfere with modal input
+                }
+                
+                // Prevent default behavior for dial keys when dial tab is active
+                const dialKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#'];
+                const key = event.key;
+                
+                if (dialKeys.includes(key)) {
+                    event.preventDefault();
+                    
+                    // Only add to dial input if we're not typing in an input field
+                    const activeElement = document.activeElement;
+                    const isInputField = activeElement && (
+                        activeElement.tagName === 'INPUT' || 
+                        activeElement.tagName === 'TEXTAREA' ||
+                        activeElement.isContentEditable
+                    );
+                    
+                    if (!isInputField) {
+                        // Use the existing handleDialpadInput function
+                        if (typeof handleDialpadInput === 'function') {
+                            handleDialpadInput(key);
+                        }
+                    }
+                }
+                
+                // Handle Enter key to initiate call when dial tab is active
+                if (key === 'Enter' && isDialTabActive && !isModalOpen) {
+                    const activeElement = document.activeElement;
+                    const isInputField = activeElement && (
+                        activeElement.tagName === 'INPUT' || 
+                        activeElement.tagName === 'TEXTAREA' ||
+                        activeElement.isContentEditable
+                    );
+                    
+                    // If not in an input field, treat Enter as "Call" button press
+                    if (!isInputField) {
+                        event.preventDefault();
+                        const callBtn = document.getElementById('callBtn');
+                        if (callBtn && !callBtn.disabled) {
+                            callBtn.click();
+                        }
+                    }
+                }
+
+                
+            });
+        });
+    </script>
+
+    <!-- Transfer Modal -->
+    <div id="transferModal" class="modal-overlay transfer-modal">
+        <div class="modal-content transfer-modal-content">
+            <div class="modal-header">
+                <h3 data-translate="transfer_call">Transfer Call</h3>
+                <button class="modal-close" id="transferModalClose">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="transfer-input-section">
+                    <label for="transferNumber" data-translate="transfer_to_number">Transfer to number:</label>
+                    <input type="text" id="transferNumber" class="transfer-input" data-translate-placeholder="enter_transfer_number" placeholder="Enter number to transfer to" />
+                </div>
+                <div id="transferActions" class="transfer-actions">
+                    <button id="blindTransferBtn" class="btn-transfer btn-primary">
+                        <i class="fa fa-share"></i> <span data-translate="blind">BLIND</span>
+                    </button>
+                    <button id="attendedTransferBtn" class="btn-transfer btn-secondary">
+                        <i class="fa fa-phone-square"></i> <span data-translate="attended">ATTENDED</span>
+                    </button>
+                    <button id="cancelTransferBtn" class="btn-transfer btn-cancel">
+                        <i class="fa fa-times"></i> <span data-translate="cancel">CANCEL</span>
+                    </button>
+                </div>
+                <div id="attendedActions" class="attended-actions hidden">
+                    <p class="attended-status" data-translate="calling_transfer_target">Calling transfer target...</p>
+                    <div class="attended-buttons">
+                        <button id="completeTransferBtn" class="btn-transfer btn-primary">
+                            <i class="fa fa-check"></i> <span data-translate="transfer">TRANSFER</span>
+                        </button>
+                        <button id="cancelAttendedBtn" class="btn-transfer btn-cancel">
+                            <i class="fa fa-times"></i> <span data-translate="cancel">CANCEL</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log div {
+            margin-bottom: 5px;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .warning { color: #ff0; }
+        .info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket Connection Test</h1>
+        
+        <div class="test-section">
+            <label for="wsUrl">WebSocket URL:</label>
+            <input type="text" id="wsUrl" value="wss://server1-388.phantomapi.net:8089/ws" placeholder="wss://server:port/path">
+        </div>
+        
+        <button id="connectBtn" onclick="testConnection()">Connect</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+        <button onclick="clearLog()">Clear Log</button>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let connectTime = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${time}] ${message}`;
+            logDiv.appendChild(div);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function testConnection() {
+            const url = document.getElementById('wsUrl').value;
+            
+            if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+                log('Already connected or connecting', 'warning');
+                return;
+            }
+
+            document.getElementById('connectBtn').disabled = true;
+            document.getElementById('disconnectBtn').disabled = false;
+
+            log('=== Starting WebSocket Connection Test ===', 'info');
+            log(`URL: ${url}`, 'info');
+            log(`Browser: ${navigator.userAgent}`, 'info');
+            
+            connectTime = Date.now();
+            
+            try {
+                log('Creating WebSocket with "sip" subprotocol...', 'info');
+                ws = new WebSocket(url, 'sip');
+
+                ws.onopen = function(event) {
+                    const duration = Date.now() - connectTime;
+                    log(`✅ CONNECTION SUCCESSFUL (${duration}ms)`, 'success');
+                    log(`Ready State: ${ws.readyState} (OPEN)`, 'success');
+                    log(`Protocol: ${ws.protocol}`, 'info');
+                    log(`Extensions: ${ws.extensions}`, 'info');
+                };
+
+                ws.onmessage = function(event) {
+                    log(`📨 Message received: ${event.data}`, 'info');
+                };
+
+                ws.onerror = function(event) {
+                    log(`❌ ERROR: WebSocket error occurred`, 'error');
+                    log(`Error details: ${JSON.stringify(event)}`, 'error');
+                };
+
+                ws.onclose = function(event) {
+                    const duration = Date.now() - connectTime;
+                    log(`🔌 CONNECTION CLOSED (${duration}ms)`, 'warning');
+                    log(`Code: ${event.code}`, 'warning');
+                    log(`Reason: ${event.reason || 'No reason provided'}`, 'warning');
+                    log(`Was Clean: ${event.wasClean}`, 'warning');
+                    
+                    if (event.code === 1006) {
+                        log('⚠️ Code 1006 = Connection closed abnormally (no close frame)', 'error');
+                        log('Possible causes:', 'error');
+                        log('  - Server is down or unreachable', 'error');
+                        log('  - Firewall blocking the connection', 'error');
+                        log('  - SSL/TLS certificate issues', 'error');
+                        log('  - Network timeout', 'error');
+                        log('  - CORS or origin policy issues', 'error');
+                    }
+                    
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = true;
+                    ws = null;
+                };
+
+                // Set a manual timeout
+                setTimeout(() => {
+                    if (ws && ws.readyState === WebSocket.CONNECTING) {
+                        log('⏱️ Connection timeout (20s) - still connecting...', 'warning');
+                    }
+                }, 20000);
+
+            } catch (error) {
+                log(`❌ EXCEPTION: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                log('Disconnecting...', 'info');
+                ws.close(1000, 'User initiated disconnect');
+            }
+        }
+
+        // Test on load
+        window.addEventListener('load', function() {
+            log('WebSocket Test Page Loaded', 'success');
+            log('Click "Connect" to test the WebSocket connection', 'info');
+        });
+    </script>
+</body>
+</html>
