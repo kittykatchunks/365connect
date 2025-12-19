@@ -3560,7 +3560,7 @@ function debugPhantomApiConfiguration() {
         baseUrl: config.baseUrl || '(not generated)',
         timeout: config.timeout,
         isReady: apiManager.isReady(),
-        expectedUrl: phantomId ? `https://server1-${phantomId}.phantomapi.net:19773/api` : '(needs PhantomID)'
+        expectedUrl: phantomId ? `https://server1-${phantomId}.phantomapi.net:443/api` : '(needs PhantomID)'
     };
     
     console.table(debugInfo);

@@ -1,7 +1,6 @@
 /* ====================================================================================== */
 /* AUTOCAB365 PWA - LANGUAGE MANAGER */
 /* Manages language loading, switching, and translation functions */
-/* Version: 0.1.001 */
 /* ====================================================================================== */
 
 class LanguageManager {

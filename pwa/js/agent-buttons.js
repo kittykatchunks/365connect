@@ -1152,10 +1152,10 @@ class AgentButtonsManager {
         // Remove existing status classes
         agentStatusElement.className = agentStatusElement.className.replace(/\bagent-\w+\b/g, '');
         
-        // Build agent display text with format: name - num
+        // Build agent display text with format: num - name
         let agentDisplayText = '';
         if (agentName && agentNumber) {
-            agentDisplayText = `${agentName} - ${agentNumber}`;
+            agentDisplayText = `${agentNumber} - ${agentName}`;
         } else if (agentNumber) {
             agentDisplayText = agentNumber;
         } else if (agentName) {
