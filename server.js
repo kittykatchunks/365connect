@@ -78,7 +78,7 @@ app.use(express.static(path.join(__dirname, 'pwa'), {
 }));
 
 app.use('/api/phantom', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net:19773',  // Default fallback
+  target: 'https://server1-000.phantomapi.net:443',  // Default fallback
   changeOrigin: true,
   pathRewrite: {
     '^/api/phantom': '/api',
