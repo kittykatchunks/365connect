@@ -348,11 +348,13 @@ class UIStateManager extends EventTarget {
         // Update agent status
         if (agentStatus && window.App?.managers?.agent) {
             const agentMgr = window.App.managers.agent;
+            const storedAgentName = window.localDB.getItem('currentAgentName', null);
+            const storedAgentNumber = window.localDB.getItem('currentAgentNumber', null);
             let statusText = 'Logged Out';
             let statusClass = 'agent-logged-out';
             
             if (agentMgr.isLoggedIn) {
-                statusText = agentMgr.isPaused ? 'Paused' : 'Available';
+                statusText = agentMgr.isPaused ? 'Paused' : 'Avalable';
                 statusClass = agentMgr.isPaused ? 'agent-paused' : 'agent-logged-in';
             }
             
@@ -361,7 +363,7 @@ class UIStateManager extends EventTarget {
         }
         
         // Update time and date
-        this.updateTimeAndDate();
+        // this.updateTimeAndDate();
     }
     
     updateTimeAndDate() {
