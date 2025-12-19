@@ -25,7 +25,6 @@ CONFIGURATION:
 - useProxy: true = Use Node.js proxy (for dev/CORS issues) - Default
 - useProxy: false = Direct HTTPS API calls (for production deployment)
 - Authentication: All requests use Basic Auth with credentials from .env
-- URL format: https://server1-{PhantomID}.phantomapi.net:19773/api/{endpoint}
 */
 
 class PhantomApiManager extends EventTarget {
@@ -151,7 +150,7 @@ class PhantomApiManager extends EventTarget {
         }
         
         const domain = `server1-${phantomId}.phantomapi.net`;
-        const port = '19773'; // Phantom API port
+        const port = process.env.PHANTOM_API_PORT || 443; // Phantom API port
         const basePath = '/api';
         
         return `https://${domain}:${port}${basePath}`;
