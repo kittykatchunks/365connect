@@ -354,7 +354,7 @@ class UIStateManager extends EventTarget {
             let statusClass = 'agent-logged-out';
             
             if (agentMgr.isLoggedIn) {
-                statusText = agentMgr.isPaused ? 'Paused' : 'Avalable';
+                statusText = agentMgr.isPaused ? 'Paused' : `${storedAgentNumber} - ${storedAgentName}`;
                 statusClass = agentMgr.isPaused ? 'agent-paused' : 'agent-logged-in';
             }
             
