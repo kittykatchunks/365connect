@@ -94,8 +94,8 @@ class PhantomApiManager extends EventTarget {
                 const response = await fetch(`/api/config?phantomId=${this.config.phantomId}`);
                 if (response.ok) {
                     const config = await response.json();
-                    this.config.apiUsername = process.env.PHANTOM_API_USERNAME || config.apiUsername;
-                    this.config.apiKey = process.env.PHANTOM_API_KEY || config.apiKey;
+                    this.config.apiUsername = config.apiUsername;
+                    this.config.apiKey = config.apiKey;
                     console.log('✅ API credentials loaded from server config');
                 } else {
                     console.warn('Failed to fetch API credentials from server');
@@ -150,7 +150,7 @@ class PhantomApiManager extends EventTarget {
         }
         
         const domain = `server1-${phantomId}.phantomapi.net`;
-        const port = process.env.PHANTOM_API_PORT || 443; // Phantom API port
+        const port = 443; // Phantom API standard HTTPS port
         const basePath = '/api';
         
         return `https://${domain}:${port}${basePath}`;
