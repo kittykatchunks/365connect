@@ -35,8 +35,8 @@ class PhantomApiManager extends EventTarget {
             baseUrl: null,
             phantomId: null,
             timeout: 30000, // 30 seconds default timeout
-            apiUsername: process.env.PHANTOM_API_USERNAME || null,
-            apiKey: process.env.PHANTOM_API_KEY || null,
+            apiUsername: null,
+            apiKey: null,
             useProxy: true // Set to false for direct API access (production deployment)
         };
         
@@ -94,8 +94,8 @@ class PhantomApiManager extends EventTarget {
                 const response = await fetch(`/api/config?phantomId=${this.config.phantomId}`);
                 if (response.ok) {
                     const config = await response.json();
-                    this.config.apiUsername = config.apiUsername;
-                    this.config.apiKey = config.apiKey;
+                    this.config.apiUsername = process.env.PHANTOM_API_USERNAME || config.apiUsername;
+                    this.config.apiKey = process.env.PHANTOM_API_KEY || config.apiKey;
                     console.log('✅ API credentials loaded from server config');
                 } else {
                     console.warn('Failed to fetch API credentials from server');
