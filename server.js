@@ -13,7 +13,7 @@ const fs = require('fs');
 const app = express();
 const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
-const PROXY_PORT = 19773;
+const PROXY_PORT = process.env.PHANTOM_API_PORT || 19773;
 const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server1-000.phantomapi.net';
 
 // Let's Encrypt certificate paths
