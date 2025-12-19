@@ -616,7 +616,7 @@ class SipSessionManager {
             }
             
             // Call AgentfromPhone API
-            const result = await apiManager.postSimpleNoAuth('AgentfromPhone', {
+            const result = await apiManager.postWithBasicAuthSimple('AgentfromPhone', {
                 phone: deviceExtension
             });
             

@@ -1,7 +1,6 @@
 /* ====================================================================================== */
 /* AUTOCAB365 PWA - AGENT BUTTONS MANAGER */
 /* Handles agent login/logout, queue, pause operations */
-/* Version: 0.3.29 - Refactored for new SIP Session Manager */
 /* ====================================================================================== */
 
 class AgentButtonsManager {
@@ -178,7 +177,7 @@ class AgentButtonsManager {
             };
 
             // Test with no auth first to see if CORS is the issue
-            const result = await apiManager.postSimpleNoAuth(
+            const result = await apiManager.postWithBasicAuthSimple(
                 'AgentfromPhone',
                 requestData
             );
@@ -247,6 +246,16 @@ class AgentButtonsManager {
             const displayStatus = this.isPaused ? 'paused' : 'logged-in';
             this.updateAgentStatusDisplay(displayStatus, this.currentAgentNumber, this.currentAgentName);
             
+            // Save agent name in sessionStorage for display during session (cleared on app exit)
+            if (this.currentAgentName) {
+                try {
+                    sessionStorage.setItem('cachedAgentName', this.currentAgentName);
+                    console.log(`💾 Agent name cached in session: ${this.currentAgentName}`);
+                } catch (e) {
+                    console.warn('Failed to cache agent name in sessionStorage:', e);
+                }
+            }
+            
             console.log(`Agent status updated from API - Agent: ${this.currentAgentNumber}${this.currentAgentName ? ' (' + this.currentAgentName + ')' : ''}, Paused: ${this.isPaused}`);
         } else {
             // Agent is not logged in
@@ -255,6 +264,13 @@ class AgentButtonsManager {
             this.currentAgentNumber = null;
             this.currentAgentName = null;
             this.updateAgentStatusDisplay('logged-out');
+            
+            // Clear cached agent name from sessionStorage
+            try {
+                sessionStorage.removeItem('cachedAgentName');
+            } catch (e) {
+                console.warn('Failed to clear cached agent name:', e);
+            }
             
             console.log('Agent status updated from API - Not logged in');
         }
@@ -267,7 +283,6 @@ class AgentButtonsManager {
         // Fallback: Restore agent state from localStorage if API fails
         if (window.localDB) {
             const savedAgentNumber = window.localDB.getItem('currentAgentNumber');
-            const savedAgentName = window.localDB.getItem('currentAgentName');
             const savedLoginState = window.localDB.getItem('agentLoggedIn') === 'true';
             const savedPauseState = window.localDB.getItem('agentPaused') === 'true';
             
@@ -275,8 +290,15 @@ class AgentButtonsManager {
                 this.currentAgentNumber = savedAgentNumber;
             }
             
-            if (savedAgentName) {
-                this.currentAgentName = savedAgentName;
+            // Try to restore agent name from sessionStorage (if available during current session)
+            try {
+                const cachedAgentName = sessionStorage.getItem('cachedAgentName');
+                if (cachedAgentName) {
+                    this.currentAgentName = cachedAgentName;
+                    console.log(`📖 Agent name restored from session cache: ${cachedAgentName}`);
+                }
+            } catch (e) {
+                console.warn('Failed to restore cached agent name:', e);
             }
             
             if (savedLoginState) {
@@ -294,6 +316,7 @@ class AgentButtonsManager {
     
     saveAgentState() {
         // Persist agent state to localStorage
+        // Note: Agent name is now stored in sessionStorage only (cleared on app exit)
         if (window.localDB) {
             if (this.currentAgentNumber) {
                 window.localDB.setItem('currentAgentNumber', this.currentAgentNumber);
@@ -597,7 +620,13 @@ class AgentButtonsManager {
         const agentNumberInput = document.getElementById('agentNumberInput');
         const passcodeInput = document.getElementById('agentPasscodeInput');
         
-        agentNumberInput.value = this.currentAgentNumber || '';
+        // Prefill with current agent number, or last entered agent number from localStorage
+        let prefillNumber = this.currentAgentNumber;
+        if (!prefillNumber && window.localDB) {
+            prefillNumber = window.localDB.getItem('lastEnteredAgentNumber') || '';
+        }
+        agentNumberInput.value = prefillNumber;
+        
         passcodeInput.value = ''; // Always clear passcode for security
         modal.classList.remove('hidden');
         
@@ -636,6 +665,12 @@ class AgentButtonsManager {
         
         this.currentAgentNumber = agentNumber;
         this.currentAgentPasscode = passcode || null; // Store passcode if provided
+        
+        // Save last entered agent number for prefilling next time
+        if (window.localDB) {
+            window.localDB.setItem('lastEnteredAgentNumber', agentNumber);
+        }
+        
         this.hideAgentNumberModal();
         this.performLogin();
     }

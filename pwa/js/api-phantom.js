@@ -1,36 +1,31 @@
 /* ====================================================================================== */
 /* AUTOCAB365 PWA - PHANTOM API MANAGER */
-/* Provides API access to the Phantom server */
-/* Version: 0.3.29 */
+/* Provides authenticated API access to the Phantom server */
 /* ====================================================================================== */
 
 /*
 USAGE EXAMPLES:
 
-1. Basic GET request:
+1. GET request:
    const result = await App.managers.api.get('ping');
-   if (result.success) {
-       console.log('API response:', result.data);
-   }
+   if (result.success) console.log('Response:', result.data);
 
-2. POST request with data:
-   const data = { username: 'test', action: 'login' };
-   const result = await App.managers.api.post('authenticate', data);
+2. POST request:
+   const result = await App.managers.api.post('AgentfromPhone', { phone: '1001' });
+   
+3. PUT/DELETE requests:
+   const result = await App.managers.api.put('endpoint', data);
+   const result = await App.managers.api.delete('endpoint');
 
-3. Custom request:
-   const result = await App.managers.api.request('PUT', 'update-status', { status: 'busy' });
-
-4. Debug functions (available in browser console):
-   debugPhantomApiConfiguration()  - Check API configuration
-   testPhantomApiConnection()     - Test API connectivity
-   examplePhantomApiRequest()     - Make example API call
-
-5. Event listeners:
+4. Event listeners:
    App.managers.api.on('error', (error) => console.log('API Error:', error));
    App.managers.api.on('response', (data) => console.log('API Response:', data));
 
-NOTE: API automatically uses PhantomID from settings to generate server URLs.
-URL format: https://server1-{PhantomID}.phantomapi.net:19773/api/{api_name}
+CONFIGURATION:
+- useProxy: true = Use Node.js proxy (for dev/CORS issues) - Default
+- useProxy: false = Direct HTTPS API calls (for production deployment)
+- Authentication: All requests use Basic Auth with credentials from .env
+- URL format: https://server1-{PhantomID}.phantomapi.net:19773/api/{endpoint}
 */
 
 class PhantomApiManager extends EventTarget {
@@ -40,7 +35,10 @@ class PhantomApiManager extends EventTarget {
         this.config = {
             baseUrl: null,
             phantomId: null,
-            timeout: 30000 // 30 seconds default timeout
+            timeout: 30000, // 30 seconds default timeout
+            apiUsername: null,
+            apiKey: null,
+            useProxy: true // Set to false for direct API access (production deployment)
         };
         
         // Event listeners
@@ -79,7 +77,7 @@ class PhantomApiManager extends EventTarget {
     }
 
     // Initialize API configuration
-    initialize(phantomId = null) {
+    async initialize(phantomId = null) {
         try {
             // Get PhantomID from parameter or localStorage
             this.config.phantomId = phantomId || this.getPhantomId();
@@ -92,9 +90,25 @@ class PhantomApiManager extends EventTarget {
             // Generate base URL from PhantomID
             this.config.baseUrl = this.generateApiUrl(this.config.phantomId);
             
+            // Fetch API credentials from server config endpoint
+            try {
+                const response = await fetch(`/api/config?phantomId=${this.config.phantomId}`);
+                if (response.ok) {
+                    const config = await response.json();
+                    this.config.apiUsername = config.apiUsername;
+                    this.config.apiKey = config.apiKey;
+                    console.log('✅ API credentials loaded from server config');
+                } else {
+                    console.warn('Failed to fetch API credentials from server');
+                }
+            } catch (error) {
+                console.warn('Error fetching API credentials:', error);
+            }
+            
             console.log('PhantomApiManager configured:', {
                 phantomId: this.config.phantomId,
-                baseUrl: this.config.baseUrl
+                baseUrl: this.config.baseUrl,
+                hasCredentials: !!(this.config.apiUsername && this.config.apiKey)
             });
             
             this.emit('initialized', this.config);
@@ -137,7 +151,7 @@ class PhantomApiManager extends EventTarget {
         }
         
         const domain = `server1-${phantomId}.phantomapi.net`;
-        const port = 19773;
+        const port = '19773'; // Phantom API port
         const basePath = '/api';
         
         return `https://${domain}:${port}${basePath}`;
@@ -148,27 +162,31 @@ class PhantomApiManager extends EventTarget {
         return this.config.baseUrl !== null && this.config.phantomId !== null;
     }
 
-    // Build proxy URL for Node.js server
-    buildProxyUrl(apiName) {
-        // Always use the local proxy endpoint with PhantomID
-        const baseUrl = `/api/phantom/${apiName}`;
-        // Add PhantomID as query parameter if available
-        if (this.config.phantomId) {
-            return `${baseUrl}?phantomId=${this.config.phantomId}`;
+    // Build URL for API request (proxy or direct)
+    buildUrl(apiName) {
+        if (this.config.useProxy) {
+            // Use local proxy endpoint with PhantomID as query parameter
+            const proxyUrl = `/api/phantom/${apiName}`;
+            return this.config.phantomId ? `${proxyUrl}?phantomId=${this.config.phantomId}` : proxyUrl;
+        } else {
+            // Direct API access (production)
+            return `${this.config.baseUrl}/${apiName}`;
         }
-        return baseUrl;
     }
 
-    // Make HTTP request to API via proxy
+    // Make authenticated HTTP request to API (via proxy or direct)
     async request(method, apiName, data = null, options = {}) {
         try {
             // Ensure API is initialized
-            if (!this.isReady() && !this.initialize()) {
-                throw new Error('API not configured - PhantomID required');
+            if (!this.isReady()) {
+                const initialized = await this.initialize();
+                if (!initialized) {
+                    throw new Error('API not configured - PhantomID required');
+                }
             }
 
-            // Build URL (always use proxy)
-            const url = this.buildProxyUrl(apiName);
+            // Build URL (proxy or direct based on config)
+            const url = this.buildUrl(apiName);
 
             // Prepare request options
             const requestOptions = {
@@ -178,18 +196,25 @@ class PhantomApiManager extends EventTarget {
                     'Accept': 'application/json',
                     ...options.headers
                 },
-                timeout: options.timeout || this.config.timeout
+                cache: 'no-cache'
             };
+
+            // Add Basic Auth header for direct API access (proxy handles auth automatically)
+            if (!this.config.useProxy && this.config.apiUsername && this.config.apiKey) {
+                const authString = btoa(`${this.config.apiUsername}:${this.config.apiKey}`);
+                requestOptions.headers['Authorization'] = `Basic ${authString}`;
+            }
 
             // Add body for POST/PUT requests
             if (data && (method.toUpperCase() === 'POST' || method.toUpperCase() === 'PUT')) {
                 requestOptions.body = JSON.stringify(data);
             }
 
-            console.log(`PhantomAPI ${method.toUpperCase()} request (via proxy):`, {
-                url,
-                data,
-                options: requestOptions
+            console.log(`PhantomAPI ${method.toUpperCase()} request ${this.config.useProxy ? '(via proxy)' : '(direct)'}:`, {
+                url: url.replace(/phantomId=[^&]+/, 'phantomId=***'), // Mask in logs
+                method: method.toUpperCase(),
+                hasAuth: !!(this.config.apiUsername && this.config.apiKey),
+                bodyData: data
             });
 
             // Emit request event
@@ -201,21 +226,46 @@ class PhantomApiManager extends EventTarget {
             });
 
             // Make the request with timeout
-            const response = await this.fetchWithTimeout(url, requestOptions);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), options.timeout || this.config.timeout);
+            
+            const response = await fetch(url, {
+                ...requestOptions,
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
 
             // Handle response
             if (!response.ok) {
-                const errorText = await response.text();
+                let errorText;
+                try {
+                    errorText = await response.text();
+                } catch (e) {
+                    errorText = `HTTP ${response.status} - ${response.statusText}`;
+                }
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             // Parse JSON response
             let responseData;
-            try {
-                responseData = await response.json();
-            } catch (parseError) {
-                console.warn('Failed to parse JSON response, returning text:', parseError);
-                responseData = await response.text();
+            const contentType = response.headers.get('content-type') || '';
+            
+            if (contentType.includes('application/json')) {
+                try {
+                    responseData = await response.json();
+                } catch (parseError) {
+                    console.warn('Failed to parse JSON response, returning text:', parseError);
+                    responseData = await response.text();
+                }
+            } else {
+                // Try JSON first, fallback to text
+                const responseText = await response.text();
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (parseError) {
+                    responseData = responseText;
+                }
             }
 
             console.log(`PhantomAPI ${method.toUpperCase()} response:`, responseData);
@@ -238,6 +288,11 @@ class PhantomApiManager extends EventTarget {
 
         } catch (error) {
             console.error(`PhantomAPI ${method.toUpperCase()} error:`, error);
+            
+            // Handle timeout error specifically
+            if (error.name === 'AbortError') {
+                error.message = `Request timeout after ${options.timeout || this.config.timeout}ms`;
+            }
 
             // Emit error event
             this.emit('error', {
@@ -256,309 +311,60 @@ class PhantomApiManager extends EventTarget {
         }
     }
 
-    // Fetch with timeout support
-    async fetchWithTimeout(url, options) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), options.timeout);
-
-        try {
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            return response;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error.name === 'AbortError') {
-                throw new Error(`Request timeout after ${options.timeout}ms`);
-            }
-            throw error;
-        }
-    }
-
-    // Convenience method for GET requests
+    // ==================== CONVENIENCE METHODS ====================
+    
+    // GET request
     async get(apiName, options = {}) {
         return await this.request('GET', apiName, null, options);
     }
 
-    // Convenience method for POST requests
+    // POST request (most commonly used for Phantom API)
     async post(apiName, data = null, options = {}) {
         return await this.request('POST', apiName, data, options);
     }
 
-    // Convenience method for PUT requests
+    // PUT request
     async put(apiName, data = null, options = {}) {
         return await this.request('PUT', apiName, data, options);
     }
 
-    // Convenience method for DELETE requests
+    // DELETE request
     async delete(apiName, options = {}) {
         return await this.request('DELETE', apiName, null, options);
     }
 
-    // Convenience method for POST requests with Basic Authentication
+    // ==================== BACKWARD COMPATIBILITY METHODS ====================
+    // These methods maintain backward compatibility with existing code
+    // All authentication is now handled via proxy or direct API with .env credentials
+    
+    // Legacy method: postWithBasicAuth - now just calls post()
     async postWithBasicAuth(apiName, data = null, username, password, options = {}) {
-        const authString = btoa(`${username}:${password}`);
-        const authOptions = {
-            ...options,
-            headers: {
-                ...options.headers,
-                'Authorization': `Basic ${authString}`
-            }
-        };
-        return await this.request('POST', apiName, data, authOptions);
+        return await this.post(apiName, data, options);
     }
 
-    // POST request with no auth to test CORS - uses proxy to avoid CORS issues
+    // Legacy method: postSimpleNoAuth - now just calls post() with auth
     async postSimpleNoAuth(apiName, data = null, options = {}) {
-        try {
-            // Ensure API is initialized
-            if (!this.isReady() && !this.initialize()) {
-                throw new Error('API not configured - PhantomID required');
-            }
-
-            // Build proxy URL with only PhantomID as query parameter
-            let url = `/api/phantom/${apiName}`;
-            if (this.config.phantomId) {
-                url += `?phantomId=${this.config.phantomId}`;
-            }
-
-            console.log(`PhantomAPI Simple POST request (via proxy):`, {
-                fullUrl: url,
-                apiName,
-                phantomId: this.config.phantomId,
-                bodyData: data
-            });
-
-            // Emit request event
-            this.emit('request', {
-                method: 'POST',
-                url,
-                apiName,
-                data
-            });
-
-            // POST request with JSON body through proxy
-            const requestOptions = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: data ? JSON.stringify(data) : null,
-                cache: 'no-cache'
-            };
-
-            // Make the request with timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), options.timeout || this.config.timeout);
-            
-            const response = await fetch(url, {
-                ...requestOptions,
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            // Handle response
-            if (!response.ok) {
-                let errorText;
-                try {
-                    errorText = await response.text();
-                } catch (e) {
-                    errorText = `HTTP ${response.status} - ${response.statusText}`;
-                }
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
-            }
-
-            // Parse response
-            let responseData;
-            const contentType = response.headers.get('content-type') || '';
-            
-            if (contentType.includes('application/json')) {
-                try {
-                    responseData = await response.json();
-                } catch (parseError) {
-                    console.warn('Failed to parse JSON response despite content-type, returning text:', parseError);
-                    responseData = await response.text();
-                }
-            } else {
-                // Try JSON first, fallback to text
-                const responseText = await response.text();
-                try {
-                    responseData = JSON.parse(responseText);
-                } catch (parseError) {
-                    responseData = responseText;
-                }
-            }
-
-            console.log(`PhantomAPI Simple POST response:`, responseData);
-
-            // Emit success event
-            this.emit('response', {
-                method: 'POST',
-                url,
-                apiName,
-                data: responseData,
-                status: response.status
-            });
-
-            return responseData; // Return data directly to match existing API
-
-        } catch (error) {
-            console.error(`PhantomAPI Simple POST error:`, error);
-            
-            // Handle timeout error specifically
-            if (error.name === 'AbortError') {
-                error.message = `Request timeout after ${options.timeout || this.config.timeout}ms`;
-            }
-            
-            // Emit error event
-            this.emit('error', {
-                type: 'request',
-                method: 'POST',
-                apiName,
-                error,
-                message: error.message
-            });
-
-            return {
-                success: false,
-                error: error.message,
-                data: null
-            };
-        }
+        // This method returns data directly (not wrapped in success/data object)
+        // to maintain backward compatibility with existing code
+        const result = await this.post(apiName, data, options);
+        return result.success ? result.data : result;
     }
 
-    // POST request with Basic Auth through proxy
+    // Legacy method: postWithBasicAuthSimple - now just calls post()
     async postWithBasicAuthSimple(apiName, data = null, username, password, options = {}) {
-        try {
-            // Ensure API is initialized
-            if (!this.isReady() && !this.initialize()) {
-                throw new Error('API not configured - PhantomID required');
-            }
+        // This method returns data directly (not wrapped in success/data object)
+        // to maintain backward compatibility with existing code
+        const result = await this.post(apiName, data, options);
+        return result.success ? result.data : result;
+    }
 
-            // Build proxy URL with PhantomID and auth as query parameters
-            let url = `/api/phantom/${apiName}`;
-            const params = new URLSearchParams();
-            
-            // Add PhantomID
-            if (this.config.phantomId) {
-                params.append('phantomId', this.config.phantomId);
-            }
-            
-            // Add basic auth to URL (as query params to avoid Authorization header)
-            if (username && password) {
-                params.append('auth_user', username);
-                params.append('auth_pass', password);
-            }
-
-            if (params.toString()) {
-                url += '?' + params.toString();
-            }
-
-            console.log(`PhantomAPI POST with Basic Auth (via proxy):`, {
-                url: url.replace(/auth_pass=[^&]+/, 'auth_pass=***'), // Hide password in logs
-                bodyData: data
-            });
-
-            // Emit request event
-            this.emit('request', {
-                method: 'POST',
-                url,
-                apiName,
-                data
-            });
-
-            // POST request with JSON body through proxy
-            const requestOptions = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: data ? JSON.stringify(data) : null,
-                cache: 'no-cache'
-            };
-
-            // Make the request with timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), options.timeout || this.config.timeout);
-            
-            const response = await fetch(url, {
-                ...requestOptions,
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            // Handle response
-            if (!response.ok) {
-                let errorText;
-                try {
-                    errorText = await response.text();
-                } catch (e) {
-                    errorText = `HTTP ${response.status} - ${response.statusText}`;
-                }
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
-            }
-
-            // Parse response
-            let responseData;
-            const contentType = response.headers.get('content-type') || '';
-            
-            if (contentType.includes('application/json')) {
-                try {
-                    responseData = await response.json();
-                } catch (parseError) {
-                    console.warn('Failed to parse JSON response despite content-type, returning text:', parseError);
-                    responseData = await response.text();
-                }
-            } else {
-                // Try JSON first, fallback to text
-                const responseText = await response.text();
-                try {
-                    responseData = JSON.parse(responseText);
-                } catch (parseError) {
-                    responseData = responseText;
-                }
-            }
-
-            console.log(`PhantomAPI Simple POST response:`, responseData);
-
-            // Emit success event
-            this.emit('response', {
-                method: 'POST',
-                url,
-                apiName,
-                data: responseData,
-                status: response.status
-            });
-
-            return responseData; // Return data directly to match existing API
-
-        } catch (error) {
-            console.error(`PhantomAPI Simple POST error:`, error);
-            
-            // Handle timeout error specifically
-            if (error.name === 'AbortError') {
-                error.message = `Request timeout after ${options.timeout || this.config.timeout}ms`;
-            }
-            
-            // Emit error event
-            this.emit('error', {
-                type: 'request',
-                method: 'POST',
-                apiName,
-                error,
-                message: error.message
-            });
-
-            return {
-                success: false,
-                error: error.message,
-                data: null
-            };
-        }
+    // ==================== CONFIGURATION METHODS ====================
+    
+    // Switch between proxy mode (dev) and direct API mode (production)
+    setProxyMode(useProxy) {
+        this.config.useProxy = useProxy;
+        console.log(`PhantomAPI mode: ${useProxy ? 'PROXY (via Node.js)' : 'DIRECT (production)'}`);
+        this.emit('configUpdated', this.config);
     }
 
     // Update configuration
@@ -626,6 +432,8 @@ class PhantomApiManager extends EventTarget {
             config: this.config,
             isReady: this.isReady(),
             phantomId: this.getPhantomId(),
+            mode: this.config.useProxy ? 'PROXY' : 'DIRECT',
+            hasCredentials: !!(this.config.apiUsername && this.config.apiKey),
             listeners: Array.from(this.listeners.keys())
         });
     }
@@ -635,3 +443,31 @@ class PhantomApiManager extends EventTarget {
 if (typeof window !== 'undefined') {
     window.PhantomApiManager = PhantomApiManager;
 }
+
+/* ====================================================================================== */
+/* REFACTORING NOTES - December 2025 */
+/* ====================================================================================== */
+/*
+CHANGES MADE:
+1. Consolidated all API methods into single request() method
+2. All requests now use Basic Authentication (credentials from .env via server config)
+3. Added useProxy flag to easily switch between proxy (dev) and direct (production) modes
+4. Removed redundant code and duplicate methods
+5. Simplified backward compatibility methods to just call main methods
+6. All responses return standard JSON format
+
+REMOVED/CONSOLIDATED:
+- fetchWithTimeout() - functionality moved into request() method
+- Duplicate POST methods (postSimpleNoAuth, postWithBasicAuthSimple) - now just wrappers
+- No-auth request functions - all requests now authenticated
+- Redundant error handling - centralized in request() method
+
+TO SWITCH TO DIRECT API MODE (Production):
+Set config.useProxy = false or call: App.managers.api.setProxyMode(false);
+
+AUTHENTICATION:
+- In proxy mode: Server adds Basic Auth from .env (PHANTOM_API_USERNAME, PHANTOM_API_KEY)
+- In direct mode: Client adds Basic Auth from fetched credentials
+- All API calls are now authenticated via HTTPS
+
+*/

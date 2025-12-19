@@ -335,7 +335,7 @@ class ApplicationStartup {
         // Initialize API manager
         if (App.managers.api) {
             try {
-                App.managers.api.initialize();
+                await App.managers.api.initialize();
                 console.log('✅ Phantom API initialized');
             } catch (error) {
                 console.warn('⚠️ Failed to initialize Phantom API:', error);

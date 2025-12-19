@@ -86,12 +86,24 @@ app.use('/api/phantom', createProxyMiddleware({
   router: (req) => {
     // Extract phantomId from query string
     const phantomId = req.query.phantomId || '000';
-    const target = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}`;
+    const apiPort = process.env.PHANTOM_API_PORT || 19773;
+    const target = `https://server1-${phantomId}.phantomapi.net:${apiPort}`;
     console.log(`[PROXY ROUTER] Routing to: ${target}`);
     return target;
   },
   onProxyReq: (proxyReq, req, res) => {
     const phantomId = req.query.phantomId || '000';
+    const apiUsername = process.env.PHANTOM_API_USERNAME;
+    const apiKey = process.env.PHANTOM_API_KEY;
+    
+    if (apiUsername && apiKey) {
+      const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
+      proxyReq.setHeader('Authorization', `Basic ${authString}`);
+      console.log(`[AUTH]    Added Basic Auth for user: ${apiUsername}`);
+    } else {
+      console.warn(`[AUTH]    Missing PHANTOM_API_USERNAME or PHANTOM_API_KEY in .env file`);
+    }
+    
     console.log(`\n========== PROXY REQUEST ==========`);
     console.log(`[TIME]    ${new Date().toISOString()}`);
     console.log(`[METHOD]  ${req.method}`);
@@ -146,6 +158,7 @@ app.get('/api/config', (req, res) => {
   const wssPath = '/ws';
   const sipPort = 5061;
   const sipServer = domain;
+  const apiPort = process.env.PHANTOM_API_PORT || 19773;
   
   res.json({
     phantomId,
@@ -155,7 +168,9 @@ app.get('/api/config', (req, res) => {
     sipDomain: domain,
     sipServer,
     sipPort,
-    phantomApiBase: `https://${domain}:19773/api`,
+    phantomApiBase: `https://${domain}:${apiPort}/api`,
+    apiUsername: process.env.PHANTOM_API_USERNAME,
+    apiKey: process.env.PHANTOM_API_KEY
   });
 });
 

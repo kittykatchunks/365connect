@@ -15,8 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 /* AUTOCAB365CONNECT PWA - MAIN APPLICATION */
-/* Version: 0.1.001 */
-/* Refactored with Class-based Architecture */
 /* ====================================================================================== */
 
 // Global application state
@@ -283,16 +281,6 @@ async function showTransferModal() {
                     tabIndex: transferInput.tabIndex,
                     style: getComputedStyle(transferInput).pointerEvents
                 });
-                
-                // Test typing capability
-/*                 setTimeout(() => {
-                    transferInput.value = 'TEST';
-                    console.log('🧪 Test input set to "TEST" - if you see this, input is working');
-                    setTimeout(() => {
-                        transferInput.value = '';
-                        console.log('🧹 Test cleared - ready for user input');
-                    }, 1000);
-                }, 500); */
             }
         }, 150);
     } else {
@@ -1391,7 +1379,7 @@ function loadSettingsFromDatabase() {
     updateNotificationStatusDisplay();
 }
 
-function saveSettings() {
+async function saveSettings() {
     console.log('Saving settings...');
     
     try {
@@ -1448,7 +1436,7 @@ function saveSettings() {
                     // Reinitialize API manager with new PhantomID
                     if (App.managers?.api) {
                         try {
-                            App.managers.api.initialize(phantomID);
+                            await App.managers.api.initialize(phantomID);
                             console.log('✅ Phantom API reinitialized with new PhantomID');
                         } catch (error) {
                             console.warn('⚠️ Failed to reinitialize Phantom API:', error);
@@ -3426,6 +3414,14 @@ window.addEventListener('beforeunload', () => {
     
     App.timers.forEach(timerId => clearInterval(timerId));
     App.timers.clear();
+    
+    // Clear session-specific agent data (agent name cache)
+    try {
+        sessionStorage.removeItem('cachedAgentName');
+        console.log('✅ Cleared session cache for agent data');
+    } catch (e) {
+        console.warn('Failed to clear session cache:', e);
+    }
     
     if (App.managers.sip) {
         App.managers.sip.destroy();
