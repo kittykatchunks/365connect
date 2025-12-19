@@ -35,8 +35,8 @@ class PhantomApiManager extends EventTarget {
             baseUrl: null,
             phantomId: null,
             timeout: 30000, // 30 seconds default timeout
-            apiUsername: null,
-            apiKey: null,
+            apiUsername: process.env.PHANTOM_API_USERNAME || null,
+            apiKey: process.env.PHANTOM_API_KEY || null,
             useProxy: true // Set to false for direct API access (production deployment)
         };
         
