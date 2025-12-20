@@ -1,4 +1,4 @@
-const cacheID = "autocab365connect_v2"; // Increment version
+const cacheID = "autocab365connect_v3"; // Increment version - v3: Updated busylight-manager.js
 
 const CacheItems = [
     // Core files
@@ -72,12 +72,14 @@ self.addEventListener('activate', function(event){
 
 
 self.addEventListener("fetch", function(event){
-    // Exclude API proxy routes from caching
+    // Don't intercept API routes - let them pass through to the network naturally
+    // This allows proper error handling in the application
     if (event.request.url.includes('/api/')) {
-        // Always use network for API requests
-        event.respondWith(fetch(event.request));
+        // Return early without calling event.respondWith()
+        // This lets the browser handle the request normally
         return;
     }
+    
     if(event.request.url.endsWith("index.html")){
         console.log("Special Home Page handling...", event.request.url);
         event.respondWith(loadHomePage(event.request));
