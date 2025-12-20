@@ -216,10 +216,6 @@ class ApplicationStartup {
     }
     
     async createManagers() {
-        console.log('📱 Creating Sidebar Manager...');
-        App.managers.sidebar = new SidebarManager();
-        console.log('✅ Sidebar Manager created');
-        
         console.log('🎨 Creating UI State Manager...');
         App.managers.ui = new UIStateManager();
         console.log('✅ UI State Manager created');
