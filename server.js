@@ -270,7 +270,6 @@ if (sslOptions) {
   });
   
   // Start HTTP redirect server
-  /*
   http.createServer((req, res) => {
     res.writeHead(301, { 
       Location: `https://${req.headers.host}${req.url}` 
@@ -279,7 +278,6 @@ if (sslOptions) {
   }).listen(HTTP_PORT, () => {
     console.log(`✓ HTTP redirect server running on port ${HTTP_PORT} → HTTPS`);
   });
-  */
   
 } else {
   // No SSL certificates - run HTTP only
