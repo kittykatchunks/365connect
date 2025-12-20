@@ -1,37 +1,324 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Busylight WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #555;
+            font-size: 18px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        .connect-btn {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        .disconnect-btn {
+            background: #f44336;
+            color: white;
+        }
+        .state-btn {
+            background: #2196F3;
+            color: white;
+        }
+        .color-btn {
+            background: #FF9800;
+            color: white;
+        }
+        .action-btn {
+            background: #9C27B0;
+            color: white;
+        }
+        #status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        #status.connected {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        #status.disconnected {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        #messages {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .message.sent {
+            color: #1565c0;
+        }
+        .message.received {
+            color: #2e7d32;
+        }
+        .message.error {
+            color: #c62828;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
 <body>
-    <button onclick="connect()">Connect</button>
-    <button onclick="send()">Send Test</button>
-    <div id="status"></div>
-    <div id="messages"></div>
+    <h1>🚦 Busylight WebSocket Test Interface</h1>
+
+    <div class="section">
+        <h2>Connection</h2>
+        <button class="connect-btn" onclick="connect()">Connect to WebSocket</button>
+        <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
+        <div id="status" class="disconnected">Disconnected</div>
+    </div>
+
+    <div class="section">
+        <h2>State Commands</h2>
+        <button class="state-btn" onclick="setState('offline')">Offline (Gray)</button>
+        <button class="state-btn" onclick="setState('registered')">Registered (Blue)</button>
+        <button class="state-btn" onclick="setState('idle')">Idle (Green)</button>
+        <button class="state-btn" onclick="setState('ringing')">Ringing (Red Flash)</button>
+        <button class="state-btn" onclick="setState('active')">Active Call (Red)</button>
+        <button class="state-btn" onclick="setState('hold')">Hold (Yellow Flash)</button>
+    </div>
+
+    <div class="section">
+        <h2>Direct Light Control</h2>
+        <button class="color-btn" onclick="setColor(100, 0, 0)">Red</button>
+        <button class="color-btn" onclick="setColor(0, 100, 0)">Green</button>
+        <button class="color-btn" onclick="setColor(0, 0, 100)">Blue</button>
+        <button class="color-btn" onclick="setColor(100, 100, 0)">Yellow</button>
+        <button class="color-btn" onclick="setColor(100, 0, 100)">Magenta</button>
+        <button class="color-btn" onclick="setColor(0, 100, 100)">Cyan</button>
+        <button class="color-btn" onclick="setColor(100, 100, 100)">White</button>
+        <button class="action-btn" onclick="turnOff()">Turn Off</button>
+    </div>
+
+    <div class="section">
+        <h2>Custom RGB Color</h2>
+        <div class="controls">
+            <label>R:</label>
+            <input type="number" id="red" min="0" max="100" value="50">
+            <label>G:</label>
+            <input type="number" id="green" min="0" max="100" value="50">
+            <label>B:</label>
+            <input type="number" id="blue" min="0" max="100" value="50">
+            <button class="color-btn" onclick="setCustomColor()">Set Custom Color</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Alert (with Sound)</h2>
+        <div class="controls">
+            <label>Sound:</label>
+            <input type="number" id="sound" min="1" max="7" value="3">
+            <label>Volume:</label>
+            <input type="number" id="volume" min="0" max="100" value="50">
+            <button class="action-btn" onclick="setAlert()">Play Alert</button>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+            Sounds: 1=OpenOffice, 2=Quiet, 3=Funky, 4=FairyTale, 5=KuandoTrain, 6=Telephone, 7=HighPitch
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Blink Pattern</h2>
+        <div class="controls">
+            <label>On Time:</label>
+            <input type="number" id="ontime" min="1" max="100" value="5">
+            <label>Off Time:</label>
+            <input type="number" id="offtime" min="1" max="100" value="5">
+            <button class="action-btn" onclick="setBlink()">Set Blink</button>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+            Uses last set color or custom RGB values above. Time in 100ms units (5 = 500ms)
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Messages</h2>
+        <button onclick="clearMessages()">Clear Messages</button>
+        <div id="messages"></div>
+    </div>
 
     <script>
         let ws;
         
         function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addMessage('Already connected', 'error');
+                return;
+            }
+
             ws = new WebSocket('ws://localhost:19774/ws');
             
             ws.onopen = () => {
-                document.getElementById('status').innerHTML = 'Connected ✓';
+                const status = document.getElementById('status');
+                status.innerHTML = 'Connected ✓';
+                status.className = 'connected';
+                addMessage('WebSocket connected successfully', 'received');
             };
             
             ws.onmessage = (event) => {
-                document.getElementById('messages').innerHTML += 
-                    '<br>Received: ' + event.data;
+                addMessage('← Received: ' + event.data, 'received');
             };
             
             ws.onerror = (error) => {
-                document.getElementById('status').innerHTML = 
-                    'Error: ' + error;
+                addMessage('WebSocket error: ' + error, 'error');
+            };
+
+            ws.onclose = () => {
+                const status = document.getElementById('status');
+                status.innerHTML = 'Disconnected';
+                status.className = 'disconnected';
+                addMessage('WebSocket disconnected', 'error');
             };
         }
-        
-        function send() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send('Hello from test page');
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
             }
         }
+
+        function sendCommand(command) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addMessage('Not connected! Click "Connect to WebSocket" first.', 'error');
+                return false;
+            }
+
+            const json = JSON.stringify(command);
+            ws.send(json);
+            addMessage('→ Sent: ' + json, 'sent');
+            return true;
+        }
+
+        function setState(state) {
+            sendCommand({ action: 'state', state: state });
+        }
+
+        function setColor(red, green, blue) {
+            sendCommand({ 
+                action: 'light', 
+                red: red, 
+                green: green, 
+                blue: blue 
+            });
+        }
+
+        function setCustomColor() {
+            const red = parseInt(document.getElementById('red').value);
+            const green = parseInt(document.getElementById('green').value);
+            const blue = parseInt(document.getElementById('blue').value);
+            setColor(red, green, blue);
+        }
+
+        function setAlert() {
+            const red = parseInt(document.getElementById('red').value);
+            const green = parseInt(document.getElementById('green').value);
+            const blue = parseInt(document.getElementById('blue').value);
+            const sound = parseInt(document.getElementById('sound').value);
+            const volume = parseInt(document.getElementById('volume').value);
+            
+            sendCommand({
+                action: 'alert',
+                red: red,
+                green: green,
+                blue: blue,
+                sound: sound,
+                volume: volume
+            });
+        }
+
+        function setBlink() {
+            const red = parseInt(document.getElementById('red').value);
+            const green = parseInt(document.getElementById('green').value);
+            const blue = parseInt(document.getElementById('blue').value);
+            const ontime = parseInt(document.getElementById('ontime').value);
+            const offtime = parseInt(document.getElementById('offtime').value);
+            
+            sendCommand({
+                action: 'blink',
+                red: red,
+                green: green,
+                blue: blue,
+                ontime: ontime,
+                offtime: offtime
+            });
+        }
+
+        function turnOff() {
+            sendCommand({ action: 'off' });
+        }
+
+        function addMessage(msg, type = 'sent') {
+            const messagesDiv = document.getElementById('messages');
+            const timestamp = new Date().toLocaleTimeString();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ' + type;
+            msgDiv.textContent = `[${timestamp}] ${msg}`;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        // Auto-connect on load
+        window.onload = () => {
+            addMessage('Page loaded. Click "Connect to WebSocket" to begin.', 'received');
+        };
     </script>
 </body>
 </html>
