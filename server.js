@@ -15,7 +15,7 @@ const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
 const PROXY_PORT = process.env.PHANTOM_API_PORT || 443;
 const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server1-000.phantomapi.net';
-const BUSYLIGHT_BRIDGE_URL = process.env.BUSYLIGHT_BRIDGE_URL || 'ws://localhost:19774';
+const BUSYLIGHT_BRIDGE_URL = process.env.BUSYLIGHT_BRIDGE_URL || 'ws://127.0.0.1:19774/ws';
 
 // Let's Encrypt certificate paths
 const LETSENCRYPT_CERT = './certs/fullchain.pem';

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <button onclick="connect()">Connect</button>
+    <button onclick="send()">Send Test</button>
+    <div id="status"></div>
+    <div id="messages"></div>
+
+    <script>
+        let ws;
+        
+        function connect() {
+            ws = new WebSocket('ws://localhost:19774/ws');
+            
+            ws.onopen = () => {
+                document.getElementById('status').innerHTML = 'Connected ✓';
+            };
+            
+            ws.onmessage = (event) => {
+                document.getElementById('messages').innerHTML += 
+                    '<br>Received: ' + event.data;
+            };
+            
+            ws.onerror = (error) => {
+                document.getElementById('status').innerHTML = 
+                    'Error: ' + error;
+            };
+        }
+        
+        function send() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send('Hello from test page');
+            }
+        }
+    </script>
+</body>
+</html>
