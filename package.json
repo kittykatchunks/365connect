@@ -17,7 +17,6 @@
     "http-proxy-middleware": "^2.0.9",
     "sip.js": "^0.21.2",
     "ws": "^8.18.3"
-
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
