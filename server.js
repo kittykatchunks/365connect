@@ -249,6 +249,8 @@ else if (fs.existsSync(SSL_CERT_PATH) && fs.existsSync(SSL_KEY_PATH)) {
 // Start servers based on available certificates
 if (sslOptions) {
   // Start HTTPS server
+  const httpsServer = https.createServer(sslOptions, app);
+  
   // Enable WebSocket upgrade handling for proxies
   httpsServer.on('upgrade', (req, socket, head) => {
     console.log(`[WebSocket] Upgrade request: ${req.url}`);
@@ -265,8 +267,6 @@ if (sslOptions) {
     console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
     console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
     console.log(`  WebSocket support: ENABLED for Busylight Bridge`);
-    console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
-    console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
   });
   
   // Start HTTP redirect server
