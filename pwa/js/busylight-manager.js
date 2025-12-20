@@ -4,7 +4,7 @@ class BusylightManager {
         this.connected = false;
         this.baseUrl = null;
         this.bridgeUrl = '/api/busylight'; // Proxy through Express server (HTTPS-safe)
-        this.websocketUrl = `wss://${window.location.host}/api/busylight`; // WebSocket through proxy (ws param in middleware)
+        this.websocketUrl = `ws://127.0.0.1:19774/ws`; // WebSocket through proxy (ws param in middleware)
         this.websocket = null;
         this.useWebSocket = true;
         this.connectionMode = 'none'; // 'websocket', 'http', or 'none'
@@ -45,7 +45,7 @@ class BusylightManager {
         
         // Bridge connection settings - use proxied URLs by default (HTTPS-safe)
         const defaultBridgeUrl = '/api/busylight';
-        const defaultWsUrl = `wss://${window.location.host}/api/busylight`;
+        const defaultWsUrl = `ws://127.0.0.1:19774/ws`;
         
         this.bridgeUrl = window.localDB.getItem("BusylightBridgeUrl", defaultBridgeUrl);
         this.websocketUrl = window.localDB.getItem("BusylightWebSocketUrl", defaultWsUrl);
