@@ -5,7 +5,7 @@ const CacheItems = [
     "index.html",
     "offline.html",
     "favicon.ico",
-    "manifest.json",
+    // NOTE: manifest.json is NOT cached - always fetch fresh from server
     
     // Application files
     "js/agent-buttons.js",
@@ -77,6 +77,12 @@ self.addEventListener("fetch", function(event){
     if (event.request.url.includes('/api/')) {
         // Return early without calling event.respondWith()
         // This lets the browser handle the request normally
+        return;
+    }
+    
+    // Don't cache manifest.json - always fetch fresh
+    if (event.request.url.includes('manifest.json')) {
+        event.respondWith(fetch(event.request));
         return;
     }
     
