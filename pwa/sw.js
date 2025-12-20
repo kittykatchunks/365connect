@@ -1,4 +1,4 @@
-const cacheID = "autocab365connect_v0_1_001"; // Increment version
+const cacheID = "autocab365connect_v2"; // Increment version
 
 const CacheItems = [
     // Core files

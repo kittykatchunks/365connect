@@ -44,16 +44,6 @@ app.use(cors({
 
 app.use(compression());
 
-// Basic rate limiting (100 requests per 15 minutes per IP)
-/*
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-}));
-*/
-
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.protocol} ${req.method} ${req.originalUrl}`);
   console.log(`Host: ${req.get('host')}`);
@@ -87,7 +77,8 @@ app.use('/api/phantom', createProxyMiddleware({
   router: (req) => {
     // Extract phantomId from query string
     const phantomId = req.query.phantomId || '000';
-    const apiPort = process.env.PHANTOM_API_PORT || 19773;
+    console.log(`[PROXY ROUTER] phantomId: ${phantomId}`);
+    const apiPort = process.env.PHANTOM_API_PORT || 443;
     const target = `https://server1-${phantomId}.phantomapi.net:${apiPort}`;
     console.log(`[PROXY ROUTER] Routing to: ${target}`);
     return target;
@@ -187,7 +178,7 @@ app.get('/api/config', (req, res) => {
   const wssPath = '/ws';
   const sipPort = 5061;
   const sipServer = domain;
-  const apiPort = process.env.PHANTOM_API_PORT || 19773;
+  const apiPort = process.env.PHANTOM_API_PORT || 443;
   
   res.json({
     phantomId,
