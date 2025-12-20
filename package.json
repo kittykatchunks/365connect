@@ -15,8 +15,9 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^7.2.0",
     "http-proxy-middleware": "^2.0.9",
-    "ws": "^8.18.3",
-    "sip.js": "^0.21.2"
+    "sip.js": "^0.21.2",
+    "ws": "^8.18.3"
+
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
