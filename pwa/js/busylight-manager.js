@@ -3,12 +3,20 @@ class BusylightManager {
         this.enabled = false;
         this.connected = false;
         this.baseUrl = null;
+        this.bridgeUrl = '/api/busylight'; // Proxy through Express server (HTTPS-safe)
+        this.websocketUrl = `wss://${window.location.host}/api/busylight/ws`; // Secure WebSocket through proxy
+        this.websocket = null;
+        this.useWebSocket = true;
+        this.connectionMode = 'none'; // 'websocket', 'http', or 'none'
         this.monitoringInterval = null;
         this.lastVoicemailCount = 0;
         this.currentCallState = 'offline';
         this.configDialog = null;
         this.flashingInterval = null;
         this.isFlashing = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectDelay = 2000;
         
         // Load settings from localStorage
         this.loadSettings();
@@ -35,11 +43,21 @@ class BusylightManager {
         this.enabled = (window.localDB.getItem("BusylightEnabled", "0") === "1");
         this.baseUrl = window.localDB.getItem("BusylightUrl", "http://localhost:8989");
         
-        // Migration: Update 127.0.0.1 to localhost and old API format
-        if (this.baseUrl === "http://127.0.0.1:8989" || this.baseUrl === "http://127.0.0.1:8989/api") {
-            this.baseUrl = "http://localhost:8989";
-            window.localDB.setItem("BusylightUrl", this.baseUrl);
-            console.log("[Busylight] Migrated URL to localhost");
+        // Bridge connection settings - use proxied URLs by default (HTTPS-safe)
+        const defaultBridgeUrl = '/api/busylight';
+        const defaultWsUrl = `wss://${window.location.host}/api/busylight/ws`;
+        
+        this.bridgeUrl = window.localDB.getItem("BusylightBridgeUrl", defaultBridgeUrl);
+        this.websocketUrl = window.localDB.getItem("BusylightWebSocketUrl", defaultWsUrl);
+        this.useWebSocket = (window.localDB.getItem("BusylightUseWebSocket", "1") === "1");
+        
+        // Migration: Update old URLs to use proxy
+        if (this.bridgeUrl === "http://localhost:19774" || this.bridgeUrl.startsWith("http://localhost")) {
+            this.bridgeUrl = defaultBridgeUrl;
+            this.websocketUrl = defaultWsUrl;
+            window.localDB.setItem("BusylightBridgeUrl", this.bridgeUrl);
+            window.localDB.setItem("BusylightWebSocketUrl", this.websocketUrl);
+            console.log("[Busylight] Migrated to use HTTPS proxy");
         }
     }
 
@@ -47,13 +65,18 @@ class BusylightManager {
     saveSettings() {
         localDB.setItem("BusylightEnabled", this.enabled ? "1" : "0");
         localDB.setItem("BusylightUrl", this.baseUrl || "http://localhost:8989");
+        localDB.setItem("BusylightBridgeUrl", this.bridgeUrl || "http://localhost:19774");
+        localDB.setItem("BusylightWebSocketUrl", this.websocketUrl || "ws://localhost:19774/ws");
+        localDB.setItem("BusylightUseWebSocket", this.useWebSocket ? "1" : "0");
     }
 
     // Initialize busylight connection and setup event listeners
     async initialize() {
-        console.log('[Busylight] Initializing Kuando Busylight service...');
+        console.log('[Busylight] Initializing Busylight Bridge service...');
         console.log('[Busylight] Enabled:', this.enabled);
-        console.log('[Busylight] Base URL:', this.baseUrl);
+        console.log('[Busylight] Bridge URL:', this.bridgeUrl);
+        console.log('[Busylight] WebSocket URL:', this.websocketUrl);
+        console.log('[Busylight] Use WebSocket:', this.useWebSocket);
         
         // Setup event listeners regardless of enabled state
         this.setupEventListeners();
@@ -63,66 +86,155 @@ class BusylightManager {
             return false;
         }
 
-        if (!this.baseUrl) {
-            console.warn("[Busylight] URL not configured - using default");
-            this.baseUrl = "http://localhost:8989";
+        // Try WebSocket connection first
+        if (this.useWebSocket) {
+            const wsConnected = await this.connectWebSocket();
+            if (wsConnected) {
+                console.log("[Busylight] Connected via WebSocket");
+                this.connectionMode = 'websocket';
+                await this.testConnection();
+                this.startMonitoring();
+                await this.updateStateFromSystem();
+                return true;
+            }
+            console.log("[Busylight] WebSocket connection failed, trying HTTP fallback...");
         }
 
-        const connected = await this.checkConnection();
-        if (connected) {
+        // Fallback to HTTP
+        const httpConnected = await this.checkHttpConnection();
+        if (httpConnected) {
+            console.log("[Busylight] Connected via HTTP");
+            this.connectionMode = 'http';
             await this.testConnection();
             this.startMonitoring();
             await this.updateStateFromSystem();
             return true;
-        } else {
-            this.showConnectionError();
-            return false;
+        }
+
+        console.warn("[Busylight] Failed to connect via WebSocket and HTTP");
+        this.connectionMode = 'none';
+        this.showConnectionError();
+        return false;
+    }
+
+    // Connect to Busylight Bridge via WebSocket
+    async connectWebSocket() {
+        return new Promise((resolve) => {
+            try {
+                console.log(`[Busylight] Attempting WebSocket connection to ${this.websocketUrl}`);
+                
+                this.websocket = new WebSocket(this.websocketUrl);
+                
+                const timeout = setTimeout(() => {
+                    if (this.websocket && this.websocket.readyState !== WebSocket.OPEN) {
+                        console.warn("[Busylight] WebSocket connection timeout");
+                        this.websocket.close();
+                        this.websocket = null;
+                        resolve(false);
+                    }
+                }, 5000);
+
+                this.websocket.onopen = () => {
+                    clearTimeout(timeout);
+                    console.log("[Busylight] WebSocket connection established");
+                    this.connected = true;
+                    this.reconnectAttempts = 0;
+                    resolve(true);
+                };
+
+                this.websocket.onclose = (event) => {
+                    console.log(`[Busylight] WebSocket closed: ${event.code} - ${event.reason}`);
+                    this.connected = false;
+                    this.websocket = null;
+                    
+                    // Attempt to reconnect if enabled
+                    if (this.enabled && this.reconnectAttempts < this.maxReconnectAttempts) {
+                        this.reconnectAttempts++;
+                        console.log(`[Busylight] Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+                        setTimeout(() => this.connectWebSocket(), this.reconnectDelay * this.reconnectAttempts);
+                    } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+                        console.warn("[Busylight] Max reconnection attempts reached, falling back to HTTP");
+                        this.connectionMode = 'http';
+                    }
+                };
+
+                this.websocket.onerror = (error) => {
+                    clearTimeout(timeout);
+                    console.error("[Busylight] WebSocket error:", error);
+                    this.connected = false;
+                    if (this.websocket) {
+                        this.websocket.close();
+                        this.websocket = null;
+                    }
+                    resolve(false);
+                };
+
+                this.websocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this.handleWebSocketMessage(data);
+                    } catch (error) {
+                        console.error("[Busylight] Error parsing WebSocket message:", error);
+                    }
+                };
+
+            } catch (error) {
+                console.error("[Busylight] Error creating WebSocket:", error);
+                resolve(false);
+            }
+        });
+    }
+
+    // Handle incoming WebSocket messages
+    handleWebSocketMessage(data) {
+        console.log("[Busylight] WebSocket message received:", data);
+        
+        if (data.type === 'status') {
+            this.connected = data.connected || false;
+            if (data.deviceCount !== undefined) {
+                console.log(`[Busylight] ${data.deviceCount} device(s) connected`);
+            }
+        } else if (data.type === 'error') {
+            console.error("[Busylight] Bridge error:", data.message);
+        } else if (data.type === 'response') {
+            // Response to a command
+            console.log("[Busylight] Command response:", data);
         }
     }
 
-    // Check if Busylight service is responding and has devices
-    async checkConnection() {
+    // Check HTTP connection to bridge
+    async checkHttpConnection() {
         try {
-            // First check if the HTTP service is responding
-            const response = await fetch(`${this.baseUrl}?action=currentpresence`, {
+            console.log(`[Busylight] Checking HTTP connection to ${this.bridgeUrl}`);
+            
+            const response = await fetch(`${this.bridgeUrl}?action=currentpresence`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(3000)
             });
 
             if (!response.ok) {
-                this.connected = false;
-                console.warn("[Busylight] Kuando HTTP service returned error:", response.status);
+                console.warn("[Busylight] HTTP Bridge returned error:", response.status);
                 return false;
             }
 
-            console.log("[Busylight] Kuando HTTP service is responding");
-
-            // Now check if any actual devices are connected
-            try {
-                const devices = await this.getDevices();
-
-                if (!devices || devices.length === 0) {
-                    console.warn("[Busylight] Kuando HTTP service running but no devices connected");
-                    this.connected = false;
-                    return false;
-                }
-
-                console.log(`[Busylight] Kuando service running with ${devices.length} device(s) connected`);
-                this.connected = true;
-                return true;
-
-            } catch (deviceError) {
-                console.warn("[Busylight] Could not check for devices:", deviceError.message);
-                // If we can't check devices but service responds, assume connection for now
-                this.connected = true;
-                return true;
-            }
+            console.log("[Busylight] HTTP Bridge is responding");
+            this.connected = true;
+            return true;
 
         } catch (error) {
+            console.warn("[Busylight] HTTP Bridge not reachable:", error.message);
             this.connected = false;
-            console.warn("[Busylight] Kuando Busylight service not reachable:", error.message);
             return false;
         }
+    }
+    // Check connection (used by monitoring)
+    async checkConnection() {
+        if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            return true;
+        } else if (this.connectionMode === 'http') {
+            return await this.checkHttpConnection();
+        }
+        return false;
     }
 
     // Test connection with color sequence
@@ -191,15 +303,45 @@ class BusylightManager {
     // Get list of connected Busylight devices
     async getDevices() {
         try {
-            const url = `${this.baseUrl}?action=busylightdevices`;
-            const response = await fetch(url, {
-                method: 'GET',
-                signal: AbortSignal.timeout(2000)
-            });
+            let url, response;
+            
+            if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                // Send WebSocket request
+                return new Promise((resolve, reject) => {
+                    const messageId = Date.now();
+                    const timeout = setTimeout(() => reject(new Error('Timeout')), 2000);
+                    
+                    const handler = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (data.id === messageId && data.type === 'devices') {
+                                clearTimeout(timeout);
+                                this.websocket.removeEventListener('message', handler);
+                                resolve(data.devices || []);
+                            }
+                        } catch (e) {
+                            // Ignore parse errors
+                        }
+                    };
+                    
+                    this.websocket.addEventListener('message', handler);
+                    this.websocket.send(JSON.stringify({
+                        id: messageId,
+                        action: 'getDevices'
+                    }));
+                });
+            } else {
+                // HTTP fallback
+                url = `${this.bridgeUrl}?action=busylightdevices`;
+                response = await fetch(url, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
 
-            if (response.ok) {
-                const devices = await response.json();
-                return devices;
+                if (response.ok) {
+                    const devices = await response.json();
+                    return devices;
+                }
             }
         } catch (error) {
             console.warn("[Busylight] Error getting devices:", error);
@@ -422,7 +564,14 @@ class BusylightManager {
             }
         }
         
+        // Close WebSocket if open
+        if (this.websocket) {
+            this.websocket.close();
+            this.websocket = null;
+        }
+        
         this.connected = false;
+        this.connectionMode = 'none';
         console.log("[Busylight] Disconnected");
     }
 
@@ -467,26 +616,37 @@ class BusylightManager {
         if (!this.enabled || !this.connected) return false;
 
         try {
-            // Use official Kuando API format (values 0-100)
-            const url = `${this.baseUrl}?action=light&red=${red}&green=${green}&blue=${blue}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                signal: AbortSignal.timeout(2000)
-            });
-
-            if (response.ok) {
+            if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                // Send via WebSocket
+                this.websocket.send(JSON.stringify({
+                    action: 'light',
+                    red: red,
+                    green: green,
+                    blue: blue
+                }));
                 return true;
-            } else if (response.status === 404) {
-                console.warn("[Busylight] Device not connected (404)");
-                this.connected = false;
-                return false;
-            } else if (response.status === 401) {
-                console.warn("[Busylight] HTTP token invalid (401)");
-                this.connected = false;
-                return false;
             } else {
-                console.warn("[Busylight] Failed to set color:", response.status);
-                return false;
+                // HTTP fallback
+                const url = `${this.bridgeUrl}?action=light&red=${red}&green=${green}&blue=${blue}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
+
+                if (response.ok) {
+                    return true;
+                } else if (response.status === 404) {
+                    console.warn("[Busylight] Device not connected (404)");
+                    this.connected = false;
+                    return false;
+                } else if (response.status === 401) {
+                    console.warn("[Busylight] HTTP token invalid (401)");
+                    this.connected = false;
+                    return false;
+                } else {
+                    console.warn("[Busylight] Failed to set color:", response.status);
+                    return false;
+                }
             }
 
         } catch (error) {
@@ -501,14 +661,26 @@ class BusylightManager {
         if (!this.enabled || !this.connected) return false;
 
         try {
-            // Use official Kuando alert API
-            const url = `${this.baseUrl}?action=alert&red=${red}&green=${green}&blue=${blue}&sound=${sound}&volume=${volume}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                signal: AbortSignal.timeout(2000)
-            });
-
-            return response.ok;
+            if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                // Send via WebSocket
+                this.websocket.send(JSON.stringify({
+                    action: 'alert',
+                    red: red,
+                    green: green,
+                    blue: blue,
+                    sound: sound,
+                    volume: volume
+                }));
+                return true;
+            } else {
+                // HTTP fallback
+                const url = `${this.bridgeUrl}?action=alert&red=${red}&green=${green}&blue=${blue}&sound=${sound}&volume=${volume}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
+                return response.ok;
+            }
         } catch (error) {
             console.error("[Busylight] Error setting alert:", error);
             this.connected = false;
@@ -521,14 +693,26 @@ class BusylightManager {
         if (!this.enabled || !this.connected) return false;
 
         try {
-            // Use official Kuando blink API (ontime/offtime in 0.1 second steps)
-            const url = `${this.baseUrl}?action=blink&red=${red}&green=${green}&blue=${blue}&ontime=${ontime}&offtime=${offtime}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                signal: AbortSignal.timeout(2000)
-            });
-
-            return response.ok;
+            if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                // Send via WebSocket
+                this.websocket.send(JSON.stringify({
+                    action: 'blink',
+                    red: red,
+                    green: green,
+                    blue: blue,
+                    ontime: ontime,
+                    offtime: offtime
+                }));
+                return true;
+            } else {
+                // HTTP fallback
+                const url = `${this.bridgeUrl}?action=blink&red=${red}&green=${green}&blue=${blue}&ontime=${ontime}&offtime=${offtime}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
+                return response.ok;
+            }
         } catch (error) {
             console.error("[Busylight] Error setting blink:", error);
             this.connected = false;
@@ -541,13 +725,21 @@ class BusylightManager {
         if (!this.connected) return;
         
         try {
-            // Use official Kuando off command
-            const url = `${this.baseUrl}?action=off`;
-            const response = await fetch(url, {
-                method: 'GET',
-                signal: AbortSignal.timeout(2000)
-            });
-            return response.ok;
+            if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                // Send via WebSocket
+                this.websocket.send(JSON.stringify({
+                    action: 'off'
+                }));
+                return true;
+            } else {
+                // HTTP fallback
+                const url = `${this.bridgeUrl}?action=off`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
+                return response.ok;
+            }
         } catch (error) {
             console.warn("[Busylight] Failed to turn off:", error);
             return false;
@@ -690,7 +882,7 @@ class BusylightManager {
         
         if (window.Alert && window.Confirm) {
             Alert(
-                `Busylight service is not responding at:\n${this.baseUrl}\n\nPlease check that the Kuando HTTP server is running.`,
+                `Busylight Bridge service is not responding.\n\nThe PWA connects via HTTPS proxy:\n- WebSocket: ${this.websocketUrl}\n- HTTP: ${window.location.origin}${this.bridgeUrl}\n\nThis requires:\n1. Busylight Bridge running on your PC (localhost:19774)\n2. Express server proxy configured\n\nPlease ensure the Busylight Bridge application is running.`,
                 "Busylight Connection Error",
                 () => {
                     // Offer to retry connection
@@ -721,15 +913,31 @@ class BusylightManager {
         
         modal.innerHTML = `
             <h3>Busylight Configuration</h3>
-            <p>Configure your Kuando Busylight settings:</p>
+            <p>Configure your Busylight Bridge settings (connects via HTTPS proxy):</p>
             <div class="busylight-form-group">
-                <label>Busylight Service URL:</label>
-                <input id="busylight-url" type="text" value="${this.baseUrl || 'http://localhost:8989'}" 
-                       placeholder="http://localhost:8989" />
-                <div class="busylight-help-text">Default: http://localhost:8989</div>
+                <label>WebSocket URL (secure):</label>
+                <input id="busylight-ws-url" type="text" value="${this.websocketUrl}" 
+                       placeholder="wss://${window.location.host}/api/busylight/ws" readonly />
+                <div class="busylight-help-text">Proxied through Express server to localhost:19774/ws</div>
+            </div>
+            <div class="busylight-form-group">
+                <label>HTTP Bridge URL (secure):</label>
+                <input id="busylight-bridge-url" type="text" value="${this.bridgeUrl}" 
+                       placeholder="/api/busylight" readonly />
+                <div class="busylight-help-text">Proxied through Express server to localhost:19774/kuando</div>
+            </div>
+            <div class="busylight-form-group">
+                <label><input type="checkbox" id="busylight-use-ws" ${this.useWebSocket ? 'checked' : ''}> Prefer WebSocket</label>
             </div>
             <div class="busylight-form-group">
                 <label><input type="checkbox" id="busylight-enabled" ${this.enabled ? 'checked' : ''}> Enable Busylight</label>
+            </div>
+            <div class="busylight-form-group">
+                <label>Connection Status:</label>
+                <div id="connection-status">
+                    Mode: ${this.connectionMode}<br>
+                    Connected: ${this.connected ? 'Yes' : 'No'}
+                </div>
             </div>
             <div class="busylight-form-group">
                 <label>Device Information:</label>
@@ -755,14 +963,14 @@ class BusylightManager {
 
         // Event handlers
         document.getElementById('busylight-test').onclick = async () => {
-            const url = document.getElementById('busylight-url').value;
+            const bridgeUrl = this.bridgeUrl;
             const status = document.getElementById('busylight-status');
             
             status.textContent = 'Testing...';
             status.className = 'busylight-status-testing';
 
             try {
-                const response = await fetch(`${url}?action=currentpresence`, {
+                const response = await fetch(`${bridgeUrl}?action=currentpresence`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(3000)
                 });
@@ -772,10 +980,10 @@ class BusylightManager {
                     status.className = 'busylight-status-success';
                     
                     // Flash green to indicate success
-                    await fetch(`${url}?action=light&red=0&green=100&blue=0`, {
+                    await fetch(`${bridgeUrl}?action=light&red=0&green=100&blue=0`, {
                         method: 'GET'
                     });
-                    setTimeout(() => fetch(`${url}?action=off`, {
+                    setTimeout(() => fetch(`${bridgeUrl}?action=off`, {
                         method: 'GET'
                     }), 2000);
                     
@@ -792,11 +1000,13 @@ class BusylightManager {
         };
 
         document.getElementById('busylight-save').onclick = async () => {
-            this.baseUrl = document.getElementById('busylight-url').value;
+            // URLs are now fixed to use proxy, only update preferences
+            this.useWebSocket = document.getElementById('busylight-use-ws').checked;
             this.enabled = document.getElementById('busylight-enabled').checked;
             this.saveSettings();
 
             if (this.enabled) {
+                await this.disconnect();
                 await this.initialize();
             } else {
                 await this.disconnect();
@@ -847,8 +1057,11 @@ class BusylightManager {
         return {
             enabled: this.enabled,
             connected: this.connected,
+            connectionMode: this.connectionMode,
             callState: this.currentCallState,
-            baseUrl: this.baseUrl
+            bridgeUrl: this.bridgeUrl,
+            websocketUrl: this.websocketUrl,
+            useWebSocket: this.useWebSocket
         };
     }
 }
@@ -870,24 +1083,38 @@ window.testBusylight = async function() {
     console.log('Manager found:', manager.constructor.name);
     console.log('Enabled:', manager.enabled);
     console.log('Connected:', manager.connected);
-    console.log('Base URL:', manager.baseUrl);
+    console.log('Connection Mode:', manager.connectionMode);
+    console.log('Bridge URL:', manager.bridgeUrl);
+    console.log('WebSocket URL:', manager.websocketUrl);
+    console.log('Use WebSocket:', manager.useWebSocket);
     console.log('Current State:', manager.currentCallState);
     console.log('Is Flashing:', manager.isFlashing);
     
-    // Test connection
-    if (manager.baseUrl) {
-        console.log('\n📡 Testing connection to', manager.baseUrl);
+    // Test HTTP connection
+    if (manager.bridgeUrl) {
+        console.log('\n📡 Testing HTTP connection (via proxy):', manager.bridgeUrl);
         try {
-            await fetch(`${manager.baseUrl}/?action=busylightdevices`, {
+            const response = await fetch(`${manager.bridgeUrl}?action=currentpresence`, {
                 method: 'GET',
-                mode: 'no-cors',
                 signal: AbortSignal.timeout(3000)
             });
-            console.log('Connection: ✅ SUCCESS (using no-cors mode)');
-            console.log('Note: With no-cors mode, we cannot read response status');
-            console.log('      If no error thrown, connection is working');
+            if (response.ok) {
+                console.log('HTTP Connection: ✅ SUCCESS');
+            } else {
+                console.error('HTTP Connection: ❌ FAILED - Status', response.status);
+            }
         } catch (error) {
-            console.error('Connection: ❌ FAILED -', error.message);
+            console.error('HTTP Connection: ❌ FAILED -', error.message);
+        }
+    }
+    
+    // Test WebSocket connection
+    if (manager.websocketUrl) {
+        console.log('\n🔌 Testing WebSocket connection to', manager.websocketUrl);
+        if (manager.websocket && manager.websocket.readyState === WebSocket.OPEN) {
+            console.log('WebSocket: ✅ CONNECTED');
+        } else {
+            console.log('WebSocket: ⚠️ NOT CONNECTED (State:', manager.websocket?.readyState || 'null', ')');
         }
     }
     
