@@ -143,7 +143,7 @@ app.use('/api/phantom', createProxyMiddleware({
 }));
 
 // Busylight Bridge HTTP proxy with WebSocket support
-app.use('/api/busylight', createProxyMiddleware({
+const busylightProxy = createProxyMiddleware({
   target: BUSYLIGHT_BRIDGE_URL,
   changeOrigin: true,
   ws: true, // Enable WebSocket proxying
@@ -168,7 +168,9 @@ app.use('/api/busylight', createProxyMiddleware({
     console.log(`===========================================\n`);
     res.status(502).json({ error: 'Busylight Bridge unreachable', message: err.message });
   }
-}));
+});
+
+app.use('/api/busylight', busylightProxy);
 
 // Configuration endpoint for SIP/WebSocket
 app.get('/api/config', (req, res) => {
@@ -247,11 +249,22 @@ else if (fs.existsSync(SSL_CERT_PATH) && fs.existsSync(SSL_KEY_PATH)) {
 // Start servers based on available certificates
 if (sslOptions) {
   // Start HTTPS server
-  const httpsServer = https.createServer(sslOptions, app);
+  // Enable WebSocket upgrade handling for proxies
+  httpsServer.on('upgrade', (req, socket, head) => {
+    console.log(`[WebSocket] Upgrade request: ${req.url}`);
+    if (req.url.startsWith('/api/busylight')) {
+      busylightProxy.upgrade(req, socket, head);
+    } else {
+      socket.destroy();
+    }
+  });
   
   httpsServer.listen(HTTPS_PORT, () => {
     console.log(`✓ HTTPS Server running on https://connect365.servehttp.com:${HTTPS_PORT}`);
     console.log(`  Certificate source: ${certSource}`);
+    console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
+    console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
+    console.log(`  WebSocket support: ENABLED for Busylight Bridge`);
     console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
     console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
   });
