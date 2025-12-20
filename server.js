@@ -16,6 +16,7 @@ const HTTPS_PORT = 443;
 const PROXY_PORT = process.env.PHANTOM_API_PORT || 443;
 const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server1-000.phantomapi.net';
 const BUSYLIGHT_WS_BRIDGE_URL = process.env.BUSYLIGHT_WS_BRIDGE_URL || 'ws://127.0.0.1:19774/ws';
+const BUSYLIGHT_BRIDGE_URL = process.env.BUSYLIGHT_BRIDGE_URL || 'http://127.0.0.1:19774';
 
 // Let's Encrypt certificate paths
 const LETSENCRYPT_CERT = './certs/fullchain.pem';
@@ -144,7 +145,7 @@ app.use('/api/phantom', createProxyMiddleware({
 
 // Busylight Bridge HTTP proxy with WebSocket support
 const busylightProxy = createProxyMiddleware({
-  target: BUSYLIGHT_WS_BRIDGE_URL,
+  target: BUSYLIGHT_BRIDGE_URL,
   changeOrigin: true,
   ws: true, // Enable WebSocket proxying
   pathRewrite: {
@@ -155,7 +156,7 @@ const busylightProxy = createProxyMiddleware({
     console.log(`[TIME]    ${new Date().toISOString()}`);
     console.log(`[METHOD]  ${req.method}`);
     console.log(`[FROM]    ${req.originalUrl}`);
-    console.log(`[TO]      ${BUSYLIGHT_WS_BRIDGE_URL}/kuando`);
+    console.log(`[TO]      ${BUSYLIGHT_BRIDGE_URL}/kuando`);
   },
   onProxyRes: (proxyRes, req, res) => {
     console.log(`[BUSYLIGHT] Response: ${proxyRes.statusCode}`);
@@ -265,7 +266,7 @@ if (sslOptions) {
     console.log(`✓ HTTPS Server running on https://connect365.servehttp.com:${HTTPS_PORT}`);
     console.log(`  Certificate source: ${certSource}`);
     console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
-    console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_WS_BRIDGE_URL}/kuando`);
+    console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
     console.log(`  WebSocket support: ENABLED for Busylight Bridge`);
   });
   
