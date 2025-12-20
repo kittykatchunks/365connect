@@ -8,19 +8,24 @@ const CacheItems = [
     "manifest.json",
     
     // Application files
-    "js/audio-settings-manager.js",
-    "js/call-history-manager.js",
-    "js/call-history-ui.js",
-    "js/phone.js",
-    "js/browser-cache.js",
-    "js/sip-session-manager.js",
-    "js/ui-state-manager.js",
-    "js/busylight-manager.js",
     "js/agent-buttons.js",
-    "js/blf-button-manager.js",
     "js/api-phantom.js",
     "js/app-config.js",
     "js/app-startup.js",
+    "js/audio-settings-manager.js",
+    "js/blf-button-manager.js",
+    "js/browser-cache.js",
+    "js/busylight-manager.js",
+    "js/call-history-manager.js",
+    "js/call-history-ui.js",
+    "js/company-numbers-manager.js",
+    "js/contacts-manager.js",
+    "js/language-manager.js",
+    "js/phone.js",
+    "js/settings-accordion.js",
+    "js/sip-session-manager.js",
+    "js/ui-state-manager.js",
+
     
     // Styles
     "css/phone.css",
