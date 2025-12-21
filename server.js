@@ -304,8 +304,8 @@ if (sslOptions) {
   
   httpServer.listen(HTTP_PORT, () => {
     console.log(`✓ HTTP Server running on port ${HTTP_PORT}`);
-    console.log(`  Busylight Bridge proxy: http://${req.headers.host}/api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
-    console.log(`  WebSocket support: ENABLED for Busylight Bridge (ws://localhost/api/busylight)`);
+    console.log(`  Busylight Bridge proxy: http://server1-XXXX.phantomapi.net/api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
+    console.log(`  WebSocket support: ENABLED for Busylight Bridge (http://127.0.0.1:19774/kuando)`);
     console.log(`  All other traffic redirected to HTTPS`);
   });
   
