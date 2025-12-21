@@ -7,8 +7,10 @@ const cors = require('cors');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
+const BusylightBridgeServer = require('./bridge-server');
 
 // Create logs directory if it doesn't exist
 const logsDir = path.join(__dirname, 'logs');
@@ -89,8 +91,12 @@ const HTTP_PORT = process.env.HTTP_PORT || 80;
 const HTTPS_PORT = process.env.HTTPS_PORT || 443;
 const PROXY_PORT = process.env.PHANTOM_API_PORT || 443;
 const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server1-000.phantomapi.net';
-// const BUSYLIGHT_WS_BRIDGE_URL = process.env.BUSYLIGHT_WS_BRIDGE_URL || 'ws://127.0.0.1:19774/ws';
-const BUSYLIGHT_BRIDGE_URL = process.env.BUSYLIGHT_BRIDGE_URL || 'http://127.0.0.1:19774';
+
+// Initialize Busylight Bridge Server
+const busylightBridge = new BusylightBridgeServer({
+  localServiceUrl: process.env.BUSYLIGHT_WS_URL || 'ws://127.0.0.1:19774/ws',
+  localServiceHost: process.env.BUSYLIGHT_HTTP_HOST || 'http://127.0.0.1:19774'
+});
 
 // Let's Encrypt certificate paths
 const LETSENCRYPT_CERT = './certs/fullchain.pem';
@@ -233,49 +239,13 @@ app.use('/api/phantom', createProxyMiddleware({
   }
 }));
 
-// Busylight Bridge HTTP proxy with WebSocket support
-const busylightProxy = createProxyMiddleware({
-  target: BUSYLIGHT_BRIDGE_URL,
-  changeOrigin: true,
-  ws: true, // Enable WebSocket proxying
-  pathRewrite: {
-    '^/api/busylight': '/kuando',
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    const host = req.headers.host || 'unknown';
-    const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/busylight/, '/kuando');
-    const targetUrl = `${BUSYLIGHT_BRIDGE_URL}${rewrittenPath}`;
-    const protocol = req.protocol || 'http';
-    
-    console.log(`  🚦 BUSYLIGHT PROXY TRANSLATION:`);
-    console.log(`     Input:  ${protocol}://${host}${originalPath}`);
-    console.log(`     Output: ${targetUrl}`);
-    
-    // Parse and display query parameters
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
-      console.log(`     Parameters:`);
-      for (const [key, value] of queryParams) {
-        console.log(`       • ${key} = ${value}`);
-      }
-    }
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
-    console.log(`  ${statusIcon} BUSYLIGHT RESPONSE:`);
-    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
-  },
-  onError: (err, req, res) => {
-    console.log(`  ❌ BUSYLIGHT ERROR:`);
-    console.log(`     URL: ${req.originalUrl}`);
-    console.log(`     Error: ${err.message}`);
-    console.log(`     💡 Hint: Is Busylight Bridge running on ${BUSYLIGHT_BRIDGE_URL}?`);
-    res.status(502).json({ error: 'Busylight Bridge unreachable', message: err.message });
-  }
-});
+// Busylight Bridge HTTP middleware
+app.use('/api/busylight', busylightBridge.createHttpMiddleware());
 
-app.use('/api/busylight', busylightProxy);
+// Busylight Bridge status endpoint
+app.get('/api/busylight-status', (req, res) => {
+  res.json(busylightBridge.getStatus());
+});
 
 // Configuration endpoint for SIP/WebSocket
 app.get('/api/config', (req, res) => {
@@ -356,12 +326,24 @@ if (sslOptions) {
   // Start HTTPS server
   const httpsServer = https.createServer(sslOptions, app);
   
-  // Enable WebSocket upgrade handling for proxies
+  // Create WebSocket server for Busylight Bridge client connections
+  const wss = new WebSocket.Server({ noServer: true });
+  
+  wss.on('connection', (ws, request) => {
+    const clientId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[BusylightBridge] New client WebSocket connection: ${clientId}`);
+    busylightBridge.registerClient(ws, clientId);
+  });
+  
+  // Enable WebSocket upgrade handling
   httpsServer.on('upgrade', (req, socket, head) => {
     console.log(`[WebSocket] Upgrade request: ${req.url}`);
-    if (req.url.startsWith('/api/busylight')) {
-      busylightProxy.upgrade(req, socket, head);
+    if (req.url.startsWith('/api/busylight/ws') || req.url === '/api/busylight-ws') {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit('connection', ws, req);
+      });
     } else {
+      console.log('[WebSocket] Unknown upgrade path, destroying socket');
       socket.destroy();
     }
   });
@@ -370,8 +352,9 @@ if (sslOptions) {
     console.log(`✓ HTTPS Server running on https://connect365.servehttp.com:${HTTPS_PORT}`);
     console.log(`  Certificate source: ${certSource}`);
     console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
-    //console.log(`  Busylight Bridge proxy: /api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
-    console.log(`  WebSocket support: ENABLED for Busylight Bridge`);
+    console.log(`  Busylight Bridge: /api/busylight → ws://127.0.0.1:19774/ws (HTTP proxy to http://127.0.0.1:19774/kuando)`);
+    console.log(`  Busylight WebSocket: /api/busylight-ws (Client connections)`);
+    console.log(`  Busylight Status: /api/busylight-status`);
   });
   
   // Start HTTP server for busylight-bridge proxy (no redirect for busylight endpoints)
@@ -391,8 +374,11 @@ if (sslOptions) {
     next();
   });
   
-  // Allow busylight proxy on HTTP (WebSocket needs non-secure connection)
-  httpApp.use('/api/busylight', busylightProxy);
+  // Allow busylight bridge on HTTP
+  httpApp.use('/api/busylight', busylightBridge.createHttpMiddleware());
+  httpApp.get('/api/busylight-status', (req, res) => {
+    res.json(busylightBridge.getStatus());
+  });
   
   // Redirect all other HTTP traffic to HTTPS
   httpApp.use((req, res) => {
@@ -404,20 +390,32 @@ if (sslOptions) {
   
   const httpServer = http.createServer(httpApp);
   
-  // Enable WebSocket upgrade handling for busylight proxy on HTTP
+  // Create WebSocket server for HTTP as well
+  const httpWss = new WebSocket.Server({ noServer: true });
+  
+  httpWss.on('connection', (ws, request) => {
+    const clientId = `http_client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[BusylightBridge] New HTTP client WebSocket connection: ${clientId}`);
+    busylightBridge.registerClient(ws, clientId);
+  });
+  
+  // Enable WebSocket upgrade handling on HTTP
   httpServer.on('upgrade', (req, socket, head) => {
     console.log(`[HTTP WebSocket] Upgrade request: ${req.url}`);
-    if (req.url.startsWith('/api/busylight')) {
-      busylightProxy.upgrade(req, socket, head);
+    if (req.url.startsWith('/api/busylight/ws') || req.url === '/api/busylight-ws') {
+      httpWss.handleUpgrade(req, socket, head, (ws) => {
+        httpWss.emit('connection', ws, req);
+      });
     } else {
+      console.log('[HTTP WebSocket] Unknown upgrade path, destroying socket');
       socket.destroy();
     }
   });
   
   httpServer.listen(HTTP_PORT, () => {
     console.log(`✓ HTTP Server running on port ${HTTP_PORT}`);
-    console.log(`  Busylight Bridge proxy: http://server1-XXXX.phantomapi.net/api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
-    console.log(`  WebSocket support: ENABLED for Busylight Bridge (http://127.0.0.1:19774/kuando)`);
+    console.log(`  Busylight Bridge: /api/busylight → ws://127.0.0.1:19774/ws (HTTP proxy to http://127.0.0.1:19774/kuando)`);
+    console.log(`  Busylight WebSocket: /api/busylight-ws (Client connections)`);
     console.log(`  All other traffic redirected to HTTPS`);
   });
   
@@ -450,6 +448,7 @@ process.on('unhandledRejection', (err) => {
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\nShutting down gracefully...');
+  busylightBridge.shutdown();
   httpLogStream.end();
   httpsLogStream.end();
   errorLogStream.end();

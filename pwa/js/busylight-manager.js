@@ -4,7 +4,7 @@ class BusylightManager {
         this.connected = false;
         this.baseUrl = null;
         this.bridgeUrl = '/api/busylight'; // Proxy through Express server (HTTPS-safe)
-        this.websocketUrl = `ws://127.0.0.1:19774/ws`; // WebSocket through proxy (ws param in middleware)
+        this.websocketUrl = null; // Will be set dynamically based on protocol
         this.websocket = null;
         this.useWebSocket = true;
         this.connectionMode = 'none'; // 'websocket', 'http', or 'none'
@@ -17,6 +17,11 @@ class BusylightManager {
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 2000;
+        
+        // Set WebSocket URL based on current protocol
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        this.websocketUrl = `${protocol}//${host}/api/busylight-ws`;
         
         // Load settings from localStorage
         this.loadSettings();
@@ -45,28 +50,23 @@ class BusylightManager {
         
         // Bridge connection settings - use proxied URLs by default (HTTPS-safe)
         const defaultBridgeUrl = '/api/busylight';
-        const defaultWsUrl = `ws://127.0.0.1:19774/ws`;
         
+        // WebSocket URL is set in constructor based on protocol
         this.bridgeUrl = window.localDB.getItem("BusylightBridgeUrl", defaultBridgeUrl);
-        this.websocketUrl = window.localDB.getItem("BusylightWebSocketUrl", defaultWsUrl);
         this.useWebSocket = (window.localDB.getItem("BusylightUseWebSocket", "1") === "1");
         
-        // Migration: Update old URLs to use proxy
-        if (this.bridgeUrl === "http://127.0.0.1:19774" || this.bridgeUrl.startsWith("http://127.0.0.1")) {
-            this.bridgeUrl = defaultBridgeUrl;
-            this.websocketUrl = defaultWsUrl;
-            window.localDB.setItem("BusylightBridgeUrl", this.bridgeUrl);
-            window.localDB.setItem("BusylightWebSocketUrl", this.websocketUrl);
-            console.log("[Busylight] Migrated to use HTTPS proxy");
-        }
+        console.log('[Busylight] Settings loaded:');
+        console.log('  Enabled:', this.enabled);
+        console.log('  Bridge URL:', this.bridgeUrl);
+        console.log('  WebSocket URL:', this.websocketUrl);
+        console.log('  Use WebSocket:', this.useWebSocket);
     }
 
     // Save settings to localStorage
     saveSettings() {
         localDB.setItem("BusylightEnabled", this.enabled ? "1" : "0");
         localDB.setItem("BusylightUrl", this.baseUrl || "http://127.0.0.1:8989");
-        localDB.setItem("BusylightBridgeUrl", this.bridgeUrl || "http://127.0.0.1:19774");
-        localDB.setItem("BusylightWebSocketUrl", this.websocketUrl || "ws://127.0.0.1:19774/ws");
+        localDB.setItem("BusylightBridgeUrl", this.bridgeUrl || "/api/busylight");
         localDB.setItem("BusylightUseWebSocket", this.useWebSocket ? "1" : "0");
     }
 
@@ -193,6 +193,16 @@ class BusylightManager {
             this.connected = data.connected || false;
             if (data.deviceCount !== undefined) {
                 console.log(`[Busylight] ${data.deviceCount} device(s) connected`);
+            }
+        } else if (data.type === 'bridge_status') {
+            // Handle bridge connection status
+            console.log(`[Busylight] Bridge status: ${data.connected ? 'connected' : 'disconnected'}`);
+            if (data.message) {
+                console.log(`[Busylight] ${data.message}`);
+            }
+            // Update our connection state based on bridge state
+            if (!data.connected) {
+                console.warn('[Busylight] Bridge lost connection to local service');
             }
         } else if (data.type === 'error') {
             console.error("[Busylight] Bridge error:", data.message);
@@ -882,7 +892,7 @@ class BusylightManager {
         
         if (window.Alert && window.Confirm) {
             Alert(
-                `Busylight Bridge service is not responding.\n\nThe PWA connects via HTTPS proxy:\n- WebSocket: ${this.websocketUrl}\n- HTTP: ${window.location.origin}${this.bridgeUrl}\n\nThis requires:\n1. Busylight Bridge running on your PC (127.0.0.1:19774)\n2. Express server proxy configured\n\nPlease ensure the Busylight Bridge application is running.`,
+                `Busylight Bridge service is not responding.\n\nThe PWA connects through the bridge server:\n- WebSocket: ${this.websocketUrl}\n- HTTP: ${window.location.origin}${this.bridgeUrl}\n\nThis requires:\n1. Busylight Bridge application running on your PC (127.0.0.1:19774)\n2. Bridge server proxying connections\n\nPlease ensure the Busylight Bridge application is running on your local PC.`,
                 "Busylight Connection Error",
                 () => {
                     // Offer to retry connection
@@ -913,18 +923,18 @@ class BusylightManager {
         
         modal.innerHTML = `
             <h3>Busylight Configuration</h3>
-            <p>Configure your Busylight Bridge settings (connects via HTTPS proxy):</p>
+            <p>Configure your Busylight Bridge settings:</p>
             <div class="busylight-form-group">
-                <label>WebSocket URL (secure):</label>
+                <label>WebSocket URL (Bridge):</label>
                 <input id="busylight-ws-url" type="text" value="${this.websocketUrl}" 
-                       placeholder="wss://${window.location.host}/api/busylight/ws" readonly />
-                <div class="busylight-help-text">Proxied through Express server to 127.0.0.1:19774/ws</div>
+                       placeholder="${this.websocketUrl}" readonly />
+                <div class="busylight-help-text">Connects to server bridge at ${this.websocketUrl} → ws://127.0.0.1:19774/ws</div>
             </div>
             <div class="busylight-form-group">
-                <label>HTTP Bridge URL (secure):</label>
+                <label>HTTP Bridge URL:</label>
                 <input id="busylight-bridge-url" type="text" value="${this.bridgeUrl}" 
                        placeholder="/api/busylight" readonly />
-                <div class="busylight-help-text">Proxied through Express server to 127.0.0.1:19774/kuando</div>
+                <div class="busylight-help-text">HTTP requests via ${this.bridgeUrl} → http://127.0.0.1:19774/kuando</div>
             </div>
             <div class="busylight-form-group">
                 <label><input type="checkbox" id="busylight-use-ws" ${this.useWebSocket ? 'checked' : ''}> Prefer WebSocket</label>
