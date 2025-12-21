@@ -96,7 +96,20 @@ class PhantomApiManager extends EventTarget {
                     const config = await response.json();
                     this.config.apiUsername = config.apiUsername;
                     this.config.apiKey = config.apiKey;
+                    
+                    // Store WebSocket server URL if available
+                    if (config.wssServerUrl && window.localDB) {
+                        window.localDB.setItem('wssServer', config.wssServerUrl);
+                        console.log('✅ WebSocket server URL updated:', config.wssServerUrl);
+                    }
+                    
+                    // Store SIP domain if available
+                    if (config.sipDomain && window.localDB) {
+                        window.localDB.setItem('SipDomain', config.sipDomain);
+                    }
+                    
                     console.log('✅ API credentials loaded from server config');
+                    console.log('   Using proxy:', config.usingProxy ? 'Yes' : 'No (direct connection)');
                 } else {
                     console.warn('Failed to fetch API credentials from server');
                 }

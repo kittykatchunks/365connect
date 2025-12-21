@@ -257,9 +257,15 @@ app.get('/api/config', (req, res) => {
   const sipServer = domain;
   const apiPort = process.env.PHANTOM_API_PORT || 443;
   
+  // Return proxied WebSocket URL through our server instead of direct connection
+  const useProxy = process.env.USE_SIP_PROXY !== 'false'; // Default to true
+  const wssServerUrl = useProxy 
+    ? `wss://${req.headers.host}/api/sip-ws/${phantomId}` 
+    : `wss://${domain}:${wssPort}${wssPath}`;
+  
   res.json({
     phantomId,
-    wssServerUrl: `wss://${domain}:${wssPort}${wssPath}`,
+    wssServerUrl,
     wssPort,
     wssPath,
     sipDomain: domain,
@@ -267,7 +273,8 @@ app.get('/api/config', (req, res) => {
     sipPort,
     phantomApiBase: `https://${domain}:${apiPort}/api`,
     apiUsername: process.env.PHANTOM_API_USERNAME,
-    apiKey: process.env.PHANTOM_API_KEY
+    apiKey: process.env.PHANTOM_API_KEY,
+    usingProxy: useProxy
   });
 });
 
@@ -335,14 +342,102 @@ if (sslOptions) {
     busylightBridge.registerClient(ws, clientId);
   });
   
+  // Create WebSocket server for SIP proxy
+  const sipWss = new WebSocket.Server({ noServer: true });
+  
+  sipWss.on('connection', (clientWs, request) => {
+    const pathMatch = request.url.match(/\/api\/sip-ws\/(\d+)/);
+    if (!pathMatch) {
+      console.error('[SIP Proxy] Invalid path format');
+      clientWs.close(1008, 'Invalid path');
+      return;
+    }
+    
+    const phantomId = pathMatch[1];
+    const targetUrl = `wss://server1-${phantomId}.phantomapi.net:8089/ws`;
+    
+    console.log(`[SIP Proxy] New client connection for Phantom ID: ${phantomId}`);
+    console.log(`[SIP Proxy] Connecting to: ${targetUrl}`);
+    
+    // Connect to Phantom API server with relaxed SSL
+    const backendWs = new WebSocket(targetUrl, {
+      rejectUnauthorized: false // Accept self-signed certificates
+    });
+    
+    // Track connection state
+    let backendConnected = false;
+    
+    // Backend connection opened
+    backendWs.on('open', () => {
+      backendConnected = true;
+      console.log(`[SIP Proxy] Connected to Phantom server: ${targetUrl}`);
+    });
+    
+    // Forward messages from client to backend
+    clientWs.on('message', (data) => {
+      if (backendConnected && backendWs.readyState === WebSocket.OPEN) {
+        backendWs.send(data);
+      }
+    });
+    
+    // Forward messages from backend to client
+    backendWs.on('message', (data) => {
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.send(data);
+      }
+    });
+    
+    // Handle backend errors
+    backendWs.on('error', (error) => {
+      console.error(`[SIP Proxy] Backend error:`, error.message);
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.close(1011, 'Backend connection error');
+      }
+    });
+    
+    // Handle backend close
+    backendWs.on('close', (code, reason) => {
+      console.log(`[SIP Proxy] Backend closed: ${code} - ${reason || 'No reason'}`);
+      backendConnected = false;
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.close(code, reason);
+      }
+    });
+    
+    // Handle client errors
+    clientWs.on('error', (error) => {
+      console.error(`[SIP Proxy] Client error:`, error.message);
+      if (backendConnected && backendWs.readyState === WebSocket.OPEN) {
+        backendWs.close(1011, 'Client connection error');
+      }
+    });
+    
+    // Handle client close
+    clientWs.on('close', (code, reason) => {
+      console.log(`[SIP Proxy] Client closed: ${code} - ${reason || 'No reason'}`);
+      if (backendConnected && backendWs.readyState === WebSocket.OPEN) {
+        backendWs.close(1000, 'Client closed connection');
+      }
+    });
+  });
+  
   // Enable WebSocket upgrade handling
   httpsServer.on('upgrade', (req, socket, head) => {
     console.log(`[WebSocket] Upgrade request: ${req.url}`);
+    
+    // Busylight Bridge WebSocket
     if (req.url.startsWith('/api/busylight/ws') || req.url === '/api/busylight-ws') {
       wss.handleUpgrade(req, socket, head, (ws) => {
         wss.emit('connection', ws, req);
       });
-    } else {
+    }
+    // SIP Proxy WebSocket
+    else if (req.url.startsWith('/api/sip-ws/')) {
+      sipWss.handleUpgrade(req, socket, head, (ws) => {
+        sipWss.emit('connection', ws, req);
+      });
+    }
+    else {
       console.log('[WebSocket] Unknown upgrade path, destroying socket');
       socket.destroy();
     }
@@ -352,6 +447,7 @@ if (sslOptions) {
     console.log(`✓ HTTPS Server running on https://connect365.servehttp.com:${HTTPS_PORT}`);
     console.log(`  Certificate source: ${certSource}`);
     console.log(`  Phantom API proxy: /api/phantom → https://server1-{phantomId}.phantomapi.net:${PROXY_PORT}/api`);
+    console.log(`  SIP WebSocket proxy: /api/sip-ws/{phantomId} → wss://server1-{phantomId}.phantomapi.net:8089/ws`);
     console.log(`  Busylight Bridge: /api/busylight → ws://127.0.0.1:19774/ws (HTTP proxy to http://127.0.0.1:19774/kuando)`);
     console.log(`  Busylight WebSocket: /api/busylight-ws (Client connections)`);
     console.log(`  Busylight Status: /api/busylight-status`);
