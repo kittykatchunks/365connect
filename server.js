@@ -85,8 +85,8 @@ const app = express();
 // Add response time middleware first
 app.use(responseTimeMiddleware);
 
-const HTTP_PORT = 80;
-const HTTPS_PORT = 443;
+const HTTP_PORT = process.env.HTTP_PORT || 80;
+const HTTPS_PORT = process.env.HTTPS_PORT || 443;
 const PROXY_PORT = process.env.PHANTOM_API_PORT || 443;
 const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server1-000.phantomapi.net';
 // const BUSYLIGHT_WS_BRIDGE_URL = process.env.BUSYLIGHT_WS_BRIDGE_URL || 'ws://127.0.0.1:19774/ws';
