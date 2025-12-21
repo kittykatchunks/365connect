@@ -270,14 +270,43 @@ if (sslOptions) {
     console.log(`  WebSocket support: ENABLED for Busylight Bridge`);
   });
   
-  // Start HTTP redirect server
-  http.createServer((req, res) => {
+  // Start HTTP server for busylight-bridge proxy (no redirect for busylight endpoints)
+  const httpApp = express();
+  
+  // Simple logging for HTTP requests
+  httpApp.use((req, res, next) => {
+    console.log(`[HTTP ${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+    next();
+  });
+  
+  // Allow busylight proxy on HTTP (WebSocket needs non-secure connection)
+  httpApp.use('/api/busylight', busylightProxy);
+  
+  // Redirect all other HTTP traffic to HTTPS
+  httpApp.use((req, res) => {
     res.writeHead(301, { 
       Location: `https://${req.headers.host}${req.url}` 
     });
     res.end();
-  }).listen(HTTP_PORT, () => {
-    console.log(`✓ HTTP redirect server running on port ${HTTP_PORT} → HTTPS`);
+  });
+  
+  const httpServer = http.createServer(httpApp);
+  
+  // Enable WebSocket upgrade handling for busylight proxy on HTTP
+  httpServer.on('upgrade', (req, socket, head) => {
+    console.log(`[HTTP WebSocket] Upgrade request: ${req.url}`);
+    if (req.url.startsWith('/api/busylight')) {
+      busylightProxy.upgrade(req, socket, head);
+    } else {
+      socket.destroy();
+    }
+  });
+  
+  httpServer.listen(HTTP_PORT, () => {
+    console.log(`✓ HTTP Server running on port ${HTTP_PORT}`);
+    console.log(`  Busylight Bridge proxy: http://localhost/api/busylight → ${BUSYLIGHT_BRIDGE_URL}/kuando`);
+    console.log(`  WebSocket support: ENABLED for Busylight Bridge (ws://localhost/api/busylight)`);
+    console.log(`  All other traffic redirected to HTTPS`);
   });
   
 } else {
