@@ -10,7 +10,56 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
 const fs = require('fs');
 
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
+}
+
+// Create write streams for logs
+const httpLogStream = fs.createWriteStream(path.join(logsDir, 'http-access.log'), { flags: 'a' });
+const httpsLogStream = fs.createWriteStream(path.join(logsDir, 'https-access.log'), { flags: 'a' });
+const errorLogStream = fs.createWriteStream(path.join(logsDir, 'error.log'), { flags: 'a' });
+
+// Custom logger function
+function logRequest(stream, protocol, req, res) {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.originalUrl || req.url;
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
+  const userAgent = req.headers['user-agent'] || '-';
+  
+  // Log when response finishes
+  res.on('finish', () => {
+    const statusCode = res.statusCode;
+    const contentLength = res.get('content-length') || '-';
+    const responseTime = res.get('x-response-time') || '-';
+    
+    const logLine = `[${timestamp}] ${protocol} ${ip} "${method} ${url}" ${statusCode} ${contentLength} "${userAgent}" ${responseTime}ms\n`;
+    
+    // Write to file
+    stream.write(logLine);
+    
+    // Also log to console
+    console.log(`[${protocol}] ${method} ${url} - ${statusCode}`);
+  });
+}
+
+// Response time middleware
+function responseTimeMiddleware(req, res, next) {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    res.set('x-response-time', duration);
+  });
+  next();
+}
+
 const app = express();
+
+// Add response time middleware first
+app.use(responseTimeMiddleware);
+
 const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
 const PROXY_PORT = process.env.PHANTOM_API_PORT || 443;
@@ -26,9 +75,12 @@ const LETSENCRYPT_KEY = './certs/privkey.pem';
 const SSL_KEY_PATH = process.env.SSL_KEY_PATH || './certs/privkey.pem';
 const SSL_CERT_PATH = process.env.SSL_CERT_PATH || './certs/fullchain.pem';
 
-// Simple logging middleware
+// HTTPS logging middleware (will be used by HTTPS server)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  // Only log to HTTPS stream when on HTTPS (will be set by server)
+  if (req.protocol === 'https' || req.secure) {
+    logRequest(httpsLogStream, 'HTTPS', req, res);
+  }
   next();
 });
 
@@ -45,12 +97,7 @@ app.use(cors({
 
 app.use(compression());
 
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.protocol} ${req.method} ${req.originalUrl}`);
-  console.log(`Host: ${req.get('host')}`);
-  console.log(`User-Agent: ${req.get('user-agent')}`);
-  next();
-});
+
 
 // Serve static files from /pwa with PWA-specific caching
 app.use(express.static(path.join(__dirname, 'pwa'), {
@@ -273,9 +320,12 @@ if (sslOptions) {
   // Start HTTP server for busylight-bridge proxy (no redirect for busylight endpoints)
   const httpApp = express();
   
-  // Simple logging for HTTP requests
+  // Add response time middleware
+  httpApp.use(responseTimeMiddleware);
+  
+  // HTTP logging middleware
   httpApp.use((req, res, next) => {
-    console.log(`[HTTP ${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+    logRequest(httpLogStream, 'HTTP', req, res);
     next();
   });
   
@@ -324,9 +374,22 @@ if (sslOptions) {
 
 // Error handling
 process.on('uncaughtException', (err) => {
+  const errorMsg = `[${new Date().toISOString()}] Uncaught Exception: ${err.message}\n${err.stack}\n`;
   console.error('Uncaught Exception:', err);
+  errorLogStream.write(errorMsg);
 });
 
 process.on('unhandledRejection', (err) => {
+  const errorMsg = `[${new Date().toISOString()}] Unhandled Rejection: ${err.message}\n${err.stack}\n`;
   console.error('Unhandled Rejection:', err);
+  errorLogStream.write(errorMsg);
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down gracefully...');
+  httpLogStream.end();
+  httpsLogStream.end();
+  errorLogStream.end();
+  process.exit(0);
 });
