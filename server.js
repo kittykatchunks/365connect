@@ -21,37 +21,62 @@ const httpLogStream = fs.createWriteStream(path.join(logsDir, 'http-access.log')
 const httpsLogStream = fs.createWriteStream(path.join(logsDir, 'https-access.log'), { flags: 'a' });
 const errorLogStream = fs.createWriteStream(path.join(logsDir, 'error.log'), { flags: 'a' });
 
-// Custom logger function
+// Custom logger function with enhanced console output
 function logRequest(stream, protocol, req, res) {
   const timestamp = new Date().toISOString();
   const method = req.method;
   const url = req.originalUrl || req.url;
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
   const userAgent = req.headers['user-agent'] || '-';
+  const host = req.headers.host || '-';
+  
+  // Enhanced console logging at request start
+  console.log(`\n${'='.repeat(80)}`);
+  console.log(`[${protocol} REQUEST] ${timestamp}`);
+  console.log(`${'='.repeat(80)}`);
+  console.log(`  Method:      ${method}`);
+  console.log(`  Input URL:   ${protocol.toLowerCase()}://${host}${url}`);
+  console.log(`  Path:        ${url}`);
+  console.log(`  Client IP:   ${ip}`);
+  console.log(`  User-Agent:  ${userAgent.substring(0, 60)}${userAgent.length > 60 ? '...' : ''}`);
+  
+  // Identify request type
+  let requestType = 'STATIC FILE';
+  if (url.startsWith('/api/phantom')) {
+    requestType = 'PHANTOM API PROXY';
+  } else if (url.startsWith('/api/busylight')) {
+    requestType = 'BUSYLIGHT PROXY';
+  } else if (url.startsWith('/api/')) {
+    requestType = 'API ENDPOINT';
+  } else if (url === '/' || url.startsWith('/index')) {
+    requestType = 'SPA ROOT';
+  }
+  console.log(`  Type:        ${requestType}`);
+  console.log(`${'-'.repeat(80)}`);
   
   // Log when response finishes
   res.on('finish', () => {
     const statusCode = res.statusCode;
     const contentLength = res.get('content-length') || '-';
-    const responseTime = res.get('x-response-time') || '-';
+    const responseTime = res.locals.startTime ? Date.now() - res.locals.startTime : '-';
     
     const logLine = `[${timestamp}] ${protocol} ${ip} "${method} ${url}" ${statusCode} ${contentLength} "${userAgent}" ${responseTime}ms\n`;
     
     // Write to file
     stream.write(logLine);
     
-    // Also log to console
-    console.log(`[${protocol}] ${method} ${url} - ${statusCode}`);
+    // Enhanced console output
+    const statusColor = statusCode >= 500 ? '❌' : statusCode >= 400 ? '⚠️' : statusCode >= 300 ? '↪️' : '✅';
+    console.log(`  ${statusColor} Response:   ${statusCode} ${http.STATUS_CODES[statusCode] || ''}`);
+    console.log(`  Duration:    ${responseTime}ms`);
+    console.log(`  Size:        ${contentLength} bytes`);
+    console.log(`${'='.repeat(80)}\n`);
   });
 }
 
-// Response time middleware
+// Response time middleware - stores start time for later calculation
 function responseTimeMiddleware(req, res, next) {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    res.set('x-response-time', duration);
-  });
+  res.locals.startTime = Date.now();
   next();
 }
 
@@ -135,57 +160,75 @@ app.use('/api/phantom', createProxyMiddleware({
     const phantomId = req.query.phantomId || '000';
     const apiUsername = process.env.PHANTOM_API_USERNAME;
     const apiKey = process.env.PHANTOM_API_KEY;
+    const host = req.headers.host || 'unknown';
+    
+    // Get the actual path being called after rewrite
+    const originalPath = req.originalUrl;
+    const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api');
+    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}${rewrittenPath}`;
+    
+    console.log(`  🔄 PROXY TRANSLATION:`);
+    console.log(`     Input:  https://${host}${originalPath}`);
+    console.log(`     Output: ${targetUrl}`);
+    console.log(`     PhantomID: ${phantomId}`);
     
     if (apiUsername && apiKey) {
       const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
       proxyReq.setHeader('Authorization', `Basic ${authString}`);
-      console.log(`[AUTH]    Added Basic Auth for user: ${apiUsername}`);
+      console.log(`     Auth: ✅ Basic Auth (${apiUsername})`);
     } else {
-      console.warn(`[AUTH]    Missing PHANTOM_API_USERNAME or PHANTOM_API_KEY in .env file`);
+      console.warn(`     Auth: ⚠️ Missing credentials`);
     }
     
-    console.log(`\n========== PROXY REQUEST ==========`);
-    console.log(`[TIME]    ${new Date().toISOString()}`);
-    console.log(`[METHOD]  ${req.method}`);
-    console.log(`[FROM]    ${req.originalUrl}`);
-    console.log(`[TO]      https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}/api`);
-    console.log(`[HEADERS] ${JSON.stringify(req.headers, null, 2)}`);
+    // Log query params if present
+    const queryParams = new URLSearchParams(req.url.split('?')[1]);
+    if (queryParams.toString()) {
+      console.log(`     Query Params:`);
+      for (const [key, value] of queryParams) {
+        console.log(`       • ${key} = ${value}`);
+      }
+    }
     
     // Log request body if present
     if (req.body && Object.keys(req.body).length > 0) {
-      console.log(`[BODY]    ${JSON.stringify(req.body, null, 2)}`);
+      console.log(`     Body: ${JSON.stringify(req.body)}`);
     }
   },
   onProxyRes: (proxyRes, req, res) => {
     let responseBody = '';
+    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+    
+    console.log(`  ${statusIcon} PROXY RESPONSE:`);
+    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
+    console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
     
     proxyRes.on('data', (chunk) => {
       responseBody += chunk.toString();
     });
     
     proxyRes.on('end', () => {
-      console.log(`\n========== PROXY RESPONSE ==========`);
-      console.log(`[TIME]    ${new Date().toISOString()}`);
-      console.log(`[STATUS]  ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
-      console.log(`[HEADERS] ${JSON.stringify(proxyRes.headers, null, 2)}`);
-      try {
-        const parsed = JSON.parse(responseBody);
-        console.log(`[BODY]    ${JSON.stringify(parsed, null, 2)}`);
-      } catch {
-        console.log(`[BODY]    ${responseBody.substring(0, 500)}${responseBody.length > 500 ? '...' : ''}`);
+      if (responseBody.length > 0) {
+        try {
+          const parsed = JSON.parse(responseBody);
+          const preview = JSON.stringify(parsed).substring(0, 200);
+          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
+        } catch {
+          const preview = responseBody.substring(0, 200);
+          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
+        }
       }
-      console.log(`====================================\n`);
     });
     
     delete proxyRes.headers['www-authenticate'];
   },
   onError: (err, req, res) => {
-    console.log(`\n========== PROXY ERROR ==========`);
-    console.log(`[TIME]    ${new Date().toISOString()}`);
-    console.log(`[URL]     ${req.originalUrl}`);
-    console.log(`[ERROR]   ${err.message}`);
-    console.log(`[STACK]   ${err.stack}`);
-    console.log(`==================================\n`);
+    console.log(`  ❌ PROXY ERROR:`);
+    console.log(`     URL: ${req.originalUrl}`);
+    console.log(`     Error: ${err.message}`);
+    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
+    if (err.code === 'ECONNREFUSED') {
+      console.log(`     💡 Hint: Target server may be down or unreachable`);
+    }
     res.status(502).json({ error: 'Proxy error', message: err.message });
   }
 }));
@@ -199,21 +242,35 @@ const busylightProxy = createProxyMiddleware({
     '^/api/busylight': '/kuando',
   },
   onProxyReq: (proxyReq, req, res) => {
-    console.log(`\n========== BUSYLIGHT PROXY REQUEST ==========`);
-    console.log(`[TIME]    ${new Date().toISOString()}`);
-    console.log(`[METHOD]  ${req.method}`);
-    console.log(`[FROM]    ${req.originalUrl}`);
-    console.log(`[TO]      ${BUSYLIGHT_BRIDGE_URL}/kuando`);
+    const host = req.headers.host || 'unknown';
+    const originalPath = req.originalUrl;
+    const rewrittenPath = originalPath.replace(/^\/api\/busylight/, '/kuando');
+    const targetUrl = `${BUSYLIGHT_BRIDGE_URL}${rewrittenPath}`;
+    const protocol = req.protocol || 'http';
+    
+    console.log(`  🚦 BUSYLIGHT PROXY TRANSLATION:`);
+    console.log(`     Input:  ${protocol}://${host}${originalPath}`);
+    console.log(`     Output: ${targetUrl}`);
+    
+    // Parse and display query parameters
+    const queryParams = new URLSearchParams(req.url.split('?')[1]);
+    if (queryParams.toString()) {
+      console.log(`     Parameters:`);
+      for (const [key, value] of queryParams) {
+        console.log(`       • ${key} = ${value}`);
+      }
+    }
   },
   onProxyRes: (proxyRes, req, res) => {
-    console.log(`[BUSYLIGHT] Response: ${proxyRes.statusCode}`);
+    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+    console.log(`  ${statusIcon} BUSYLIGHT RESPONSE:`);
+    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
   },
   onError: (err, req, res) => {
-    console.log(`\n========== BUSYLIGHT PROXY ERROR ==========`);
-    console.log(`[TIME]    ${new Date().toISOString()}`);
-    console.log(`[URL]     ${req.originalUrl}`);
-    console.log(`[ERROR]   ${err.message}`);
-    console.log(`===========================================\n`);
+    console.log(`  ❌ BUSYLIGHT ERROR:`);
+    console.log(`     URL: ${req.originalUrl}`);
+    console.log(`     Error: ${err.message}`);
+    console.log(`     💡 Hint: Is Busylight Bridge running on ${BUSYLIGHT_BRIDGE_URL}?`);
     res.status(502).json({ error: 'Busylight Bridge unreachable', message: err.message });
   }
 });
@@ -323,9 +380,14 @@ if (sslOptions) {
   // Add response time middleware
   httpApp.use(responseTimeMiddleware);
   
-  // HTTP logging middleware
+  // HTTP logging middleware with enhanced details
   httpApp.use((req, res, next) => {
     logRequest(httpLogStream, 'HTTP', req, res);
+    
+    // Log redirect decisions
+    if (!req.url.startsWith('/api/busylight')) {
+      console.log(`  ↪️  Will redirect to HTTPS`);
+    }
     next();
   });
   
