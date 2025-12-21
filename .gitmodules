@@ -1,0 +1,3 @@
+[submodule "busylight-bridge"]
+	path = busylight-bridge
+	url = https://github.com/kittykatchunks/busylight-bridge.git
