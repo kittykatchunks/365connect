@@ -326,7 +326,24 @@ if (sslOptions) {
   // Start HTTPS server
   const httpsServer = https.createServer(sslOptions, app);
   
-  // Create WebSocket server for Busylight Bridge client connections
+  // Create WebSocket server for Busylight Bridge client connections (port 8088)
+  const bridgeServer = http.createServer();
+  const bridgeWss = new WebSocket.Server({ server: bridgeServer, path: '/ws' });
+  
+  bridgeWss.on('connection', (ws, request) => {
+    const clientIp = request.socket.remoteAddress;
+    const bridgeId = `bridge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[BusylightBridge] New bridge connection from ${clientIp}: ${bridgeId}`);
+    busylightBridge.registerBridge(ws, bridgeId);
+  });
+  
+  // Start bridge connection server on port 8088
+  bridgeServer.listen(8088, () => {
+    console.log(`✓ Bridge WebSocket Server running on ws://0.0.0.0:8088/ws`);
+    console.log(`  Accepting incoming connections from Busylight Bridge clients`);
+  });
+  
+  // Create WebSocket server for Busylight Bridge client connections (legacy/HTTPS)
   const wss = new WebSocket.Server({ noServer: true });
   
   wss.on('connection', (ws, request) => {
