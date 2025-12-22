@@ -17,8 +17,8 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 class BusylightBridgeServer {
     constructor(options = {}) {
-        this.localServiceUrl = options.localServiceUrl || 'ws://127.0.0.1:19774/ws';
-        this.localServiceHost = options.localServiceHost || 'http://127.0.0.1:19774';
+        this.localServiceUrl = options.localServiceUrl || 'ws://localhost:19774/ws';
+        this.localServiceHost = options.localServiceHost || 'http://localhost:19774';
         this.clients = new Map(); // Track connected clients
         this.localConnection = null; // WebSocket connection to local service
         this.reconnectAttempts = 0;

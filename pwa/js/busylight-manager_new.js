@@ -19,7 +19,7 @@ class BusylightManager {
         
         // Connection settings
         this.bridgeUrl = 'http://127.0.0.1:19774';
-        this.bridgeWsUrl = 'ws://127.0.0.1:19774/ws';
+        this.bridgeWsUrl = 'ws://localhost:19774/ws';
         this.directUrl = 'http://127.0.0.1:8989';  // Direct kuandoHUB (fallback)
         
         // Computed baseUrl for API calls

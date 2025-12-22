@@ -46,7 +46,7 @@ class BusylightManager {
     // Load settings from localStorage
     loadSettings() {
         this.enabled = (window.localDB.getItem("BusylightEnabled", "0") === "1");
-        this.baseUrl = window.localDB.getItem("BusylightUrl", "http://127.0.0.1:8989");
+        this.baseUrl = window.localDB.getItem("BusylightUrl", "http://localhost:8989");
         
         // Bridge connection settings - use proxied URLs by default (HTTPS-safe)
         const defaultBridgeUrl = '/api/busylight';
@@ -65,7 +65,7 @@ class BusylightManager {
     // Save settings to localStorage
     saveSettings() {
         localDB.setItem("BusylightEnabled", this.enabled ? "1" : "0");
-        localDB.setItem("BusylightUrl", this.baseUrl || "http://127.0.0.1:8989");
+        localDB.setItem("BusylightUrl", this.baseUrl || "http://localhost:8989");
         localDB.setItem("BusylightBridgeUrl", this.bridgeUrl || "/api/busylight");
         localDB.setItem("BusylightUseWebSocket", this.useWebSocket ? "1" : "0");
     }
@@ -928,7 +928,7 @@ class BusylightManager {
                 <label>WebSocket URL (Bridge):</label>
                 <input id="busylight-ws-url" type="text" value="${this.websocketUrl}" 
                        placeholder="${this.websocketUrl}" readonly />
-                <div class="busylight-help-text">Connects to server bridge at ${this.websocketUrl} → ws://127.0.0.1:19774/ws</div>
+                <div class="busylight-help-text">Connects to server bridge at ${this.websocketUrl} → ws://localhost:19774/ws</div>
             </div>
             <div class="busylight-form-group">
                 <label>HTTP Bridge URL:</label>

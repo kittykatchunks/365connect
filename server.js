@@ -94,8 +94,8 @@ const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server
 
 // Initialize Busylight Bridge Server
 const busylightBridge = new BusylightBridgeServer({
-  localServiceUrl: process.env.BUSYLIGHT_WS_URL || 'ws://127.0.0.1:19774/ws',
-  localServiceHost: process.env.BUSYLIGHT_HTTP_HOST || 'http://127.0.0.1:19774'
+  localServiceUrl: process.env.BUSYLIGHT_WS_URL || 'ws://localhost:19774/ws',
+  localServiceHost: process.env.BUSYLIGHT_HTTP_HOST || 'http://localhost:19774'
 });
 
 // Let's Encrypt certificate paths
