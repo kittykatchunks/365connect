@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Busylight Manager Test</title>
+    <title>Busylight API Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
         h1 {
@@ -102,12 +102,18 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
-        input[type="number"] {
-            width: 60px;
+        input[type="number"], input[type="text"], select {
             padding: 5px;
             border: 1px solid #ddd;
             border-radius: 4px;
+        }
+        input[type="number"] {
+            width: 60px;
+        }
+        select {
+            width: 200px;
         }
         label {
             font-weight: bold;
@@ -116,368 +122,27 @@
     </style>
 </head>
 <body>
-    <h1>🚦 Busylight Manager Test Interface</h1>
+    <h1>🚦 Busylight API Test Interface</h1>
     <p style="color: #666; font-size: 14px;">
-        This test uses the actual BusylightManager class from the PWA application.
+        Test the Busylight Bridge API using HTTP requests instead of WebSocket connections.
     </p>
 
     <div class="section">
-        <h2>Connection</h2>
-        <button class="connect-btn" onclick="initialize()">Initialize Busylight Manager</button>
-        <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
-        <div id="status" class="disconnected">Not Initialized</div>
-    </div>
-
-    <div class="section">
-        <h2>Device Info</h2>
-        <button class="action-btn" onclick="testDevices()">Get Devices</button>
-        <button class="action-btn" onclick="testConnection()">Test Connection (Color Sequence)</button>
-        <div id="deviceInfo" style="margin-top: 10px; font-size: 12px; color: #333; white-space: pre-wrap;"></div>
-    </div>
-
-    <div class="section">
-        <h2>SIP State Simulation</h2>
-        <button class="state-btn" onclick="simulateSipRegistered()">SIP Registered</button>
-        <button class="state-btn" onclick="simulateIncomingCall()">Incoming Call</button>
-        <button class="state-btn" onclick="simulateCallAnswered()">Call Answered</button>
-        <button class="state-btn" onclick="simulateCallTerminated()">Call Terminated</button>
-        <button class="state-btn" onclick="simulateAgentLogin()">Agent Login</button>
-        <button class="state-btn" onclick="simulateAgentLogout()">Agent Logout</button>
-    </div>
-
-    <div class="section">
-        <h2>Direct Light Control</h2>
-        <button class="color-btn" onclick="setColor(100, 0, 0)">Red</button>
-        <button class="color-btn" onclick="setColor(0, 100, 0)">Green</button>
-        <button class="color-btn" onclick="setColor(0, 0, 100)">Blue</button>
-        <button class="color-btn" onclick="setColor(100, 100, 0)">Yellow</button>
-        <button class="color-btn" onclick="setColor(100, 0, 100)">Magenta</button>
-        <button class="color-btn" onclick="setColor(0, 100, 100)">Cyan</button>
-        <button class="color-btn" onclick="setColor(100, 100, 100)">White</button>
-        <button class="action-btn" onclick="turnOff()">Turn Off</button>
-    </div>
-
-    <div class="section">
-        <h2>Custom RGB Color</h2>
+        <h2>API Configuration</h2>
         <div class="controls">
-            <label>R:</label>
-            <input type="number" id="red" min="0" max="100" value="50">
-            <label>G:</label>
-            <input type="number" id="green" min="0" max="100" value="50">
-            <label>B:</label>
-            <input type="number" id="blue" min="0" max="100" value="50">
-            <button class="color-btn" onclick="setCustomColor()">Set Custom Color</button>
+            <label>API Base URL:</label>
+            <input type="text" id="apiUrl" value="/api/busylight" style="width: 300px;">
+            <label>Bridge ID (optional):</label>
+            <input type="text" id="bridgeId" placeholder="auto" style="width: 150px;">
         </div>
-    </div>
-
-    <div class="section">
-        <h2>Messages</h2>
-        <button onclick="clearMessages()">Clear Messages</button>
-        <div id="messages"></div>
-    </div>
-
-    <!-- Include required PWA libraries -->
-    <script type="text/javascript" src="js/browser-cache.js"></script>
-    <script type="text/javascript" src="js/busylight-manager.js"></script>
-
-    <script>
-        let busylightManager;
-        
-        async function initialize() {
-            try {
-                addMessage('Initializing BusylightManager...', 'sent');
-                
-                // Create and initialize the manager
-                busylightManager = new BusylightManager({
-                    enabled: true,
-                    bridgeUrl: '/api/busylight',
-                    websocketUrl: 'wss://connect365.servehttp.com/api/busylight-ws',
-                    useWebSocket: true
-                });
-                
-                await busylightManager.initialize();
-                
-                const status = document.getElementById('status');
-                status.innerHTML = `Connected ✓ (${busylightManager.connected ? 'Bridge Connected' : 'Waiting for Bridge'})`;
-                status.className = 'connected';
-                addMessage('BusylightManager initialized successfully', 'received');
-                
-            } catch (error) {
-                addMessage('Error initializing: ' + error.message, 'error');
-                console.error(error);
-            }
-        }
-
-        async function disconnect() {
-            if (busylightManager) {
-                busylightManager.disconnect();
-                busylightManager = null;
-                const status = document.getElementById('status');
-                status.innerHTML = 'Disconnected';
-                status.className = 'disconnected';
-                addMessage('Disconnected', 'received');
-            }
-        }
-
-        async function testDevices() {
-            if (!busylightManager) {
-                addMessage('Not initialized! Click "Initialize Busylight Manager" first.', 'error');
-                return;
-            }
-            
-            try {
-                addMessage('Getting devices...', 'sent');
-                const devices = await busylightManager.getDevices();
-                const info = document.getElementById('deviceInfo');
-                info.textContent = `Found ${devices.length} device(s):\n${JSON.stringify(devices, null, 2)}`;
-                addMessage(`Found ${devices.length} device(s)`, 'received');
-            } catch (error) {
-                addMessage('Error getting devices: ' + error.message, 'error');
-            }
-        }
-
-        async function testConnection() {
-            if (!busylightManager) {
-                addMessage('Not initialized! Click "Initialize Busylight Manager" first.', 'error');
-                return;
-            }
-            
-            try {
-                addMessage('Running connection test (color sequence)...', 'sent');
-                await busylightManager.testConnection();
-                addMessage('Connection test completed', 'received');
-            } catch (error) {
-                addMessage('Error during test: ' + error.message, 'error');
-            }
-        }
-
-        // SIP State Simulations
-        function simulateSipRegistered() {
-            if (!busylightManager) return;
-            addMessage('Simulating: SIP Registered', 'sent');
-            busylightManager.handleSipRegistered();
-        }
-
-        function simulateIncomingCall() {
-            if (!busylightManager) return;
-            addMessage('Simulating: Incoming Call', 'sent');
-            busylightManager.handleIncomingCall({ remoteIdentity: { uri: { user: '1234' } } });
-        }
-
-        function simulateCallAnswered() {
-            if (!busylightManager) return;
-            addMessage('Simulating: Call Answered', 'sent');
-            busylightManager.handleCallAnswered();
-        }
-
-        function simulateCallTerminated() {
-            if (!busylightManager) return;
-            addMessage('Simulating: Call Terminated', 'sent');
-            busylightManager.handleCallTerminated();
-        }
-
-        function simulateAgentLogin() {
-            if (!busylightManager) return;
-            addMessage('Simulating: Agent Login', 'sent');
-            busylightManager.handleAgentLogin();
-        }
-
-        function simulateAgentLogout() {
-            if (!busylightManager) return;
-            addMessage('Simulating: Agent Logout', 'sent');
-            busylightManager.handleAgentLogout();
-        }
-
-        // Direct control functions
-        async function setColor(red, green, blue) {
-            if (!busylightManager) {
-                addMessage('Not initialized!', 'error');
-                return;
-            }
-            
-            try {
-                addMessage(`Setting color: R=${red}, G=${green}, B=${blue}`, 'sent');
-                await busylightManager.setColorRGB(red, green, blue);
-                addMessage('Color set successfully', 'received');
-            } catch (error) {
-                addMessage('Error: ' + error.message, 'error');
-            }
-        }
-
-        async function setCustomColor() {
-            const red = parseInt(document.getElementById('red').value);
-            const green = parseInt(document.getElementById('green').value);
-            const blue = parseInt(document.getElementById('blue').value);
-            await setColor(red, green, blue);
-        }
-
-        async function turnOff() {
-            if (!busylightManager) {
-                addMessage('Not initialized!', 'error');
-                return;
-            }
-            
-            try {
-                addMessage('Turning off...', 'sent');
-                await busylightManager.turnOff();
-                addMessage('Light turned off', 'received');
-            } catch (error) {
-                addMessage('Error: ' + error.message, 'error');
-            }
-        }
-
-        function addMessage(msg, type = 'sent') {
-            const messagesDiv = document.getElementById('messages');
-            const timestamp = new Date().toLocaleTimeString();
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message ' + type;
-            msgDiv.textContent = `[${timestamp}] ${msg}`;
-            messagesDiv.appendChild(msgDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        function clearMessages() {
-            document.getElementById('messages').innerHTML = '';
-        }
-
-        // Page load
-        window.onload = () => {
-            addMessage('Page loaded. Click "Initialize Busylight Manager" to begin.', 'received');
-        };
-    </script>
-</body>
-</html>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #333;
-        }
-        .section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f9f9f9;
-        }
-        .section h2 {
-            margin-top: 0;
-            color: #555;
-            font-size: 18px;
-        }
-        button {
-            margin: 5px;
-            padding: 10px 15px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        button:hover {
-            opacity: 0.8;
-        }
-        .connect-btn {
-            background: #4CAF50;
-            color: white;
-            font-weight: bold;
-        }
-        .disconnect-btn {
-            background: #f44336;
-            color: white;
-        }
-        .state-btn {
-            background: #2196F3;
-            color: white;
-        }
-        .color-btn {
-            background: #FF9800;
-            color: white;
-        }
-        .action-btn {
-            background: #9C27B0;
-            color: white;
-        }
-        #status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        #status.connected {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-        #status.disconnected {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-        #messages {
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-        }
-        .message {
-            margin: 5px 0;
-            padding: 5px;
-        }
-        .message.sent {
-            color: #1565c0;
-        }
-        .message.received {
-            color: #2e7d32;
-        }
-        .message.error {
-            color: #c62828;
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        input[type="number"] {
-            width: 60px;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        label {
-            font-weight: bold;
-            margin-left: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>🚦 Busylight WebSocket Test Interface</h1>
-
-    <div class="section">
-        <h2>Connection</h2>
-        <div class="controls">
-            <label>WebSocket URL:</label>
-            <select id="wsUrl" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px; width: 400px;">
-                <option value="wss://connect365.servehttp.com/api/busylight-ws">Bridge Server (WSS - Production)</option>
-                <option value="ws://localhost:8088/api/busylight-ws">Bridge Server (WS - Local)</option>
-                <option value="ws://localhost:19774/ws">Direct to Bridge Client (Legacy)</option>
-            </select>
-        </div>
-        <button class="connect-btn" onclick="connect()">Connect to WebSocket</button>
-        <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
-        <div id="status" class="disconnected">Disconnected</div>
+        <button class="action-btn" onclick="checkBridgeStatus()">Check Bridge Status</button>
+        <div id="status" class="disconnected">Not Connected</div>
     </div>
 
     <div class="section">
         <h2>Device Info</h2>
         <button class="action-btn" onclick="getDevices()">Get Devices</button>
-        <button class="action-btn" onclick="getStatus()">Get Status</button>
+        <button class="action-btn" onclick="getCurrentPresence()">Get Current Presence</button>
         <button class="action-btn" onclick="getHealth()">Get Health</button>
         <div id="deviceInfo" style="margin-top: 10px; font-size: 12px; color: #333; white-space: pre-wrap;"></div>
     </div>
@@ -541,7 +206,7 @@
             <button class="action-btn" onclick="setBlink()">Set Blink</button>
         </div>
         <div style="margin-top: 10px; font-size: 12px; color: #666;">
-            Uses last set color or custom RGB values above. Time in 100ms units (5 = 500ms)
+            Uses custom RGB values above. Time in 100ms units (5 = 500ms)
         </div>
     </div>
 
@@ -552,145 +217,169 @@
     </div>
 
     <script>
-        let ws;
-        
-        function connect() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                addMessage('Already connected', 'error');
-                return;
-            }
-
-            const wsUrl = document.getElementById('wsUrl').value;
-            addMessage(`Connecting to ${wsUrl}...`, 'sent');
+        // API helper function
+        async function sendApiRequest(action, params = {}) {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const bridgeId = document.getElementById('bridgeId').value;
             
-            ws = new WebSocket(wsUrl);
-            
-            ws.onopen = () => {
-                const status = document.getElementById('status');
-                status.innerHTML = 'Connected ✓';
-                status.className = 'connected';
-                addMessage('WebSocket connected successfully', 'received');
-            };
-            
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    addMessage('← Received: ' + JSON.stringify(data, null, 2), 'received');
-                    
-                    // Display device/status info
-                    if (data.type === 'response' && data.data) {
-                        const info = document.getElementById('deviceInfo');
-                        info.textContent = JSON.stringify(data.data, null, 2);
-                    } else if (data.type === 'connection_status') {
-                        addMessage(`Bridge status: ${data.bridges} bridge(s) connected`, 'received');
-                    }
-                } catch (e) {
-                    addMessage('← Received: ' + event.data, 'received');
+            try {
+                const requestData = {
+                    action: action,
+                    ...params
+                };
+                
+                if (bridgeId && bridgeId !== 'auto') {
+                    requestData.bridgeId = bridgeId;
                 }
-            };
-            
-            ws.onerror = (error) => {
-                addMessage('WebSocket error: ' + error, 'error');
-            };
+                
+                addMessage(`→ POST ${apiUrl}: ${JSON.stringify(requestData)}`, 'sent');
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addMessage(`← Response: ${JSON.stringify(data, null, 2)}`, 'received');
+                return data;
+                
+            } catch (error) {
+                addMessage(`✗ Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
 
-            ws.onclose = () => {
+        // Status check
+        async function checkBridgeStatus() {
+            try {
+                const apiUrl = document.getElementById('apiUrl').value;
+                addMessage(`→ GET ${apiUrl}/status`, 'sent');
+                
+                const response = await fetch(`${apiUrl.replace('/api/busylight', '')}/api/busylight-status`);
+                const data = await response.json();
+                
                 const status = document.getElementById('status');
-                status.innerHTML = 'Disconnected';
-                status.className = 'disconnected';
-                addMessage('WebSocket disconnected', 'error');
-            };
-        }
-
-        function disconnect() {
-            if (ws) {
-                ws.close();
-                ws = null;
+                if (data.bridges > 0) {
+                    status.innerHTML = `Connected ✓ (${data.bridges} bridge(s) available)`;
+                    status.className = 'connected';
+                } else {
+                    status.innerHTML = 'No bridges connected';
+                    status.className = 'disconnected';
+                }
+                
+                addMessage(`← Bridge Status: ${JSON.stringify(data, null, 2)}`, 'received');
+                
+            } catch (error) {
+                addMessage(`✗ Error checking status: ${error.message}`, 'error');
             }
-        }
-
-        function sendCommand(command) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                addMessage('Not connected! Click "Connect to WebSocket" first.', 'error');
-                return false;
-            }
-
-            const json = JSON.stringify(command);
-            ws.send(json);
-            addMessage('→ Sent: ' + json, 'sent');
-            return true;
         }
 
         // Device query functions
-        function getDevices() {
-            sendCommand({ action: 'busylightdevices' });
+        async function getDevices() {
+            try {
+                const data = await sendApiRequest('busylightdevices');
+                const info = document.getElementById('deviceInfo');
+                if (data.success && data.devices) {
+                    info.textContent = `Found ${data.devices.length} device(s):\n${JSON.stringify(data.devices, null, 2)}`;
+                }
+            } catch (error) {
+                console.error('Error getting devices:', error);
+            }
         }
 
-        function getStatus() {
-            sendCommand({ action: 'currentpresence' });
+        async function getCurrentPresence() {
+            try {
+                const data = await sendApiRequest('currentpresence');
+                const info = document.getElementById('deviceInfo');
+                if (data.success && data.presence) {
+                    info.textContent = `Current Presence:\n${JSON.stringify(data.presence, null, 2)}`;
+                }
+            } catch (error) {
+                console.error('Error getting presence:', error);
+            }
         }
 
-        function getHealth() {
-            sendCommand({ action: 'health' });
+        async function getHealth() {
+            try {
+                const data = await sendApiRequest('health');
+                const info = document.getElementById('deviceInfo');
+                if (data.success) {
+                    info.textContent = `Health Status:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                console.error('Error getting health:', error);
+            }
         }
 
-        function setState(state) {
-            sendCommand({ action: 'state', state: state });
+        // State control
+        async function setState(state) {
+            try {
+                await sendApiRequest('state', { state: state });
+            } catch (error) {
+                console.error('Error setting state:', error);
+            }
         }
 
-        function setColor(red, green, blue) {
-            sendCommand({ 
-                action: 'light', 
-                red: red, 
-                green: green, 
-                blue: blue 
-            });
+        // Color control
+        async function setColor(red, green, blue) {
+            try {
+                await sendApiRequest('light', { red, green, blue });
+            } catch (error) {
+                console.error('Error setting color:', error);
+            }
         }
 
-        function setCustomColor() {
+        async function setCustomColor() {
             const red = parseInt(document.getElementById('red').value);
             const green = parseInt(document.getElementById('green').value);
             const blue = parseInt(document.getElementById('blue').value);
-            setColor(red, green, blue);
+            await setColor(red, green, blue);
         }
 
-        function setAlert() {
+        async function setAlert() {
             const red = parseInt(document.getElementById('red').value);
             const green = parseInt(document.getElementById('green').value);
             const blue = parseInt(document.getElementById('blue').value);
             const sound = parseInt(document.getElementById('sound').value);
             const volume = parseInt(document.getElementById('volume').value);
             
-            sendCommand({
-                action: 'alert',
-                red: red,
-                green: green,
-                blue: blue,
-                sound: sound,
-                volume: volume
-            });
+            try {
+                await sendApiRequest('alert', { red, green, blue, sound, volume });
+            } catch (error) {
+                console.error('Error setting alert:', error);
+            }
         }
 
-        function setBlink() {
+        async function setBlink() {
             const red = parseInt(document.getElementById('red').value);
             const green = parseInt(document.getElementById('green').value);
             const blue = parseInt(document.getElementById('blue').value);
             const ontime = parseInt(document.getElementById('ontime').value);
             const offtime = parseInt(document.getElementById('offtime').value);
             
-            sendCommand({
-                action: 'blink',
-                red: red,
-                green: green,
-                blue: blue,
-                ontime: ontime,
-                offtime: offtime
-            });
+            try {
+                await sendApiRequest('blink', { red, green, blue, ontime, offtime });
+            } catch (error) {
+                console.error('Error setting blink:', error);
+            }
         }
 
-        function turnOff() {
-            sendCommand({ action: 'off' });
+        async function turnOff() {
+            try {
+                await sendApiRequest('off');
+            } catch (error) {
+                console.error('Error turning off:', error);
+            }
         }
 
+        // Message logging
         function addMessage(msg, type = 'sent') {
             const messagesDiv = document.getElementById('messages');
             const timestamp = new Date().toLocaleTimeString();
@@ -705,9 +394,10 @@
             document.getElementById('messages').innerHTML = '';
         }
 
-        // Auto-connect on load
+        // Page load
         window.onload = () => {
-            addMessage('Page loaded. Select WebSocket URL and click "Connect to WebSocket" to begin.', 'received');
+            addMessage('Page loaded. Click "Check Bridge Status" to verify connection.', 'received');
+            checkBridgeStatus();
         };
     </script>
 </body>
