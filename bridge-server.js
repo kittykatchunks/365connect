@@ -267,20 +267,56 @@ class BusylightBridgeServer {
      * @param {string} clientId - The client ID
      * @param {Object} message - The message object
      */
-    handleClientMessage(clientId, message) {
-        // Forward the message to the local service if connected
-        if (this.localConnection && this.localConnection.readyState === WebSocket.OPEN) {
-            console.log(`[BusylightBridge] Forwarding message to local service:`, message);
-            this.localConnection.send(JSON.stringify(message));
-        } else {
-            console.warn('[BusylightBridge] Cannot forward message - not connected to local service');
+    async handleClientMessage(clientId, message) {
+        try {
+            // Check if we have any connected bridges
+            if (this.bridges.size === 0) {
+                console.warn('[BusylightBridge] Client message received but no bridges connected');
+                const client = this.clients.get(clientId);
+                if (client && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({
+                        type: 'error',
+                        message: 'No Busylight Bridge clients connected',
+                        originalMessage: message
+                    }));
+                }
+                return;
+            }
+
+            // Extract action and params from client message
+            const { action, ...params } = message;
+            
+            if (!action) {
+                console.warn('[BusylightBridge] Client message missing action:', message);
+                return;
+            }
+
+            console.log(`[BusylightBridge] Client ${clientId} → Bridge: ${action}`, params);
+
+            // Send to first available bridge (same as HTTP requests)
+            const result = await this.sendToBridge(null, action, params);
+
+            // Send response back to client
+            const client = this.clients.get(clientId);
+            if (client && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'response',
+                    action: action,
+                    success: result.success,
+                    data: result.data,
+                    error: result.error
+                }));
+            }
+
+        } catch (error) {
+            console.error('[BusylightBridge] Error handling client message:', error);
             
             // Send error back to client
             const client = this.clients.get(clientId);
             if (client && client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({
                     type: 'error',
-                    message: 'Not connected to local Busylight service',
+                    message: error.message,
                     originalMessage: message
                 }));
             }
