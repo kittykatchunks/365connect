@@ -321,8 +321,19 @@ class BusylightManager {
             });
 
             if (response.ok) {
-                const devices = await response.json();
-                return devices;
+                const result = await response.json();
+                // Handle both direct array and wrapped response formats
+                if (Array.isArray(result)) {
+                    return result;
+                } else if (result.devices && Array.isArray(result.devices)) {
+                    return result.devices;
+                } else if (result.data && Array.isArray(result.data)) {
+                    return result.data;
+                } else if (result.data && result.data.devices && Array.isArray(result.data.devices)) {
+                    return result.data.devices;
+                }
+                console.warn('[Busylight] Unexpected device response format:', result);
+                return [];
             }
         } catch (error) {
             console.warn("[Busylight] Error getting devices:", error);
