@@ -342,6 +342,13 @@ class BusylightBridgeServer {
                 let params = { ...queryParams };
                 delete params.action;
                 
+                // Map Kuando HTTP API actions to bridge actions
+                if (action === 'busylightdevices') {
+                    action = 'devices';
+                } else if (action === 'currentpresence') {
+                    action = 'status';
+                }
+                
                 // Map HTTP endpoints to actions
                 if (!action) {
                     if (urlPath.includes('/health') || req.originalUrl.includes('/health')) {
