@@ -86,32 +86,35 @@ class BusylightManager {
             return false;
         }
 
-        // Check HTTP API connection (used for all commands)
-        const httpConnected = await this.checkHttpConnection();
-        if (!httpConnected) {
-            console.warn("[Busylight] HTTP API not reachable");
-            this.connectionMode = 'none';
-            this.showConnectionError();
-            return false;
-        }
-
-        console.log("[Busylight] HTTP API connected");
-        this.connectionMode = 'http';
-        
-        // Optionally connect WebSocket for receiving event notifications
+        // Try WebSocket connection first
         if (this.useWebSocket) {
             const wsConnected = await this.connectWebSocket();
             if (wsConnected) {
-                console.log("[Busylight] WebSocket connected for event notifications");
-            } else {
-                console.log("[Busylight] WebSocket unavailable, will use HTTP API only");
+                console.log("[Busylight] Connected via WebSocket");
+                this.connectionMode = 'websocket';
+                await this.testConnection();
+                this.startMonitoring();
+                await this.updateStateFromSystem();
+                return true;
             }
+            console.log("[Busylight] WebSocket connection failed, trying HTTP fallback...");
         }
-        
-        await this.testConnection();
-        this.startMonitoring();
-        await this.updateStateFromSystem();
-        return true;
+
+        // Fallback to HTTP
+        const httpConnected = await this.checkHttpConnection();
+        if (httpConnected) {
+            console.log("[Busylight] Connected via HTTP");
+            this.connectionMode = 'http';
+            await this.testConnection();
+            this.startMonitoring();
+            await this.updateStateFromSystem();
+            return true;
+        }
+
+        console.warn("[Busylight] Failed to connect via WebSocket and HTTP");
+        this.connectionMode = 'none';
+        this.showConnectionError();
+        return false;
     }
 
     // Connect to Busylight Bridge via WebSocket
@@ -236,8 +239,12 @@ class BusylightManager {
     }
     // Check connection (used by monitoring)
     async checkConnection() {
-        // Check if HTTP API is available (all commands use HTTP)
-        return await this.checkHttpConnection();
+        if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            return true;
+        } else if (this.connectionMode === 'http') {
+            return await this.checkHttpConnection();
+        }
+        return false;
     }
 
     // Test connection with color sequence
