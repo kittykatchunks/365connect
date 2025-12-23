@@ -313,45 +313,16 @@ class BusylightManager {
     // Get list of connected Busylight devices
     async getDevices() {
         try {
-            let url, response;
-            
-            if (this.connectionMode === 'websocket' && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-                // Send WebSocket request
-                return new Promise((resolve, reject) => {
-                    const messageId = Date.now();
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 2000);
-                    
-                    const handler = (event) => {
-                        try {
-                            const data = JSON.parse(event.data);
-                            if (data.id === messageId && data.type === 'devices') {
-                                clearTimeout(timeout);
-                                this.websocket.removeEventListener('message', handler);
-                                resolve(data.devices || []);
-                            }
-                        } catch (e) {
-                            // Ignore parse errors
-                        }
-                    };
-                    
-                    this.websocket.addEventListener('message', handler);
-                    this.websocket.send(JSON.stringify({
-                        id: messageId,
-                        action: 'getDevices'
-                    }));
-                });
-            } else {
-                // HTTP fallback
-                url = `${this.bridgeUrl}?action=busylightdevices`;
-                response = await fetch(url, {
-                    method: 'GET',
-                    signal: AbortSignal.timeout(2000)
-                });
+            // Always use HTTP for device queries - more reliable than WebSocket for request/response
+            const url = `${this.bridgeUrl}?action=busylightdevices`;
+            const response = await fetch(url, {
+                method: 'GET',
+                signal: AbortSignal.timeout(2000)
+            });
 
-                if (response.ok) {
-                    const devices = await response.json();
-                    return devices;
-                }
+            if (response.ok) {
+                const devices = await response.json();
+                return devices;
             }
         } catch (error) {
             console.warn("[Busylight] Error getting devices:", error);
