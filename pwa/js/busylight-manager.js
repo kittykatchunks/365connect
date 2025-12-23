@@ -24,8 +24,7 @@ class BusylightManager {
         this.monitoringInterval = null;
         this.monitoringIntervalMs = 15000; // 15 seconds
         
-        // Flashing control
-        this.flashingInterval = null;
+        // Flashing control (managed by device blink API)
         this.isFlashing = false;
         
         // Alert settings for ringing
@@ -53,11 +52,12 @@ class BusylightManager {
             'hold': { red: 100, green: 100, blue: 0 }          // YELLOW (will flash)
         };
         
-        // Flash intervals (milliseconds)
+        // Flash intervals for blink API (in 0.1 second units)
+        // e.g., 15 = 1.5 seconds
         this.flashIntervals = {
-            'ringing': 500,        // Fast flash for ringing
-            'hold': 1500,          // Slow flash for hold
-            'idle_voicemail': 1500 // Slow flash for voicemail
+            'ringing': { ontime: 5, offtime: 5 },        // Fast flash for ringing (0.5s on/off)
+            'hold': { ontime: 15, offtime: 15 },         // Slow flash for hold (1.5s on/off)
+            'idle_voicemail': { ontime: 15, offtime: 15 } // Slow flash for voicemail (1.5s on/off)
         };
     }
 
@@ -537,8 +537,8 @@ class BusylightManager {
         
         if (!this.enabled || !this.connected) return;
         
-        // Stop any existing flashing
-        this.stopFlashing();
+        // Mark that we're flashing or not
+        this.isFlashing = (state === 'hold' || state === 'idle_voicemail');
 
         const color = this.stateColors[state];
         
@@ -558,9 +558,15 @@ class BusylightManager {
             );
             
         } else if (state === 'hold' || state === 'idle_voicemail') {
-            // Slow flash for hold or voicemail
-            const interval = this.flashIntervals[state];
-            await this.startFlashing(color, interval);
+            // Use blink API for flashing states
+            const timing = this.flashIntervals[state];
+            await this.setBlink(
+                color.red,
+                color.green,
+                color.blue,
+                timing.ontime,
+                timing.offtime
+            );
             
         } else {
             // Solid color for other states
@@ -588,53 +594,25 @@ class BusylightManager {
     }
 
     /**
+     * Set blink pattern using device's built-in blink command
+     * @param {number} red - Red value (0-100)
+     * @param {number} green - Green value (0-100)
+     * @param {number} blue - Blue value (0-100)
+     * @param {number} ontime - Time light is on in 0.1 second units (default 5 = 0.5s)
+     * @param {number} offtime - Time light is off in 0.1 second units (default 5 = 0.5s)
+     */
+    async setBlink(red, green, blue, ontime = 5, offtime = 5) {
+        return await this.apiRequest('blink', { red, green, blue, ontime, offtime });
+    }
+
+    /**
      * Turn light off
      */
     async turnOff() {
         return await this.apiRequest('off');
     }
 
-    /**
-     * Start flashing pattern
-     */
-    async startFlashing(color, intervalMs = 1500) {
-        if (!this.enabled || !this.connected || this.isFlashing) return;
-        
-        console.log(`[Busylight] Starting flash pattern (${intervalMs}ms interval)`);
-        this.isFlashing = true;
-        
-        let isOn = true;
-        
-        // Set initial color
-        await this.setColorRGB(color.red, color.green, color.blue);
-        
-        // Setup flashing interval
-        this.flashingInterval = setInterval(async () => {
-            if (!this.enabled || !this.connected) {
-                this.stopFlashing();
-                return;
-            }
-            
-            if (isOn) {
-                await this.turnOff();
-            } else {
-                await this.setColorRGB(color.red, color.green, color.blue);
-            }
-            isOn = !isOn;
-        }, intervalMs);
-    }
 
-    /**
-     * Stop flashing
-     */
-    stopFlashing() {
-        if (this.flashingInterval) {
-            clearInterval(this.flashingInterval);
-            this.flashingInterval = null;
-            this.isFlashing = false;
-            console.log('[Busylight] Stopped flashing');
-        }
-    }
 
     /**
      * Start connection monitoring
@@ -689,7 +667,6 @@ class BusylightManager {
     async disconnect() {
         console.log('[Busylight] Disconnecting...');
         
-        this.stopFlashing();
         this.stopMonitoring();
         
         if (this.connected) {
@@ -699,6 +676,7 @@ class BusylightManager {
         this.connected = false;
         this.retryAttempts = 0;
         this.isRetrying = false;
+        this.isFlashing = false;
         
         console.log('[Busylight] Disconnected');
     }
