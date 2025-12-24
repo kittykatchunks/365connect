@@ -192,9 +192,9 @@ class BusylightBridgeServer {
                 }
                 
                 // Update lastSeen
-                const tempBridge = this.bridgesByConnectionId.get(connectionId);
-                if (tempBridge && tempBridge.uniqueId) {
-                    const bridge = this.bridges.get(tempBridge.uniqueId);
+                const responseBridge = this.bridgesByConnectionId.get(connectionId);
+                if (responseBridge && responseBridge.uniqueId) {
+                    const bridge = this.bridges.get(responseBridge.uniqueId);
                     if (bridge) {
                         bridge.lastSeen = new Date();
                     }
@@ -203,13 +203,13 @@ class BusylightBridgeServer {
                 
             case 'pong':
                 // Ping/pong keepalive
-                const bridge = this.bridgesByConnectionId.get(connectionId);
-                if (bridge && bridge.uniqueId) {
-                    const registeredBridge = this.bridges.get(bridge.uniqueId);
+                const pongBridge = this.bridgesByConnectionId.get(connectionId);
+                if (pongBridge && pongBridge.uniqueId) {
+                    const registeredBridge = this.bridges.get(pongBridge.uniqueId);
                     if (registeredBridge) {
                         registeredBridge.lastSeen = new Date();
                     }
-                    console.log(`[BusylightBridge] Pong from bridge ${bridge.uniqueId}`);
+                    console.log(`[BusylightBridge] Pong from bridge ${pongBridge.uniqueId}`);
                 }
                 break;
                 
