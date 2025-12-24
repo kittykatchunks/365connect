@@ -24,8 +24,13 @@ class BusylightManager {
         this.monitoringInterval = null;
         this.monitoringIntervalMs = 15000; // 15 seconds
         
-        // Flashing control (managed by device blink API)
+        // Device type detection
+        this.deviceModel = null;
+        this.isAlphaDevice = false;
+        
+        // Flashing control
         this.isFlashing = false;
+        this.flashingInterval = null; // For alpha devices using manual flashing
         
         // Alert settings for ringing
         this.ringSound = 3; // 1-7 (default: Funky)
@@ -124,6 +129,9 @@ class BusylightManager {
             this.retryAttempts = 0;
             this.isRetrying = false;
             
+            // Detect device type
+            await this.detectDeviceType();
+            
             // Run test sequence
             await this.testConnection();
             
@@ -205,6 +213,31 @@ class BusylightManager {
             console.error('[Busylight] Error testing connection:', error);
             this.connected = false;
             throw error;
+        }
+    }
+
+    /**
+     * Detect device type to determine if manual flashing is needed
+     */
+    async detectDeviceType() {
+        try {
+            const devices = await this.getDevices();
+            if (devices.length > 0) {
+                const device = devices[0];
+                this.deviceModel = device.ModelName || device.ProductID || 'Unknown';
+                
+                // Check if device is an Alpha model (doesn't support blink API)
+                this.isAlphaDevice = this.deviceModel.toLowerCase().includes('alpha');
+                
+                console.log('[Busylight] Device detected:');
+                console.log('  Model:', this.deviceModel);
+                console.log('  Is Alpha:', this.isAlphaDevice);
+                console.log('  Flash method:', this.isAlphaDevice ? 'Manual (interval-based)' : 'Hardware blink API');
+            } else {
+                console.warn('[Busylight] No devices detected');
+            }
+        } catch (error) {
+            console.warn('[Busylight] Error detecting device type:', error);
         }
     }
 
@@ -558,15 +591,22 @@ class BusylightManager {
             );
             
         } else if (state === 'hold' || state === 'idle_voicemail') {
-            // Use blink API for flashing states
-            const timing = this.flashIntervals[state];
-            await this.setBlink(
-                color.red,
-                color.green,
-                color.blue,
-                timing.ontime,
-                timing.offtime
-            );
+            // Use appropriate flashing method based on device type
+            if (this.isAlphaDevice) {
+                // Alpha devices: use manual interval-based flashing
+                const intervalMs = state === 'hold' ? 1500 : 1500; // 1.5s for both hold and voicemail
+                await this.startFlashingAlpha(color, intervalMs);
+            } else {
+                // Non-alpha devices: use hardware blink API
+                const timing = this.flashIntervals[state];
+                await this.setBlink(
+                    color.red,
+                    color.green,
+                    color.blue,
+                    timing.ontime,
+                    timing.offtime
+                );
+            }
             
         } else {
             // Solid color for other states
@@ -609,7 +649,53 @@ class BusylightManager {
      * Turn light off
      */
     async turnOff() {
+        // Stop any manual flashing for alpha devices
+        this.stopFlashingAlpha();
         return await this.apiRequest('off');
+    }
+
+    /**
+     * Start manual flashing for alpha devices (interval-based)
+     * @param {object} color - Color object with red, green, blue properties (0-100)
+     * @param {number} intervalMs - Flash interval in milliseconds
+     */
+    async startFlashingAlpha(color, intervalMs = 500) {
+        if (!this.enabled || !this.connected || this.isFlashing) return;
+        
+        console.log(`[Busylight] Starting manual flash for alpha device (${intervalMs}ms interval)`);
+        this.isFlashing = true;
+        
+        let isOn = true;
+        
+        // Set initial color
+        await this.setColorRGB(color.red, color.green, color.blue);
+        
+        // Setup flashing interval
+        this.flashingInterval = setInterval(async () => {
+            if (!this.enabled || !this.connected) {
+                this.stopFlashingAlpha();
+                return;
+            }
+            
+            if (isOn) {
+                await this.apiRequest('off');
+            } else {
+                await this.setColorRGB(color.red, color.green, color.blue);
+            }
+            isOn = !isOn;
+        }, intervalMs);
+    }
+
+    /**
+     * Stop manual flashing for alpha devices
+     */
+    stopFlashingAlpha() {
+        if (this.flashingInterval) {
+            clearInterval(this.flashingInterval);
+            this.flashingInterval = null;
+            this.isFlashing = false;
+            console.log('[Busylight] Stopped manual flashing for alpha device');
+        }
     }
 
 
@@ -668,6 +754,7 @@ class BusylightManager {
         console.log('[Busylight] Disconnecting...');
         
         this.stopMonitoring();
+        this.stopFlashingAlpha();
         
         if (this.connected) {
             await this.turnOff();
@@ -758,6 +845,9 @@ class BusylightManager {
             enabled: this.enabled,
             connected: this.connected,
             bridgeId: this.bridgeId || 'auto',
+            deviceModel: this.deviceModel || 'Unknown',
+            isAlphaDevice: this.isAlphaDevice,
+            flashMethod: this.isAlphaDevice ? 'Manual (interval-based)' : 'Hardware blink API',
             state: this.currentState,
             hasVoicemail: this.hasVoicemail,
             isFlashing: this.isFlashing,
@@ -794,6 +884,9 @@ window.testBusylight = async function() {
     console.log('Connected:', manager.connected);
     console.log('Bridge URL:', manager.bridgeUrl);
     console.log('Bridge ID:', manager.bridgeId || 'auto-select');
+    console.log('Device Model:', manager.deviceModel || 'Unknown');
+    console.log('Is Alpha Device:', manager.isAlphaDevice);
+    console.log('Flash Method:', manager.isAlphaDevice ? 'Manual (interval-based)' : 'Hardware blink API');
     console.log('Current State:', manager.currentState);
     console.log('Has Voicemail:', manager.hasVoicemail);
     console.log('Is Flashing:', manager.isFlashing);
