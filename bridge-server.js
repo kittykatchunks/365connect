@@ -113,7 +113,7 @@ class BusylightBridgeServer {
                 if (!registrationId) {
                     console.warn(`[BusylightBridge] Bridge ${connectionId} attempted to register without uniqueId`);
                     const tempBridge = this.bridgesByConnectionId.get(connectionId);
-                    if (tempBridge && tempBridge.ws.readyState === WebSocket.OPEN) {
+                    if (tempBridge && tempBridge.ws && tempBridge.ws.readyState === WebSocket.OPEN) {
                         tempBridge.ws.send(JSON.stringify({
                             type: 'error',
                             message: 'Registration requires uniqueId (Connect365 Username)'
