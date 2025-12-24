@@ -156,10 +156,13 @@ class BusylightManager {
     async checkConnection() {
         try {
             const url = this.buildApiUrl('currentpresence');
+            const headers = this.buildRequestHeaders();
+            
             console.log(`[Busylight] Checking connection: ${url}`);
             
             const response = await fetch(url, {
                 method: 'GET',
+                headers,
                 signal: AbortSignal.timeout(3000)
             });
 
@@ -247,8 +250,11 @@ class BusylightManager {
     async getDevices() {
         try {
             const url = this.buildApiUrl('busylightdevices');
+            const headers = this.buildRequestHeaders();
+            
             const response = await fetch(url, {
                 method: 'GET',
+                headers,
                 signal: AbortSignal.timeout(2000)
             });
 
@@ -318,6 +324,44 @@ class BusylightManager {
     }
 
     /**
+     * Get Connect365 Username from connection settings for routing
+     * This is used as the unique identifier to route commands to the correct busylight-bridge
+     */
+    getConnect365Username() {
+        try {
+            // Get from connection settings (stored by connection manager)
+            if (window.localDB) {
+                const username = window.localDB.getItem('CurrentUser', '');
+                if (username) {
+                    return username;
+                }
+            }
+            
+            // Fallback: try to get from global App settings
+            if (window.App?.settings?.currentUser) {
+                return window.App.settings.currentUser;
+            }
+        } catch (error) {
+            console.warn('[Busylight] Error getting Connect365 Username:', error);
+        }
+        return null;
+    }
+
+    /**
+     * Build request headers including Connect365 Username for routing
+     */
+    buildRequestHeaders() {
+        const headers = {};
+        
+        const username = this.getConnect365Username();
+        if (username) {
+            headers['x-connect365-username'] = username;
+        }
+        
+        return headers;
+    }
+
+    /**
      * Make API request with retry logic
      */
     async apiRequest(action, params = {}) {
@@ -325,8 +369,11 @@ class BusylightManager {
 
         try {
             const url = this.buildApiUrl(action, params);
+            const headers = this.buildRequestHeaders();
+            
             const response = await fetch(url, {
                 method: 'GET',
+                headers,
                 signal: AbortSignal.timeout(2000)
             });
 
@@ -879,11 +926,14 @@ window.testBusylight = async function() {
         return;
     }
     
+    const username = manager.getConnect365Username();
+    
     console.log('✓ Manager found');
     console.log('Enabled:', manager.enabled);
     console.log('Connected:', manager.connected);
     console.log('Bridge URL:', manager.bridgeUrl);
     console.log('Bridge ID:', manager.bridgeId || 'auto-select');
+    console.log('Connect365 Username:', username || 'not configured');
     console.log('Device Model:', manager.deviceModel || 'Unknown');
     console.log('Is Alpha Device:', manager.isAlphaDevice);
     console.log('Flash Method:', manager.isAlphaDevice ? 'Manual (interval-based)' : 'Hardware blink API');

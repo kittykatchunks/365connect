@@ -17,70 +17,74 @@ const crypto = require('crypto');
 
 class BusylightBridgeServer {
     constructor(options = {}) {
-        this.bridges = new Map(); // Track connected bridge clients: bridgeId -> { ws, info, pendingRequests }
+        this.bridges = new Map(); // Track connected bridge clients: uniqueId -> { ws, info, pendingRequests }
+        this.bridgesByConnectionId = new Map(); // Track by connection ID for cleanup: connectionId -> uniqueId
         this.clients = new Map(); // Track PWA clients (legacy)
         this.pendingRequests = new Map(); // Track pending API requests by requestId
         this.requestTimeout = 30000; // 30 seconds
         
         console.log('[BusylightBridge] Bridge server initialized (reverse connection mode)');
+        console.log('[BusylightBridge] Using uniqueId-based routing (Connect365 Username)');
         console.log('[BusylightBridge] Waiting for incoming bridge connections on port 8088...');
     }
 
     /**
      * Register an incoming bridge connection
      * @param {WebSocket} ws - The bridge's WebSocket connection
-     * @param {string} bridgeId - Unique identifier for the bridge
+     * @param {string} connectionId - Temporary connection identifier
      */
-    registerBridge(ws, bridgeId) {
-        console.log(`[BusylightBridge] Registering bridge: ${bridgeId}`);
+    registerBridge(ws, connectionId) {
+        console.log(`[BusylightBridge] New bridge connection: ${connectionId} (waiting for registration with uniqueId)`);
         
-        const bridgeInfo = {
+        // Store temporary connection until we get uniqueId from bridge_register message
+        this.bridgesByConnectionId.set(connectionId, {
             ws,
-            bridgeId,
+            connectionId,
             connectedAt: new Date(),
-            lastSeen: new Date(),
-            info: {},
-            pendingRequests: new Map()
-        };
-        
-        this.bridges.set(bridgeId, bridgeInfo);
+            registered: false
+        });
         
         // Handle messages from bridge
         ws.on('message', (data) => {
             try {
                 const message = JSON.parse(data.toString());
-                console.log(`[BusylightBridge] Message from bridge ${bridgeId}:`, message);
-                this.handleBridgeMessage(bridgeId, message);
-                bridgeInfo.lastSeen = new Date();
+                this.handleBridgeMessage(connectionId, message);
             } catch (error) {
-                console.error(`[BusylightBridge] Error parsing message from bridge ${bridgeId}:`, error);
+                console.error(`[BusylightBridge] Error parsing message from bridge ${connectionId}:`, error);
             }
         });
         
         // Handle bridge disconnect
         ws.on('close', () => {
-            console.log(`[BusylightBridge] Bridge disconnected: ${bridgeId}`);
-            this.unregisterBridge(bridgeId);
+            const tempBridge = this.bridgesByConnectionId.get(connectionId);
+            if (tempBridge && tempBridge.uniqueId) {
+                console.log(`[BusylightBridge] Bridge disconnected: ${tempBridge.uniqueId} (${connectionId})`);
+                this.unregisterBridge(tempBridge.uniqueId);
+            } else {
+                console.log(`[BusylightBridge] Unregistered bridge disconnected: ${connectionId}`);
+            }
+            this.bridgesByConnectionId.delete(connectionId);
         });
         
         ws.on('error', (error) => {
-            console.error(`[BusylightBridge] Bridge ${bridgeId} error:`, error.message);
+            console.error(`[BusylightBridge] Bridge ${connectionId} error:`, error.message);
         });
         
         // Send welcome message
         ws.send(JSON.stringify({
             type: 'welcome',
-            bridgeId: bridgeId,
-            serverTime: new Date().toISOString()
+            connectionId: connectionId,
+            serverTime: new Date().toISOString(),
+            message: 'Please send bridge_register message with uniqueId'
         }));
     }
     
     /**
-     * Unregister a bridge
-     * @param {string} bridgeId - The bridge ID to unregister
+     * Unregister a bridge by uniqueId
+     * @param {string} uniqueId - The bridge uniqueId to unregister
      */
-    unregisterBridge(bridgeId) {
-        const bridge = this.bridges.get(bridgeId);
+    unregisterBridge(uniqueId) {
+        const bridge = this.bridges.get(uniqueId);
         if (bridge) {
             // Reject all pending requests for this bridge
             bridge.pendingRequests.forEach((request) => {
@@ -88,30 +92,84 @@ class BusylightBridgeServer {
                     request.reject(new Error('Bridge disconnected'));
                 }
             });
-            this.bridges.delete(bridgeId);
-            console.log(`[BusylightBridge] Bridge unregistered: ${bridgeId}. Remaining bridges: ${this.bridges.size}`);
+            this.bridges.delete(uniqueId);
+            console.log(`[BusylightBridge] Bridge unregistered: ${uniqueId}. Remaining bridges: ${this.bridges.size}`);
         }
     }
     
     /**
      * Handle a message from a connected bridge
-     * @param {string} bridgeId - The bridge ID
+     * @param {string} connectionId - The temporary connection ID
      * @param {Object} message - The message object
      */
-    handleBridgeMessage(bridgeId, message) {
-        const { type, requestId } = message;
+    handleBridgeMessage(connectionId, message) {
+        const { type, requestId, uniqueId, connect365Username } = message;
         
         switch (type) {
             case 'bridge_register':
-                // Bridge is announcing its capabilities/info
-                const bridge = this.bridges.get(bridgeId);
-                if (bridge) {
-                    bridge.info = {
-                        version: message.version,
-                        kuandoConnected: message.kuandoConnected,
-                        ...message
+                // Bridge is registering with its uniqueId (Connect365 Username)
+                const registrationId = uniqueId || connect365Username;
+                
+                if (!registrationId) {
+                    console.warn(`[BusylightBridge] Bridge ${connectionId} attempted to register without uniqueId`);
+                    const tempBridge = this.bridgesByConnectionId.get(connectionId);
+                    if (tempBridge && tempBridge.ws.readyState === WebSocket.OPEN) {
+                        tempBridge.ws.send(JSON.stringify({
+                            type: 'error',
+                            message: 'Registration requires uniqueId (Connect365 Username)'
+                        }));
+                    }
+                    return;
+                }
+                
+                // Check if this uniqueId is already registered
+                if (this.bridges.has(registrationId)) {
+                    console.warn(`[BusylightBridge] Bridge with uniqueId ${registrationId} already registered. Replacing old connection.`);
+                    // Close old connection
+                    const oldBridge = this.bridges.get(registrationId);
+                    if (oldBridge.ws.readyState === WebSocket.OPEN) {
+                        oldBridge.ws.close();
+                    }
+                }
+                
+                // Move bridge from temporary to registered
+                const tempBridge = this.bridgesByConnectionId.get(connectionId);
+                if (tempBridge) {
+                    const bridgeInfo = {
+                        ws: tempBridge.ws,
+                        uniqueId: registrationId,
+                        connectionId,
+                        connectedAt: tempBridge.connectedAt,
+                        registeredAt: new Date(),
+                        lastSeen: new Date(),
+                        info: {
+                            version: message.version,
+                            kuandoConnected: message.kuandoConnected,
+                            connect365Username: registrationId,
+                            ...message
+                        },
+                        pendingRequests: new Map()
                     };
-                    console.log(`[BusylightBridge] Bridge ${bridgeId} registered with info:`, bridge.info);
+                    
+                    this.bridges.set(registrationId, bridgeInfo);
+                    tempBridge.uniqueId = registrationId;
+                    tempBridge.registered = true;
+                    
+                    console.log(`[BusylightBridge] ✓ Bridge registered: ${registrationId} (${connectionId})`);
+                    console.log(`[BusylightBridge]   Version: ${message.version}`);
+                    console.log(`[BusylightBridge]   Kuando: ${message.kuandoConnected ? 'Connected' : 'Disconnected'}`);
+                    console.log(`[BusylightBridge]   Total bridges: ${this.bridges.size}`);
+                    
+                    // Send confirmation
+                    if (bridgeInfo.ws.readyState === WebSocket.OPEN) {
+                        bridgeInfo.ws.send(JSON.stringify({
+                            type: 'registration_complete',
+                            uniqueId: registrationId,
+                            message: 'Bridge successfully registered'
+                        }));
+                    }
+                } else {
+                    console.warn(`[BusylightBridge] Cannot find connection ${connectionId} for registration`);
                 }
                 break;
                 
@@ -132,39 +190,55 @@ class BusylightBridgeServer {
                         console.warn(`[BusylightBridge] Received response for unknown request: ${requestId}`);
                     }
                 }
+                
+                // Update lastSeen
+                const tempBridge = this.bridgesByConnectionId.get(connectionId);
+                if (tempBridge && tempBridge.uniqueId) {
+                    const bridge = this.bridges.get(tempBridge.uniqueId);
+                    if (bridge) {
+                        bridge.lastSeen = new Date();
+                    }
+                }
                 break;
                 
             case 'pong':
                 // Ping/pong keepalive
-                console.log(`[BusylightBridge] Pong from bridge ${bridgeId}`);
+                const bridge = this.bridgesByConnectionId.get(connectionId);
+                if (bridge && bridge.uniqueId) {
+                    const registeredBridge = this.bridges.get(bridge.uniqueId);
+                    if (registeredBridge) {
+                        registeredBridge.lastSeen = new Date();
+                    }
+                    console.log(`[BusylightBridge] Pong from bridge ${bridge.uniqueId}`);
+                }
                 break;
                 
             default:
-                console.log(`[BusylightBridge] Unknown message type from bridge ${bridgeId}: ${type}`);
+                console.log(`[BusylightBridge] Unknown message type from bridge ${connectionId}: ${type}`);
         }
     }
     
     /**
      * Send an API request to a connected bridge
-     * @param {string} bridgeId - The bridge to send the request to (optional, uses first available)
+     * @param {string} uniqueId - The bridge uniqueId to send the request to (Connect365 Username)
      * @param {string} action - The action to perform
      * @param {Object} params - Action parameters
      * @returns {Promise<Object>} - The response from the bridge
      */
-    async sendToBridge(bridgeId, action, params = {}) {
-        // If no bridgeId specified, use the first available bridge
-        if (!bridgeId && this.bridges.size > 0) {
-            bridgeId = Array.from(this.bridges.keys())[0];
-            console.log(`[BusylightBridge] No bridge specified, using first available: ${bridgeId}`);
+    async sendToBridge(uniqueId, action, params = {}) {
+        // If no uniqueId specified, use the first available bridge
+        if (!uniqueId && this.bridges.size > 0) {
+            uniqueId = Array.from(this.bridges.keys())[0];
+            console.log(`[BusylightBridge] No uniqueId specified, using first available bridge: ${uniqueId}`);
         }
         
-        const bridge = this.bridges.get(bridgeId);
+        const bridge = this.bridges.get(uniqueId);
         if (!bridge) {
-            throw new Error(`Bridge not found or disconnected: ${bridgeId || 'none'}`);
+            throw new Error(`Bridge not found for uniqueId: ${uniqueId || 'none'}. Available bridges: ${Array.from(this.bridges.keys()).join(', ') || 'none'}`);
         }
         
         if (bridge.ws.readyState !== WebSocket.OPEN) {
-            throw new Error(`Bridge ${bridgeId} is not connected`);
+            throw new Error(`Bridge ${uniqueId} is not connected`);
         }
         
         // Generate unique request ID
@@ -175,12 +249,12 @@ class BusylightBridgeServer {
             // Set timeout
             const timeout = setTimeout(() => {
                 this.pendingRequests.delete(requestId);
-                reject(new Error(`Request timeout for bridge ${bridgeId}`));
+                reject(new Error(`Request timeout for bridge ${uniqueId}`));
             }, this.requestTimeout);
             
             // Store pending request
             this.pendingRequests.set(requestId, {
-                bridgeId,
+                uniqueId,
                 action,
                 params,
                 resolve,
@@ -189,15 +263,16 @@ class BusylightBridgeServer {
                 sentAt: new Date()
             });
             
-            // Send request to bridge
+            // Send request to bridge with targetUser for validation
             const message = {
                 type: 'api_request',
                 requestId,
                 action,
-                params
+                params,
+                targetUser: uniqueId // Include for bridge-side validation
             };
             
-            console.log(`[BusylightBridge] Sending request ${requestId} to bridge ${bridgeId}:`, action);
+            console.log(`[BusylightBridge] Sending request ${requestId} to bridge ${uniqueId}:`, action);
             bridge.ws.send(JSON.stringify(message));
         });
     }
@@ -348,6 +423,9 @@ class BusylightBridgeServer {
      */
     createHttpMiddleware() {
         return async (req, res, next) => {
+            // Extract targetUser from headers (Connect365 Username for routing)
+            const targetUser = req.headers['x-connect365-username'] || req.query.bridgeId || null;
+            
             // Check if we have any connected bridges
             if (this.bridges.size === 0) {
                 console.warn('[BusylightBridge] HTTP request received but no bridges connected');
@@ -356,6 +434,17 @@ class BusylightBridgeServer {
                     message: 'No Busylight Bridge clients are currently connected. Please ensure the Busylight Bridge application is running on a PC with the server configured.',
                     connected: false,
                     bridges: 0
+                });
+            }
+            
+            // If targetUser specified, check if that bridge is connected
+            if (targetUser && !this.bridges.has(targetUser)) {
+                console.warn(`[BusylightBridge] Request for bridge ${targetUser} but it is not connected`);
+                return res.status(404).json({
+                    error: 'Bridge not found',
+                    message: `No bridge connected for user: ${targetUser}`,
+                    targetUser,
+                    availableBridges: Array.from(this.bridges.keys())
                 });
             }
 
@@ -368,10 +457,12 @@ class BusylightBridgeServer {
                 console.log(`[BusylightBridge] HTTP → Bridge WebSocket translation:`);
                 console.log(`  Method: ${req.method}`);
                 console.log(`  Path:   ${req.originalUrl}`);
+                console.log(`  Target: ${targetUser || 'auto (first available)'}`);
                 
                 let action = queryParams.action;
                 let params = { ...queryParams };
                 delete params.action;
+                delete params.bridgeId; // Remove from params if present
                 
                 // Map Kuando HTTP API actions to bridge actions
                 if (action === 'busylightdevices') {
@@ -414,8 +505,8 @@ class BusylightBridgeServer {
                 console.log(`  Action: ${action}`);
                 console.log(`  Params:`, params);
                 
-                // Send request to first available bridge (TODO: implement bridge selection/routing)
-                const result = await this.sendToBridge(null, action, params);
+                // Send request to specified bridge or first available
+                const result = await this.sendToBridge(targetUser, action, params);
                 
                 console.log(`[BusylightBridge] Bridge response:`, result);
                 
@@ -516,9 +607,11 @@ class BusylightBridgeServer {
      * Get current connection status
      */
     getStatus() {
-        const bridgeList = Array.from(this.bridges.entries()).map(([id, bridge]) => ({
-            id,
+        const bridgeList = Array.from(this.bridges.entries()).map(([uniqueId, bridge]) => ({
+            uniqueId,
+            connect365Username: uniqueId,
             connectedAt: bridge.connectedAt,
+            registeredAt: bridge.registeredAt,
             lastSeen: bridge.lastSeen,
             info: bridge.info
         }));
