@@ -128,22 +128,65 @@ app.use(cors({
 
 app.use(compression());
 
+// Determine static folder based on environment
+const staticFolder = process.env.NODE_ENV === 'production' 
+  ? path.join(__dirname, 'dist')
+  : path.join(__dirname, 'pwa');
 
+console.log(`[SERVER] Serving static files from: ${staticFolder}`);
+console.log(`[SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
 
-// Serve static files from /pwa with PWA-specific caching
-app.use(express.static(path.join(__dirname, 'pwa'), {
-  maxAge: '1y',
+// Serve static files with smart caching strategy
+app.use(express.static(staticFolder, {
+  etag: true,
+  lastModified: true,
   setHeaders: (res, filePath) => {
-    // Don't cache service worker
-    if (filePath.endsWith('service-worker.js')) {
+    // Never cache service worker or manifest
+    if (filePath.endsWith('sw.js') || filePath.endsWith('service-worker.js')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+      return;
     }
-    // Don't cache manifest
+    
     if (filePath.endsWith('manifest.json')) {
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
       res.setHeader('Content-Type', 'application/manifest+json');
+      return;
     }
+    
+    // Don't cache HTML files - always get fresh
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      return;
+    }
+    
+    // Immutable assets (versioned/hashed files) - cache forever
+    if (filePath.match(/\.(js|css)\?v=/) || filePath.match(/\.[a-f0-9]{8,}\.(js|css|png|jpg|webp|woff2?)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return;
+    }
+    
+    // Libraries in lib/ folder - cache for 1 week (these rarely change)
+    if (filePath.includes('/lib/') || filePath.includes('\\lib\\')) {
+      res.setHeader('Cache-Control', 'public, max-age=604800'); // 1 week
+      return;
+    }
+    
+    // Application JS/CSS - cache but revalidate (for development)
+    if (filePath.match(/\.(js|css)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate'); // 1 hour
+      return;
+    }
+    
+    // Images, fonts - cache for 1 week
+    if (filePath.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800'); // 1 week
+      return;
+    }
+    
+    // Default: short cache with revalidation
+    res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate'); // 5 minutes
   }
 }));
 
