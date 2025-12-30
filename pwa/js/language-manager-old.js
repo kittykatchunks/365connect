@@ -1,13 +1,15 @@
 /* ====================================================================================== */
-/* AUTOCAB365 PWA - LANGUAGE MANAGER (i18next) */
-/* Manages language loading, switching, and translation functions using i18next */
+/* AUTOCAB365 PWA - LANGUAGE MANAGER */
+/* Manages language loading, switching, and translation functions */
 /* ====================================================================================== */
 
 class LanguageManager {
     constructor() {
-        // i18next will be loaded from npm package and bundled by webpack
-        this.i18n = null;
-        this.isInitialized = false;
+        this.currentLanguage = 'en';
+        this.translations = {};
+        this.fallbackTranslations = {};
+        this.isLoading = false;
+        this.loadedLanguages = new Set();
         
         // Bind methods to ensure correct 'this' context
         this.translate = this.translate.bind(this);
@@ -15,90 +17,38 @@ class LanguageManager {
     }
 
     /**
-     * Initialize i18next
+     * Initialize the language manager
      */
     async initialize() {
         try {
-            // Dynamically import i18next (webpack will bundle it)
-            const i18next = (await import('i18next')).default;
-            const HttpBackend = (await import('i18next-http-backend')).default;
-            const LanguageDetector = (await import('i18next-browser-languagedetector')).default;
+            // Get saved language preference or use browser default
+            this.currentLanguage = this.getSavedLanguage();
             
-            this.i18n = i18next;
+            // Always load English as fallback
+            if (this.currentLanguage !== 'en') {
+                await this.loadLanguage('en');
+                this.fallbackTranslations = this.translations['en'] || {};
+            }
             
-            // Get saved language preference
-            const savedLanguage = this.getSavedLanguage();
-            
-            await this.i18n
-                .use(HttpBackend)
-                .use(LanguageDetector)
-                .init({
-                    fallbackLng: 'en',
-                    lng: savedLanguage,
-                    debug: false, // Set to true for debugging
-                    
-                    // Backend configuration for loading translation files
-                    backend: {
-                        loadPath: 'lang/{{lng}}.json',
-                        crossDomain: false
-                    },
-                    
-                    // Language detection options
-                    detection: {
-                        order: ['localStorage', 'navigator'],
-                        caches: ['localStorage'],
-                        lookupLocalStorage: 'AppLanguage'
-                    },
-                    
-                    // Interpolation options
-                    interpolation: {
-                        escapeValue: false, // Not needed for DOM manipulation
-                        prefix: '{',
-                        suffix: '}'
-                    },
-                    
-                    // Supported languages
-                    supportedLngs: ['en', 'de', 'es', 'fr', 'ja', 'nl', 'pl', 'pt-br', 'ru', 'tr', 'zh-hans', 'zh'],
-                    
-                    // Load options
-                    load: 'languageOnly', // Load only 'en' not 'en-US'
-                    
-                    // React options
-                    react: {
-                        useSuspense: false
-                    }
-                });
-
-            this.isInitialized = true;
+            // Load current language
+            await this.loadLanguage(this.currentLanguage);
             
             // Apply translations to existing DOM elements
             this.applyTranslations();
             
-            console.log(`✅ Language Manager initialized with language: ${this.i18n.language}`);
+            console.log(`✅ Language Manager initialized with language: ${this.currentLanguage}`);
             
             // Trigger language loaded event
             if (window.WebHooks?.onLanguagePackLoaded) {
-                window.WebHooks.onLanguagePackLoaded(this.i18n.store.data[this.i18n.language]?.translation || {});
+                window.WebHooks.onLanguagePackLoaded(this.translations[this.currentLanguage]);
             }
-            
-            // Listen for language changes
-            this.i18n.on('languageChanged', (lng) => {
-                console.log(`🌐 Language changed to: ${lng}`);
-                this.applyTranslations();
-                
-                // Trigger custom event
-                document.dispatchEvent(new CustomEvent('languageChanged', {
-                    detail: { 
-                        language: lng, 
-                        translations: this.i18n.store.data[lng]?.translation || {}
-                    }
-                }));
-            });
             
             return true;
         } catch (error) {
             console.error('❌ Failed to initialize Language Manager:', error);
-            this.isInitialized = false;
+            // Fallback to English
+            this.currentLanguage = 'en';
+            await this.loadLanguage('en');
             return false;
         }
     }
@@ -121,21 +71,77 @@ class LanguageManager {
     }
 
     /**
-     * Change current language
+     * Load language file
      */
-    async setLanguage(languageCode) {
-        if (!this.isInitialized) {
-            console.warn('⚠️ Language Manager not initialized yet');
-            return false;
+    async loadLanguage(languageCode) {
+        if (this.loadedLanguages.has(languageCode)) {
+            return this.translations[languageCode];
         }
 
         try {
-            await this.i18n.changeLanguage(languageCode);
+            this.isLoading = true;
+            
+            const response = await fetch(`lang/${languageCode}.json`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const translations = await response.json();
+            
+            // Store translations
+            this.translations[languageCode] = translations;
+            this.loadedLanguages.add(languageCode);
+            
+            console.log(`📄 Loaded language pack: ${languageCode}`);
+            return translations;
+            
+        } catch (error) {
+            console.error(`❌ Failed to load language ${languageCode}:`, error);
+            
+            // If loading current language fails, fallback to English
+            if (languageCode !== 'en') {
+                console.log('⚠️ Falling back to English');
+                return this.loadLanguage('en');
+            }
+            
+            throw error;
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    /**
+     * Change current language
+     */
+    async setLanguage(languageCode) {
+        if (languageCode === this.currentLanguage) {
+            return true;
+        }
+
+        try {
+            // Load new language if not already loaded
+            await this.loadLanguage(languageCode);
+            
+            // Update current language
+            this.currentLanguage = languageCode;
             
             // Save preference
             if (window.localDB) {
                 window.localDB.setItem('AppLanguage', languageCode);
             }
+            
+            // Apply translations to DOM
+            this.applyTranslations();
+            
+            console.log(`🌐 Language changed to: ${languageCode}`);
+            
+            // Trigger language change event
+            document.dispatchEvent(new CustomEvent('languageChanged', {
+                detail: { 
+                    language: languageCode, 
+                    translations: this.translations[languageCode] 
+                }
+            }));
             
             return true;
             
@@ -147,22 +153,30 @@ class LanguageManager {
 
     /**
      * Get translation for a key
-     * @param {string} key - Translation key
-     * @param {string|object} defaultValue - Default value or options object
-     * @param {object} params - Interpolation parameters
      */
     translate(key, defaultValue = null, params = {}) {
-        if (!this.isInitialized) {
-            return defaultValue !== null ? defaultValue : key;
+        // Get current translations
+        const currentTranslations = this.translations[this.currentLanguage] || {};
+        
+        // Try current language first
+        let translation = currentTranslations[key];
+        
+        // Fallback to English if not found
+        if (translation === undefined && this.fallbackTranslations[key] !== undefined) {
+            translation = this.fallbackTranslations[key];
         }
-
-        // i18next options format
-        const options = {
-            defaultValue: defaultValue !== null ? defaultValue : key,
-            ...params
-        };
-
-        return this.i18n.t(key, options);
+        
+        // Use default value or key if no translation found
+        if (translation === undefined) {
+            translation = defaultValue !== null ? defaultValue : key;
+        }
+        
+        // Replace parameters if any
+        if (typeof translation === 'string' && Object.keys(params).length > 0) {
+            translation = this.replaceParameters(translation, params);
+        }
+        
+        return translation;
     }
 
     /**
@@ -173,7 +187,7 @@ class LanguageManager {
     }
 
     /**
-     * Replace parameters in translation string (legacy compatibility)
+     * Replace parameters in translation string
      */
     replaceParameters(text, params) {
         return text.replace(/\{(\w+)\}/g, (match, paramName) => {
@@ -185,8 +199,6 @@ class LanguageManager {
      * Apply translations to DOM elements with data-translate attributes
      */
     applyTranslations() {
-        if (!this.isInitialized) return;
-
         // Update elements with data-translate attributes
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
@@ -238,67 +250,21 @@ class LanguageManager {
      * Get current language
      */
     getCurrentLanguage() {
-        return this.isInitialized ? this.i18n.language : 'en';
+        return this.currentLanguage;
     }
 
     /**
      * Check if a language is loaded
      */
     isLanguageLoaded(languageCode) {
-        if (!this.isInitialized) return false;
-        return this.i18n.hasResourceBundle(languageCode, 'translation');
+        return this.loadedLanguages.has(languageCode);
     }
 
     /**
      * Get all loaded translations for debugging
      */
     getAllTranslations() {
-        if (!this.isInitialized) return {};
-        return this.i18n.store.data;
-    }
-
-    /**
-     * Get i18next instance directly (for advanced usage)
-     */
-    getInstance() {
-        return this.i18n;
-    }
-
-    /**
-     * Add translations dynamically (useful for plugins)
-     */
-    addTranslations(language, namespace, translations) {
-        if (!this.isInitialized) return false;
-        this.i18n.addResourceBundle(language, namespace || 'translation', translations, true, true);
-        return true;
-    }
-
-    /**
-     * Format number (using Intl API with current language)
-     */
-    formatNumber(value, options = {}) {
-        if (!this.isInitialized) return value;
-        return new Intl.NumberFormat(this.i18n.language, options).format(value);
-    }
-
-    /**
-     * Format date (using Intl API with current language)
-     */
-    formatDate(date, options = {}) {
-        if (!this.isInitialized) return date;
-        return new Intl.DateTimeFormat(this.i18n.language, options).format(date);
-    }
-
-    /**
-     * Format currency (using Intl API with current language)
-     */
-    formatCurrency(value, currency = 'USD', options = {}) {
-        if (!this.isInitialized) return value;
-        return new Intl.NumberFormat(this.i18n.language, {
-            style: 'currency',
-            currency,
-            ...options
-        }).format(value);
+        return this.translations;
     }
 }
 
@@ -336,7 +302,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Expose globally for debugging and external access
         window.languageManager = languageManager;
-        window.LanguageManager = LanguageManager;
     }
 });
 
@@ -344,6 +309,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LanguageManager;
 }
-
-// Also export as window global for backward compatibility
-window.LanguageManager = LanguageManager;
