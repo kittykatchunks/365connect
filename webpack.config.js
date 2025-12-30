@@ -14,6 +14,7 @@ module.exports = (env, argv) => {
     // Entry point - bundle all JS files
     entry: {
       app: [
+        './pwa/js/app-config.js',
         './pwa/js/language-manager.js',
         './pwa/js/browser-cache.js',
         './pwa/js/sip-session-manager.js',
@@ -102,6 +103,9 @@ module.exports = (env, argv) => {
           // Remove the app-config.js script
           html = html.replace(/<script type="text\/javascript" src="js\/app-config\.js"><\/script>/g, '');
           
+          // Remove the old CSS link (css/phone.css) - webpack will inject the bundled version
+          html = html.replace(/<link rel="stylesheet"[^>]*href="css\/phone\.css"[^>]*>/g, '');
+          
           // Remove service worker registration inline script
           html = html.replace(/<script type="text\/javascript">\s*"serviceWorker"[\s\S]*?<\/script>/g, '');
           
@@ -161,8 +165,14 @@ module.exports = (env, argv) => {
           // Copy offline page
           { from: 'pwa/offline.html', to: 'offline.html' },
           
-          // Copy icons
-          { from: 'pwa/icons', to: 'icons' },
+          // Copy icons (exclude backup/original files)
+          { 
+            from: 'pwa/icons', 
+            to: 'icons',
+            globOptions: {
+              ignore: ['**/IncomingCallIcon-original*.png']
+            }
+          },
           
           // Copy favicon
           { from: 'pwa/favicon.ico', to: 'favicon.ico' },

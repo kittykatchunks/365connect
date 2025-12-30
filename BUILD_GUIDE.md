@@ -116,7 +116,8 @@ The server will serve directly from `/pwa` - no build needed for development.
    npm start
    
    # Windows CMD
-   set NODE_ENV=production && npm start
+   set NODE_ENV=production
+   npm start
    
    # Linux/Mac
    NODE_ENV=production npm start
@@ -212,7 +213,7 @@ Set via:
 # PowerShell
 $env:NODE_ENV="production"
 
-# CMD
+# CMD  
 set NODE_ENV=production
 
 # Linux/Mac

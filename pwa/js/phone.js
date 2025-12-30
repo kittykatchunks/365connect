@@ -3049,7 +3049,7 @@ function debugSipConfiguration() {
 /* UI EVENT HANDLERS SETUP */
 /* ====================================================================================== */
 
-function setupUIEventHandlers() {
+window.setupUIEventHandlers = function setupUIEventHandlers() {
     console.log('Setting up UI event handlers...');
     
     // Prevent duplicate event handler setup
@@ -3915,6 +3915,15 @@ window.Phone = {
         return App.managers;
     }
 };
+
+// Export functions used by app-startup.js and other modules
+window.initializeContainerVisibility = initializeContainerVisibility;
+window.clearDialInput = clearDialInput;
+window.getLastDialedNumber = getLastDialedNumber;
+window.loadSettingsIntoForm = loadSettingsIntoForm;
+window.updateRegisterButton = updateRegisterButton;
+window.showSuccessNotification = showSuccessNotification;
+window.showErrorNotification = showErrorNotification;
 
 /* ====================================================================================== */
 /* END OF FILE */

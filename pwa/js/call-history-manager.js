@@ -426,6 +426,9 @@ class CallHistoryManager extends EventTarget {
     }
 }
 
+// Make CallHistoryManager available globally
+window.CallHistoryManager = CallHistoryManager;
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CallHistoryManager;

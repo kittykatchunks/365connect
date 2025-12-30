@@ -188,13 +188,16 @@ class AudioSettingsManager {
         console.log('Starting microphone level monitoring...');
 
         try {
+            // Build constraints - only add deviceId if we have a valid non-default device
             const constraints = {
-                audio: {
-                    deviceId: this.settings.selectedMicrophone !== 'default' 
-                        ? { exact: this.settings.selectedMicrophone }
-                        : undefined
-                }
+                audio: {}
             };
+            
+            if (this.settings.selectedMicrophone && 
+                this.settings.selectedMicrophone !== 'default' && 
+                this.settings.selectedMicrophone !== '') {
+                constraints.audio.deviceId = { exact: this.settings.selectedMicrophone };
+            }
 
             this.microphoneStream = await navigator.mediaDevices.getUserMedia(constraints);
             
@@ -303,7 +306,7 @@ class AudioSettingsManager {
                     ? this.settings.selectedRinger 
                     : this.settings.selectedSpeaker;
                     
-                if (deviceId !== 'default') {
+                if (deviceId && deviceId !== 'default' && deviceId !== '') {
                     await this.testAudio.setSinkId(deviceId);
                 }
             }
@@ -348,7 +351,10 @@ class AudioSettingsManager {
             this.testAudio = new Audio(`media/${this.settings.selectedRingtone}`);
             
             // Set ringer device if supported
-            if (this.testAudio.setSinkId && this.settings.selectedRinger !== 'default') {
+            if (this.testAudio.setSinkId && 
+                this.settings.selectedRinger && 
+                this.settings.selectedRinger !== 'default' && 
+                this.settings.selectedRinger !== '') {
                 await this.testAudio.setSinkId(this.settings.selectedRinger);
             }
 
@@ -412,7 +418,10 @@ class AudioSettingsManager {
             this.ringtoneAudio.preload = 'auto'; // Preload for immediate playback
             
             // Set ringer device if supported
-            if (this.ringtoneAudio.setSinkId && this.settings.selectedRinger !== 'default') {
+            if (this.ringtoneAudio.setSinkId && 
+                this.settings.selectedRinger && 
+                this.settings.selectedRinger !== 'default' && 
+                this.settings.selectedRinger !== '') {
                 await this.ringtoneAudio.setSinkId(this.settings.selectedRinger);
                 console.log('🔊 Ringtone output device set to:', this.settings.selectedRinger);
             }
@@ -522,6 +531,11 @@ class AudioSettingsManager {
 
     updateDeviceSelection(deviceType, deviceId) {
         console.log(`Updating ${deviceType} selection to:`, deviceId);
+        
+        // Normalize empty or invalid device IDs to 'default'
+        if (!deviceId || deviceId === '') {
+            deviceId = 'default';
+        }
         
         switch (deviceType) {
             case 'speaker':
