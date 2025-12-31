@@ -1,4 +1,4 @@
-const cacheID = "autocab365connect_v3"; // Increment version - v3: Updated busylight-manager.js
+const cacheID = "autocab365connect_v4"; // Increment version - v4: Fixed busylight getUsername method
 
 const CacheItems = [
     // Core files
