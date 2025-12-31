@@ -439,8 +439,16 @@ class BusylightBridgeServer {
      */
     createHttpMiddleware() {
         return async (req, res, next) => {
-            // Extract targetUser from headers (Connect365 Username for routing)
-            const targetUser = req.headers['x-connect365-username'] || req.query.bridgeId || null;
+            // Extract targetUser from headers or query parameters (Connect365 Username for routing)
+            // bridgeId should be the username, not a connection ID
+            let targetUser = req.headers['x-connect365-username'] || req.query.bridgeId || req.query.uniqueId || null;
+            
+            // Log the routing decision
+            if (targetUser) {
+                console.log(`[BusylightBridge] Routing to specific user: ${targetUser}`);
+            } else {
+                console.log(`[BusylightBridge] No targetUser specified, will use first available bridge`);
+            }
             
             // Check if we have any connected bridges
             if (this.bridges.size === 0) {

@@ -76,13 +76,14 @@ class BusylightManager {
         }
         
         this.enabled = (window.localDB.getItem("BusylightEnabled", "0") === "1");
-        this.bridgeId = window.localDB.getItem("BusylightBridgeId", null);
+        // bridgeId should be the Connect365 username (SIP username), not a connection ID
+        // We'll get this dynamically from SIP manager when needed
+        this.bridgeId = null;
         this.ringSound = parseInt(window.localDB.getItem("BusylightRingSound", "3"), 10);
         this.ringVolume = parseInt(window.localDB.getItem("BusylightRingVolume", "50"), 10);
         
         console.log('[Busylight] Settings loaded:');
         console.log('  Enabled:', this.enabled);
-        console.log('  Bridge ID:', this.bridgeId || 'auto-select');
         console.log('  Ring Sound:', this.ringSound);
         console.log('  Ring Volume:', this.ringVolume);
     }
@@ -97,7 +98,6 @@ class BusylightManager {
         }
         
         window.localDB.setItem("BusylightEnabled", this.enabled ? "1" : "0");
-        window.localDB.setItem("BusylightBridgeId", this.bridgeId || "");
         window.localDB.setItem("BusylightRingSound", this.ringSound.toString());
         window.localDB.setItem("BusylightRingVolume", this.ringVolume.toString());
         
@@ -302,15 +302,19 @@ class BusylightManager {
     }
 
     /**
-     * Build API URL with optional bridge ID
+     * Build API URL with optional bridge ID (username-based routing)
      */
     buildApiUrl(action, params = {}) {
         const url = new URL(this.bridgeUrl, window.location.origin);
         url.searchParams.set('action', action);
         
-        // Add bridge ID if specified
-        if (this.bridgeId) {
-            url.searchParams.set('bridgeId', this.bridgeId);
+        // Get username from SIP manager for bridge routing
+        const username = this.getUsername();
+        if (username) {
+            url.searchParams.set('bridgeId', username);
+            console.log(`[Busylight] Routing to bridge for user: ${username}`);
+        } else {
+            console.log('[Busylight] No username available, using auto-select routing');
         }
         
         // Add additional parameters
@@ -852,20 +856,11 @@ class BusylightManager {
     }
 
     /**
-     * Select bridge by ID
+     * Select bridge by ID (DEPRECATED - now uses automatic username-based routing)
      */
     async selectBridge(bridgeId) {
-        if (this.bridgeId === bridgeId) return;
-        
-        console.log(`[Busylight] Selecting bridge: ${bridgeId || 'auto'}`);
-        this.bridgeId = bridgeId;
-        this.saveSettings();
-        
-        // Reconnect with new bridge ID
-        if (this.enabled) {
-            await this.disconnect();
-            await this.initialize();
-        }
+        console.log(`[Busylight] selectBridge() is deprecated - now using automatic username-based routing`);
+        console.log(`[Busylight] Requests will automatically route to bridge for current SIP username`);
     }
 
     /**
@@ -891,7 +886,8 @@ class BusylightManager {
         return {
             enabled: this.enabled,
             connected: this.connected,
-            bridgeId: this.bridgeId || 'auto',
+            bridgeId: this.getUsername() || 'auto',
+            username: this.getUsername(),
             deviceModel: this.deviceModel || 'Unknown',
             isAlphaDevice: this.isAlphaDevice,
             flashMethod: this.isAlphaDevice ? 'Manual (interval-based)' : 'Hardware blink API',
@@ -932,7 +928,7 @@ window.testBusylight = async function() {
     console.log('Enabled:', manager.enabled);
     console.log('Connected:', manager.connected);
     console.log('Bridge URL:', manager.bridgeUrl);
-    console.log('Bridge ID:', manager.bridgeId || 'auto-select');
+    console.log('Username (Bridge Routing):', manager.getUsername() || 'auto-select');
     console.log('Connect365 Username:', username || 'not configured');
     console.log('Device Model:', manager.deviceModel || 'Unknown');
     console.log('Is Alpha Device:', manager.isAlphaDevice);
