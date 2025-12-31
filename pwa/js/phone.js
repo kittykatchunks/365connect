@@ -1375,6 +1375,14 @@ function loadSettingsFromDatabase() {
         console.log('Loaded theme mode:', currentTheme);
     }
     
+    // Language - load current language setting
+    const languageSelect = document.getElementById('AppLanguage');
+    if (languageSelect && window.languageManager) {
+        const currentLanguage = window.languageManager.i18n?.language || 'en';
+        languageSelect.value = currentLanguage;
+        console.log('Loaded language:', currentLanguage);
+    }
+    
     // Update notification status display
     updateNotificationStatusDisplay();
 }
@@ -1402,6 +1410,12 @@ async function saveSettings() {
                 if (element.id === 'ThemeMode' && App.managers?.ui) {
                     console.log('Setting theme mode to:', element.value);
                     App.managers.ui.setTheme(element.value);
+                }
+                
+                // Special handling for language change
+                if (element.id === 'AppLanguage' && window.languageManager) {
+                    console.log('Setting language to:', element.value);
+                    window.languageManager.setLanguage(element.value);
                 }
             });
             

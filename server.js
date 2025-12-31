@@ -336,9 +336,19 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Fallback: serve index.html for SPA routes
+// Fallback: serve index.html for SPA routes (but NOT for static files)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pwa', 'index.html'));
+  const ext = path.extname(req.path);
+  
+  // If requesting a file with an extension (like .json, .js, .css, etc.), 
+  // and it wasn't found by express.static, return 404
+  if (ext && ext !== '.html') {
+    return res.status(404).send('File not found');
+  }
+  
+  // For HTML routes or routes without extension, serve index.html
+  const indexPath = path.join(staticFolder, 'index.html');
+  res.sendFile(indexPath);
 });
 
 // Determine which SSL certificates to use

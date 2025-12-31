@@ -1984,6 +1984,48 @@ input[type="checkbox"]:checked::after {
     border-top: 1px solid var(--border-color);
 }
 
+/* Pause Reason Modal */
+.pause-reason-modal .modal-content {
+    min-width: 450px;
+}
+
+.pause-reason-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+}
+
+.pause-reason-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: var(--surface-color);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    color: var(--text-color);
+    font-size: var(--font-size-md);
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pause-reason-button:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pause-reason-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* ===== SCROLLBARS ===== */
 
 ::-webkit-scrollbar {

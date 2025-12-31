@@ -39,8 +39,13 @@ class LanguageManager {
                     
                     // Backend configuration for loading translation files
                     backend: {
-                        loadPath: 'lang/{{lng}}.json',
-                        crossDomain: false
+                        loadPath: '/lang/{{lng}}.json',
+                        crossDomain: false,
+                        requestOptions: {
+                            mode: 'cors',
+                            credentials: 'same-origin',
+                            cache: 'default'
+                        }
                     },
                     
                     // Language detection options
@@ -53,8 +58,8 @@ class LanguageManager {
                     // Interpolation options
                     interpolation: {
                         escapeValue: false, // Not needed for DOM manipulation
-                        prefix: '{',
-                        suffix: '}'
+                        prefix: '{{',
+                        suffix: '}}'
                     },
                     
                     // Supported languages
@@ -74,11 +79,18 @@ class LanguageManager {
             // Apply translations to existing DOM elements
             this.applyTranslations();
             
+            // Debug: Check what resources were loaded
+            const loadedLanguages = Object.keys(this.i18n.store.data);
+            const currentLangData = this.i18n.store.data[this.i18n.language];
+            const translationKeys = currentLangData?.translation ? Object.keys(currentLangData.translation).length : 0;
+            
             console.log(`✅ Language Manager initialized with language: ${this.i18n.language}`);
+            console.log(`📚 Loaded languages: ${loadedLanguages.join(', ')}`);
+            console.log(`🔑 Translation keys available: ${translationKeys}`);
             
             // Trigger language loaded event
             if (window.WebHooks?.onLanguagePackLoaded) {
-                window.WebHooks.onLanguagePackLoaded(this.i18n.store.data[this.i18n.language]?.translation || {});
+                window.WebHooks.onLanguagePackLoaded(currentLangData?.translation || {});
             }
             
             // Listen for language changes
@@ -153,6 +165,7 @@ class LanguageManager {
      */
     translate(key, defaultValue = null, params = {}) {
         if (!this.isInitialized) {
+            console.warn(`⚠️ Language manager not initialized, returning key: ${key}`);
             return defaultValue !== null ? defaultValue : key;
         }
 
@@ -162,7 +175,14 @@ class LanguageManager {
             ...params
         };
 
-        return this.i18n.t(key, options);
+        const translation = this.i18n.t(key, options);
+        
+        // Debug logging for missing translations
+        if (translation === key && defaultValue === null) {
+            console.debug(`🔍 Translation key not found: "${key}" in language: ${this.i18n.language}`);
+        }
+        
+        return translation;
     }
 
     /**
@@ -185,17 +205,40 @@ class LanguageManager {
      * Apply translations to DOM elements with data-translate attributes
      */
     applyTranslations() {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized) {
+            console.warn('⚠️ Language manager not initialized, cannot apply translations');
+            return;
+        }
+
+        let translatedCount = 0;
+        let failedCount = 0;
 
         // Update elements with data-translate attributes
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             const translation = this.translate(key);
             
-            if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'password' || element.type === 'email')) {
-                element.placeholder = translation;
+            // Check if translation was successful (not just returning the key)
+            if (translation && translation !== key) {
+                if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'password' || element.type === 'email')) {
+                    element.placeholder = translation;
+                } else {
+                    // Only update text content if element doesn't have child elements (to preserve icons, etc.)
+                    if (element.children.length === 0) {
+                        element.textContent = translation;
+                    } else {
+                        // For elements with children, update only text nodes
+                        Array.from(element.childNodes).forEach(node => {
+                            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                                node.textContent = translation;
+                            }
+                        });
+                    }
+                }
+                translatedCount++;
             } else {
-                element.textContent = translation;
+                failedCount++;
+                console.warn(`⚠️ Missing translation for key: "${key}"`);
             }
         });
         
@@ -203,15 +246,23 @@ class LanguageManager {
         document.querySelectorAll('[data-translate-title]').forEach(element => {
             const key = element.getAttribute('data-translate-title');
             const translation = this.translate(key);
-            element.title = translation;
+            if (translation && translation !== key) {
+                element.title = translation;
+                translatedCount++;
+            }
         });
         
         // Update elements with data-translate-placeholder attributes
         document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
             const key = element.getAttribute('data-translate-placeholder');
             const translation = this.translate(key);
-            element.placeholder = translation;
+            if (translation && translation !== key) {
+                element.placeholder = translation;
+                translatedCount++;
+            }
         });
+
+        console.log(`🌐 Applied ${translatedCount} translations (${failedCount} missing keys)`);
     }
 
     /**

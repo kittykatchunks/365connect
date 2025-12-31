@@ -503,6 +503,11 @@ class AgentButtonsManager {
         if (!document.getElementById('dtmfInputModal')) {
             this.createDtmfInputModal();
         }
+        
+        // Create pause reason modal if it doesn't exist
+        if (!document.getElementById('pauseReasonModal')) {
+            this.createPauseReasonModal();
+        }
     }
     
     createAgentNumberModal() {
@@ -604,6 +609,31 @@ class AgentButtonsManager {
                 this.cancelDtmfInput();
             }
         });
+    }
+    
+    createPauseReasonModal() {
+        const modal = document.createElement('div');
+        modal.id = 'pauseReasonModal';
+        modal.className = 'modal-overlay hidden';
+        modal.innerHTML = `
+            <div class="modal-content pause-reason-modal">
+                <div class="modal-header">
+                    <h3>Select Pause Reason</h3>
+                </div>
+                <div class="modal-body">
+                    <div id="pauseReasonList" class="pause-reason-list">
+                        <!-- Pause reasons will be dynamically added here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="pauseReasonCancelBtn" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Setup event listeners
+        document.getElementById('pauseReasonCancelBtn').addEventListener('click', () => this.hidePauseReasonModal());
     }
     
     async handleLogin() {
@@ -779,10 +809,184 @@ class AgentButtonsManager {
             return;
         }
         
+        // Check if already paused - unpause programmatically via API
         if (this.isPaused) {
-            await this.performUnpause();
+            await this.performUnpauseViaAPI();
+            return;
+        }
+        
+        // Agent is unpaused, check if on active call
+        const sipManager = await this.waitForSipManager();
+        const hasActiveCall = sipManager && sipManager.hasActiveSessions && sipManager.hasActiveSessions();
+        
+        if (hasActiveCall) {
+            // On active call - skip pause reasons and pause directly via API
+            console.log('📞 Agent on active call - pausing directly via API');
+            await this.pauseAgentViaAPI();
         } else {
+            // Phone is idle - fetch pause reasons first
+            console.log('📞 Phone idle - fetching pause reasons');
+            await this.fetchPauseReasonsAndHandle();
+        }
+    }
+    
+    async fetchPauseReasonsAndHandle() {
+        try {
+            this.updateButtonState('pause', 'processing');
+            this.setAllButtonsEnabled(false);
+            
+            // Get username from SIP config
+            const sipManager = await this.waitForSipManager();
+            if (!sipManager) {
+                throw new Error('SIP manager not available');
+            }
+            
+            const username = sipManager.config.username;
+            if (!username) {
+                throw new Error('Username not available');
+            }
+            
+            // Fetch pause reasons from Phantom API
+            const apiManager = await this.waitForApiManager();
+            if (!apiManager) {
+                console.warn('API manager not available, falling back to DTMF method');
+                await this.performPause();
+                return;
+            }
+            
+            console.log('📡 Fetching pause reasons for:', username);
+            const result = await apiManager.post('WallBoardStats', { phone: username });
+            
+            if (!result.success) {
+                console.warn('Failed to fetch pause reasons, falling back to DTMF method');
+                await this.performPause();
+                return;
+            }
+            
+            const pausereasons = result.data?.pausereasons;
+            if (!pausereasons) {
+                console.warn('No pause reasons in API response, falling back to DTMF method');
+                await this.performPause();
+                return;
+            }
+            
+            // Check if all pause reasons (0-9) are null/empty
+            const validReasons = [];
+            for (let i = 0; i <= 9; i++) {
+                const reason = pausereasons[i.toString()];
+                if (reason && reason.trim() !== '') {
+                    validReasons.push({ code: i, label: reason });
+                }
+            }
+            
+            if (validReasons.length === 0) {
+                // All empty - pause directly via API
+                console.log('📋 No pause reasons available - pausing directly via API');
+                await this.pauseAgentViaAPI();
+            } else {
+                // Show modal with pause reasons
+                console.log('📋 Showing pause reason modal with', validReasons.length, 'reasons');
+                this.showPauseReasonModal(validReasons);
+                // Reset button state as modal is shown
+                this.updateButtonState('pause', 'idle');
+                this.setAllButtonsEnabled(true);
+            }
+            
+        } catch (error) {
+            console.error('Error fetching pause reasons:', error);
+            this.showNotification('error', 'Failed to fetch pause reasons, using fallback method');
+            // Fall back to standard DTMF pause
             await this.performPause();
+        }
+    }
+    
+    async pauseAgentViaAPI() {
+        try {
+            this.updateButtonState('pause', 'processing');
+            this.setAllButtonsEnabled(false);
+            
+            // Get username from SIP config
+            const sipManager = await this.waitForSipManager();
+            if (!sipManager) {
+                throw new Error('SIP manager not available');
+            }
+            
+            const username = sipManager.config.username;
+            if (!username) {
+                throw new Error('Username not available');
+            }
+            
+            // Call pause API
+            const apiManager = await this.waitForApiManager();
+            if (!apiManager) {
+                throw new Error('API manager not available');
+            }
+            
+            console.log('📡 Pausing agent via API:', username);
+            const result = await apiManager.post('AgentpausefromPhone', { phone: username });
+            
+            if (result.success) {
+                this.isPaused = true;
+                this.updateButtonState('pause', 'active');
+                this.updateAgentStatusDisplay('paused', this.currentAgentNumber, this.currentAgentName);
+                this.saveAgentState();
+                this.setAllButtonsEnabled(true);
+                this.updateButtonEnabledStates();
+                this.showNotification('success', 'Agent paused');
+            } else {
+                throw new Error(result.error || 'API call failed');
+            }
+            
+        } catch (error) {
+            console.error('Pause via API failed:', error);
+            this.showNotification('error', 'Pause failed: ' + error.message);
+            this.updateButtonState('pause', 'idle');
+            this.setAllButtonsEnabled(true);
+        }
+    }
+    
+    async performUnpauseViaAPI() {
+        try {
+            this.updateButtonState('pause', 'processing');
+            this.setAllButtonsEnabled(false);
+            
+            // Get username from SIP config
+            const sipManager = await this.waitForSipManager();
+            if (!sipManager) {
+                throw new Error('SIP manager not available');
+            }
+            
+            const username = sipManager.config.username;
+            if (!username) {
+                throw new Error('Username not available');
+            }
+            
+            // Call unpause API (same endpoint toggles pause/unpause)
+            const apiManager = await this.waitForApiManager();
+            if (!apiManager) {
+                throw new Error('API manager not available');
+            }
+            
+            console.log('📡 Unpausing agent via API:', username);
+            const result = await apiManager.post('AgentpausefromPhone', { phone: username });
+            
+            if (result.success) {
+                this.isPaused = false;
+                this.updateButtonState('pause', 'idle');
+                this.updateAgentStatusDisplay('logged-in', this.currentAgentNumber, this.currentAgentName);
+                this.saveAgentState();
+                this.setAllButtonsEnabled(true);
+                this.updateButtonEnabledStates();
+                this.showNotification('success', 'Agent unpaused');
+            } else {
+                throw new Error(result.error || 'API call failed');
+            }
+            
+        } catch (error) {
+            console.error('Unpause via API failed:', error);
+            this.showNotification('error', 'Unpause failed: ' + error.message);
+            this.updateButtonState('pause', 'active');
+            this.setAllButtonsEnabled(true);
         }
     }
     
@@ -1028,6 +1232,87 @@ class AgentButtonsManager {
         // Reset pause button state
         this.updateButtonState('pause', 'idle');
         this.setAllButtonsEnabled(true);
+    }
+    
+    showPauseReasonModal(pauseReasons) {
+        const modal = document.getElementById('pauseReasonModal');
+        const reasonList = document.getElementById('pauseReasonList');
+        
+        if (!modal || !reasonList) {
+            console.error('Pause reason modal not found');
+            return;
+        }
+        
+        // Clear existing reasons
+        reasonList.innerHTML = '';
+        
+        // Add each pause reason as a button
+        pauseReasons.forEach(reason => {
+            const button = document.createElement('button');
+            button.className = 'pause-reason-button';
+            button.textContent = reason.label;
+            button.dataset.code = reason.code;
+            button.addEventListener('click', () => this.selectPauseReason(reason.code, reason.label));
+            reasonList.appendChild(button);
+        });
+        
+        // Show modal
+        modal.classList.remove('hidden');
+    }
+    
+    hidePauseReasonModal() {
+        const modal = document.getElementById('pauseReasonModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        
+        // Reset button state
+        this.updateButtonState('pause', 'idle');
+        this.setAllButtonsEnabled(true);
+    }
+    
+    async selectPauseReason(code, label) {
+        try {
+            console.log(`📋 Selected pause reason ${code}: ${label}`);
+            
+            // Hide the modal
+            this.hidePauseReasonModal();
+            
+            // Update button state
+            this.updateButtonState('pause', 'processing');
+            this.setAllButtonsEnabled(false);
+            
+            // Get SIP manager
+            const sipManager = await this.waitForSipManager();
+            if (!sipManager) {
+                throw new Error('SIP manager not available');
+            }
+            
+            // Dial the DTMF code: *63*{code}
+            const dtmfCode = `*63*${code}`;
+            console.log(`📞 Dialing DTMF code: ${dtmfCode}`);
+            
+            // Create outgoing session (this will dial the code)
+            const sessionData = await sipManager.createOutgoingSession(dtmfCode, {
+                type: 'agent-pause-reason',
+                pauseCode: code,
+                pauseLabel: label
+            });
+            
+            this.activeAgentSessions.set(sessionData.id, {
+                type: 'pause',
+                pauseCode: code,
+                pauseLabel: label
+            });
+            
+            this.showNotification('info', `Pausing with reason: ${label}`);
+            
+        } catch (error) {
+            console.error('Failed to select pause reason:', error);
+            this.showNotification('error', 'Failed to pause with reason: ' + error.message);
+            this.updateButtonState('pause', 'idle');
+            this.setAllButtonsEnabled(true);
+        }
     }
     
     updateButtonState(buttonType, state) {
