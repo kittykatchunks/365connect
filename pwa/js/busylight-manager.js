@@ -339,15 +339,15 @@ class BusylightManager {
         try {
             // Get from connection settings (stored by connection manager)
             if (window.localDB) {
-                const username = window.localDB.getItem('CurrentUser', '');
+                const username = window.localDB.getItem('SipUsername', '');
                 if (username) {
                     return username;
                 }
             }
             
             // Fallback: try to get from global App settings
-            if (window.App?.settings?.currentUser) {
-                return window.App.settings.currentUser;
+            if (window.App?.settings?.SipUsername) {
+                return window.App.settings.SipUsername;
             }
         } catch (error) {
             console.warn('[Busylight] Error getting Connect365 Username:', error);
