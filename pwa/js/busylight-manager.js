@@ -132,9 +132,8 @@ class BusylightManager {
             // Detect device type
             await this.detectDeviceType();
             
-            // Skip test sequence - go straight to setting the correct state
-            // Test can be run manually via testBusylight() function
-            // await this.testConnection();
+            // Run test sequence
+            await this.testConnection();
             
             // Update to current system state
             await this.updateStateFromSystem();
@@ -779,10 +778,10 @@ class BusylightManager {
                 this.retryAttempts = 0;
                 this.isRetrying = false;
                 
-                // Detect device type (skip test sequence on reconnection)
+                // Detect device type
                 await this.detectDeviceType();
                 
-                // Update to current system state immediately
+                // Update to current system state
                 await this.updateStateFromSystem();
                 
                 console.log('[Busylight] Bridge fully reconnected and ready');
