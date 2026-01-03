@@ -309,7 +309,7 @@ class BusylightManager {
         url.searchParams.set('action', action);
         
         // Get username from SIP manager for bridge routing
-        const username = this.getUsername();
+        const username = this.getConnect365Username();
         if (username) {
             url.searchParams.set('bridgeId', username);
             console.log(`[Busylight] Routing to bridge for user: ${username}`);
@@ -886,8 +886,8 @@ class BusylightManager {
         return {
             enabled: this.enabled,
             connected: this.connected,
-            bridgeId: this.getUsername() || 'auto',
-            username: this.getUsername(),
+            bridgeId: this.getConnect365Username() || 'auto',
+            username: this.getConnect365Username(),
             deviceModel: this.deviceModel || 'Unknown',
             isAlphaDevice: this.isAlphaDevice,
             flashMethod: this.isAlphaDevice ? 'Manual (interval-based)' : 'Hardware blink API',
@@ -928,7 +928,7 @@ window.testBusylight = async function() {
     console.log('Enabled:', manager.enabled);
     console.log('Connected:', manager.connected);
     console.log('Bridge URL:', manager.bridgeUrl);
-    console.log('Username (Bridge Routing):', manager.getUsername() || 'auto-select');
+    console.log('Username (Bridge Routing):', manager.getConnect365Username() || 'auto-select');
     console.log('Connect365 Username:', username || 'not configured');
     console.log('Device Model:', manager.deviceModel || 'Unknown');
     console.log('Is Alpha Device:', manager.isAlphaDevice);
