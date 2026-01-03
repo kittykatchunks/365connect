@@ -135,18 +135,22 @@ class BusylightManager {
             // Run test sequence
             await this.testConnection();
             
-            // Start monitoring
-            this.startMonitoring();
-            
             // Update to current system state
             await this.updateStateFromSystem();
+            
+            // Start monitoring (always start, even if connected)
+            this.startMonitoring();
             
             return true;
         }
 
-        console.warn('[Busylight] Failed to connect');
+        console.warn('[Busylight] Failed initial connection - will retry via monitoring');
         this.connected = false;
         this.showConnectionError();
+        
+        // Start monitoring even if initial connection failed - it will retry
+        this.startMonitoring();
+        
         return false;
     }
 
@@ -769,11 +773,18 @@ class BusylightManager {
             const isConnected = await this.checkConnection();
 
             if (!wasConnected && isConnected) {
-                console.log('[Busylight] Bridge reconnected');
+                console.log('[Busylight] Bridge reconnected - reinitializing...');
                 this.connected = true;
                 this.retryAttempts = 0;
                 this.isRetrying = false;
+                
+                // Detect device type
+                await this.detectDeviceType();
+                
+                // Update to current system state
                 await this.updateStateFromSystem();
+                
+                console.log('[Busylight] Bridge fully reconnected and ready');
                 
                 if (window.Alert) {
                     window.Alert('Busylight bridge has reconnected!', 'Busylight Reconnected');
