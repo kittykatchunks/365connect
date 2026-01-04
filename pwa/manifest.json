@@ -4,15 +4,12 @@
     "id": "autocab.com",
     "start_url": "/",
     "display": "standalone",
-    "display_override": ["side-panel"],
     "orientation": "any",
     "background_color": "#fff",
     "theme_color": "#f6f6f6",
     "description": "Autocab365Connect is a fully featured browser based WebRTC SIP phone for your Autocab365 system. It was designed for, and powered by your Phantom PBX.",
     "categories": ["business", "utilities", "productivity"],
-    "edge_side_panel": {
-        "preferred_width": 600
-    },
+    "preferred_width": 400,
     "scope": "/",
     "screenshots": [
     ],
