@@ -132,18 +132,7 @@ function setupLegacyWebHooks() {
 // Initialize legacy web hooks
 setupLegacyWebHooks();
 
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js').then(function(registration) {
-            console.log('✅ ServiceWorker registration successful with scope:', registration.scope);
-        }, function(err) {
-            console.error('❌ ServiceWorker registration failed:', err);
-        });
-    });
-} else {
-    console.warn("⚠️ Cannot make use of ServiceWorker - not supported");
-}
+// Note: Service Worker is registered in index.html to avoid duplicate registration
 
 // Make config globally available
 window.AppConfig = AppConfig;

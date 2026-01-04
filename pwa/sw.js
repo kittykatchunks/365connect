@@ -1,4 +1,4 @@
-const cacheID = "autocab365connect_v4"; // Increment version - v4: Fixed busylight getUsername method
+const cacheID = "autocab365connect_v5"; // Increment version - v5: Fixed PWA manifest issues and duplicate service worker registration
 
 const CacheItems = [
     // Core files
@@ -80,9 +80,31 @@ self.addEventListener("fetch", function(event){
         return;
     }
     
-    // Don't cache manifest.json - always fetch fresh
+    // Don't cache manifest.json - always fetch fresh with error handling
     if (event.request.url.includes('manifest.json')) {
-        event.respondWith(fetch(event.request));
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    if (response.ok) {
+                        return response;
+                    }
+                    console.warn('Manifest fetch failed with status:', response.status);
+                    return response;
+                })
+                .catch(error => {
+                    console.error('Error fetching manifest:', error);
+                    // Return a minimal valid response to prevent PWA installation issues
+                    return new Response(JSON.stringify({
+                        "name": "Autocab365Connect",
+                        "short_name": "Autocab365",
+                        "start_url": "/",
+                        "display": "standalone"
+                    }), {
+                        status: 200,
+                        headers: { "Content-Type": "application/manifest+json" }
+                    });
+                })
+        );
         return;
     }
     
