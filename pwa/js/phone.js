@@ -2058,12 +2058,21 @@ function setupSipConnectionMonitoring() {
         console.log('🔔 Incoming call detected, starting ringtone and notification');
         updateCallButton(session);
         
-        // Start playing ringtone if audio manager is available
-        if (App.managers.audio) {
-            App.managers.audio.startRinging();
-            console.log('✅ Ringtone started for incoming call');
+        // Check if there are other active calls
+        const activeSessions = App.managers.sip.getActiveSessions();
+        const hasOtherActiveCalls = activeSessions.some(s => s.id !== session.id && s.state !== 'ringing');
+        
+        if (hasOtherActiveCalls) {
+            // Don't play full ringtone - call waiting tone already played by LineManager
+            console.log('⏸️ Other active calls exist - using call waiting tone only (no full ringtone)');
         } else {
-            console.warn('⚠️ Audio manager not available, no ringtone will play');
+            // No other active calls - play full ringtone
+            if (App.managers.audio) {
+                App.managers.audio.startRinging();
+                console.log('✅ Ringtone started for incoming call');
+            } else {
+                console.warn('⚠️ Audio manager not available, no ringtone will play');
+            }
         }
         
         // Send system notification if enabled

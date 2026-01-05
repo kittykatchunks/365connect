@@ -254,6 +254,21 @@ class LineManager {
         const lineState = this.lineStates.get(lineNumber);
         if (!lineState) return;
         
+        // If switching from an active line to another line, auto-hold the previous line
+        if (this.selectedLine && this.selectedLine !== lineNumber) {
+            const previousLineState = this.lineStates.get(this.selectedLine);
+            if (previousLineState && previousLineState.state === 'active' && previousLineState.sessionId) {
+                console.log(`📞 LineManager: Auto-holding line ${this.selectedLine} when switching to line ${lineNumber}`);
+                // Put previous line on hold
+                if (this.sipManager) {
+                    this.sipManager.toggleHold(previousLineState.sessionId)
+                        .catch(error => {
+                            console.error('Failed to auto-hold previous line:', error);
+                        });
+                }
+            }
+        }
+        
         // If selecting an idle line, clear UI
         if (lineState.state === 'idle') {
             console.log(`📞 LineManager: Selected idle line ${lineNumber} - clearing UI`);
