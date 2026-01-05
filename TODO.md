@@ -7,7 +7,7 @@
 - [X] When connecting and API call to check if logged in, if company numbers tab is enabled, retrieve current CLIP outgoing and compare to company numbers - display as currently selected company on dial UI page for company numbers selector
 - [X] When unregistered and reconnecting, check returned value for pause state and ensure UI reflects this if agent is still logged in after re-registering
 - [ ] BLF not recognising changes to connected/disconnected states of programmed devices, F5 does refresh state
-- [ ] Reword the statement appearing when webpage is accessed initially (settings required etc.)
+- [X] Reword the statement appearing when webpage is accessed initially (settings required etc.)
 - [ ] Review and complete localisation (e.g. languages)
 - [X] If on another tab and an incoming call starts then the tab to maybe flash to alert the user, also check if answering with the windows notification of a call that the dial screen is automatically shown if on another tab
 
