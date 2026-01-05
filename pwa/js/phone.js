@@ -89,45 +89,28 @@ async function makeCall() {
         return;
     }
     
-    const lineManager = App.managers.line;
-    if (!lineManager) {
-        console.error('Line manager not available');
-        showError(t('phoneSystemNotReady', 'Phone system not ready'));
-        return;
-    }
-    
-    const selectedLine = lineManager.getSelectedLine();
-    
-    // First priority: Check ALL lines for any ringing calls (even if not selected)
-    // This allows the Answer button to work regardless of which line is selected
-    for (let lineNum = 1; lineNum <= 3; lineNum++) {
-        const lineState = lineManager.getLineState(lineNum);
-        if (lineState && lineState.state === 'ringing' && lineState.sessionId) {
-            console.log('Answering incoming call on line:', lineNum);
-            
-            // Select this line if not already selected
-            if (selectedLine !== lineNum) {
-                lineManager.selectLine(lineNum);
-            }
-            
-            // Stop tab flashing when answering
-            if (window.TabAlertManager) {
-                window.TabAlertManager.stopFlashing();
-            }
-            
-            try {
-                await App.managers.sip.answerSession(lineState.sessionId);
-                console.log('Incoming call answered successfully');
-                return;
-            } catch (error) {
-                console.error('Failed to answer incoming call:', error);
-                showError(t('failedToAnswerCall', 'Failed to answer call') + ': ' + error.message);
-                return;
-            }
+    // Check if there's an incoming call to answer
+    const incomingSession = App.managers.sip.getIncomingSession();
+    if (incomingSession) {
+        console.log('Answering incoming call:', incomingSession.id);
+        
+        // Stop tab flashing when answering
+        if (window.TabAlertManager) {
+            window.TabAlertManager.stopFlashing();
+        }
+        
+        try {
+            await App.managers.sip.answerCall(incomingSession.id);
+            console.log('Incoming call answered successfully');
+            return;
+        } catch (error) {
+            console.error('Failed to answer incoming call:', error);
+            showError(t('failedToAnswerCall', 'Failed to answer call') + ': ' + error.message);
+            return;
         }
     }
     
-    // No ringing call to answer, proceed with outgoing call
+    // No incoming call, proceed with outgoing call
     const dialInput = document.getElementById('dialInput');
     if (!dialInput) {
         console.error('Dial input not found');
@@ -155,33 +138,6 @@ async function makeCall() {
     if (!isValidPhoneNumber(number)) {
         showError(t('pleaseEnterValidPhoneNumber', 'Please enter a valid phone number'));
         return;
-    }
-    
-    // Check if we need to select an available line first
-    if (!selectedLine || (selectedLine && lineManager.getLineState(selectedLine)?.state !== 'idle')) {
-        // Need to find and select an available line
-        const availableLine = lineManager.getFirstAvailableLine();
-        if (!availableLine) {
-            showError('All lines are busy. Please end or hold a call first.');
-            return;
-        }
-        
-        // If there's an active call on current line, put it on hold
-        if (selectedLine) {
-            const currentLineState = lineManager.getLineState(selectedLine);
-            if (currentLineState && currentLineState.state === 'active') {
-                console.log(`Auto-holding line ${selectedLine} to make new call on line ${availableLine}`);
-                try {
-                    await App.managers.sip.toggleHold(currentLineState.sessionId);
-                } catch (error) {
-                    console.warn('Failed to auto-hold current line:', error);
-                }
-            }
-        }
-        
-        // Select the available line
-        lineManager.selectLine(availableLine);
-        console.log(`Selected available line ${availableLine} for outgoing call`);
     }
 
     console.log('Making outgoing call to:', number);
@@ -242,19 +198,8 @@ async function toggleMute(sessionId = null) {
         return;
     }
     
-    // If no sessionId provided, use selected line's session
-    let targetSessionId = sessionId;
-    if (!targetSessionId && App.managers.line) {
-        targetSessionId = App.managers.line.getSelectedSessionId();
-    }
-    
-    if (!targetSessionId) {
-        console.error('No session selected for mute');
-        return;
-    }
-    
     try {
-        await App.managers.sip.toggleMute(targetSessionId);
+        await App.managers.sip.toggleMute(sessionId);
         
     } catch (error) {
         console.error('Failed to toggle mute:', error);
@@ -270,20 +215,9 @@ async function toggleHold(sessionId = null) {
         return;
     }
     
-    // If no sessionId provided, use selected line's session
-    let targetSessionId = sessionId;
-    if (!targetSessionId && App.managers.line) {
-        targetSessionId = App.managers.line.getSelectedSessionId();
-    }
-    
-    if (!targetSessionId) {
-        console.error('No session selected for hold');
-        return;
-    }
-    
     try {
-        console.log('📞 Calling SIP manager toggleHold for session:', targetSessionId);
-        await App.managers.sip.toggleHold(targetSessionId);
+        console.log('📞 Calling SIP manager toggleHold');
+        await App.managers.sip.toggleHold(sessionId);
         console.log('✅ Hold toggle successful');
         
     } catch (error) {
@@ -874,17 +808,10 @@ async function sendDTMF(digit) {
         return;
     }
     
-    // DTMF always goes to selected line only
-    const sessionId = App.managers.line?.getSelectedSessionId();
-    if (!sessionId) {
-        console.error('No line selected for DTMF');
-        return;
-    }
-    
-    // Get the session to validate state
-    const currentSession = App.managers.sip.getSession(sessionId);
+    // Get the current active session
+    const currentSession = App.managers.sip.getCurrentSession();
     if (!currentSession) {
-        console.warn('Selected line session not found');
+        console.warn('No active session to send DTMF to');
         return;
     }
     
@@ -910,7 +837,7 @@ async function sendDTMF(digit) {
     }
     
     try {
-        await App.managers.sip.sendDTMF(sessionId, digit);
+        await App.managers.sip.sendDTMF(currentSession.id, digit);
         console.log(`DTMF ${digit} sent to session ${currentSession.id}`);
     } catch (error) {
         console.error('Failed to send DTMF:', error);
@@ -2047,14 +1974,13 @@ function setupSipConnectionMonitoring() {
     // Monitor session events for call status display
     App.managers.sip.on('sessionCreated', (session) => {
         console.log('Session created, updating call status display');
-        // LineManager now handles all UI updates for multi-line system
-        // const callData = {
-        //     remoteIdentity: session.session?.remoteIdentity,
-        //     direction: session.direction,
-        //     target: session.target,
-        //     state: 'created' // Session created but not yet connected
-        // };
-        // App.managers.ui.updateCallStatus(callData);
+        const callData = {
+            remoteIdentity: session.session?.remoteIdentity,
+            direction: session.direction,
+            target: session.target,
+            state: 'created' // Session created but not yet connected
+        };
+        App.managers.ui.updateCallStatus(callData);
         // Don't start timer yet - wait for connection
         
         // Update call button for incoming calls
@@ -2065,21 +1991,12 @@ function setupSipConnectionMonitoring() {
         console.log('🔔 Incoming call detected, starting ringtone and notification');
         updateCallButton(session);
         
-        // Check if there are other active calls
-        const activeSessions = App.managers.sip.getActiveSessions();
-        const hasOtherActiveCalls = activeSessions.some(s => s.id !== session.id && s.state !== 'ringing');
-        
-        if (hasOtherActiveCalls) {
-            // Don't play full ringtone - call waiting tone already played by LineManager
-            console.log('⏸️ Other active calls exist - using call waiting tone only (no full ringtone)');
+        // Start playing ringtone if audio manager is available
+        if (App.managers.audio) {
+            App.managers.audio.startRinging();
+            console.log('✅ Ringtone started for incoming call');
         } else {
-            // No other active calls - play full ringtone
-            if (App.managers.audio) {
-                App.managers.audio.startRinging();
-                console.log('✅ Ringtone started for incoming call');
-            } else {
-                console.warn('⚠️ Audio manager not available, no ringtone will play');
-            }
+            console.warn('⚠️ Audio manager not available, no ringtone will play');
         }
         
         // Send system notification if enabled
@@ -2105,34 +2022,32 @@ function setupSipConnectionMonitoring() {
             window.currentIncomingSession = null;
         }
         
-        // LineManager now handles all UI updates for multi-line system
         // Update call status to show "Connected" and start timer
-        // const callData = {
-        //     remoteIdentity: session.session?.remoteIdentity,
-        //     direction: session.direction,
-        //     target: session.target,
-        //     state: 'answered' // Call is now connected
-        // };
-        // App.managers.ui.updateCallStatus(callData);
-        // App.managers.ui.startCallTimer(Date.now());
+        const callData = {
+            remoteIdentity: session.session?.remoteIdentity,
+            direction: session.direction,
+            target: session.target,
+            state: 'answered' // Call is now connected
+        };
+        App.managers.ui.updateCallStatus(callData);
+        App.managers.ui.startCallTimer(Date.now());
         
         showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
-        // updateCallControlUI(session);
+        updateCallControlUI(session);
     });
     
     App.managers.sip.on('sessionEstablished', (session) => {
         console.log('Session established, updating call timer');
         
-        // LineManager now handles all UI updates for multi-line system
         // Update call status to show "Connected"
-        // const callData = {
-        //     remoteIdentity: session.session?.remoteIdentity,
-        //     direction: session.direction,
-        //     target: session.target,
-        //     state: 'established' // Call is now established/connected
-        // };
-        // App.managers.ui.updateCallStatus(callData);
+        const callData = {
+            remoteIdentity: session.session?.remoteIdentity,
+            direction: session.direction,
+            target: session.target,
+            state: 'established' // Call is now established/connected
+        };
+        App.managers.ui.updateCallStatus(callData);
         
         // Start timer only if not already started
         if (!App.managers.ui.callTimer) {
@@ -2145,7 +2060,7 @@ function setupSipConnectionMonitoring() {
         // Show call controls if not already shown
         showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
-        // updateCallControlUI(session);
+        updateCallControlUI(session);
     });
     
     App.managers.sip.on('sessionTerminated', (session) => {
@@ -2167,9 +2082,8 @@ function setupSipConnectionMonitoring() {
             window.currentIncomingSession = null;
         }
         
-        // LineManager now handles all UI updates for multi-line system
-        // App.managers.ui.updateCallStatus({});
-        // App.managers.ui.stopCallTimer();
+        App.managers.ui.updateCallStatus({});
+        App.managers.ui.stopCallTimer();
         
         // Reset call button and hide call controls
         updateCallButton(null);
@@ -2189,21 +2103,20 @@ function setupSipConnectionMonitoring() {
     
     App.managers.sip.on('sessionMuted', (data) => {
         console.log('Session mute state changed:', data);
-        // LineManager now handles all UI updates for multi-line system
-        // const session = App.managers.sip.sessions.get(data.sessionId);
-        // if (session) {
-        //     updateCallControlUI(session);
-        // }
+        const session = App.managers.sip.sessions.get(data.sessionId);
+        if (session) {
+            updateCallControlUI(session);
+        }
     });
     
     App.managers.sip.on('sessionHeld', (data) => {
         console.log('Session hold state changed:', data);
-        // LineManager now handles all UI updates for multi-line system
-        // const session = App.managers.sip.sessions.get(data.sessionId);
-        // if (session) {
-        //     updateCallControlUI(session);
-        //     App.managers.ui.updateCallStatus(session);
-        // }
+        const session = App.managers.sip.sessions.get(data.sessionId);
+        if (session) {
+            updateCallControlUI(session);
+            // Update the call display to show hold status
+            App.managers.ui.updateCallStatus(session);
+        }
     });
 
     // Transfer event handlers
