@@ -457,7 +457,8 @@ class ApplicationStartup {
         });
         
         // Hold state changes
-        sip.on('sessionHoldStateChanged', (data) => {
+        sip.on('sessionHeld', (data) => {
+            console.log('📞 Session hold state changed:', data);
             if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
             if (typeof updateCallDisplayForLine === 'function' && sip.selectedLine) {
                 updateCallDisplayForLine(sip.selectedLine);
