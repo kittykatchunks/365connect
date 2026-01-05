@@ -81,19 +81,15 @@
 - [ ] Document browser compatibility
 
 ### Features - Future
-- [ ] Add video calling support
-- [ ] Add screen sharing
-- [ ] Add chat/messaging
-- [ ] Add call analytics dashboard
+- [ ] Add queue monitoring tab
+- [ ] 3 line capability
 - [ ] Add multi-language support expansion
-- [ ] Add contact import/export
-- [ ] Add call history export
+- [X] Add contact import/export
 
 ## 🐛 Known Issues
 
 - [ ] `npm start` fails in production mode - investigate NODE_ENV handling
 - [ ] Busylight bridge installer build failing - check dependencies
-- [ ] API config fetch returns ERR_NAME_NOT_RESOLVED for servehttp.com
 - [ ] Service worker shows TypeScript fetch error in console
 
 ## 🔐 Security
@@ -136,12 +132,10 @@
 ## 💡 Ideas / Enhancements
 
 - [ ] Add presence status (Available, Busy, Away, DND)
-- [ ] Add call parking
+- [X] Add call parking
 - [ ] Add conference calling
 - [ ] Add call queuing
-- [ ] Add custom ringtones per contact
 - [ ] Add call statistics
-- [ ] Add integration with CRM systems
 - [ ] Add browser extension for click-to-call
 
 ---
