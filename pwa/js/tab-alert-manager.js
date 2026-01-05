@@ -185,8 +185,9 @@
     }
 
     // Create singleton instance
+    console.log('📋 Creating TabAlertManager instance...');
     window.TabAlertManager = new TabAlertManager();
-    
-    console.log('📋 TabAlertManager module loaded');
+    console.log('✅ TabAlertManager module loaded and attached to window');
+    console.log('🔍 window.TabAlertManager:', window.TabAlertManager);
 
 })();

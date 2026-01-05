@@ -2482,12 +2482,16 @@ function sendIncomingCallNotification(session) {
         }
 
         // Start tab flashing for incoming call
+        console.log('🔍 Checking TabAlertManager:', typeof window.TabAlertManager, window.TabAlertManager);
         if (window.TabAlertManager) {
             const callerInfo = session?.session?.remoteIdentity?.displayName || 
                              session?.session?.remoteIdentity?.uri?.user || 
                              'Unknown';
+            console.log('🔔 Calling startFlashing with:', `📞 CALL: ${callerInfo}`);
             window.TabAlertManager.startFlashing(`📞 CALL: ${callerInfo}`);
             console.log('🔔 Started tab flashing for incoming call');
+        } else {
+            console.error('❌ TabAlertManager not available!');
         }
 
         // Check if notifications are supported
