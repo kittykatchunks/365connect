@@ -270,5 +270,10 @@
     "offline_sorry": "Sorry... Autocab365Connect PWA requires an active internet connection and your IP address to be whitelisted on Phantom.",
     "reload": "Reload",
     "select_language_help": "Select your preferred language for the application interface.",
-    "exportCompanyNumbersToCSV": "Export company numbers to CSV"
+    "exportCompanyNumbersToCSV": "Export company numbers to CSV",
+    "line1": "Line 1",
+    "line2": "Line 2",
+    "line3": "Line 3",
+    "call_waiting_tone": "Call Waiting Tone",
+    "enable_call_waiting_tone": "Play a faint tone when a new call arrives while on another call"
 }

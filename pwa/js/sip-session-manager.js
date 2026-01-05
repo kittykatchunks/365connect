@@ -907,6 +907,11 @@ class SipSessionManager {
             const sessionId = this.generateSessionId();
             const lineNumber = this.assignLineNumber();
             
+            // Check if line is available
+            if (lineNumber === null) {
+                throw new Error('All lines are occupied. Please end or hold a call first.');
+            }
+            
             // Create target URI
             let targetURI;
             if (typeof target === 'string') {
@@ -987,6 +992,17 @@ class SipSessionManager {
         try {
             const sessionId = this.generateSessionId();
             const lineNumber = this.assignLineNumber();
+            
+            // Check if line is available
+            if (lineNumber === null) {
+                console.warn('⚠️ All lines occupied - rejecting incoming call');
+                invitation.reject();
+                this.emit('incomingCallRejected', { 
+                    reason: 'All lines occupied',
+                    caller: invitation.remoteIdentity.displayName || invitation.remoteIdentity.uri.user
+                });
+                return;
+            }
 
             // Create session data
             const sessionData = {
@@ -1011,8 +1027,11 @@ class SipSessionManager {
             this.sessions.set(sessionId, sessionData);
             this.activeLines.set(lineNumber, sessionId);
 
-            // Auto-answer if enabled
-            if (this.config.autoAnswer) {
+            // Don't auto-answer if there are already active calls
+            const activeSessions = this.getActiveSessions();
+            const hasOtherActiveCalls = activeSessions.some(s => s.id !== sessionId);
+            
+            if (this.config.autoAnswer && !hasOtherActiveCalls) {
                 setTimeout(() => {
                     this.answerSession(sessionId);
                 }, 1500);
@@ -1263,15 +1282,17 @@ class SipSessionManager {
         // Remove from active sessions
         this.sessions.delete(sessionId);
         this.activeLines.delete(lineNumber);
+        
+        console.log(`📞 Released line ${lineNumber} from terminated session ${sessionId}`);
 
-        // Update selected line
+        // Clear selection if this was the selected line - don't auto-select another
         if (this.selectedLine === lineNumber) {
-            const remainingLines = Array.from(this.activeLines.keys());
-            this.selectedLine = remainingLines.length > 0 ? remainingLines[0] : null;
+            this.selectedLine = null;
+            console.log('📞 Cleared line selection - user must manually select a line');
         }
 
         this.emit('sessionTerminated', { ...sessionData, reason });
-        this.emit('lineFreed', lineNumber);
+        this.emit('lineReleased', { lineNumber, sessionId });
     }
 
     cleanupAudioElements() {
@@ -1858,12 +1879,15 @@ class SipSessionManager {
     }
 
     assignLineNumber() {
-        // Find the lowest available line number
-        let lineNumber = 1;
-        while (this.activeLines.has(lineNumber)) {
-            lineNumber++;
+        // Find first available line (1, 2, or 3)
+        for (let lineNumber = 1; lineNumber <= 3; lineNumber++) {
+            if (!this.activeLines.has(lineNumber)) {
+                return lineNumber;
+            }
         }
-        return lineNumber;
+        // All lines occupied - return null
+        console.warn('⚠️ All 3 lines are occupied');
+        return null;
     }
 
     // State Getters
@@ -2587,6 +2611,119 @@ class SipSessionManager {
     
     hasActiveSessions() {
         return this.sessions.size > 0;
+    }
+
+    // Line Management Methods
+    getAvailableLine() {
+        // Find first available line (1, 2, or 3)
+        for (let lineNumber = 1; lineNumber <= 3; lineNumber++) {
+            if (!this.activeLines.has(lineNumber)) {
+                return lineNumber;
+            }
+        }
+        return null; // All lines occupied
+    }
+
+    autoAssignLine(sessionId) {
+        const availableLine = this.getAvailableLine();
+        if (availableLine) {
+            this.activeLines.set(availableLine, sessionId);
+            const sessionData = this.sessions.get(sessionId);
+            if (sessionData) {
+                sessionData.lineNumber = availableLine;
+                console.log(`📞 Session ${sessionId} assigned to line ${availableLine}`);
+            }
+            return availableLine;
+        }
+        console.warn('⚠️ No available lines for session assignment');
+        return null;
+    }
+
+    selectLine(lineNumber) {
+        if (lineNumber < 1 || lineNumber > 3) {
+            console.error('❌ Invalid line number:', lineNumber);
+            return false;
+        }
+
+        const sessionId = this.activeLines.get(lineNumber);
+        if (!sessionId) {
+            console.log(`📞 Line ${lineNumber} has no active session`);
+            this.selectedLine = null;
+            this.emit('lineSelected', { lineNumber, sessionId: null });
+            return false;
+        }
+
+        this.selectedLine = lineNumber;
+        console.log(`📞 Line ${lineNumber} selected (session: ${sessionId})`);
+        this.emit('lineSelected', { lineNumber, sessionId });
+        return true;
+    }
+
+    async holdCurrentAndSelectLine(targetLineNumber) {
+        // Get current selected line session
+        const currentLineNumber = this.selectedLine;
+        const currentSessionId = currentLineNumber ? this.activeLines.get(currentLineNumber) : null;
+        const currentSession = currentSessionId ? this.sessions.get(currentSessionId) : null;
+
+        // If there's an active call on current line that's not already on hold, hold it
+        if (currentSession && !currentSession.onHold && currentSession.state === SIP.SessionState.Established) {
+            console.log(`📞 Auto-holding current line ${currentLineNumber} before switching to line ${targetLineNumber}`);
+            try {
+                await this.holdSession(currentSessionId);
+            } catch (error) {
+                console.error('❌ Failed to auto-hold current session:', error);
+                // Continue anyway - user explicitly wants to switch lines
+            }
+        }
+
+        // Select the target line
+        return this.selectLine(targetLineNumber);
+    }
+
+    getLineSession(lineNumber) {
+        const sessionId = this.activeLines.get(lineNumber);
+        return sessionId ? this.sessions.get(sessionId) : null;
+    }
+
+    releaseLineAssignment(sessionId) {
+        // Find and remove line assignment for this session
+        for (const [lineNumber, sid] of this.activeLines.entries()) {
+            if (sid === sessionId) {
+                this.activeLines.delete(lineNumber);
+                console.log(`📞 Released line ${lineNumber} from session ${sessionId}`);
+                
+                // If this was the selected line, clear selection
+                if (this.selectedLine === lineNumber) {
+                    this.selectedLine = null;
+                }
+                
+                this.emit('lineReleased', { lineNumber, sessionId });
+                return lineNumber;
+            }
+        }
+        return null;
+    }
+
+    getLineStates() {
+        const states = {};
+        for (let lineNumber = 1; lineNumber <= 3; lineNumber++) {
+            const sessionId = this.activeLines.get(lineNumber);
+            const session = sessionId ? this.sessions.get(sessionId) : null;
+            
+            if (!session) {
+                states[lineNumber] = 'idle';
+            } else if (session.direction === 'incoming' && 
+                       (session.state === 'establishing' || session.state === 'ringing')) {
+                states[lineNumber] = 'ringing';
+            } else if (session.onHold) {
+                states[lineNumber] = 'hold';
+            } else if (session.state === SIP.SessionState.Established) {
+                states[lineNumber] = 'active';
+            } else {
+                states[lineNumber] = 'idle';
+            }
+        }
+        return states;
     }
 
     // Debug function to analyze session DTMF capabilities
