@@ -1298,6 +1298,11 @@ function loadSettingsIntoForm() {
         window.updateTabVisibility();
     }
     
+    // Update auto-focus checkbox state based on notification setting
+    if (typeof window.updateAutoFocusState === 'function') {
+        window.updateAutoFocusState();
+    }
+    
     console.log('Settings loaded into form');
 }
 
@@ -1363,6 +1368,7 @@ function loadSettingsFromDatabase() {
         { id: 'AutoAnswerEnabled', key: 'AutoAnswerEnabled', defaultValue: '0' },
         { id: 'CallWaitingEnabled', key: 'CallWaitingEnabled', defaultValue: '0' },
         { id: 'IncomingCallNotifications', key: 'IncomingCallNotifications', defaultValue: '1' },
+        { id: 'AutoFocusOnNotificationAnswer', key: 'AutoFocusOnNotificationAnswer', defaultValue: '1' },
         { id: 'BlfEnabled', key: 'BlfEnabled', defaultValue: '0' },
         { id: 'PreferBlindTransfer', key: 'PreferBlindTransfer', defaultValue: '0' },
         { id: 'BusylightEnabled', key: 'BusylightEnabled', defaultValue: '0' },
@@ -2587,16 +2593,25 @@ function sendIncomingCallNotification(session) {
 
         // Handle notification clicks - answer call and show dial screen
         notification.onclick = (event) => {
-            console.log('🖱️ Incoming call notification clicked - answering and showing dial screen');
+            console.log('🖱️ Incoming call notification clicked');
             event.preventDefault();
             
-            // Focus the window to bring app to front
-            window.focus();
+            // Check if auto-focus is enabled (default: true for backward compatibility)
+            const autoFocusEnabled = window.localDB && window.localDB.getItem('AutoFocusOnNotificationAnswer', '1') === '1';
             
-            // Switch to dial screen if on another tab
-            if (window.App?.managers?.ui && typeof window.App.managers.ui.setCurrentView === 'function') {
-                window.App.managers.ui.setCurrentView('dial');
-                console.log('📱 Switched to dial screen after notification click');
+            if (autoFocusEnabled) {
+                console.log('📱 Auto-focus enabled - bringing window to front and showing dial screen');
+                
+                // Focus the window to bring app to front
+                window.focus();
+                
+                // Switch to dial screen if on another tab
+                if (window.App?.managers?.ui && typeof window.App.managers.ui.setCurrentView === 'function') {
+                    window.App.managers.ui.setCurrentView('dial');
+                    console.log('✓ Switched to dial screen after notification click');
+                }
+            } else {
+                console.log('📱 Auto-focus disabled - answering in background');
             }
             
             // Stop tab flashing if active
@@ -3165,6 +3180,19 @@ window.setupUIEventHandlers = function setupUIEventHandlers() {
     
     // Incoming call notifications checkbox
     const notificationsCheckbox = document.getElementById('IncomingCallNotifications');
+    const autoFocusCheckbox = document.getElementById('AutoFocusOnNotificationAnswer');
+    
+    // Function to update auto-focus checkbox state
+    function updateAutoFocusState() {
+        if (autoFocusCheckbox && notificationsCheckbox) {
+            autoFocusCheckbox.disabled = !notificationsCheckbox.checked;
+            autoFocusCheckbox.parentElement.style.opacity = notificationsCheckbox.checked ? '1' : '0.5';
+        }
+    }
+    
+    // Make updateAutoFocusState globally accessible
+    window.updateAutoFocusState = updateAutoFocusState;
+    
     if (notificationsCheckbox) {
         notificationsCheckbox.addEventListener('change', async (e) => {
             if (e.target.checked) {
@@ -3178,7 +3206,12 @@ window.setupUIEventHandlers = function setupUIEventHandlers() {
             } else {
                 console.log('Incoming call notifications disabled');
             }
+            // Update auto-focus checkbox state
+            updateAutoFocusState();
         });
+        
+        // Initialize auto-focus state on load
+        updateAutoFocusState();
         console.log('✓ Incoming call notifications handler attached');
     }
     
