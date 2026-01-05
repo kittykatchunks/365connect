@@ -245,6 +245,7 @@ class LineManager {
     
     /**
      * Select a line (make it active in the UI)
+     * Each line is treated as a completely independent UI interface
      */
     selectLine(lineNumber) {
         if (!this.lines.includes(lineNumber)) {
@@ -255,11 +256,23 @@ class LineManager {
         const lineState = this.lineStates.get(lineNumber);
         if (!lineState) return;
         
-        // If switching from an active line to another line, auto-hold the previous line
+        // If clicking the already selected line, just refresh the UI (don't toggle anything)
+        if (this.selectedLine === lineNumber) {
+            console.log(`📞 LineManager: Reselecting line ${lineNumber} - refreshing UI only`);
+            this.updateLineKeySelections();
+            this.updateMainDisplay();
+            this.updateCallControls();
+            return;
+        }
+        
+        // If switching from a different line to this line...
         if (this.selectedLine && this.selectedLine !== lineNumber) {
             const previousLineState = this.lineStates.get(this.selectedLine);
+            
+            // Auto-hold the previous line ONLY if it's in active state (not already on hold)
             if (previousLineState && previousLineState.state === 'active' && previousLineState.sessionId) {
-                console.log(`📞 LineManager: Auto-holding line ${this.selectedLine} when switching to line ${lineNumber}`);
+                console.log(`📞 LineManager: Auto-holding active line ${this.selectedLine} when switching to line ${lineNumber}`);
+                
                 // Put previous line on hold
                 if (this.sipManager) {
                     this.sipManager.toggleHold(previousLineState.sessionId)
@@ -270,21 +283,7 @@ class LineManager {
             }
         }
         
-        // If selecting an idle line, clear UI
-        if (lineState.state === 'idle') {
-            console.log(`📞 LineManager: Selected idle line ${lineNumber} - clearing UI`);
-            this.selectedLine = lineNumber;
-            this.updateMainDisplay();
-            this.updateCallControls();
-            this.updateLineKeySelections();
-            return;
-        }
-        
-        console.log(`📞 LineManager: Selected line ${lineNumber}`, {
-            state: lineState.state,
-            sessionId: lineState.sessionId
-        });
-        
+        // Now switch to the new line
         this.selectedLine = lineNumber;
         
         // Update SipSessionManager's selected line
@@ -292,7 +291,12 @@ class LineManager {
             this.sipManager.selectedLine = lineNumber;
         }
         
-        // Update UI
+        console.log(`📞 LineManager: Selected line ${lineNumber}`, {
+            state: lineState.state,
+            sessionId: lineState.sessionId
+        });
+        
+        // Update UI to show this line's state (completely independent interface)
         this.updateLineKeySelections();
         this.updateMainDisplay();
         this.updateCallControls();
@@ -411,31 +415,32 @@ class LineManager {
     
     /**
      * Update main display (Device/Agent box) with selected line's info
+     * Each line gets a completely independent display state
      */
     updateMainDisplay() {
-        // If no line selected, show idle state
-        if (!this.selectedLine) {
-            this.showIdleDisplay();
-            return;
-        }
+        // Get current line state (or null if no line selected)
+        const lineState = this.selectedLine ? this.lineStates.get(this.selectedLine) : null;
         
-        const lineState = this.lineStates.get(this.selectedLine);
+        // If no line selected or line is idle, show dial interface
         if (!lineState || lineState.state === 'idle') {
             this.showIdleDisplay();
             return;
         }
         
-        // Show call display
+        // Show call display for this line's specific state
         this.showCallDisplay(lineState);
     }
     
     /**
      * Show idle display (dial input visible, call info hidden)
+     * This is a fresh dial interface ready for making a call
      */
     showIdleDisplay() {
         const dialInputRow = document.getElementById('dialInputRow');
         const callStatusRow = document.getElementById('callStatusRow');
+        const dialInput = document.getElementById('dialInput');
         
+        // Show dial input, hide call status
         if (dialInputRow) {
             dialInputRow.classList.remove('hidden');
         }
@@ -444,7 +449,12 @@ class LineManager {
             callStatusRow.classList.add('hidden');
         }
         
-        console.log('📞 LineManager: Showing idle display');
+        // Clear the dial input to show fresh interface
+        if (dialInput) {
+            dialInput.value = '';
+        }
+        
+        console.log(`📞 LineManager: Showing idle display (line ${this.selectedLine || 'none'})`);
     }
     
     /**
@@ -494,6 +504,7 @@ class LineManager {
     
     /**
      * Update call control buttons based on selected line state
+     * Each line gets a completely independent UI state
      */
     updateCallControls() {
         const callControls = document.getElementById('callControls');
@@ -502,28 +513,61 @@ class LineManager {
         const muteBtn = document.getElementById('muteBtn');
         const holdBtn = document.getElementById('holdBtn');
         const transferBtn = document.getElementById('transferBtn');
+        const dialpadBtn = document.getElementById('dialpadBtn');
         
-        // If no line selected or selected line is idle, hide call controls
-        if (!this.selectedLine) {
-            if (callControls) callControls.classList.add('hidden');
-            if (callBtn) callBtn.classList.remove('hidden');
-            if (hangupBtn) hangupBtn.classList.add('hidden');
-            return;
-        }
+        // Get current line state (or null if no line selected)
+        const lineState = this.selectedLine ? this.lineStates.get(this.selectedLine) : null;
         
-        const lineState = this.lineStates.get(this.selectedLine);
+        // IDLE STATE: Show dial interface (Call and End Call buttons visible, call controls hidden)
         if (!lineState || lineState.state === 'idle') {
             if (callControls) callControls.classList.add('hidden');
-            if (callBtn) callBtn.classList.remove('hidden');
-            if (hangupBtn) hangupBtn.classList.add('hidden');
+            if (callBtn) {
+                callBtn.classList.remove('hidden');
+                const callBtnLabel = callBtn.querySelector('span');
+                if (callBtnLabel) {
+                    callBtnLabel.textContent = 'CALL';
+                    callBtnLabel.setAttribute('data-translate', 'call');
+                }
+            }
+            if (hangupBtn) hangupBtn.classList.remove('hidden');
+            if (dialpadBtn) dialpadBtn.classList.remove('hidden');
+            console.log(`📞 updateCallControls: IDLE state (line ${this.selectedLine || 'none'})`);
             return;
         }
         
-        // Show call controls for active/hold/calling/ringing states
+        // RINGING STATE: Show Answer and Hangup buttons
+        if (lineState.state === 'ringing') {
+            if (callControls) callControls.classList.add('hidden');
+            if (callBtn) {
+                callBtn.classList.remove('hidden');
+                const callBtnLabel = callBtn.querySelector('span');
+                if (callBtnLabel) {
+                    callBtnLabel.textContent = 'ANSWER';
+                    callBtnLabel.setAttribute('data-translate', 'answer');
+                }
+            }
+            if (hangupBtn) hangupBtn.classList.remove('hidden');
+            if (dialpadBtn) dialpadBtn.classList.add('hidden');
+            console.log(`📞 updateCallControls: RINGING state (line ${this.selectedLine})`);
+            return;
+        }
+        
+        // CALLING STATE: Show Hangup button only
+        if (lineState.state === 'calling') {
+            if (callControls) callControls.classList.add('hidden');
+            if (callBtn) callBtn.classList.add('hidden');
+            if (hangupBtn) hangupBtn.classList.remove('hidden');
+            if (dialpadBtn) dialpadBtn.classList.add('hidden');
+            console.log(`📞 updateCallControls: CALLING state (line ${this.selectedLine})`);
+            return;
+        }
+        
+        // ACTIVE or HOLD STATE: Show call controls (mute, hold, transfer, dialpad)
         if (lineState.state === 'active' || lineState.state === 'hold') {
             if (callControls) callControls.classList.remove('hidden');
             if (callBtn) callBtn.classList.add('hidden');
             if (hangupBtn) hangupBtn.classList.add('hidden');
+            if (dialpadBtn) dialpadBtn.classList.remove('hidden');
             
             // Update mute button
             if (muteBtn) {
@@ -545,29 +589,16 @@ class LineManager {
                 if (lineState.onHold) {
                     if (holdBtnLabel) holdBtnLabel.setAttribute('data-translate', 'resume_button');
                     if (holdBtnIcon) holdBtnIcon.className = 'fa fa-play';
+                    holdBtn.classList.remove('active');
                 } else {
                     if (holdBtnLabel) holdBtnLabel.setAttribute('data-translate', 'hold_button');
                     if (holdBtnIcon) holdBtnIcon.className = 'fa fa-pause';
+                    holdBtn.classList.remove('active');
                 }
             }
-        } else {
-            // Ringing or calling state - show answer/hangup buttons
-            if (callControls) callControls.classList.add('hidden');
             
-            if (lineState.state === 'ringing') {
-                if (callBtn) {
-                    callBtn.classList.remove('hidden');
-                    const callBtnLabel = callBtn.querySelector('span');
-                    if (callBtnLabel) {
-                        callBtnLabel.textContent = 'ANSWER';
-                        callBtnLabel.setAttribute('data-translate', 'answer');
-                    }
-                }
-            } else {
-                if (callBtn) callBtn.classList.add('hidden');
-            }
-            
-            if (hangupBtn) hangupBtn.classList.remove('hidden');
+            console.log(`📞 updateCallControls: ${lineState.state.toUpperCase()} state (line ${this.selectedLine})`);
+            return;
         }
     }
     
