@@ -2047,13 +2047,14 @@ function setupSipConnectionMonitoring() {
     // Monitor session events for call status display
     App.managers.sip.on('sessionCreated', (session) => {
         console.log('Session created, updating call status display');
-        const callData = {
-            remoteIdentity: session.session?.remoteIdentity,
-            direction: session.direction,
-            target: session.target,
-            state: 'created' // Session created but not yet connected
-        };
-        App.managers.ui.updateCallStatus(callData);
+        // LineManager now handles all UI updates for multi-line system
+        // const callData = {
+        //     remoteIdentity: session.session?.remoteIdentity,
+        //     direction: session.direction,
+        //     target: session.target,
+        //     state: 'created' // Session created but not yet connected
+        // };
+        // App.managers.ui.updateCallStatus(callData);
         // Don't start timer yet - wait for connection
         
         // Update call button for incoming calls
@@ -2104,32 +2105,34 @@ function setupSipConnectionMonitoring() {
             window.currentIncomingSession = null;
         }
         
+        // LineManager now handles all UI updates for multi-line system
         // Update call status to show "Connected" and start timer
-        const callData = {
-            remoteIdentity: session.session?.remoteIdentity,
-            direction: session.direction,
-            target: session.target,
-            state: 'answered' // Call is now connected
-        };
-        App.managers.ui.updateCallStatus(callData);
-        App.managers.ui.startCallTimer(Date.now());
+        // const callData = {
+        //     remoteIdentity: session.session?.remoteIdentity,
+        //     direction: session.direction,
+        //     target: session.target,
+        //     state: 'answered' // Call is now connected
+        // };
+        // App.managers.ui.updateCallStatus(callData);
+        // App.managers.ui.startCallTimer(Date.now());
         
         showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
-        updateCallControlUI(session);
+        // updateCallControlUI(session);
     });
     
     App.managers.sip.on('sessionEstablished', (session) => {
         console.log('Session established, updating call timer');
         
+        // LineManager now handles all UI updates for multi-line system
         // Update call status to show "Connected"
-        const callData = {
-            remoteIdentity: session.session?.remoteIdentity,
-            direction: session.direction,
-            target: session.target,
-            state: 'established' // Call is now established/connected
-        };
-        App.managers.ui.updateCallStatus(callData);
+        // const callData = {
+        //     remoteIdentity: session.session?.remoteIdentity,
+        //     direction: session.direction,
+        //     target: session.target,
+        //     state: 'established' // Call is now established/connected
+        // };
+        // App.managers.ui.updateCallStatus(callData);
         
         // Start timer only if not already started
         if (!App.managers.ui.callTimer) {
@@ -2142,7 +2145,7 @@ function setupSipConnectionMonitoring() {
         // Show call controls if not already shown
         showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
-        updateCallControlUI(session);
+        // updateCallControlUI(session);
     });
     
     App.managers.sip.on('sessionTerminated', (session) => {
@@ -2164,8 +2167,9 @@ function setupSipConnectionMonitoring() {
             window.currentIncomingSession = null;
         }
         
-        App.managers.ui.updateCallStatus({});
-        App.managers.ui.stopCallTimer();
+        // LineManager now handles all UI updates for multi-line system
+        // App.managers.ui.updateCallStatus({});
+        // App.managers.ui.stopCallTimer();
         
         // Reset call button and hide call controls
         updateCallButton(null);
@@ -2185,20 +2189,21 @@ function setupSipConnectionMonitoring() {
     
     App.managers.sip.on('sessionMuted', (data) => {
         console.log('Session mute state changed:', data);
-        const session = App.managers.sip.sessions.get(data.sessionId);
-        if (session) {
-            updateCallControlUI(session);
-        }
+        // LineManager now handles all UI updates for multi-line system
+        // const session = App.managers.sip.sessions.get(data.sessionId);
+        // if (session) {
+        //     updateCallControlUI(session);
+        // }
     });
     
     App.managers.sip.on('sessionHeld', (data) => {
         console.log('Session hold state changed:', data);
-        const session = App.managers.sip.sessions.get(data.sessionId);
-        if (session) {
-            updateCallControlUI(session);
-            // Update the call display to show hold status
-            App.managers.ui.updateCallStatus(session);
-        }
+        // LineManager now handles all UI updates for multi-line system
+        // const session = App.managers.sip.sessions.get(data.sessionId);
+        // if (session) {
+        //     updateCallControlUI(session);
+        //     App.managers.ui.updateCallStatus(session);
+        // }
     });
 
     // Transfer event handlers
