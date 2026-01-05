@@ -239,8 +239,8 @@ class AgentButtonsManager {
             this.currentAgentNumber = apiData.num.toString();
             this.currentAgentName = apiData.name ? apiData.name.toString() : null;
             
-            // Check pause status
-            this.isPaused = apiData.pause === true || apiData.pause === 'true';
+            // Check pause status - handle boolean true, string 'true', number 1, and string '1'
+            this.isPaused = apiData.pause === true || apiData.pause === 'true' || apiData.pause === 1 || apiData.pause === '1';
             
             // Update display with both number and name
             const displayStatus = this.isPaused ? 'paused' : 'logged-in';
