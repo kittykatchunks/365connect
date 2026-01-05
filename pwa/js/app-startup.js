@@ -224,7 +224,11 @@ class ApplicationStartup {
         App.managers.sip = new SipSessionManager();
         console.log('✅ SIP Session Manager created');
         
-        console.log('💡 Creating Busylight Manager...');
+        console.log('� Creating Line Manager...');
+        App.managers.line = window.LineManager; // Use global instance
+        console.log('✅ Line Manager created');
+        
+        console.log('�💡 Creating Busylight Manager...');
         App.managers.busylight = new BusylightManager();
         // Initialize busylight after creation
         try {
@@ -388,7 +392,13 @@ class ApplicationStartup {
     }
 
     setupManagerEventListeners() {
-        const { sip, ui, busylight, api, callHistory } = App.managers;
+        const { sip, ui, busylight, api, callHistory, line } = App.managers;
+        
+        // Initialize LineManager with SIP manager
+        if (line && sip) {
+            line.initialize(sip);
+            console.log('✅ Line Manager initialized with SIP Manager');
+        }
         
         // SIP Events -> UI Updates  
         sip.on('sessionCreated', (sessionData) => {

@@ -89,28 +89,39 @@ async function makeCall() {
         return;
     }
     
-    // Check if there's an incoming call to answer
-    const incomingSession = App.managers.sip.getIncomingSession();
-    if (incomingSession) {
-        console.log('Answering incoming call:', incomingSession.id);
-        
-        // Stop tab flashing when answering
-        if (window.TabAlertManager) {
-            window.TabAlertManager.stopFlashing();
-        }
-        
-        try {
-            await App.managers.sip.answerCall(incomingSession.id);
-            console.log('Incoming call answered successfully');
-            return;
-        } catch (error) {
-            console.error('Failed to answer incoming call:', error);
-            showError(t('failedToAnswerCall', 'Failed to answer call') + ': ' + error.message);
-            return;
+    const lineManager = App.managers.line;
+    if (!lineManager) {
+        console.error('Line manager not available');
+        showError(t('phoneSystemNotReady', 'Phone system not ready'));
+        return;
+    }
+    
+    const selectedLine = lineManager.getSelectedLine();
+    
+    // If a line is selected and it has a ringing call, answer it
+    if (selectedLine) {
+        const lineState = lineManager.getLineState(selectedLine);
+        if (lineState && lineState.state === 'ringing' && lineState.sessionId) {
+            console.log('Answering incoming call on selected line:', selectedLine);
+            
+            // Stop tab flashing when answering
+            if (window.TabAlertManager) {
+                window.TabAlertManager.stopFlashing();
+            }
+            
+            try {
+                await App.managers.sip.answerSession(lineState.sessionId);
+                console.log('Incoming call answered successfully');
+                return;
+            } catch (error) {
+                console.error('Failed to answer incoming call:', error);
+                showError(t('failedToAnswerCall', 'Failed to answer call') + ': ' + error.message);
+                return;
+            }
         }
     }
     
-    // No incoming call, proceed with outgoing call
+    // No ringing call to answer, proceed with outgoing call
     const dialInput = document.getElementById('dialInput');
     if (!dialInput) {
         console.error('Dial input not found');
@@ -138,6 +149,33 @@ async function makeCall() {
     if (!isValidPhoneNumber(number)) {
         showError(t('pleaseEnterValidPhoneNumber', 'Please enter a valid phone number'));
         return;
+    }
+    
+    // Check if we need to select an available line first
+    if (!selectedLine || (selectedLine && lineManager.getLineState(selectedLine)?.state !== 'idle')) {
+        // Need to find and select an available line
+        const availableLine = lineManager.getFirstAvailableLine();
+        if (!availableLine) {
+            showError('All lines are busy. Please end or hold a call first.');
+            return;
+        }
+        
+        // If there's an active call on current line, put it on hold
+        if (selectedLine) {
+            const currentLineState = lineManager.getLineState(selectedLine);
+            if (currentLineState && currentLineState.state === 'active') {
+                console.log(`Auto-holding line ${selectedLine} to make new call on line ${availableLine}`);
+                try {
+                    await App.managers.sip.toggleHold(currentLineState.sessionId);
+                } catch (error) {
+                    console.warn('Failed to auto-hold current line:', error);
+                }
+            }
+        }
+        
+        // Select the available line
+        lineManager.selectLine(availableLine);
+        console.log(`Selected available line ${availableLine} for outgoing call`);
     }
 
     console.log('Making outgoing call to:', number);
@@ -198,8 +236,19 @@ async function toggleMute(sessionId = null) {
         return;
     }
     
+    // If no sessionId provided, use selected line's session
+    let targetSessionId = sessionId;
+    if (!targetSessionId && App.managers.line) {
+        targetSessionId = App.managers.line.getSelectedSessionId();
+    }
+    
+    if (!targetSessionId) {
+        console.error('No session selected for mute');
+        return;
+    }
+    
     try {
-        await App.managers.sip.toggleMute(sessionId);
+        await App.managers.sip.toggleMute(targetSessionId);
         
     } catch (error) {
         console.error('Failed to toggle mute:', error);
@@ -215,9 +264,20 @@ async function toggleHold(sessionId = null) {
         return;
     }
     
+    // If no sessionId provided, use selected line's session
+    let targetSessionId = sessionId;
+    if (!targetSessionId && App.managers.line) {
+        targetSessionId = App.managers.line.getSelectedSessionId();
+    }
+    
+    if (!targetSessionId) {
+        console.error('No session selected for hold');
+        return;
+    }
+    
     try {
-        console.log('📞 Calling SIP manager toggleHold');
-        await App.managers.sip.toggleHold(sessionId);
+        console.log('📞 Calling SIP manager toggleHold for session:', targetSessionId);
+        await App.managers.sip.toggleHold(targetSessionId);
         console.log('✅ Hold toggle successful');
         
     } catch (error) {
@@ -808,10 +868,17 @@ async function sendDTMF(digit) {
         return;
     }
     
-    // Get the current active session
-    const currentSession = App.managers.sip.getCurrentSession();
+    // DTMF always goes to selected line only
+    const sessionId = App.managers.line?.getSelectedSessionId();
+    if (!sessionId) {
+        console.error('No line selected for DTMF');
+        return;
+    }
+    
+    // Get the session to validate state
+    const currentSession = App.managers.sip.getSession(sessionId);
     if (!currentSession) {
-        console.warn('No active session to send DTMF to');
+        console.warn('Selected line session not found');
         return;
     }
     
@@ -837,7 +904,7 @@ async function sendDTMF(digit) {
     }
     
     try {
-        await App.managers.sip.sendDTMF(currentSession.id, digit);
+        await App.managers.sip.sendDTMF(sessionId, digit);
         console.log(`DTMF ${digit} sent to session ${currentSession.id}`);
     } catch (error) {
         console.error('Failed to send DTMF:', error);
