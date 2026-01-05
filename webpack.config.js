@@ -17,6 +17,7 @@ module.exports = (env, argv) => {
         './pwa/js/app-config.js',
         './pwa/js/language-manager.js',
         './pwa/js/browser-cache.js',
+        './pwa/js/tab-alert-manager.js',
         './pwa/js/sip-session-manager.js',
         './pwa/js/ui-state-manager.js',
         './pwa/js/busylight-manager.js',
