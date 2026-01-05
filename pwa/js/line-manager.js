@@ -103,13 +103,10 @@ class LineManager {
             
             this.updateLineKeyUI(lineNumber);
             
-            // For outgoing calls, auto-select the line
-            if (direction === 'outgoing') {
-                this.selectLine(lineNumber);
-            }
-            
-            // For incoming calls, don't auto-select - user must click line key
-            // Just play call waiting tone and show ringing state
+            // Auto-select the line for both incoming and outgoing calls
+            // This shows the call info in the UI
+            // User must still manually press Answer for incoming calls
+            this.selectLine(lineNumber);
         }
     }
     
