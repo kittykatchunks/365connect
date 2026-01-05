@@ -98,11 +98,17 @@ async function makeCall() {
     
     const selectedLine = lineManager.getSelectedLine();
     
-    // If a line is selected and it has a ringing call, answer it
-    if (selectedLine) {
-        const lineState = lineManager.getLineState(selectedLine);
+    // First priority: Check ALL lines for any ringing calls (even if not selected)
+    // This allows the Answer button to work regardless of which line is selected
+    for (let lineNum = 1; lineNum <= 3; lineNum++) {
+        const lineState = lineManager.getLineState(lineNum);
         if (lineState && lineState.state === 'ringing' && lineState.sessionId) {
-            console.log('Answering incoming call on selected line:', selectedLine);
+            console.log('Answering incoming call on line:', lineNum);
+            
+            // Select this line if not already selected
+            if (selectedLine !== lineNum) {
+                lineManager.selectLine(lineNum);
+            }
             
             // Stop tab flashing when answering
             if (window.TabAlertManager) {
