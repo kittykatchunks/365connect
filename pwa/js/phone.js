@@ -146,31 +146,40 @@ function updateCallDisplayForLine(lineNumber) {
     const callControls = document.getElementById('callControls');
     const callBtn = document.getElementById('callBtn');
     const hangupBtn = document.getElementById('hangupBtn');
+    const dialActions = document.querySelector('.dial-actions');
+    
+    console.log(`📞 Updating call display for line: ${lineNumber}`);
     
     if (!lineNumber) {
         // No line selected - show idle state
         if (dialInputRow) dialInputRow.classList.remove('hidden');
         if (callStatusRow) callStatusRow.classList.add('hidden');
         if (callControls) callControls.classList.add('hidden');
+        if (dialActions) dialActions.style.display = 'flex';
         if (callBtn) callBtn.classList.remove('hidden');
         if (hangupBtn) hangupBtn.classList.add('hidden');
+        console.log('📞 No line selected - showing idle state');
         return;
     }
     
     const session = App.managers.sip.getLineSession(lineNumber);
     if (!session) {
-        // Line selected but no session
+        // Line selected but no session - ready to make outgoing call
         if (dialInputRow) dialInputRow.classList.remove('hidden');
         if (callStatusRow) callStatusRow.classList.add('hidden');
         if (callControls) callControls.classList.add('hidden');
+        if (dialActions) dialActions.style.display = 'flex';
         if (callBtn) callBtn.classList.remove('hidden');
         if (hangupBtn) hangupBtn.classList.add('hidden');
+        console.log(`📞 Line ${lineNumber} selected with no session - showing call button`);
         return;
     }
     
     // Show call information
     if (dialInputRow) dialInputRow.classList.add('hidden');
     if (callStatusRow) callStatusRow.classList.remove('hidden');
+    
+    console.log(`📞 Line ${lineNumber} has session:`, session.id, 'state:', session.state, 'onHold:', session.onHold);
     
     // Update call details
     const callerNumber = document.getElementById('callerNumber');
@@ -201,20 +210,29 @@ function updateCallDisplayForLine(lineNumber) {
     const isRinging = session.state === 'ringing' || session.state === 'establishing';
     
     if (isEstablished) {
+        // Active or held call - show call controls
         if (callControls) callControls.classList.remove('hidden');
+        if (dialActions) dialActions.style.display = 'none';
         if (callBtn) callBtn.classList.add('hidden');
         if (hangupBtn) hangupBtn.classList.add('hidden');
         
         // Update hold and mute button states
         updateCallControlUI(session);
+        console.log(`📞 Line ${lineNumber} established - showing call controls`);
     } else if (isRinging && session.direction === 'incoming') {
+        // Incoming call ringing - show answer button
         if (callControls) callControls.classList.add('hidden');
+        if (dialActions) dialActions.style.display = 'flex';
         if (callBtn) callBtn.classList.remove('hidden');
         if (hangupBtn) hangupBtn.classList.remove('hidden');
+        console.log(`📞 Line ${lineNumber} ringing - showing answer/hangup buttons`);
     } else {
+        // Outgoing call dialing - show hangup button only
         if (callControls) callControls.classList.add('hidden');
+        if (dialActions) dialActions.style.display = 'flex';
         if (callBtn) callBtn.classList.add('hidden');
         if (hangupBtn) hangupBtn.classList.remove('hidden');
+        console.log(`📞 Line ${lineNumber} dialing - showing hangup button`);
     }
 }
 
