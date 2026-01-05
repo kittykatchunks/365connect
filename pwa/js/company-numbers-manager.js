@@ -797,6 +797,62 @@ class CompanyNumbersManager {
         }
     }
 
+    /**
+     * Sync current CLIP from API agent data
+     * Called after agent login check to retrieve and display current outgoing CLI
+     * @param {Object} agentData - Agent data from API containing 'cid' field
+     */
+    syncCurrentClipFromAPI(agentData) {
+        // Check if company numbers tab is enabled
+        if (!this.isCompanyNumbersTabVisible()) {
+            console.log('📞 CompanyNumbersManager: Company Numbers tab not enabled, skipping CLIP sync');
+            return;
+        }
+
+        // Extract the cid (current CLIP outgoing) from agent data
+        const currentCid = agentData.cid;
+        
+        if (!currentCid) {
+            console.log('📞 CompanyNumbersManager: No cid field in agent data');
+            return;
+        }
+
+        console.log('📞 CompanyNumbersManager: Current CLIP from API (cid):', currentCid);
+
+        // Try to find a matching company by ID
+        // The cid from API should correspond to the company ID (1-99)
+        const matchingCompany = this.getCompanyById(parseInt(currentCid));
+
+        if (matchingCompany) {
+            console.log('📞 CompanyNumbersManager: Found matching company for cid:', matchingCompany);
+            
+            // Set as current selected company
+            this.currentSelectedCompany = matchingCompany;
+            
+            // Update the UI to reflect current company
+            this.updateCliDisplay();
+            
+            // Reset dropdown to default (not showing a pending selection)
+            const dropdown = document.getElementById('cliCompanySelect');
+            if (dropdown) {
+                dropdown.value = '';
+            }
+            
+            // Ensure confirm button is hidden
+            const confirmBtn = document.getElementById('cliConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.style.display = 'none';
+            }
+            
+            console.log('✅ CompanyNumbersManager: CLI synced from API - Current company:', matchingCompany.name);
+        } else {
+            console.log('📞 CompanyNumbersManager: No matching company found for cid:', currentCid);
+            // Clear current selection if cid doesn't match any stored company
+            this.currentSelectedCompany = null;
+            this.updateCliDisplay();
+        }
+    }
+
     /* ====================================================================================== */
     /* NOTIFICATIONS */
     /* ====================================================================================== */

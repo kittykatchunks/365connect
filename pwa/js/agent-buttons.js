@@ -218,6 +218,11 @@ class AgentButtonsManager {
                 if (num !== null && num !== undefined && num !== '') {
                     console.log(`✅ Agent found - Name: ${name}, Num: ${num}`);
                     this.updateStateFromAPI(agentData);
+                    
+                    // Sync current CLIP with company numbers manager if available
+                    if (App.managers.companyNumbers) {
+                        App.managers.companyNumbers.syncCurrentClipFromAPI(agentData);
+                    }
                 } else {
                     console.warn('Agent num is null or empty:', agentData);
                 }
@@ -442,6 +447,11 @@ class AgentButtonsManager {
                     this.updateButtonState('pause', this.isPaused ? 'active' : 'idle');
                     this.setAllButtonsEnabled(true);
                     this.updateButtonEnabledStates();
+                    
+                    // Sync current CLIP with company numbers manager if available
+                    if (App.managers.companyNumbers) {
+                        App.managers.companyNumbers.syncCurrentClipFromAPI(agentData);
+                    }
                 } else {
                     // Agent is not logged in
                     console.log('Agent not logged in (num is null)');
