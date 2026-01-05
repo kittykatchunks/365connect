@@ -505,29 +505,47 @@ class UIStateManager extends EventTarget {
         // Update caller number - handle both incoming and outgoing calls
         if (callerNumber) {
             let displayNumber = 'Unknown';
+            let displayName = '';
             
-            if (callData.direction === 'incoming' && callData.remoteIdentity) {
-                // For incoming calls, show the caller's number
-                displayNumber = callData.remoteIdentity.uri?.user || callData.remoteIdentity.displayName || 'Unknown';
-            } else if (callData.direction === 'outgoing' && callData.target) {
+            if (callData.direction === 'incoming') {
+                // For incoming calls, use callerID or target
+                displayNumber = callData.callerID || callData.target || 'Unknown';
+                // Try to extract name if callerID contains both name and number
+                if (callData.callerID && callData.target && callData.callerID !== callData.target) {
+                    displayName = callData.callerID;
+                    displayNumber = callData.target;
+                }
+                // Fallback to remoteIdentity if available
+                if (!displayNumber || displayNumber === 'Unknown') {
+                    if (callData.remoteIdentity) {
+                        displayNumber = callData.remoteIdentity.uri?.user || callData.remoteIdentity.displayName || 'Unknown';
+                        displayName = callData.remoteIdentity.displayName;
+                    }
+                }
+            } else if (callData.direction === 'outgoing') {
                 // For outgoing calls, show the target number
-                displayNumber = callData.target;
-            } else if (callData.remoteIdentity) {
-                // Fallback to remote identity
-                displayNumber = callData.remoteIdentity.uri?.user || callData.remoteIdentity.displayName || 'Unknown';
+                displayNumber = callData.target || 'Unknown';
             }
             
-            callerNumber.textContent = displayNumber;
-        }
-        
-        // Update caller name - only show if available and different from number
-        if (callerName) {
-            const displayName = callData.remoteIdentity?.displayName;
-            if (displayName && displayName !== callerNumber?.textContent) {
-                callerName.textContent = displayName;
-                callerName.classList.remove('hidden');
-            } else {
-                callerName.classList.add('hidden');
+            // Don't update if we only have 'Unknown' and there's already a valid number showing
+            if (displayNumber !== 'Unknown' || !callerNumber.textContent || callerNumber.textContent === 'Unknown') {
+                callerNumber.textContent = displayNumber;
+            }
+            
+            // Update caller name - only show if available and different from number
+            if (callerName) {
+                // Use extracted displayName or fall back to remoteIdentity
+                if (!displayName && callData.remoteIdentity?.displayName) {
+                    displayName = callData.remoteIdentity.displayName;
+                }
+                
+                if (displayName && displayName !== displayNumber && displayName !== callerNumber?.textContent) {
+                    callerName.textContent = displayName;
+                    callerName.classList.remove('hidden');
+                } else if (!displayName) {
+                    // Don't clear existing name, just hide if no new name available
+                    // callerName.classList.add('hidden');
+                }
             }
         }
         
