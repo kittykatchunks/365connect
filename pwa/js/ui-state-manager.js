@@ -302,11 +302,12 @@ class UIStateManager extends EventTarget {
         }
         
         if (text) {
+            const t = window.languageManager?.t || ((key, def) => def);
             const stateText = {
-                'registered': 'Connected',
-                'disconnected': 'Disconnected',
-                'failed': 'Failed',
-                'connecting': 'Connecting...'
+                'registered': t('connected', 'Connected'),
+                'disconnected': t('disconnected', 'Disconnected'),
+                'failed': t('failed', 'Failed'),
+                'connecting': t('connecting', 'Connecting...')
             };
             text.textContent = stateText[state] || state;
         }
@@ -350,11 +351,12 @@ class UIStateManager extends EventTarget {
             const agentMgr = window.App.managers.agent;
             const storedAgentName = window.localDB.getItem('currentAgentName', null);
             const storedAgentNumber = window.localDB.getItem('currentAgentNumber', null);
-            let statusText = 'Logged Out';
+            const t = window.languageManager?.t || ((key, def) => def);
+            let statusText = t('logged_out', 'Logged Out');
             let statusClass = 'agent-logged-out';
             
             if (agentMgr.isLoggedIn) {
-                statusText = agentMgr.isPaused ? 'Paused' : `${storedAgentNumber} - ${storedAgentName}`;
+                statusText = agentMgr.isPaused ? t('paused', 'Paused') : `${storedAgentNumber} - ${storedAgentName}`;
                 statusClass = agentMgr.isPaused ? 'agent-paused' : 'agent-logged-in';
             }
             
@@ -562,7 +564,8 @@ class UIStateManager extends EventTarget {
             // Determine the call state and direction text
             // Check for established/active states (including SIP.SessionState.Established constant)
             else if (this.isCallEstablished(callData.state)) {
-                directionText = 'Connected';
+                const t = window.languageManager?.t || ((key, def) => def);
+                directionText = t('connected', 'Connected');
                 callStateClass = 'call-connected';
             } else if (callData.state === 'Initial' || callData.state === 'Establishing') {
                 // Call is being set up

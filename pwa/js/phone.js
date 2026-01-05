@@ -725,10 +725,10 @@ function updateCallControlUI(session) {
         const muteLabel = muteBtn.querySelector('.btn-label');
         if (session && session.muted) {
             muteBtn.classList.add('muted');
-            if (muteLabel) muteLabel.textContent = 'UNMUTE';
+            if (muteLabel) muteLabel.textContent = window.languageManager?.t('unmute_button', 'UNMUTE') || 'UNMUTE';
         } else {
             muteBtn.classList.remove('muted');
-            if (muteLabel) muteLabel.textContent = 'MUTE';
+            if (muteLabel) muteLabel.textContent = window.languageManager?.t('mute_button', 'MUTE') || 'MUTE';
         }
         console.log('🔇 Mute button updated:', session?.muted ? 'UNMUTE' : 'MUTE');
     }
@@ -737,10 +737,10 @@ function updateCallControlUI(session) {
         const holdLabel = holdBtn.querySelector('.btn-label');
         if (session && session.onHold) {
             holdBtn.classList.add('on-hold');
-            if (holdLabel) holdLabel.textContent = 'RESUME';
+            if (holdLabel) holdLabel.textContent = window.languageManager?.t('resume_button', 'RESUME') || 'RESUME';
         } else {
             holdBtn.classList.remove('on-hold');
-            if (holdLabel) holdLabel.textContent = 'HOLD';
+            if (holdLabel) holdLabel.textContent = window.languageManager?.t('hold_button', 'HOLD') || 'HOLD';
         }
         console.log('⏸️ Hold button updated:', session?.onHold ? 'RESUME' : 'HOLD');
     }
@@ -1524,7 +1524,8 @@ async function saveSettings() {
 }
 
 function resetSettings() {
-    if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+    const t = window.languageManager?.t || ((key, def) => def);
+    if (confirm(t('reset_settings_confirm', 'Are you sure you want to reset all settings to defaults? This cannot be undone.'))) {
         try {
             // Reset all settings by clearing localStorage keys
             const keysToReset = [
@@ -2214,14 +2215,14 @@ function updateRegisterButton(registrationState) {
         case true: // Legacy support for boolean parameter
             registerBtn.classList.add('register-connected');
             if (icon) icon.className = 'fa fa-check-circle';
-            if (text) text.textContent = 'REGISTERED';
+            if (text) text.textContent = window.languageManager?.t('registered', 'REGISTERED') || 'REGISTERED';
             registerBtn.title = 'Disconnect from SIP server';
             break;
             
         case 'registering':
             registerBtn.classList.add('register-connecting');
             if (icon) icon.className = 'fa fa-spinner';
-            if (text) text.textContent = 'REGISTERING';
+            if (text) text.textContent = window.languageManager?.t('registering', 'REGISTERING') || 'REGISTERING';
             registerBtn.title = 'Registering to SIP server...';
             break;
             

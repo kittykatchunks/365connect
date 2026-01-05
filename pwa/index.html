@@ -78,7 +78,7 @@
                 <div class="register-status">
                     <button id="registerBtn" class="register-button register-disconnected">
                         <i class="fa fa-power-off"></i>
-                        <span class="register-text">REGISTER</span>
+                        <span class="register-text" data-translate="register">REGISTER</span>
                     </button>
                 </div>
             </div>
@@ -153,15 +153,15 @@
                     <div class="agent-keys-grid">
                         <button id="loginBtn" class="agent-key login-idle uppercase">
                             <i class="fa fa-sign-in"></i>
-                            <span class="agent-text">Login</span>
+                            <span class="agent-text" data-translate="login">Login</span>
                         </button>
                         <button id="queueBtn" class="agent-key queue-idle uppercase">
                             <i class="fa fa-users"></i>
-                            <span class="agent-text">Queue</span>
+                            <span class="agent-text" data-translate="queue">Queue</span>
                         </button>
                         <button id="pauseBtn" class="agent-key pause-idle uppercase">
                             <i class="fa fa-pause"></i>
-                            <span class="agent-text">Pause</span>
+                            <span class="agent-text" data-translate="pause">Pause</span>
                         </button>
                     </div>
                 </div>
@@ -238,7 +238,7 @@
                         <div class="status-row status-bottom">
                             <div class="status-item">
                                 <span class="status-label" data-translate="agent">Agent:</span>
-                                <span id="agentStatus" class="status-value agent-logged-out">Logged Out</span>
+                                <span id="agentStatus" class="status-value agent-logged-out" data-translate="logged_out">Logged Out</span>
                             </div>
                         </div>
                     </div>
@@ -322,18 +322,18 @@
                     <div id="callControls" class="call-controls hidden">
                         <button id="muteBtn" class="btn-control" data-translate-title="muteUnmute" title="Mute/Unmute">
                             <i class="fa fa-microphone"></i>
-                            <span class="btn-label">MUTE</span>
+                            <span class="btn-label" data-translate="mute_button">MUTE</span>
                         </button>
                         <button id="holdBtn" class="btn-control" data-translate-title="holdUnhold" title="Hold/Unhold">
                             <i class="fa fa-pause"></i>
-                            <span class="btn-label">HOLD</span>
+                            <span class="btn-label" data-translate="hold_button">HOLD</span>
                         </button>
                         <button id="transferBtn" class="btn-control" data-translate-title="transferCall" title="Transfer Call">
                             <i class="fa fa-exchange"></i>
-                            <span class="btn-label">TRANSFER</span>
+                            <span class="btn-label" data-translate="transfer_button">TRANSFER</span>
                         </button>
                         <button id="endCallBtn" class="btn-danger call-button" data-translate-title="endCall" title="End Call">
-                            <i class="fa fa-phone"></i> END
+                            <i class="fa fa-phone"></i> <span data-translate="end_button">END</span>
                         </button>
                     </div>
                 </div>
@@ -381,13 +381,13 @@
                             </button>
                             <div class="company-numbers-import-export">
                                 <button id="deleteAllCompanyNumbersBtn" class="btn-danger delete-all-btn" data-translate-title="deleteAllCompanyNumbers" title="Delete all company numbers">
-                                    <i class="fa fa-trash"></i> Delete All
+                                    <i class="fa fa-trash"></i> <span data-translate="delete_all">Delete All</span>
                                 </button>
                                 <button id="importCompanyNumbersBtn" class="btn-secondary import-btn" data-translate-title="importCompanyNumbersFromCSV" title="Import company numbers from CSV">
-                                    <i class="fa fa-upload"></i> Import
+                                    <i class="fa fa-upload"></i> <span data-translate="import">Import</span>
                                 </button>
-                                <button id="exportCompanyNumbersBtn" class="btn-secondary export-btn" title="Export company numbers to CSV">
-                                    <i class="fa fa-download"></i> Export
+                                <button id="exportCompanyNumbersBtn" class="btn-secondary export-btn" data-translate-title="exportCompanyNumbersToCSV" title="Export company numbers to CSV">
+                                    <i class="fa fa-download"></i> <span data-translate="export">Export</span>
                                 </button>
                             </div>
                         </div>
@@ -481,7 +481,7 @@
                                                 <option value="en">English</option>
                                                 <option value="es">Español (Spanish)</option>
                                             </select>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="select_language_help">
                                                 Select your preferred language for the application interface.
                                             </div>
                                         </div>
@@ -489,9 +489,9 @@
                                             <label>Theme Mode:</label>
                                             <div class="theme-toggle-control">
                                                 <select id="ThemeMode" name="ThemeMode">
-                                                    <option value="auto">Auto (System)</option>
-                                                    <option value="light">Light Mode</option>
-                                                    <option value="dark">Dark Mode</option>
+                                                    <option value="auto" data-translate="auto_system">Auto (System)</option>
+                                                    <option value="light" data-translate="light_mode">Light Mode</option>
+                                                    <option value="dark" data-translate="dark_mode">Dark Mode</option>
                                                 </select>
                                             </div>
                                         </div>

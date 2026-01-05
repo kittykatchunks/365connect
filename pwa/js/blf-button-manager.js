@@ -733,7 +733,8 @@ class BLFButtonManager {
         const buttonType = checkedTypes.length > 0 ? checkedTypes[0] : 'speeddial';
 
         if (!displayName && !number) {
-            this.showToast('Please enter a display name or number', 'warning');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('please_enter_display_name_or_number', 'Please enter a display name or number'), 'warning');
             return;
         }
 
