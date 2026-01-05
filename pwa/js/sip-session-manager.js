@@ -2713,11 +2713,16 @@ class SipSessionManager {
             if (!session) {
                 states[lineNumber] = 'idle';
             } else if (session.direction === 'incoming' && 
-                       (session.state === 'establishing' || session.state === 'ringing')) {
+                       (session.state === 'establishing' || session.state === 'ringing' || 
+                        session.state === SIP.SessionState.Initial)) {
                 states[lineNumber] = 'ringing';
             } else if (session.onHold) {
                 states[lineNumber] = 'hold';
-            } else if (session.state === SIP.SessionState.Established) {
+            } else if (session.state === SIP.SessionState.Established || 
+                       session.state === 'Established' ||
+                       session.state === 'active' ||
+                       session.state === 'confirmed' ||
+                       (typeof session.state === 'number' && session.state === 3)) {
                 states[lineNumber] = 'active';
             } else {
                 states[lineNumber] = 'idle';

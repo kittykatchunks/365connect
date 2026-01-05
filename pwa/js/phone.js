@@ -205,9 +205,8 @@ function updateCallDisplayForLine(lineNumber) {
         if (callBtn) callBtn.classList.add('hidden');
         if (hangupBtn) hangupBtn.classList.add('hidden');
         
-        // Update hold button state
-        updateHoldButton(session.onHold);
-        updateMuteButton(session.muted);
+        // Update hold and mute button states
+        updateCallControlUI(session);
     } else if (isRinging && session.direction === 'incoming') {
         if (callControls) callControls.classList.add('hidden');
         if (callBtn) callBtn.classList.remove('hidden');
