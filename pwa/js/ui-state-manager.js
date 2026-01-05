@@ -466,7 +466,7 @@ class UIStateManager extends EventTarget {
                 callStatusRow.classList.add('hidden');
                 // Remove call state classes
                 if (callInfoDisplay) {
-                    callInfoDisplay.classList.remove('call-ringing', 'call-dialing', 'call-connected');
+                    callInfoDisplay.classList.remove('call-ringing', 'call-dialing', 'call-connected', 'call-on-hold');
                 }
             }
             if (dialInputRow) {
@@ -517,8 +517,13 @@ class UIStateManager extends EventTarget {
             let directionText = 'Unknown';
             let callStateClass = '';
             
+            // Check if call is on hold first (highest priority for display)
+            if (callData.onHold) {
+                directionText = 'On Hold';
+                callStateClass = 'call-on-hold';
+            }
             // Determine the call state and direction text
-            if (callData.state === 'established' || callData.state === 'answered') {
+            else if (callData.state === 'established' || callData.state === 'answered') {
                 directionText = 'Connected';
                 callStateClass = 'call-connected';
             } else if (callData.direction === 'incoming') {
@@ -536,7 +541,7 @@ class UIStateManager extends EventTarget {
             
             // Update background color based on call state
             if (callInfoDisplay) {
-                callInfoDisplay.classList.remove('call-ringing', 'call-dialing', 'call-connected');
+                callInfoDisplay.classList.remove('call-ringing', 'call-dialing', 'call-connected', 'call-on-hold');
                 if (callStateClass) {
                     callInfoDisplay.classList.add(callStateClass);
                 }

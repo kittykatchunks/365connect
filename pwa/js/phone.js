@@ -2096,6 +2096,8 @@ function setupSipConnectionMonitoring() {
         const session = App.managers.sip.sessions.get(data.sessionId);
         if (session) {
             updateCallControlUI(session);
+            // Update the call display to show hold status
+            App.managers.ui.updateCallStatus(session);
         }
     });
 

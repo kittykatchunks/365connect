@@ -1477,6 +1477,10 @@ input[type="checkbox"]:checked::after {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green for connected */
 }
 
+.call-info-display.call-on-hold {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); /* Yellow for on hold */
+}
+
 /* Dark theme call state colors */
 [data-theme="dark"] .call-info-display.call-ringing {
     background: linear-gradient(135deg, #d97706 0%, #b45309 100%); /* Darker orange for dark theme */
@@ -1488,6 +1492,10 @@ input[type="checkbox"]:checked::after {
 
 [data-theme="dark"] .call-info-display.call-connected {
     background: linear-gradient(135deg, #059669 0%, #047857 100%); /* Darker green for dark theme */
+}
+
+[data-theme="dark"] .call-info-display.call-on-hold {
+    background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%); /* Darker yellow for dark theme */
 }
 
 /* Auto theme (system preference) */
@@ -1502,6 +1510,10 @@ input[type="checkbox"]:checked::after {
     
     :root:not([data-theme="light"]) .call-info-display.call-connected {
         background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+    
+    :root:not([data-theme="light"]) .call-info-display.call-on-hold {
+        background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
     }
 }
 
