@@ -1478,7 +1478,7 @@ input[type="checkbox"]:checked::after {
 }
 
 .call-info-display.call-on-hold {
-    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); /* Yellow for on hold */
+    background: var(--warning-color); /* Matches hold button color */
 }
 
 /* Dark theme call state colors */
@@ -1495,7 +1495,7 @@ input[type="checkbox"]:checked::after {
 }
 
 [data-theme="dark"] .call-info-display.call-on-hold {
-    background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%); /* Darker yellow for dark theme */
+    background: var(--warning-color); /* Matches hold button color */
 }
 
 /* Auto theme (system preference) */
@@ -1513,7 +1513,7 @@ input[type="checkbox"]:checked::after {
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-on-hold {
-        background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+        background: var(--warning-color); /* Matches hold button color */
     }
 }
 

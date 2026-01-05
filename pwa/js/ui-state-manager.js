@@ -451,6 +451,25 @@ class UIStateManager extends EventTarget {
         this.startTimeUpdates();
     }
     
+    // Helper method to check if a call is in an established state
+    isCallEstablished(state) {
+        // Check for various forms of established state
+        // state can be a SIP.SessionState enum or string
+        const stateStr = state?.toString() || '';
+        const validStates = [
+            'Established',
+            'established', 
+            'answered',
+            'active',
+            'confirmed'
+        ];
+        return validStates.some(validState => 
+            stateStr === validState || 
+            stateStr.includes(validState) ||
+            state === validState
+        );
+    }
+    
     updateCallStatus(callData) {
         const callStatusRow = document.getElementById('callStatusRow');
         const dialInputRow = document.getElementById('dialInputRow');
@@ -523,9 +542,19 @@ class UIStateManager extends EventTarget {
                 callStateClass = 'call-on-hold';
             }
             // Determine the call state and direction text
-            else if (callData.state === 'established' || callData.state === 'answered') {
+            // Check for established/active states (including SIP.SessionState.Established constant)
+            else if (this.isCallEstablished(callData.state)) {
                 directionText = 'Connected';
                 callStateClass = 'call-connected';
+            } else if (callData.state === 'Initial' || callData.state === 'Establishing') {
+                // Call is being set up
+                if (callData.direction === 'incoming') {
+                    directionText = 'Ringing';
+                    callStateClass = 'call-ringing';
+                } else if (callData.direction === 'outgoing') {
+                    directionText = 'Dialing';
+                    callStateClass = 'call-dialing';
+                }
             } else if (callData.direction === 'incoming') {
                 directionText = 'Ringing';
                 callStateClass = 'call-ringing';
