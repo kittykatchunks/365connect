@@ -7,6 +7,7 @@
 - [ ] When connecting and API call to check if logged in, if company numbers tab is enabled, retrieve current CLIP outgoing and compare to company numbers - display as currently selected company on dial UI page for company numbers selector
 - [ ] When unregistered and reconnecting, check returned value for pause state and ensure UI reflects this if agent is still logged in after re-registering
 - [ ] BLF not recognising changes to connected/disconnected states of programmed devices, F5 does refresh state
+- [ ] Reword the statement appearing when webpage is accessed initially (settings required etc.)
 
 ### PWA & Installation
 - [x] Fix duplicate service worker registration
