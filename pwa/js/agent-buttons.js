@@ -435,9 +435,11 @@ class AgentButtonsManager {
                 
                 if (num !== null && num !== undefined && num !== '') {
                     // Agent is logged in
-                    console.log(`✅ Agent already logged in - Name: ${name}, Num: ${num}`);
+                    console.log(`✅ Agent already logged in - Name: ${name}, Num: ${num}, Pause: ${agentData.pause || false}`);
                     this.updateStateFromAPI(agentData);
                     this.updateButtonState('login', 'connected');
+                    // Update pause button to reflect current pause state from API
+                    this.updateButtonState('pause', this.isPaused ? 'active' : 'idle');
                     this.setAllButtonsEnabled(true);
                     this.updateButtonEnabledStates();
                 } else {
@@ -449,6 +451,8 @@ class AgentButtonsManager {
                     this.currentAgentName = null;
                     this.updateAgentStatusDisplay('logged-out');
                     this.updateButtonState('login', 'idle');
+                    this.updateButtonState('pause', 'idle');
+                    this.saveAgentState();
                     this.setAllButtonsEnabled(true);
                     this.updateButtonEnabledStates();
                 }
@@ -456,8 +460,11 @@ class AgentButtonsManager {
                 console.warn('No agent data returned from API after registration');
                 // Default to logged out if no data
                 this.isLoggedIn = false;
+                this.isPaused = false;
                 this.updateAgentStatusDisplay('logged-out');
                 this.updateButtonState('login', 'idle');
+                this.updateButtonState('pause', 'idle');
+                this.saveAgentState();
             }
             
         } catch (error) {
