@@ -819,9 +819,9 @@ class CompanyNumbersManager {
 
         console.log('📞 CompanyNumbersManager: Current CLIP from API (cid):', currentCid);
 
-        // Try to find a matching company by ID
-        // The cid from API should correspond to the company ID (1-99)
-        const matchingCompany = this.getCompanyById(parseInt(currentCid));
+        // Try to find a matching company by telephone number
+        // The cid from API is the actual phone number being used as outgoing CLI
+        const matchingCompany = this.companyNumbers.find(c => c.number === currentCid.toString());
 
         if (matchingCompany) {
             console.log('📞 CompanyNumbersManager: Found matching company for cid:', matchingCompany);
