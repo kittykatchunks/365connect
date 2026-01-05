@@ -79,164 +79,6 @@ function setLastDialedNumber(number) {
 }
 
 /* ====================================================================================== */
-/* LINE MANAGEMENT FUNCTIONS */
-/* ====================================================================================== */
-
-async function handleLineButtonClick(lineNumber) {
-    console.log(`📞 Line ${lineNumber} button clicked`);
-    
-    if (!App.managers.sip) {
-        console.error('SIP manager not available');
-        return;
-    }
-    
-    // Get the session for this line
-    const lineSession = App.managers.sip.getLineSession(lineNumber);
-    
-    if (!lineSession) {
-        console.log(`Line ${lineNumber} is idle - clearing selection`);
-        App.managers.sip.selectLine(lineNumber);
-        updateLineButtonStates();
-        updateCallDisplayForLine(null);
-        return;
-    }
-    
-    // If clicking on a different line with an active call, auto-hold current
-    try {
-        await App.managers.sip.holdCurrentAndSelectLine(lineNumber);
-        updateLineButtonStates();
-        updateCallDisplayForLine(lineNumber);
-        console.log(`✅ Switched to line ${lineNumber}`);
-    } catch (error) {
-        console.error(`❌ Failed to switch to line ${lineNumber}:`, error);
-        showError(`Failed to switch to line ${lineNumber}: ${error.message}`);
-    }
-}
-
-function updateLineButtonStates() {
-    if (!App.managers.sip) return;
-    
-    const lineStates = App.managers.sip.getLineStates();
-    const selectedLine = App.managers.sip.selectedLine;
-    
-    for (let lineNumber = 1; lineNumber <= 3; lineNumber++) {
-        const lineBtn = document.getElementById(`line${lineNumber}Btn`);
-        if (!lineBtn) continue;
-        
-        const state = lineStates[lineNumber];
-        
-        // Remove all state classes
-        lineBtn.classList.remove('line-idle', 'line-ringing', 'line-active', 'line-hold', 'line-selected');
-        
-        // Add current state class
-        lineBtn.classList.add(`line-${state}`);
-        
-        // Add selected class if this is the selected line
-        if (selectedLine === lineNumber) {
-            lineBtn.classList.add('line-selected');
-        }
-        
-        console.log(`📞 Line ${lineNumber} state: ${state}${selectedLine === lineNumber ? ' (selected)' : ''}`);
-    }
-}
-
-function updateCallDisplayForLine(lineNumber) {
-    const dialInputRow = document.getElementById('dialInputRow');
-    const callStatusRow = document.getElementById('callStatusRow');
-    const callControls = document.getElementById('callControls');
-    const callBtn = document.getElementById('callBtn');
-    const hangupBtn = document.getElementById('hangupBtn');
-    const dialActions = document.querySelector('.dial-actions');
-    
-    console.log(`📞 Updating call display for line: ${lineNumber}`);
-    
-    if (!lineNumber) {
-        // No line selected - show idle state
-        if (dialInputRow) dialInputRow.classList.remove('hidden');
-        if (callStatusRow) callStatusRow.classList.add('hidden');
-        if (callControls) callControls.classList.add('hidden');
-        if (dialActions) dialActions.style.display = 'flex';
-        if (callBtn) callBtn.classList.remove('hidden');
-        if (hangupBtn) hangupBtn.classList.add('hidden');
-        console.log('📞 No line selected - showing idle state');
-        return;
-    }
-    
-    const session = App.managers.sip.getLineSession(lineNumber);
-    if (!session) {
-        // Line selected but no session - ready to make outgoing call
-        if (dialInputRow) dialInputRow.classList.remove('hidden');
-        if (callStatusRow) callStatusRow.classList.add('hidden');
-        if (callControls) callControls.classList.add('hidden');
-        if (dialActions) dialActions.style.display = 'flex';
-        if (callBtn) callBtn.classList.remove('hidden');
-        if (hangupBtn) hangupBtn.classList.add('hidden');
-        console.log(`📞 Line ${lineNumber} selected with no session - showing call button`);
-        return;
-    }
-    
-    // Show call information
-    if (dialInputRow) dialInputRow.classList.add('hidden');
-    if (callStatusRow) callStatusRow.classList.remove('hidden');
-    
-    console.log(`📞 Line ${lineNumber} has session:`, session.id, 'state:', session.state, 'onHold:', session.onHold);
-    
-    // Update call details
-    const callerNumber = document.getElementById('callerNumber');
-    const callerName = document.getElementById('callerName');
-    const callDirection = document.getElementById('callDirection');
-    const callDuration = document.getElementById('callDuration');
-    
-    if (callerNumber) {
-        callerNumber.textContent = session.target || session.callerID || 'Unknown';
-    }
-    
-    if (callerName && session.callerID && session.callerID !== session.target) {
-        callerName.textContent = session.callerID;
-        callerName.classList.remove('hidden');
-    } else if (callerName) {
-        callerName.classList.add('hidden');
-    }
-    
-    if (callDirection) {
-        const directionText = session.direction === 'incoming' ? '📞 Incoming' : '📱 Outgoing';
-        callDirection.textContent = directionText;
-    }
-    
-    // Show/hide controls based on call state
-    const isEstablished = session.state === SIP.SessionState.Established || 
-                          session.state === 'Established' ||
-                          session.state === 'active';
-    const isRinging = session.state === 'ringing' || session.state === 'establishing';
-    
-    if (isEstablished) {
-        // Active or held call - show call controls
-        if (callControls) callControls.classList.remove('hidden');
-        if (dialActions) dialActions.style.display = 'none';
-        if (callBtn) callBtn.classList.add('hidden');
-        if (hangupBtn) hangupBtn.classList.add('hidden');
-        
-        // Update hold and mute button states
-        updateCallControlUI(session);
-        console.log(`📞 Line ${lineNumber} established - showing call controls`);
-    } else if (isRinging && session.direction === 'incoming') {
-        // Incoming call ringing - show answer button
-        if (callControls) callControls.classList.add('hidden');
-        if (dialActions) dialActions.style.display = 'flex';
-        if (callBtn) callBtn.classList.remove('hidden');
-        if (hangupBtn) hangupBtn.classList.remove('hidden');
-        console.log(`📞 Line ${lineNumber} ringing - showing answer/hangup buttons`);
-    } else {
-        // Outgoing call dialing - show hangup button only
-        if (callControls) callControls.classList.add('hidden');
-        if (dialActions) dialActions.style.display = 'flex';
-        if (callBtn) callBtn.classList.add('hidden');
-        if (hangupBtn) hangupBtn.classList.remove('hidden');
-        console.log(`📞 Line ${lineNumber} dialing - showing hangup button`);
-    }
-}
-
-/* ====================================================================================== */
 /* SIP FUNCTIONS */
 /* ====================================================================================== */
 
@@ -299,16 +141,6 @@ async function makeCall() {
     }
 
     console.log('Making outgoing call to:', number);
-
-    // Check if there are already active sessions
-    const activeSessions = App.managers.sip.getActiveSessions();
-    const selectedLine = App.managers.sip.selectedLine;
-    
-    if (activeSessions.length > 0 && !selectedLine) {
-        showWarning('Please select an available line first');
-        console.warn('⚠️ Cannot make call - active sessions exist but no line selected');
-        return;
-    }
 
     try {
         // Save this number as the last dialed before making the call
@@ -2200,8 +2032,7 @@ function setupSipConnectionMonitoring() {
         App.managers.ui.updateCallStatus(callData);
         App.managers.ui.startCallTimer(Date.now());
         
-        // Note: Call controls visibility now managed by updateCallDisplayForLine in multi-line system
-        // showCallControls();
+        showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
         updateCallControlUI(session);
     });
@@ -2226,8 +2057,8 @@ function setupSipConnectionMonitoring() {
         // Update call button for active call
         updateCallButton(session);
         
-        // Note: Call controls visibility now managed by updateCallDisplayForLine in multi-line system
-        // showCallControls();
+        // Show call controls if not already shown
+        showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
         updateCallControlUI(session);
     });
@@ -2254,9 +2085,9 @@ function setupSipConnectionMonitoring() {
         App.managers.ui.updateCallStatus({});
         App.managers.ui.stopCallTimer();
         
-        // Reset call button - call control visibility now managed by updateCallDisplayForLine
+        // Reset call button and hide call controls
         updateCallButton(null);
-        // hideCallControls();
+        hideCallControls();
         
         // Clear dial input after call ends
         clearDialInput();
@@ -3557,26 +3388,6 @@ window.setupUIEventHandlers = function setupUIEventHandlers() {
             }
         });
         console.log('✓ Clear search button handler attached');
-    }
-    
-    // Line key buttons
-    const line1Btn = document.getElementById('line1Btn');
-    const line2Btn = document.getElementById('line2Btn');
-    const line3Btn = document.getElementById('line3Btn');
-    
-    if (line1Btn) {
-        line1Btn.addEventListener('click', () => handleLineButtonClick(1));
-        console.log('✓ Line 1 button handler attached');
-    }
-    
-    if (line2Btn) {
-        line2Btn.addEventListener('click', () => handleLineButtonClick(2));
-        console.log('✓ Line 2 button handler attached');
-    }
-    
-    if (line3Btn) {
-        line3Btn.addEventListener('click', () => handleLineButtonClick(3));
-        console.log('✓ Line 3 button handler attached');
     }
     
     // Dial input

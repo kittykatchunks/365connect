@@ -394,7 +394,6 @@ class ApplicationStartup {
         sip.on('sessionCreated', (sessionData) => {
             ui.addCall(sessionData.lineNumber, sessionData);
             if (typeof updateCallControls === 'function') updateCallControls(true);
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
             
             if (sessionData.direction === 'incoming') {
                 if (typeof showIncomingCallNotification === 'function') {
@@ -407,7 +406,6 @@ class ApplicationStartup {
         sip.on('sessionAnswered', (sessionData) => {
             ui.updateCallState(sessionData.lineNumber, 'active');
             if (typeof startCallTimer === 'function') startCallTimer(sessionData);
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
             // Busylight handles call answered via its own event listener
         });
         
@@ -420,49 +418,11 @@ class ApplicationStartup {
                 window.TabAlertManager.stopFlashing();
             }
             
-            // Update line button states
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
-            
-            // Check if there are any remaining active sessions
             const activeSessions = sip.getActiveSessions();
             if (activeSessions.length === 0) {
-                // All sessions ended - reset UI to idle
                 if (typeof updateCallControls === 'function') updateCallControls(false);
-                if (typeof updateCallDisplayForLine === 'function') updateCallDisplayForLine(null);
-            } else {
-                // Still have active sessions - update display for current selected line or clear if none selected
-                const selectedLine = sip.selectedLine;
-                if (typeof updateCallDisplayForLine === 'function') {
-                    updateCallDisplayForLine(selectedLine);
-                }
             }
             // Busylight handles call termination via its own event listener
-        });
-        
-        // Line management events
-        sip.on('lineSelected', (data) => {
-            console.log(`📞 Line selected event: ${data.lineNumber}`);
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
-            if (typeof updateCallDisplayForLine === 'function') updateCallDisplayForLine(data.lineNumber);
-        });
-        
-        sip.on('lineReleased', (data) => {
-            console.log(`📞 Line released event: ${data.lineNumber}`);
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
-        });
-        
-        // Session state changes for line UI updates
-        sip.on('sessionStateChanged', (data) => {
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
-        });
-        
-        // Hold state changes
-        sip.on('sessionHeld', (data) => {
-            console.log('📞 Session hold state changed:', data);
-            if (typeof updateLineButtonStates === 'function') updateLineButtonStates();
-            if (typeof updateCallDisplayForLine === 'function' && sip.selectedLine) {
-                updateCallDisplayForLine(sip.selectedLine);
-            }
         });
         
         sip.on('registered', () => {
