@@ -336,6 +336,23 @@ html, body {
     display: none !important;
 }
 
+/* Incoming call flash animation for nav tabs */
+@keyframes tab-flash {
+    0%, 100% {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    50% {
+        background-color: #ff3b30;
+        color: white;
+        box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
+    }
+}
+
+.nav-tab.tab-flashing {
+    animation: tab-flash 1s ease-in-out infinite;
+}
+
 /* ===== BUTTON SYSTEM ===== */
 
 button {

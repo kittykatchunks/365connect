@@ -13,6 +13,7 @@
             this.flashInterval = null;
             this.flashState = false;
             this.isPageVisible = !document.hidden;
+            this.dialTab = null;
             
             // Initialize Page Visibility API
             this.initializePageVisibility();
@@ -49,8 +50,8 @@
         }
 
         /**
-         * Start flashing the tab title and favicon
-         * @param {string} alertMessage - Message to flash in title
+         * Start flashing the Dial navigation tab
+         * @param {string} alertMessage - Message to flash in title (optional)
          */
         startFlashing(alertMessage = '📞 INCOMING CALL') {
             if (this.isFlashing) {
@@ -58,106 +59,37 @@
                 return;
             }
 
-            console.log('🔔 Starting tab flash alert');
-            console.log('📊 Page hidden status:', document.hidden);
-            console.log('📊 isPageVisible:', this.isPageVisible);
-            
+            console.log('🔔 Starting Dial tab flash alert');
             this.isFlashing = true;
-            this.originalTitle = document.title;
-
-            // Flash title every 1 second
-            this.flashInterval = setInterval(() => {
-                this.flashState = !this.flashState;
-                
-                if (this.flashState) {
-                    document.title = alertMessage;
-                } else {
-                    document.title = this.originalTitle;
-                }
-            }, 1000);
-
-            // Also try to change favicon if possible
-            this.flashFavicon();
+            
+            // Get the Dial navigation tab
+            this.dialTab = document.getElementById('navDial');
+            
+            if (!this.dialTab) {
+                console.error('❌ Dial tab not found');
+                return;
+            }
+            
+            // Add flashing class to Dial tab
+            this.dialTab.classList.add('tab-flashing');
+            console.log('✅ Dial tab flashing started');
         }
 
         /**
-         * Stop flashing the tab
+         * Stop flashing the Dial tab
          */
         stopFlashing() {
             if (!this.isFlashing) {
                 return;
             }
 
-            console.log('🔕 Stopping tab flash alert');
+            console.log('🔕 Stopping Dial tab flash alert');
             this.isFlashing = false;
 
-            if (this.flashInterval) {
-                clearInterval(this.flashInterval);
-                this.flashInterval = null;
-            }
-
-            // Restore original title
-            document.title = this.originalTitle;
-            
-            // Restore original favicon
-            this.restoreFavicon();
-        }
-
-        /**
-         * Flash favicon by temporarily changing it
-         */
-        flashFavicon() {
-            try {
-                // Store original favicon
-                let link = document.querySelector("link[rel*='icon']");
-                if (!link) {
-                    return; // No favicon to change
-                }
-                
-                if (!this.originalFavicon) {
-                    this.originalFavicon = link.href;
-                }
-                
-                // Try to use the incoming call icon
-                // User can add 'icons/alert-favicon.ico' or 'icons/alert-favicon.png' for custom alert icon
-                const alertIcons = [
-                    'icons/alert-favicon.ico',
-                    'icons/alert-favicon.png', 
-                    'icons/IncomingCallIcon.png'
-                ];
-                
-                // Try each alert icon
-                for (const iconPath of alertIcons) {
-                    const img = new Image();
-                    img.onload = () => {
-                        link.href = iconPath;
-                        console.log('✅ Favicon changed to:', iconPath);
-                    };
-                    img.onerror = () => {
-                        // Silently continue to next option
-                    };
-                    img.src = iconPath;
-                    
-                    // Only try first one that might work
-                    break;
-                }
-            } catch (error) {
-                console.warn('⚠️ Could not change favicon:', error);
-            }
-        }
-
-        /**
-         * Restore original favicon
-         */
-        restoreFavicon() {
-            try {
-                const link = document.querySelector("link[rel*='icon']");
-                if (link && this.originalFavicon) {
-                    link.href = this.originalFavicon;
-                    console.log('✅ Favicon restored');
-                }
-            } catch (error) {
-                console.warn('⚠️ Could not restore favicon:', error);
+            // Remove flashing class from Dial tab
+            if (this.dialTab) {
+                this.dialTab.classList.remove('tab-flashing');
+                console.log('✅ Dial tab flashing stopped');
             }
         }
 
@@ -167,20 +99,6 @@
          */
         isTabVisible() {
             return this.isPageVisible;
-        }
-
-        /**
-         * Flash tab for a specific duration
-         * @param {number} duration - Duration in milliseconds (default: 30 seconds)
-         * @param {string} message - Message to display
-         */
-        flashForDuration(duration = 30000, message = '📞 INCOMING CALL') {
-            this.startFlashing(message);
-            
-            // Auto-stop after duration
-            setTimeout(() => {
-                this.stopFlashing();
-            }, duration);
         }
     }
 
