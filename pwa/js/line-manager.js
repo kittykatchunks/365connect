@@ -270,16 +270,23 @@ class LineManager {
             const previousLineState = this.lineStates.get(this.selectedLine);
             
             // Auto-hold the previous line ONLY if it's in active state (not already on hold)
-            if (previousLineState && previousLineState.state === 'active' && previousLineState.sessionId) {
+            // Check both state='active' AND onHold=false to prevent toggling held calls
+            if (previousLineState && 
+                previousLineState.state === 'active' && 
+                !previousLineState.onHold && 
+                previousLineState.sessionId) {
+                
                 console.log(`📞 LineManager: Auto-holding active line ${this.selectedLine} when switching to line ${lineNumber}`);
                 
-                // Put previous line on hold
+                // Explicitly put on hold (don't toggle)
                 if (this.sipManager) {
-                    this.sipManager.toggleHold(previousLineState.sessionId)
+                    this.sipManager.holdSession(previousLineState.sessionId)
                         .catch(error => {
                             console.error('Failed to auto-hold previous line:', error);
                         });
                 }
+            } else if (previousLineState) {
+                console.log(`📞 LineManager: Previous line ${this.selectedLine} state: ${previousLineState.state}, onHold: ${previousLineState.onHold} - not auto-holding`);
             }
         }
         
@@ -420,6 +427,8 @@ class LineManager {
     updateMainDisplay() {
         // Get current line state (or null if no line selected)
         const lineState = this.selectedLine ? this.lineStates.get(this.selectedLine) : null;
+        
+        console.log(`📞 updateMainDisplay: line ${this.selectedLine}, state: ${lineState?.state || 'none'}`);
         
         // If no line selected or line is idle, show dial interface
         if (!lineState || lineState.state === 'idle') {
