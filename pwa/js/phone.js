@@ -93,6 +93,12 @@ async function makeCall() {
     const incomingSession = App.managers.sip.getIncomingSession();
     if (incomingSession) {
         console.log('Answering incoming call:', incomingSession.id);
+        
+        // Stop tab flashing when answering
+        if (window.TabAlertManager) {
+            window.TabAlertManager.stopFlashing();
+        }
+        
         try {
             await App.managers.sip.answerCall(incomingSession.id);
             console.log('Incoming call answered successfully');
@@ -154,6 +160,11 @@ async function makeCall() {
 
 async function answerCall(sessionId) {
     console.log('Answering call:', sessionId);
+    
+    // Stop tab flashing when answering
+    if (window.TabAlertManager) {
+        window.TabAlertManager.stopFlashing();
+    }
     
     if (App.managers.sip) {
         try {
@@ -2464,6 +2475,15 @@ function sendIncomingCallNotification(session) {
             return;
         }
 
+        // Start tab flashing if user is on another tab or window
+        if (window.TabAlertManager && !window.TabAlertManager.isTabVisible()) {
+            const callerInfo = session?.session?.remoteIdentity?.displayName || 
+                             session?.session?.remoteIdentity?.uri?.user || 
+                             'Unknown';
+            window.TabAlertManager.startFlashing(`📞 CALL: ${callerInfo}`);
+            console.log('🔔 Started tab flashing for incoming call');
+        }
+
         // Check if notifications are supported
         if (!('Notification' in window)) {
             console.log('⚠️ This browser does not support desktop notifications');
@@ -2565,19 +2585,30 @@ function sendIncomingCallNotification(session) {
             console.log('🔕 Notification closed');
         };
 
-        // Handle notification clicks - answer call when clicked
+        // Handle notification clicks - answer call and show dial screen
         notification.onclick = (event) => {
-            console.log('🖱️ Incoming call notification clicked - answering in background');
+            console.log('🖱️ Incoming call notification clicked - answering and showing dial screen');
             event.preventDefault();
             
-            // Don't focus window - let user continue working
-            // window.focus() removed to keep app in background
+            // Focus the window to bring app to front
+            window.focus();
+            
+            // Switch to dial screen if on another tab
+            if (window.App?.managers?.ui && typeof window.App.managers.ui.setCurrentView === 'function') {
+                window.App.managers.ui.setCurrentView('dial');
+                console.log('📱 Switched to dial screen after notification click');
+            }
+            
+            // Stop tab flashing if active
+            if (window.TabAlertManager) {
+                window.TabAlertManager.stopFlashing();
+            }
             
             notification.close();
             
             // Auto-answer the call when notification is clicked
             if (session) {
-                console.log('📞 Auto-answering call from notification click (background)');
+                console.log('📞 Auto-answering call from notification click');
                 makeCall();
             }
         };

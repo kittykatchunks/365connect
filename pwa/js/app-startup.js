@@ -413,6 +413,11 @@ class ApplicationStartup {
             ui.removeCall(sessionData.lineNumber);
             if (typeof stopCallTimer === 'function') stopCallTimer(sessionData.id);
             
+            // Stop tab flashing when call is terminated
+            if (window.TabAlertManager) {
+                window.TabAlertManager.stopFlashing();
+            }
+            
             const activeSessions = sip.getActiveSessions();
             if (activeSessions.length === 0) {
                 if (typeof updateCallControls === 'function') updateCallControls(false);
