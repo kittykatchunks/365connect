@@ -53,18 +53,15 @@
          * @param {string} alertMessage - Message to flash in title
          */
         startFlashing(alertMessage = '📞 INCOMING CALL') {
-            // Only flash if page is not visible
-            if (this.isPageVisible) {
-                console.log('👁️ Page is visible, skipping tab flash');
-                return;
-            }
-
             if (this.isFlashing) {
                 console.log('⚠️ Already flashing, skipping');
                 return;
             }
 
             console.log('🔔 Starting tab flash alert');
+            console.log('📊 Page hidden status:', document.hidden);
+            console.log('📊 isPageVisible:', this.isPageVisible);
+            
             this.isFlashing = true;
             this.originalTitle = document.title;
 
@@ -111,28 +108,39 @@
          */
         flashFavicon() {
             try {
-                const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-                link.type = 'image/x-icon';
-                link.rel = 'icon';
+                // Store original favicon
+                let link = document.querySelector("link[rel*='icon']");
+                if (!link) {
+                    return; // No favicon to change
+                }
                 
-                // Try to use a red/alert version of favicon if available, otherwise keep original
-                // This could be enhanced with an actual alert icon
-                const alertIcon = 'icons/IncomingCallIcon.png'; // Use incoming call icon
+                if (!this.originalFavicon) {
+                    this.originalFavicon = link.href;
+                }
                 
-                // Check if we can access the icon
-                fetch(alertIcon, { method: 'HEAD' })
-                    .then(response => {
-                        if (response.ok) {
-                            link.href = alertIcon;
-                            if (!link.parentNode) {
-                                document.head.appendChild(link);
-                            }
-                        }
-                    })
-                    .catch(() => {
-                        // Silently fail if icon not available
-                        console.log('⚠️ Alert icon not available, keeping original favicon');
-                    });
+                // Try to use the incoming call icon
+                // User can add 'icons/alert-favicon.ico' or 'icons/alert-favicon.png' for custom alert icon
+                const alertIcons = [
+                    'icons/alert-favicon.ico',
+                    'icons/alert-favicon.png', 
+                    'icons/IncomingCallIcon.png'
+                ];
+                
+                // Try each alert icon
+                for (const iconPath of alertIcons) {
+                    const img = new Image();
+                    img.onload = () => {
+                        link.href = iconPath;
+                        console.log('✅ Favicon changed to:', iconPath);
+                    };
+                    img.onerror = () => {
+                        // Silently continue to next option
+                    };
+                    img.src = iconPath;
+                    
+                    // Only try first one that might work
+                    break;
+                }
             } catch (error) {
                 console.warn('⚠️ Could not change favicon:', error);
             }
@@ -144,8 +152,9 @@
         restoreFavicon() {
             try {
                 const link = document.querySelector("link[rel*='icon']");
-                if (link) {
-                    link.href = 'favicon.ico';
+                if (link && this.originalFavicon) {
+                    link.href = this.originalFavicon;
+                    console.log('✅ Favicon restored');
                 }
             } catch (error) {
                 console.warn('⚠️ Could not restore favicon:', error);

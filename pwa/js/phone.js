@@ -2481,8 +2481,8 @@ function sendIncomingCallNotification(session) {
             return;
         }
 
-        // Start tab flashing if user is on another tab or window
-        if (window.TabAlertManager && !window.TabAlertManager.isTabVisible()) {
+        // Start tab flashing for incoming call
+        if (window.TabAlertManager) {
             const callerInfo = session?.session?.remoteIdentity?.displayName || 
                              session?.session?.remoteIdentity?.uri?.user || 
                              'Unknown';
