@@ -2200,7 +2200,8 @@ function setupSipConnectionMonitoring() {
         App.managers.ui.updateCallStatus(callData);
         App.managers.ui.startCallTimer(Date.now());
         
-        showCallControls();
+        // Note: Call controls visibility now managed by updateCallDisplayForLine in multi-line system
+        // showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
         updateCallControlUI(session);
     });
@@ -2225,8 +2226,8 @@ function setupSipConnectionMonitoring() {
         // Update call button for active call
         updateCallButton(session);
         
-        // Show call controls if not already shown
-        showCallControls();
+        // Note: Call controls visibility now managed by updateCallDisplayForLine in multi-line system
+        // showCallControls();
         enableCallControls(); // Enable mute, hold, transfer buttons
         updateCallControlUI(session);
     });
@@ -2253,9 +2254,9 @@ function setupSipConnectionMonitoring() {
         App.managers.ui.updateCallStatus({});
         App.managers.ui.stopCallTimer();
         
-        // Reset call button and hide call controls
+        // Reset call button - call control visibility now managed by updateCallDisplayForLine
         updateCallButton(null);
-        hideCallControls();
+        // hideCallControls();
         
         // Clear dial input after call ends
         clearDialInput();
