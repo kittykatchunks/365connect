@@ -270,5 +270,8 @@
     "offline_sorry": "Lo sentimos... Autocab365Connect PWA requiere una conexión a Internet activa y que su dirección IP esté en la lista blanca en Phantom.",
     "reload": "Recargar",
     "select_language_help": "Seleccione su idioma preferido para la interfaz de la aplicación.",
-    "exportCompanyNumbersToCSV": "Exportar números de empresa a CSV"
+    "exportCompanyNumbersToCSV": "Exportar números de empresa a CSV",
+    "new_version_available": "¡Una nueva versión está disponible!",
+    "update_now": "Actualizar Ahora",
+    "later": "Más Tarde"
 }

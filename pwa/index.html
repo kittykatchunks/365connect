@@ -785,6 +785,16 @@
     <!-- Notification Container -->
     <div id="notificationContainer" class="notification-container"></div>
     
+    <!-- Update Notification Banner -->
+    <div id="updateBanner" class="update-banner hidden">
+        <div class="update-content">
+            <span class="update-icon">🔄</span>
+            <span class="update-message" data-translate="new_version_available">A new version is available!</span>
+            <button id="updateBtn" class="update-btn" data-translate="update_now">Update Now</button>
+            <button id="dismissUpdateBtn" class="dismiss-btn" data-translate="later">Later</button>
+        </div>
+    </div>
+    
     <!-- Modal Overlay -->
     <div id="modalOverlay" class="modal-overlay hidden"></div>
     
@@ -860,6 +870,22 @@
                 navigator.serviceWorker.register('sw.js', { scope: '/' })
                     .then(function(registration) {
                         console.log('✓ Service Worker registered successfully:', registration.scope);
+                        
+                        // Check for updates every hour
+                        setInterval(() => {
+                            registration.update();
+                        }, 3600000);
+                        
+                        // Listen for new service worker waiting to activate
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    showUpdateNotification();
+                                }
+                            });
+                        });
                     })
                     .catch(function(error) {
                         console.warn('❌ Service Worker registration failed:', error);
@@ -868,6 +894,30 @@
         } else {
             console.warn('Service Workers are not supported in this browser');
         }
+        
+        // Update notification functions
+        function showUpdateNotification() {
+            const banner = document.getElementById('updateBanner');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('updateBtn')?.addEventListener('click', () => {
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+                }
+                window.location.reload();
+            });
+            
+            document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
+                const banner = document.getElementById('updateBanner');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
+            });
+        });
     </script>
     
     <!-- Keyboard Input Handler for Dial Tab -->

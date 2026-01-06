@@ -1,5 +1,12 @@
 const cacheID = "autocab365connect_v5"; // Increment version - v5: Fixed PWA manifest issues and duplicate service worker registration
 
+// Listen for skip waiting message from client
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
 const CacheItems = [
     // Core files
     "index.html",
