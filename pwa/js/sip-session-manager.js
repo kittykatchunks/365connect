@@ -1028,13 +1028,14 @@ class SipSessionManager {
                 // Fallback to legacy line assignment
                 lineNumber = this.assignLineNumber();
                 if (lineNumber === null) {
-                console.warn('⚠️ All lines occupied - rejecting incoming call');
-                invitation.reject({ statusCode: 486 }); // 486 Busy Here
-                this.emit('incomingCallRejected', { 
-                    reason: 'All lines occupied',
-                    caller: invitation.remoteIdentity.displayName || invitation.remoteIdentity.uri.user
-                });
-                return;
+                    console.warn('⚠️ All lines occupied - rejecting incoming call');
+                    invitation.reject({ statusCode: 486 }); // 486 Busy Here
+                    this.emit('incomingCallRejected', { 
+                        reason: 'All lines occupied',
+                        caller: invitation.remoteIdentity.displayName || invitation.remoteIdentity.uri.user
+                    });
+                    return;
+                }
             }
 
             // Extract caller information
