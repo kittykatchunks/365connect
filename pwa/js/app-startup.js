@@ -642,13 +642,25 @@ class ApplicationStartup {
             // Auto-hold the previous line if it has an active call
             if (data.previousLine && sip) {
                 const previousSession = sip.getSessionByLine(data.previousLine);
+                console.log(`🔍 Checking previous line ${data.previousLine} for auto-hold:`, previousSession ? {
+                    id: previousSession.id,
+                    state: previousSession.state,
+                    onHold: previousSession.onHold
+                } : 'no session');
+                
                 if (previousSession && 
                     previousSession.state === 'established' && 
                     !previousSession.onHold) {
-                    console.log(`🔄 Auto-holding line ${data.previousLine}`);
-                    sip.holdSession(previousSession.id).catch(err => {
-                        console.error('Failed to auto-hold previous line:', err);
+                    console.log(`🔄 Auto-holding line ${data.previousLine}, session ${previousSession.id}`);
+                    sip.holdSession(previousSession.id).then(() => {
+                        console.log(`✅ Successfully auto-held line ${data.previousLine}`);
+                        this.updateCallControls();
+                        this.updateLineKeyUI();
+                    }).catch(err => {
+                        console.error('❌ Failed to auto-hold previous line:', err);
                     });
+                } else if (previousSession) {
+                    console.log(`⏭️ Skipping auto-hold: state=${previousSession.state}, onHold=${previousSession.onHold}`);
                 }
             }
             
@@ -769,6 +781,13 @@ class ApplicationStartup {
         const selectedLine = lineKeys.getSelectedLine();
         const sessionData = sip.getSessionByLine(selectedLine);
         
+        console.log('🎛️ updateCallControls for line', selectedLine, 'sessionData:', sessionData ? {
+            id: sessionData.id,
+            state: sessionData.state,
+            onHold: sessionData.onHold,
+            muted: sessionData.muted
+        } : 'null');
+        
         // Get UI elements
         const callControls = document.getElementById('callControls');
         const dialActions = document.querySelector('.dial-actions');
@@ -785,8 +804,14 @@ class ApplicationStartup {
         
         if (!sessionData) {
             // No session on this line - show CALL/END buttons (idle state)
-            if (callBtn) callBtn.classList.remove('hidden');
+            if (callBtn) {
+                callBtn.classList.remove('hidden');
+                const callBtnLabel = callBtn.querySelector('span');
+                if (callBtnLabel) callBtnLabel.textContent = 'CALL';
+                callBtn.onclick = null; // Reset to default
+            }
             if (hangupBtn) hangupBtn.classList.remove('hidden');
+            console.log('🎛️ No session - showing CALL/END buttons');
             return;
         }
         
@@ -805,6 +830,7 @@ class ApplicationStartup {
                 }
                 if (hangupBtn) hangupBtn.classList.remove('hidden');
                 if (callControls) callControls.classList.add('hidden');
+                console.log('🎛️ Ringing - showing ANSWER/END buttons');
                 break;
                 
             case 'dialing':
@@ -814,10 +840,11 @@ class ApplicationStartup {
                 if (callBtn) callBtn.classList.add('hidden');
                 if (hangupBtn) hangupBtn.classList.remove('hidden');
                 if (callControls) callControls.classList.add('hidden');
+                console.log('🎛️ Dialing/Connecting - showing END button only');
                 break;
                 
             case 'established':
-                // Active call - show call controls (MUTE/HOLD/TRANSFER/END)
+                // Active call (including on hold) - show call controls (MUTE/HOLD/TRANSFER/END)
                 if (dialActions) dialActions.classList.add('hidden');
                 if (callControls) callControls.classList.remove('hidden');
                 
@@ -842,6 +869,7 @@ class ApplicationStartup {
                         if (holdLabel) holdLabel.textContent = 'HOLD';
                     }
                 }
+                console.log('🎛️ Established - showing MUTE/HOLD/TRANSFER/END buttons', sessionData.onHold ? '(ON HOLD)' : '(ACTIVE)');
                 break;
                 
             default:
@@ -855,6 +883,7 @@ class ApplicationStartup {
                 }
                 if (hangupBtn) hangupBtn.classList.remove('hidden');
                 if (callControls) callControls.classList.add('hidden');
+                console.log('🎛️ Other state:', sessionData.state, '- showing CALL/END buttons');
         }
     }
     
