@@ -464,31 +464,83 @@ class BusylightManager {
         
         // Hold events
         sipManager.on('sessionHeld', (data) => this.onSessionHeld(data));
+        
+        // Multi-line events (if LineKeyManager is available)
+        const lineKeyManager = window.App?.managers?.lineKeys;
+        if (lineKeyManager) {
+            lineKeyManager.on('lineStateChanged', () => this.updateStateFromSystem());
+            lineKeyManager.on('lineChanged', () => this.updateStateFromSystem());
+        }
     }
 
     /**
      * Update state based on current system status
+     * Enhanced for multi-line support with priority system
      */
     async updateStateFromSystem() {
         if (!this.enabled || !this.connected) return;
         
-        // Priority 1: Ringing (incoming call)
-        if (window.App?.managers?.sip?.hasIncomingCall?.()) {
-            await this.setState('ringing');
-            return;
-        }
+        const sipManager = window.App?.managers?.sip;
+        const lineKeyManager = window.App?.managers?.lineKeys;
         
-        // Priority 2: Active call
-        if (window.App?.managers?.sip?.hasActiveSessions?.()) {
-            const session = window.App.managers.sip.getCurrentSession();
-            if (session) {
-                if (session.onHold) {
-                    // Priority 3: On hold
-                    await this.setState('hold');
-                } else {
-                    await this.setState('active');
+        // Multi-line priority system:
+        // 1. RINGING (any line) - highest priority
+        // 2. ACTIVE (any line) - active call exists
+        // 3. HOLD (all lines) - all active calls on hold
+        // 4. IDLE with voicemail
+        // 5. IDLE or REGISTERED
+        
+        if (lineKeyManager && sipManager) {
+            // Get all active lines
+            const activeLines = lineKeyManager.getActiveLines();
+            
+            if (activeLines.length > 0) {
+                // Priority 1: Check for any ringing line
+                const hasRinging = activeLines.some(line => line.state === 'ringing');
+                if (hasRinging) {
+                    await this.setState('ringing');
+                    return;
                 }
+                
+                // Priority 2: Check for any active (not on hold) line
+                const hasActive = activeLines.some(line => 
+                    line.state === 'active' || 
+                    (line.sessionId && !sipManager.getSession(line.sessionId)?.onHold)
+                );
+                if (hasActive) {
+                    await this.setState('active');
+                    return;
+                }
+                
+                // Priority 3: All lines are on hold
+                const allOnHold = activeLines.every(line => 
+                    line.state === 'hold' || 
+                    (line.sessionId && sipManager.getSession(line.sessionId)?.onHold)
+                );
+                if (allOnHold && activeLines.length > 0) {
+                    await this.setState('hold');
+                    return;
+                }
+            }
+        } else {
+            // Fallback to legacy single-line logic
+            // Priority 1: Ringing (incoming call)
+            if (sipManager?.hasIncomingCall?.()) {
+                await this.setState('ringing');
                 return;
+            }
+            
+            // Priority 2: Active call
+            if (sipManager?.hasActiveSessions?.()) {
+                const session = sipManager.getCurrentSession();
+                if (session) {
+                    if (session.onHold) {
+                        await this.setState('hold');
+                    } else {
+                        await this.setState('active');
+                    }
+                    return;
+                }
             }
         }
         

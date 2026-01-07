@@ -25,9 +25,12 @@ class SipSessionManager {
         this.sessionCounter = 0;
         this.lineCounter = 0;
         
-        // Active line tracking
+        // Active line tracking (legacy - now managed by LineKeyManager)
         this.activeLines = new Map(); // lineNumber -> sessionId
         this.selectedLine = null;
+        
+        // Line Key Manager reference (will be set by app-startup.js)
+        this.lineKeyManager = null;
         
         // Call statistics
         this.stats = {
@@ -905,11 +908,21 @@ class SipSessionManager {
 
         try {
             const sessionId = this.generateSessionId();
-            const lineNumber = this.assignLineNumber();
             
-            // Check if line is available
-            if (lineNumber === null) {
-                throw new Error('All lines are occupied. Please end or hold a call first.');
+            // Check if we can get an available line
+            let lineNumber = null;
+            if (this.lineKeyManager) {
+                // Use LineKeyManager to find available line
+                lineNumber = this.lineKeyManager.getAvailableLine();
+                if (lineNumber === null) {
+                    throw new Error('All lines busy. Please end or hold a call before making a new one.');
+                }
+            } else {
+                // Fallback to legacy line assignment
+                lineNumber = this.assignLineNumber();
+                if (lineNumber === null) {
+                    throw new Error('All lines are occupied. Please end or hold a call first.');
+                }
             }
             
             // Create target URI
@@ -952,6 +965,9 @@ class SipSessionManager {
                 session: inviter,
                 direction: 'outgoing',
                 target: target,
+                remoteNumber: target,
+                remoteIdentity: target,
+                displayName: target,
                 state: 'initiating',
                 startTime: new Date(),
                 duration: 0,
@@ -968,6 +984,11 @@ class SipSessionManager {
             this.sessions.set(sessionId, sessionData);
             this.activeLines.set(lineNumber, sessionId);
             this.selectedLine = lineNumber;
+            
+            // Assign to LineKeyManager
+            if (this.lineKeyManager) {
+                this.assignSessionToLine(sessionId, lineNumber, sessionData);
+            }
 
             // Start the session
             await inviter.invite();
@@ -991,12 +1012,24 @@ class SipSessionManager {
     handleIncomingInvitation(invitation) {
         try {
             const sessionId = this.generateSessionId();
-            const lineNumber = this.assignLineNumber();
             
-            // Check if line is available
-            if (lineNumber === null) {
+            // Check if we can get an available line
+            let lineNumber = null;
+            if (this.lineKeyManager) {
+                // Use LineKeyManager to find available line
+                lineNumber = this.lineKeyManager.getAvailableLine();
+                if (lineNumber === null) {
+                    // All lines busy - reject with 486 Busy Here
+                    console.warn('⚠️ All lines busy - rejecting incoming call');
+                    invitation.reject({ statusCode: 486 }); // 486 Busy Here
+                    return;
+                }
+            } else {
+                // Fallback to legacy line assignment
+                lineNumber = this.assignLineNumber();
+                if (lineNumber === null) {
                 console.warn('⚠️ All lines occupied - rejecting incoming call');
-                invitation.reject();
+                invitation.reject({ statusCode: 486 }); // 486 Busy Here
                 this.emit('incomingCallRejected', { 
                     reason: 'All lines occupied',
                     caller: invitation.remoteIdentity.displayName || invitation.remoteIdentity.uri.user
@@ -1004,14 +1037,21 @@ class SipSessionManager {
                 return;
             }
 
+            // Extract caller information
+            const remoteNumber = invitation.remoteIdentity.uri.user;
+            const remoteIdentity = invitation.remoteIdentity.displayName || remoteNumber;
+            
             // Create session data
             const sessionData = {
                 id: sessionId,
                 lineNumber: lineNumber,
                 session: invitation,
                 direction: 'incoming',
-                target: invitation.remoteIdentity.uri.user,
-                callerID: invitation.remoteIdentity.displayName || invitation.remoteIdentity.uri.user,
+                target: remoteNumber,
+                remoteNumber: remoteNumber,
+                remoteIdentity: remoteIdentity,
+                displayName: remoteIdentity,
+                callerID: remoteIdentity,
                 state: 'ringing',
                 startTime: new Date(),
                 duration: 0,
@@ -1026,6 +1066,19 @@ class SipSessionManager {
             // Store session
             this.sessions.set(sessionId, sessionData);
             this.activeLines.set(lineNumber, sessionId);
+            
+            // Assign to LineKeyManager
+            if (this.lineKeyManager) {
+                this.assignSessionToLine(sessionId, lineNumber, sessionData);
+                
+                // Play call waiting tone if there are other active calls
+                const activeSessions = this.getActiveSessions();
+                const hasOtherActiveCalls = activeSessions.some(s => s.id !== sessionId);
+                if (hasOtherActiveCalls) {
+                    console.log('📞 Playing call waiting tone (other calls active)');
+                    this.emit('callWaitingTone', { lineNumber, sessionData });
+                }
+            }
 
             // Don't auto-answer if there are already active calls
             const activeSessions = this.getActiveSessions();
@@ -1066,6 +1119,11 @@ class SipSessionManager {
             
             sessionData.state = state;
             this.emit('sessionStateChanged', { sessionId, state });
+            
+            // Update LineKeyManager state
+            if (this.lineKeyManager) {
+                this.updateLineStateForSession(sessionId, state);
+            }
 
             switch (state) {
                 case SIP.SessionState.Established:
@@ -1282,6 +1340,11 @@ class SipSessionManager {
         // Remove from active sessions
         this.sessions.delete(sessionId);
         this.activeLines.delete(lineNumber);
+        
+        // Clear line in LineKeyManager
+        if (this.lineKeyManager) {
+            this.clearLineForSession(sessionId);
+        }
         
         console.log(`📞 Released line ${lineNumber} from terminated session ${sessionId}`);
 
@@ -2594,6 +2657,215 @@ class SipSessionManager {
         }
         return null;
     }
+    
+    // ==================== MULTI-LINE SUPPORT METHODS ====================
+    
+    /**
+     * Set LineKeyManager reference
+     * @param {LineKeyManager} lineKeyManager - Instance of LineKeyManager
+     */
+    setLineKeyManager(lineKeyManager) {
+        this.lineKeyManager = lineKeyManager;
+        console.log('✅ LineKeyManager linked to SipSessionManager');
+        
+        // Listen to line change events for auto-hold logic
+        if (this.lineKeyManager) {
+            this.lineKeyManager.on('lineChanged', (data) => this.handleLineChange(data));
+        }
+    }
+    
+    /**
+     * Handle line change event (implements auto-hold logic)
+     * @param {Object} data - Line change event data
+     */
+    async handleLineChange(data) {
+        const { previousLine, currentLine } = data;
+        
+        console.log(`📞 Line change detected: ${previousLine} → ${currentLine}`);
+        
+        // Auto-hold previous line if it has an active call (not already on hold)
+        if (previousLine && previousLine !== currentLine) {
+            const previousSession = this.getSessionByLine(previousLine);
+            if (previousSession && previousSession.state === 'established' && !previousSession.onHold) {
+                console.log(`🔄 Auto-holding Line ${previousLine} (session ${previousSession.id})`);
+                try {
+                    await this.holdSession(previousSession.id);
+                    console.log(`✅ Line ${previousLine} put on hold`);
+                } catch (error) {
+                    console.error(`❌ Failed to auto-hold Line ${previousLine}:`, error);
+                }
+            }
+        }
+        
+        // Update internal selected line tracking
+        this.selectedLine = currentLine;
+    }
+    
+    /**
+     * Get session assigned to a specific line
+     * @param {number} lineNumber - Line number (1-3)
+     * @returns {Object|null} Session data or null
+     */
+    getSessionByLine(lineNumber) {
+        if (!this.lineKeyManager) {
+            console.warn('LineKeyManager not initialized');
+            return null;
+        }
+        
+        const sessionId = this.lineKeyManager.getSessionByLine(lineNumber);
+        return sessionId ? this.sessions.get(sessionId) : null;
+    }
+    
+    /**
+     * Get line number for a specific session
+     * @param {string} sessionId - Session ID
+     * @returns {number|null} Line number or null
+     */
+    getLineBySession(sessionId) {
+        if (!this.lineKeyManager) {
+            console.warn('LineKeyManager not initialized');
+            return null;
+        }
+        
+        return this.lineKeyManager.getLineBySession(sessionId);
+    }
+    
+    /**
+     * Get all active lines with sessions
+     * @returns {Array} Array of active line information
+     */
+    getActiveLines() {
+        if (!this.lineKeyManager) {
+            return [];
+        }
+        
+        return this.lineKeyManager.getActiveLines();
+    }
+    
+    /**
+     * Check if a specific line is available
+     * @param {number} lineNumber - Line number (1-3)
+     * @returns {boolean} True if available
+     */
+    isLineAvailable(lineNumber) {
+        if (!this.lineKeyManager) {
+            return false;
+        }
+        
+        return this.lineKeyManager.isLineAvailable(lineNumber);
+    }
+    
+    /**
+     * Get first available line number
+     * @returns {number|null} Available line number or null
+     */
+    getAvailableLine() {
+        if (!this.lineKeyManager) {
+            return null;
+        }
+        
+        return this.lineKeyManager.getAvailableLine();
+    }
+    
+    /**
+     * Check if all lines are busy
+     * @returns {boolean} True if all lines occupied
+     */
+    areAllLinesBusy() {
+        if (!this.lineKeyManager) {
+            return true;
+        }
+        
+        return this.lineKeyManager.areAllLinesBusy();
+    }
+    
+    /**
+     * Assign session to a line
+     * @param {string} sessionId - Session ID
+     * @param {number} lineNumber - Line number (1-3)
+     * @param {Object} sessionData - Session data object
+     */
+    assignSessionToLine(sessionId, lineNumber, sessionData) {
+        if (!this.lineKeyManager) {
+            console.warn('LineKeyManager not initialized');
+            return;
+        }
+        
+        // Update session data with line number
+        sessionData.lineNumber = lineNumber;
+        
+        // Determine state based on session direction and state
+        let lineState = 'active';
+        if (sessionData.direction === 'incoming' && sessionData.state === 'ringing') {
+            lineState = 'ringing';
+        } else if (sessionData.direction === 'outgoing' && sessionData.state === 'establishing') {
+            lineState = 'dialing';
+        }
+        
+        const callerInfo = {
+            remoteNumber: sessionData.remoteNumber,
+            remoteIdentity: sessionData.remoteIdentity || sessionData.remoteNumber,
+            displayName: sessionData.displayName || sessionData.remoteNumber
+        };
+        
+        // Update LineKeyManager
+        this.lineKeyManager.updateLineState(lineNumber, lineState, sessionId, callerInfo);
+        
+        // Update legacy tracking
+        this.activeLines.set(lineNumber, sessionId);
+        
+        console.log(`✅ Session ${sessionId} assigned to Line ${lineNumber} (${lineState})`);
+    }
+    
+    /**
+     * Clear line when session terminates
+     * @param {string} sessionId - Session ID
+     */
+    clearLineForSession(sessionId) {
+        const lineNumber = this.getLineBySession(sessionId);
+        if (lineNumber && this.lineKeyManager) {
+            this.lineKeyManager.clearLine(lineNumber);
+            this.activeLines.delete(lineNumber);
+            console.log(`✅ Line ${lineNumber} cleared (session ${sessionId} terminated)`);
+        }
+    }
+    
+    /**
+     * Update line state when session state changes
+     * @param {string} sessionId - Session ID
+     * @param {string} newState - New session state
+     */
+    updateLineStateForSession(sessionId, newState) {
+        const lineNumber = this.getLineBySession(sessionId);
+        if (!lineNumber || !this.lineKeyManager) {
+            return;
+        }
+        
+        const sessionData = this.sessions.get(sessionId);
+        if (!sessionData) {
+            return;
+        }
+        
+        // Map session state to line state
+        let lineState = 'active';
+        if (sessionData.onHold) {
+            lineState = 'hold';
+        } else if (newState === 'ringing' || newState === 'establishing') {
+            lineState = sessionData.direction === 'outgoing' ? 'dialing' : 'ringing';
+        } else if (newState === 'established') {
+            lineState = 'active';
+        }
+        
+        const callerInfo = {
+            remoteNumber: sessionData.remoteNumber,
+            remoteIdentity: sessionData.remoteIdentity || sessionData.remoteNumber,
+            displayName: sessionData.displayName || sessionData.remoteNumber
+        };
+        
+        this.lineKeyManager.updateLineState(lineNumber, lineState, sessionId, callerInfo);
+    }
+    
+    // ==================== END MULTI-LINE SUPPORT ====================
     
     isValidPhoneNumber(number) {
         if (!number || typeof number !== 'string') return false;

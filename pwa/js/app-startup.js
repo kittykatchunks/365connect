@@ -223,8 +223,14 @@ class ApplicationStartup {
         console.log('📞 Creating SIP Session Manager...');
         App.managers.sip = new SipSessionManager();
         console.log('✅ SIP Session Manager created');
+                console.log('📱 Creating Line Key Manager...');
+        App.managers.lineKeys = new LineKeyManager();
+        console.log('✅ Line Key Manager created');
         
-        console.log('� Creating Busylight Manager...');
+        // Link LineKeyManager to SipSessionManager
+        App.managers.sip.setLineKeyManager(App.managers.lineKeys);
+        console.log('✅ Line Key Manager linked to SIP Manager');
+                console.log('� Creating Busylight Manager...');
         App.managers.busylight = new BusylightManager();
         // Initialize busylight after creation
         try {
@@ -257,6 +263,9 @@ class ApplicationStartup {
         
         // Set up manager event communication
         this.setupManagerEventListeners();
+        
+        // Set up line key UI handlers
+        this.setupLineKeyHandlers();
         
         console.log('✅ All managers created and linked successfully');
     }
@@ -592,6 +601,220 @@ class ApplicationStartup {
         }
         
         console.log('✅ Manager event listeners established');
+    }
+
+    setupLineKeyHandlers() {
+        const { lineKeys, sip } = App.managers;
+        
+        console.log('📱 Setting up line key event handlers...');
+        
+        // Set up click handlers for line keys
+        for (let i = 1; i <= 3; i++) {
+            const lineKeyElement = document.getElementById(`lineKey${i}`);
+            if (lineKeyElement) {
+                lineKeyElement.addEventListener('click', () => {
+                    console.log(`📞 Line ${i} clicked`);
+                    lineKeys.selectLine(i);
+                    this.updateLineKeyUI();
+                });
+            }
+        }
+        
+        // Listen to line state changes from LineKeyManager
+        lineKeys.on('lineStateChanged', (data) => {
+            console.log('📊 Line state changed:', data);
+            this.updateLineKeyUI();
+            this.updateCallDisplayForSelectedLine();
+        });
+        
+        // Listen to line selection changes
+        lineKeys.on('lineChanged', (data) => {
+            console.log('📞 Line selection changed:', data);
+            this.updateLineKeyUI();
+            this.updateCallDisplayForSelectedLine();
+            this.updateCallControls();
+        });
+        
+        // Listen to call waiting tone event from SIP manager
+        if (sip) {
+            sip.on('callWaitingTone', (data) => {
+                console.log('🔔 Call waiting tone triggered for line:', data.lineNumber);
+                this.playCallWaitingTone();
+            });
+        }
+        
+        // Initial UI update
+        this.updateLineKeyUI();
+        
+        console.log('✅ Line key handlers established');
+    }
+    
+    updateLineKeyUI() {
+        const lineKeys = App.managers.lineKeys;
+        if (!lineKeys) return;
+        
+        const selectedLine = lineKeys.getSelectedLine();
+        
+        for (let i = 1; i <= 3; i++) {
+            const lineKeyElement = document.getElementById(`lineKey${i}`);
+            if (!lineKeyElement) continue;
+            
+            const lineInfo = lineKeys.getLineDisplayInfo(i);
+            if (!lineInfo) continue;
+            
+            // Update selected state
+            if (i === selectedLine) {
+                lineKeyElement.classList.add('selected');
+            } else {
+                lineKeyElement.classList.remove('selected');
+            }
+            
+            // Remove all state classes
+            lineKeyElement.classList.remove('state-idle', 'state-ringing', 'state-active', 'state-hold', 'state-dialing');
+            
+            // Add current state class
+            lineKeyElement.classList.add(`state-${lineInfo.state}`);
+            
+            // Update info text
+            const infoElement = lineKeyElement.querySelector('.line-key-info');
+            if (infoElement) {
+                if (lineInfo.state === 'idle') {
+                    infoElement.textContent = lineInfo.statusText;
+                } else if (lineInfo.callerDisplay) {
+                    // Show caller info or duration
+                    if (lineInfo.duration) {
+                        infoElement.textContent = lineInfo.duration;
+                    } else {
+                        infoElement.textContent = lineInfo.callerDisplay.substring(0, 15); // Truncate long names
+                    }
+                } else {
+                    infoElement.textContent = lineInfo.statusText;
+                }
+            }
+        }
+    }
+    
+    updateCallDisplayForSelectedLine() {
+        const lineKeys = App.managers.lineKeys;
+        const sip = App.managers.sip;
+        if (!lineKeys || !sip) return;
+        
+        const selectedLine = lineKeys.getSelectedLine();
+        const sessionData = sip.getSessionByLine(selectedLine);
+        
+        const dialInputRow = document.getElementById('dialInputRow');
+        const callStatusRow = document.getElementById('callStatusRow');
+        
+        if (sessionData && sessionData.state !== 'terminated') {
+            // Show call info, hide dial input
+            if (dialInputRow) dialInputRow.classList.add('hidden');
+            if (callStatusRow) callStatusRow.classList.remove('hidden');
+            
+            // Update call info
+            const callerNumber = document.getElementById('callerNumber');
+            const callerName = document.getElementById('callerName');
+            const callDirection = document.getElementById('callDirection');
+            const callDuration = document.getElementById('callDuration');
+            
+            if (callerNumber) {
+                callerNumber.textContent = sessionData.remoteNumber || sessionData.target || 'Unknown';
+            }
+            
+            if (callerName) {
+                if (sessionData.remoteIdentity && sessionData.remoteIdentity !== sessionData.remoteNumber) {
+                    callerName.textContent = sessionData.remoteIdentity;
+                    callerName.classList.remove('hidden');
+                } else {
+                    callerName.classList.add('hidden');
+                }
+            }
+            
+            if (callDirection) {
+                const directionText = sessionData.direction === 'incoming' ? 'Incoming' : 'Outgoing';
+                callDirection.textContent = directionText;
+            }
+            
+            // Duration will be updated by timer
+            
+        } else {
+            // Show dial input, hide call info
+            if (dialInputRow) dialInputRow.classList.remove('hidden');
+            if (callStatusRow) callStatusRow.classList.add('hidden');
+        }
+    }
+    
+    updateCallControls() {
+        const lineKeys = App.managers.lineKeys;
+        const sip = App.managers.sip;
+        if (!lineKeys || !sip) return;
+        
+        const selectedLine = lineKeys.getSelectedLine();
+        const sessionData = sip.getSessionByLine(selectedLine);
+        
+        const callControls = document.getElementById('callControls');
+        const muteBtn = document.getElementById('muteBtn');
+        const holdBtn = document.getElementById('holdBtn');
+        
+        if (sessionData && sessionData.state === 'established') {
+            // Show call controls
+            if (callControls) callControls.classList.remove('hidden');
+            
+            // Update mute button state
+            if (muteBtn) {
+                if (sessionData.muted) {
+                    muteBtn.classList.add('active');
+                } else {
+                    muteBtn.classList.remove('active');
+                }
+            }
+            
+            // Update hold button state
+            if (holdBtn) {
+                if (sessionData.onHold) {
+                    holdBtn.classList.add('active');
+                    const holdLabel = holdBtn.querySelector('.btn-label');
+                    if (holdLabel) holdLabel.textContent = 'RESUME';
+                } else {
+                    holdBtn.classList.remove('active');
+                    const holdLabel = holdBtn.querySelector('.btn-label');
+                    if (holdLabel) holdLabel.textContent = 'HOLD';
+                }
+            }
+        } else {
+            // Hide call controls
+            if (callControls) callControls.classList.add('hidden');
+        }
+    }
+    
+    playCallWaitingTone() {
+        // Create audio context if needed
+        if (!window.audioContext) {
+            window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const ctx = window.audioContext;
+        const now = ctx.currentTime;
+        
+        // Play two short beeps
+        for (let i = 0; i < 2; i++) {
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.value = 440; // A4 note
+            oscillator.type = 'sine';
+            
+            const startTime = now + (i * 0.5); // 0.5s apart
+            gainNode.gain.setValueAtTime(0.3, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.3);
+        }
+        
+        console.log('🔔 Call waiting tone played');
     }
 
     async requestNotificationPermissions() {

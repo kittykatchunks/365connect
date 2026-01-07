@@ -183,6 +183,13 @@ async function hangupCall(sessionId = null) {
     
     if (App.managers.sip) {
         try {
+            // If no sessionId provided, use selected line's session
+            if (!sessionId && App.managers.lineKeys) {
+                const selectedLine = App.managers.lineKeys.getSelectedLine();
+                const session = App.managers.sip.getSessionByLine(selectedLine);
+                sessionId = session ? session.id : null;
+            }
+            
             await App.managers.sip.hangupCall(sessionId);
         } catch (error) {
             console.error('Failed to hangup call:', error);
@@ -199,6 +206,18 @@ async function toggleMute(sessionId = null) {
     }
     
     try {
+        // If no sessionId provided, use selected line's session
+        if (!sessionId && App.managers.lineKeys) {
+            const selectedLine = App.managers.lineKeys.getSelectedLine();
+            const session = App.managers.sip.getSessionByLine(selectedLine);
+            sessionId = session ? session.id : null;
+        }
+        
+        if (!sessionId) {
+            console.warn('No session to mute');
+            return;
+        }
+        
         await App.managers.sip.toggleMute(sessionId);
         
     } catch (error) {
@@ -216,6 +235,18 @@ async function toggleHold(sessionId = null) {
     }
     
     try {
+        // If no sessionId provided, use selected line's session
+        if (!sessionId && App.managers.lineKeys) {
+            const selectedLine = App.managers.lineKeys.getSelectedLine();
+            const session = App.managers.sip.getSessionByLine(selectedLine);
+            sessionId = session ? session.id : null;
+        }
+        
+        if (!sessionId) {
+            console.warn('No session to hold');
+            return;
+        }
+        
         console.log('📞 Calling SIP manager toggleHold');
         await App.managers.sip.toggleHold(sessionId);
         console.log('✅ Hold toggle successful');

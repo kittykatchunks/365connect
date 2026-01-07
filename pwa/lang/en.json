@@ -273,5 +273,14 @@
     "exportCompanyNumbersToCSV": "Export company numbers to CSV",
     "new_version_available": "A new version is available!",
     "update_now": "Update Now",
-    "later": "Later"
+    "later": "Later",
+    "line_1": "Line 1",
+    "line_2": "Line 2",
+    "line_3": "Line 3",
+    "all_lines_busy": "All lines busy. Please end or hold a call first.",
+    "line_on_hold": "On Hold",
+    "line_idle": "Idle",
+    "line_ringing": "Ringing",
+    "line_active": "Active",
+    "line_dialing": "Dialing"
 }

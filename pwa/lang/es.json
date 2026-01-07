@@ -273,5 +273,14 @@
     "exportCompanyNumbersToCSV": "Exportar números de empresa a CSV",
     "new_version_available": "¡Una nueva versión está disponible!",
     "update_now": "Actualizar Ahora",
-    "later": "Más Tarde"
+    "later": "Más Tarde",
+    "line_1": "Línea 1",
+    "line_2": "Línea 2",
+    "line_3": "Línea 3",
+    "all_lines_busy": "Todas las líneas ocupadas. Por favor termine o ponga en espera una llamada primero.",
+    "line_on_hold": "En Espera",
+    "line_idle": "Inactiva",
+    "line_ringing": "Sonando",
+    "line_active": "Activa",
+    "line_dialing": "Marcando"
 }
