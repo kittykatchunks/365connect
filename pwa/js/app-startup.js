@@ -420,6 +420,28 @@ class ApplicationStartup {
             // Busylight handles call answered via its own event listener
         });
         
+        sip.on('sessionHeld', (data) => {
+            console.log('Session hold state changed:', data);
+            const session = sip.sessions.get(data.sessionId);
+            if (session) {
+                const lineKeys = App.managers.lineKeys;
+                if (lineKeys) {
+                    const lineNumber = lineKeys.getLineBySession(data.sessionId);
+                    if (lineNumber) {
+                        // Update line key state based on hold status
+                        const newState = data.onHold ? 'hold' : 'active';
+                        lineKeys.updateLineState(lineNumber, newState, data.sessionId, {
+                            remoteNumber: session.remoteNumber,
+                            remoteIdentity: session.remoteIdentity,
+                            displayName: session.remoteIdentity || session.remoteNumber
+                        });
+                        this.updateLineKeyUI();
+                        this.updateCallControls();
+                    }
+                }
+            }
+        });
+        
         sip.on('sessionStateChanged', (data) => {
             // Update call controls whenever any session state changes
             this.updateCallControls();

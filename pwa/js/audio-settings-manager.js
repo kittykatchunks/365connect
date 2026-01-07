@@ -384,8 +384,8 @@ class AudioSettingsManager {
         }
     }
 
-    async startRinging() {
-        console.log('🔔 Starting incoming call ringtone...');
+    async startRinging(useAlertTone = false) {
+        console.log('🔔 Starting incoming call ringtone...', useAlertTone ? '(Alert tone)' : '(Normal ringtone)');
 
         try {
             // Don't start if already ringing
@@ -411,10 +411,13 @@ class AudioSettingsManager {
                 this.testAudio = null;
             }
 
+            // Select audio file based on whether this is a second call
+            const audioFile = useAlertTone ? 'Alert.mp3' : this.settings.selectedRingtone;
+            
             // Create ringtone audio element
-            this.ringtoneAudio = new Audio(`media/${this.settings.selectedRingtone}`);
+            this.ringtoneAudio = new Audio(`media/${audioFile}`);
             this.ringtoneAudio.loop = true; // Loop the ringtone
-            this.ringtoneAudio.volume = 0.8; // Slightly louder for incoming calls
+            this.ringtoneAudio.volume = useAlertTone ? 0.5 : 0.8; // Lower volume for alert tone
             this.ringtoneAudio.preload = 'auto'; // Preload for immediate playback
             
             // Set ringer device if supported

@@ -2022,16 +2022,31 @@ function setupSipConnectionMonitoring() {
         console.log('🔔 Incoming call detected, starting ringtone and notification');
         updateCallButton(session);
         
+        // Check if there's already an active call on another line
+        const activeSessions = App.managers.sip.getActiveSessions();
+        const hasExistingCall = activeSessions.some(s => s.id !== session.id && (s.state === 'established' || s.state === 'active'));
+        
         // Start playing ringtone if audio manager is available
         if (App.managers.audio) {
-            App.managers.audio.startRinging();
-            console.log('✅ Ringtone started for incoming call');
+            if (hasExistingCall) {
+                // Use alert tone for second incoming call
+                App.managers.audio.startRinging(true); // true = use alert tone
+                console.log('✅ Alert tone started for second incoming call');
+            } else {
+                // Use normal ringtone for first call
+                App.managers.audio.startRinging();
+                console.log('✅ Ringtone started for incoming call');
+            }
         } else {
             console.warn('⚠️ Audio manager not available, no ringtone will play');
         }
         
-        // Send system notification if enabled
-        sendIncomingCallNotification(session);
+        // Send system notification only if no existing call (don't notify for second call)
+        if (!hasExistingCall) {
+            sendIncomingCallNotification(session);
+        } else {
+            console.log('📵 Skipping notification - already on active call');
+        }
     });
     
     App.managers.sip.on('sessionAnswered', (session) => {
@@ -2315,8 +2330,8 @@ function updateCallButton(sessionData) {
     const incomingSession = App.managers.sip ? App.managers.sip.getIncomingSession() : null;
     
     if (incomingSession && sessionData.direction === 'incoming' && sessionData.state !== 'established') {
-        // Incoming call - show ANSWER button
-        callBtn.classList.add('btn-primary');
+        // Incoming call - show ANSWER button (keep green background)
+        callBtn.classList.add('btn-success');
         if (icon) icon.className = 'fa fa-phone';
         callBtn.innerHTML = '<i class="fa fa-phone"></i> ANSWER';
         callBtn.title = 'Answer Incoming Call';
