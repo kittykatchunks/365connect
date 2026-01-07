@@ -399,7 +399,12 @@ class LineKeyManager {
     }
 }
 
-// Export for use in other modules
+// Export for use in other modules and browser
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LineKeyManager;
+}
+
+// Also expose to global window object for browser usage
+if (typeof window !== 'undefined') {
+    window.LineKeyManager = LineKeyManager;
 }
