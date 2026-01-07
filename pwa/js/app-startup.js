@@ -649,7 +649,7 @@ class ApplicationStartup {
                 } : 'no session');
                 
                 if (previousSession && 
-                    previousSession.state === 'established' && 
+                    (previousSession.state === 'active' || previousSession.state === 'established') && 
                     !previousSession.onHold) {
                     console.log(`🔄 Auto-holding line ${data.previousLine}, session ${previousSession.id}`);
                     sip.holdSession(previousSession.id).then(() => {
@@ -843,6 +843,7 @@ class ApplicationStartup {
                 console.log('🎛️ Dialing/Connecting - showing END button only');
                 break;
                 
+            case 'active':
             case 'established':
                 // Active call (including on hold) - show call controls (MUTE/HOLD/TRANSFER/END)
                 if (dialActions) dialActions.classList.add('hidden');
@@ -869,7 +870,7 @@ class ApplicationStartup {
                         if (holdLabel) holdLabel.textContent = 'HOLD';
                     }
                 }
-                console.log('🎛️ Established - showing MUTE/HOLD/TRANSFER/END buttons', sessionData.onHold ? '(ON HOLD)' : '(ACTIVE)');
+                console.log('🎛️ Active/Established - showing MUTE/HOLD/TRANSFER/END buttons', sessionData.onHold ? '(ON HOLD)' : '(ACTIVE)');
                 break;
                 
             default:
