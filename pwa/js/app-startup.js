@@ -403,6 +403,7 @@ class ApplicationStartup {
         sip.on('sessionCreated', (sessionData) => {
             ui.addCall(sessionData.lineNumber, sessionData);
             if (typeof updateCallControls === 'function') updateCallControls(true);
+            this.updateCallControls(); // Update buttons for the new session
             
             if (sessionData.direction === 'incoming') {
                 if (typeof showIncomingCallNotification === 'function') {
@@ -415,7 +416,14 @@ class ApplicationStartup {
         sip.on('sessionAnswered', (sessionData) => {
             ui.updateCallState(sessionData.lineNumber, 'active');
             if (typeof startCallTimer === 'function') startCallTimer(sessionData);
+            this.updateCallControls(); // Update buttons when call is answered
             // Busylight handles call answered via its own event listener
+        });
+        
+        sip.on('sessionStateChanged', (data) => {
+            // Update call controls whenever any session state changes
+            this.updateCallControls();
+            this.updateLineKeyUI();
         });
         
         sip.on('sessionTerminated', (sessionData) => {
@@ -630,6 +638,20 @@ class ApplicationStartup {
         // Listen to line selection changes
         lineKeys.on('lineChanged', (data) => {
             console.log('📞 Line selection changed:', data);
+            
+            // Auto-hold the previous line if it has an active call
+            if (data.previousLine && sip) {
+                const previousSession = sip.getSessionByLine(data.previousLine);
+                if (previousSession && 
+                    previousSession.state === 'established' && 
+                    !previousSession.onHold) {
+                    console.log(`🔄 Auto-holding line ${data.previousLine}`);
+                    sip.holdSession(previousSession.id).catch(err => {
+                        console.error('Failed to auto-hold previous line:', err);
+                    });
+                }
+            }
+            
             this.updateLineKeyUI();
             this.updateCallDisplayForSelectedLine();
             this.updateCallControls();
@@ -751,38 +773,92 @@ class ApplicationStartup {
         const selectedLine = lineKeys.getSelectedLine();
         const sessionData = sip.getSessionByLine(selectedLine);
         
+        // Get UI elements
         const callControls = document.getElementById('callControls');
+        const dialActions = document.querySelector('.dial-actions');
+        const callBtn = document.getElementById('callBtn');
+        const hangupBtn = document.getElementById('hangupBtn');
         const muteBtn = document.getElementById('muteBtn');
         const holdBtn = document.getElementById('holdBtn');
+        const transferBtn = document.getElementById('transferBtn');
+        const endCallBtn = document.getElementById('endCallBtn');
         
-        if (sessionData && sessionData.state === 'established') {
-            // Show call controls
-            if (callControls) callControls.classList.remove('hidden');
-            
-            // Update mute button state
-            if (muteBtn) {
-                if (sessionData.muted) {
-                    muteBtn.classList.add('active');
-                } else {
-                    muteBtn.classList.remove('active');
+        // Default: hide call controls, show dial actions
+        if (callControls) callControls.classList.add('hidden');
+        if (dialActions) dialActions.classList.remove('hidden');
+        
+        if (!sessionData) {
+            // No session on this line - show CALL/END buttons (idle state)
+            if (callBtn) callBtn.classList.remove('hidden');
+            if (hangupBtn) hangupBtn.classList.remove('hidden');
+            return;
+        }
+        
+        // Handle different call states
+        switch (sessionData.state) {
+            case 'ringing':
+                // Incoming call - show dial actions but change to ANSWER/END
+                if (dialActions) dialActions.classList.remove('hidden');
+                if (callBtn) {
+                    callBtn.classList.remove('hidden');
+                    const callBtnLabel = callBtn.querySelector('span');
+                    if (callBtnLabel) callBtnLabel.textContent = 'ANSWER';
+                    callBtn.onclick = () => {
+                        sip.answerSession(sessionData.id);
+                    };
                 }
-            }
-            
-            // Update hold button state
-            if (holdBtn) {
-                if (sessionData.onHold) {
-                    holdBtn.classList.add('active');
-                    const holdLabel = holdBtn.querySelector('.btn-label');
-                    if (holdLabel) holdLabel.textContent = 'RESUME';
-                } else {
-                    holdBtn.classList.remove('active');
-                    const holdLabel = holdBtn.querySelector('.btn-label');
-                    if (holdLabel) holdLabel.textContent = 'HOLD';
+                if (hangupBtn) hangupBtn.classList.remove('hidden');
+                if (callControls) callControls.classList.add('hidden');
+                break;
+                
+            case 'dialing':
+            case 'connecting':
+                // Outgoing call connecting - show only END button
+                if (dialActions) dialActions.classList.remove('hidden');
+                if (callBtn) callBtn.classList.add('hidden');
+                if (hangupBtn) hangupBtn.classList.remove('hidden');
+                if (callControls) callControls.classList.add('hidden');
+                break;
+                
+            case 'established':
+                // Active call - show call controls (MUTE/HOLD/TRANSFER/END)
+                if (dialActions) dialActions.classList.add('hidden');
+                if (callControls) callControls.classList.remove('hidden');
+                
+                // Update mute button state
+                if (muteBtn) {
+                    if (sessionData.muted) {
+                        muteBtn.classList.add('active');
+                    } else {
+                        muteBtn.classList.remove('active');
+                    }
                 }
-            }
-        } else {
-            // Hide call controls
-            if (callControls) callControls.classList.add('hidden');
+                
+                // Update hold button state
+                if (holdBtn) {
+                    if (sessionData.onHold) {
+                        holdBtn.classList.add('active');
+                        const holdLabel = holdBtn.querySelector('.btn-label');
+                        if (holdLabel) holdLabel.textContent = 'RESUME';
+                    } else {
+                        holdBtn.classList.remove('active');
+                        const holdLabel = holdBtn.querySelector('.btn-label');
+                        if (holdLabel) holdLabel.textContent = 'HOLD';
+                    }
+                }
+                break;
+                
+            default:
+                // Any other state - show CALL/END buttons
+                if (dialActions) dialActions.classList.remove('hidden');
+                if (callBtn) {
+                    callBtn.classList.remove('hidden');
+                    const callBtnLabel = callBtn.querySelector('span');
+                    if (callBtnLabel) callBtnLabel.textContent = 'CALL';
+                    callBtn.onclick = null; // Reset to default handler
+                }
+                if (hangupBtn) hangupBtn.classList.remove('hidden');
+                if (callControls) callControls.classList.add('hidden');
         }
     }
     
