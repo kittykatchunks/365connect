@@ -703,12 +703,8 @@ class ApplicationStartup {
                 if (lineInfo.state === 'idle') {
                     infoElement.textContent = lineInfo.statusText;
                 } else if (lineInfo.callerDisplay) {
-                    // Show caller info or duration
-                    if (lineInfo.duration) {
-                        infoElement.textContent = lineInfo.duration;
-                    } else {
-                        infoElement.textContent = lineInfo.callerDisplay.substring(0, 15); // Truncate long names
-                    }
+                    // Always show caller info (not timer)
+                    infoElement.textContent = lineInfo.callerDisplay.substring(0, 15); // Truncate long names
                 } else {
                     infoElement.textContent = lineInfo.statusText;
                 }
