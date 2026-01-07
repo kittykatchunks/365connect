@@ -732,11 +732,18 @@ class ApplicationStartup {
         const selectedLine = lineKeys.getSelectedLine();
         const sessionData = sip.getSessionByLine(selectedLine);
         
+        console.log('🖥️ updateCallDisplayForSelectedLine - Line:', selectedLine, 'Session:', sessionData ? {
+            id: sessionData.id,
+            state: sessionData.state,
+            onHold: sessionData.onHold
+        } : 'none');
+        
         const dialInputRow = document.getElementById('dialInputRow');
         const callStatusRow = document.getElementById('callStatusRow');
         
         if (sessionData && sessionData.state !== 'terminated') {
             // Show call info, hide dial input
+            console.log('🖥️ Showing call status, hiding dial input');
             if (dialInputRow) dialInputRow.classList.add('hidden');
             if (callStatusRow) callStatusRow.classList.remove('hidden');
             
@@ -768,6 +775,7 @@ class ApplicationStartup {
             
         } else {
             // Show dial input, hide call info
+            console.log('🖥️ Hiding call status, showing dial input');
             if (dialInputRow) dialInputRow.classList.remove('hidden');
             if (callStatusRow) callStatusRow.classList.add('hidden');
         }
