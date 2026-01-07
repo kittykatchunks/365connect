@@ -802,15 +802,21 @@ class ApplicationStartup {
         if (callControls) callControls.classList.add('hidden');
         if (dialActions) dialActions.classList.remove('hidden');
         
+        // Always reset CALL button to default state first
+        if (callBtn) {
+            callBtn.classList.remove('hidden');
+            callBtn.style.display = ''; // Clear any inline styles
+            const callBtnLabel = callBtn.querySelector('span');
+            if (callBtnLabel) callBtnLabel.textContent = 'CALL';
+            callBtn.onclick = null; // Reset to default
+        }
+        if (hangupBtn) {
+            hangupBtn.classList.remove('hidden');
+            hangupBtn.style.display = ''; // Clear any inline styles
+        }
+        
         if (!sessionData) {
-            // No session on this line - show CALL/END buttons (idle state)
-            if (callBtn) {
-                callBtn.classList.remove('hidden');
-                const callBtnLabel = callBtn.querySelector('span');
-                if (callBtnLabel) callBtnLabel.textContent = 'CALL';
-                callBtn.onclick = null; // Reset to default
-            }
-            if (hangupBtn) hangupBtn.classList.remove('hidden');
+            // No session on this line - CALL/END buttons already shown above
             console.log('🎛️ No session - showing CALL/END buttons');
             return;
         }
@@ -860,12 +866,13 @@ class ApplicationStartup {
                 
                 // Update hold button state
                 if (holdBtn) {
+                    holdBtn.classList.remove('active'); // Remove active class entirely
                     if (sessionData.onHold) {
-                        holdBtn.classList.add('active');
+                        holdBtn.classList.add('on-hold');
                         const holdLabel = holdBtn.querySelector('.btn-label');
                         if (holdLabel) holdLabel.textContent = 'RESUME';
                     } else {
-                        holdBtn.classList.remove('active');
+                        holdBtn.classList.remove('on-hold');
                         const holdLabel = holdBtn.querySelector('.btn-label');
                         if (holdLabel) holdLabel.textContent = 'HOLD';
                     }

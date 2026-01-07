@@ -2750,6 +2750,16 @@ body.view-dial .agent-keys-container { display: block; }
     background: var(--danger-color-hover);
 }
 
+/* Hold button on-hold state (use warning color instead of danger) */
+.btn-control.on-hold {
+    background: var(--warning-color);
+    color: var(--text-color-inverse);
+}
+
+.btn-control.on-hold:hover {
+    background: var(--warning-color-hover);
+}
+
 /* Mute button states */
 .btn-control.muted {
     background: var(--danger-color);
