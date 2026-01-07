@@ -794,10 +794,19 @@ class ApplicationStartup {
                 callStatusRow.style.display = ''; // Clear inline styles
                 console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(callStatusRow).display);
                 
-                // Debug: show what content is in the call status row
+                // Clear call info text to prevent stale data
                 const callerNumber = document.getElementById('callerNumber');
                 const callerName = document.getElementById('callerName');
-                console.log('🖥️ Call info still showing - Number:', callerNumber?.textContent, 'Name:', callerName?.textContent);
+                const callDirection = document.getElementById('callDirection');
+                const callDuration = document.getElementById('callDuration');
+                if (callerNumber) callerNumber.textContent = '--';
+                if (callerName) {
+                    callerName.textContent = '--';
+                    callerName.classList.add('hidden');
+                }
+                if (callDirection) callDirection.textContent = '--';
+                if (callDuration) callDuration.textContent = '00:00';
+                console.log('🖥️ Call info cleared');
             }
         }
     }
@@ -839,12 +848,9 @@ class ApplicationStartup {
         if (callBtn) {
             callBtn.classList.remove('hidden');
             callBtn.style.display = ''; // Clear any inline styles
-            const callBtnLabel = callBtn.querySelector('span');
-            console.log('🎛️ callBtnLabel found:', !!callBtnLabel, 'current text:', callBtnLabel?.textContent);
-            if (callBtnLabel) {
-                callBtnLabel.textContent = 'CALL';
-                console.log('🎛️ CALL button text reset to:', callBtnLabel.textContent);
-            }
+            // Use innerHTML to reset button content (preserves icon and bypasses translation system)
+            callBtn.innerHTML = '<i class="fa fa-phone"></i> <span data-translate="call">CALL</span>';
+            console.log('🎛️ CALL button reset to CALL');
             callBtn.onclick = null; // Reset to default
         } else {
             console.log('❌ callBtn element not found!');
