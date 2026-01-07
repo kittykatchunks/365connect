@@ -655,6 +655,23 @@ class ApplicationStartup {
             console.log('📊 Line state changed:', data);
             this.updateLineKeyUI();
             this.updateCallDisplayForSelectedLine();
+            
+            // If a line becomes idle, check if all lines are idle and auto-select line 1
+            if (data.currentState === 'idle') {
+                const allLinesIdle = [1, 2, 3].every(lineNum => {
+                    const lineState = lineKeys.getLineState(lineNum);
+                    return lineState === 'idle';
+                });
+                
+                if (allLinesIdle) {
+                    const currentlySelected = lineKeys.getSelectedLine();
+                    if (currentlySelected !== 1) {
+                        console.log('📞 All lines idle, auto-selecting line 1');
+                        lineKeys.selectLine(1);
+                        this.updateLineKeyUI();
+                    }
+                }
+            }
         });
         
         // Listen to line selection changes
