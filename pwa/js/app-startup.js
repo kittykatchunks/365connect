@@ -852,6 +852,8 @@ class ApplicationStartup {
         if (callBtn) {
             callBtn.classList.remove('hidden');
             callBtn.style.display = ''; // Clear any inline styles
+            // Reset button class to btn-success (green)
+            callBtn.className = 'btn-success call-button uppercase';
             // Use innerHTML to reset button content (preserves icon and bypasses translation system)
             callBtn.innerHTML = '<i class="fa fa-phone"></i> <span data-translate="call">CALL</span>';
             console.log('🎛️ CALL button reset to CALL');
