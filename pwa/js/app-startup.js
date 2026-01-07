@@ -808,7 +808,10 @@ class ApplicationStartup {
         
         // Default: hide call controls, show dial actions
         if (callControls) callControls.classList.add('hidden');
-        if (dialActions) dialActions.classList.remove('hidden');
+        if (dialActions) {
+            dialActions.classList.remove('hidden');
+            dialActions.style.display = ''; // Clear any inline styles from phone.js showCallControls()
+        }
         
         // Always reset CALL button to default state first
         if (callBtn) {
