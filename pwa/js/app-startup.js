@@ -744,8 +744,16 @@ class ApplicationStartup {
         if (sessionData && sessionData.state !== 'terminated') {
             // Show call info, hide dial input
             console.log('🖥️ Showing call status, hiding dial input');
-            if (dialInputRow) dialInputRow.classList.add('hidden');
-            if (callStatusRow) callStatusRow.classList.remove('hidden');
+            if (dialInputRow) {
+                dialInputRow.classList.add('hidden');
+                dialInputRow.style.display = ''; // Clear inline styles
+                console.log('🖥️ dialInputRow hidden:', dialInputRow.classList.contains('hidden'));
+            }
+            if (callStatusRow) {
+                callStatusRow.classList.remove('hidden');
+                callStatusRow.style.display = ''; // Clear inline styles
+                console.log('🖥️ callStatusRow visible:', !callStatusRow.classList.contains('hidden'));
+            }
             
             // Update call info
             const callerNumber = document.getElementById('callerNumber');
@@ -776,8 +784,16 @@ class ApplicationStartup {
         } else {
             // Show dial input, hide call info
             console.log('🖥️ Hiding call status, showing dial input');
-            if (dialInputRow) dialInputRow.classList.remove('hidden');
-            if (callStatusRow) callStatusRow.classList.add('hidden');
+            if (dialInputRow) {
+                dialInputRow.classList.remove('hidden');
+                dialInputRow.style.display = ''; // Clear inline styles
+                console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'));
+            }
+            if (callStatusRow) {
+                callStatusRow.classList.add('hidden');
+                callStatusRow.style.display = ''; // Clear inline styles
+                console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'));
+            }
         }
     }
     
@@ -818,7 +834,10 @@ class ApplicationStartup {
             callBtn.classList.remove('hidden');
             callBtn.style.display = ''; // Clear any inline styles
             const callBtnLabel = callBtn.querySelector('span');
-            if (callBtnLabel) callBtnLabel.textContent = 'CALL';
+            if (callBtnLabel) {
+                callBtnLabel.textContent = 'CALL';
+                console.log('🎛️ CALL button text reset to:', callBtnLabel.textContent);
+            }
             callBtn.onclick = null; // Reset to default
         }
         if (hangupBtn) {
