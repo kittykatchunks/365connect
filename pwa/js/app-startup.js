@@ -787,12 +787,16 @@ class ApplicationStartup {
             if (dialInputRow) {
                 dialInputRow.classList.remove('hidden');
                 dialInputRow.style.display = ''; // Clear inline styles
-                console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(dialInputRow).display);
+                const dialStyle = window.getComputedStyle(dialInputRow);
+                console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'), 'computed style:', dialStyle.display);
+                console.log('🖥️ dialInputRow position:', dialStyle.position, 'z-index:', dialStyle.zIndex, 'visibility:', dialStyle.visibility);
             }
             if (callStatusRow) {
                 callStatusRow.classList.add('hidden');
                 callStatusRow.style.display = ''; // Clear inline styles
-                console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(callStatusRow).display);
+                const callStyle = window.getComputedStyle(callStatusRow);
+                console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'), 'computed style:', callStyle.display);
+                console.log('🖥️ callStatusRow position:', callStyle.position, 'z-index:', callStyle.zIndex, 'visibility:', callStyle.visibility);
                 
                 // Clear call info text to prevent stale data
                 const callerNumber = document.getElementById('callerNumber');
@@ -851,6 +855,8 @@ class ApplicationStartup {
             // Use innerHTML to reset button content (preserves icon and bypasses translation system)
             callBtn.innerHTML = '<i class="fa fa-phone"></i> <span data-translate="call">CALL</span>';
             console.log('🎛️ CALL button reset to CALL');
+            console.log('🎛️ Button classes:', callBtn.className);
+            console.log('🎛️ Button computed background:', window.getComputedStyle(callBtn).backgroundColor);
             callBtn.onclick = null; // Reset to default
         } else {
             console.log('❌ callBtn element not found!');

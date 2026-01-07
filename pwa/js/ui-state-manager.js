@@ -473,6 +473,26 @@ class UIStateManager extends EventTarget {
     }
     
     updateCallStatus(callData) {
+        // Check if multi-line mode is active
+        const lineKeys = App.managers?.lineKeys;
+        if (lineKeys) {
+            const selectedLine = lineKeys.getSelectedLine();
+            const sessionData = App.managers?.sip?.getSessionByLine(selectedLine);
+            
+            // Only update if this call belongs to the currently selected line
+            // or if there's no session on the selected line
+            if (callData && callData.lineNumber && callData.lineNumber !== selectedLine) {
+                console.log('🎛️ Ignoring updateCallStatus - call on line', callData.lineNumber, 'but line', selectedLine, 'is selected');
+                return; // Don't update display for non-selected lines
+            }
+            
+            // If the selected line has no session, let app-startup.js handle the display
+            if (!sessionData && callData && Object.keys(callData).length > 0) {
+                console.log('🎛️ Ignoring updateCallStatus - selected line has no session');
+                return;
+            }
+        }
+        
         const callStatusRow = document.getElementById('callStatusRow');
         const dialInputRow = document.getElementById('dialInputRow');
         const callerNumber = document.getElementById('callerNumber');
