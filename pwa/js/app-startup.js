@@ -822,21 +822,35 @@ class ApplicationStartup {
         }
         
         // Handle different call states
+        console.log('🔍 Session state:', sessionData.state, 'for line', selectedLine);
+        
         switch (sessionData.state) {
             case 'ringing':
                 // Incoming call - show dial actions but change to ANSWER/END
-                if (dialActions) dialActions.classList.remove('hidden');
+                console.log('🎛️ Processing RINGING state - should show ANSWER/END');
+                if (dialActions) {
+                    dialActions.classList.remove('hidden');
+                    dialActions.style.display = ''; // Clear inline styles
+                }
                 if (callBtn) {
                     callBtn.classList.remove('hidden');
+                    callBtn.style.display = ''; // Force visible
                     const callBtnLabel = callBtn.querySelector('span');
-                    if (callBtnLabel) callBtnLabel.textContent = 'ANSWER';
+                    if (callBtnLabel) {
+                        callBtnLabel.textContent = 'ANSWER';
+                        console.log('✅ Set button text to ANSWER');
+                    }
                     callBtn.onclick = () => {
+                        console.log('📞 ANSWER button clicked for session:', sessionData.id);
                         sip.answerSession(sessionData.id);
                     };
                 }
-                if (hangupBtn) hangupBtn.classList.remove('hidden');
+                if (hangupBtn) {
+                    hangupBtn.classList.remove('hidden');
+                    hangupBtn.style.display = ''; // Force visible
+                }
                 if (callControls) callControls.classList.add('hidden');
-                console.log('🎛️ Ringing - showing ANSWER/END buttons');
+                console.log('🎛️ Ringing - ANSWER/END buttons should now be visible');
                 break;
                 
             case 'dialing':
