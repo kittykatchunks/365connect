@@ -747,12 +747,12 @@ class ApplicationStartup {
             if (dialInputRow) {
                 dialInputRow.classList.add('hidden');
                 dialInputRow.style.display = ''; // Clear inline styles
-                console.log('🖥️ dialInputRow hidden:', dialInputRow.classList.contains('hidden'));
+                console.log('🖥️ dialInputRow hidden:', dialInputRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(dialInputRow).display);
             }
             if (callStatusRow) {
                 callStatusRow.classList.remove('hidden');
                 callStatusRow.style.display = ''; // Clear inline styles
-                console.log('🖥️ callStatusRow visible:', !callStatusRow.classList.contains('hidden'));
+                console.log('🖥️ callStatusRow visible:', !callStatusRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(callStatusRow).display);
             }
             
             // Update call info
@@ -787,12 +787,17 @@ class ApplicationStartup {
             if (dialInputRow) {
                 dialInputRow.classList.remove('hidden');
                 dialInputRow.style.display = ''; // Clear inline styles
-                console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'));
+                console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(dialInputRow).display);
             }
             if (callStatusRow) {
                 callStatusRow.classList.add('hidden');
                 callStatusRow.style.display = ''; // Clear inline styles
-                console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'));
+                console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(callStatusRow).display);
+                
+                // Debug: show what content is in the call status row
+                const callerNumber = document.getElementById('callerNumber');
+                const callerName = document.getElementById('callerName');
+                console.log('🖥️ Call info still showing - Number:', callerNumber?.textContent, 'Name:', callerName?.textContent);
             }
         }
     }
@@ -830,15 +835,19 @@ class ApplicationStartup {
         }
         
         // Always reset CALL button to default state first
+        console.log('🎛️ Resetting buttons - callBtn:', !!callBtn, 'hangupBtn:', !!hangupBtn);
         if (callBtn) {
             callBtn.classList.remove('hidden');
             callBtn.style.display = ''; // Clear any inline styles
             const callBtnLabel = callBtn.querySelector('span');
+            console.log('🎛️ callBtnLabel found:', !!callBtnLabel, 'current text:', callBtnLabel?.textContent);
             if (callBtnLabel) {
                 callBtnLabel.textContent = 'CALL';
                 console.log('🎛️ CALL button text reset to:', callBtnLabel.textContent);
             }
             callBtn.onclick = null; // Reset to default
+        } else {
+            console.log('❌ callBtn element not found!');
         }
         if (hangupBtn) {
             hangupBtn.classList.remove('hidden');
