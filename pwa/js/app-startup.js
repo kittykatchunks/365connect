@@ -492,7 +492,7 @@ class ApplicationStartup {
         api.on('error', (errorData) => {
             console.error('Phantom API error:', errorData);
             if (typeof showErrorNotification === 'function') {
-                showErrorNotification('API Error', errorData.message || 'API request failed');
+                showErrorNotification(t('apiError', 'API Error'), errorData.message || t('apiRequestFailed', 'API request failed'));
             }
         });
         
@@ -500,7 +500,7 @@ class ApplicationStartup {
             if (result.success) {
                 console.log('Phantom API connection test passed');
                 if (typeof showSuccessNotification === 'function') {
-                    showSuccessNotification('API Connected', 'Phantom API connection successful');
+                    showSuccessNotification(t('apiConnected', 'API Connected'), t('phantomApiConnectionSuccessful', 'Phantom API connection successful'));
                 }
             } else {
                 console.warn('Phantom API connection test failed:', result.error);
@@ -1064,7 +1064,7 @@ class ApplicationStartup {
                         App.managers.ui.addNotification({
                             type: 'success',
                             title: t('notifications_enabled', 'Notifications Enabled'),
-                            message: 'You will now receive desktop notifications for incoming calls',
+                            message: t('desktopNotificationsForIncomingCalls', 'You will now receive desktop notifications for incoming calls'),
                             duration: 5000
                         });
                     }
@@ -1076,7 +1076,7 @@ class ApplicationStartup {
                         App.managers.ui.addNotification({
                             type: 'warning',
                             title: t('notifications_disabled', 'Notifications Disabled'),
-                            message: 'Desktop notifications for incoming calls are disabled. You can enable them in browser settings.',
+                            message: t('desktopNotificationsDisabledEnableInBrowser', 'Desktop notifications for incoming calls are disabled. You can enable them in browser settings.'),
                             duration: 8000
                         });
                     }
@@ -1162,10 +1162,10 @@ class ApplicationStartup {
                     App.managers.ui.addNotification({
                         type: 'info',
                         title: t('install_app', 'Install App'),
-                        message: 'Install Autocab365 PWA for better performance',
+                        message: t('installPwaForBetterPerformance', 'Install Autocab365 PWA for better performance'),
                         duration: 10000,
                         actions: [{
-                            text: 'Install',
+                            text: t('install', 'Install'),
                             class: 'btn-primary',
                             action: () => {
                                 e.prompt();
@@ -1186,7 +1186,7 @@ class ApplicationStartup {
                 App.managers.ui.addNotification({
                     type: 'success',
                     title: t('back_online', 'Back Online'),
-                    message: 'Internet connection restored',
+                    message: t('internetConnectionRestored', 'Internet connection restored'),
                     duration: 3000
                 });
             }
@@ -1198,7 +1198,7 @@ class ApplicationStartup {
                 App.managers.ui.addNotification({
                     type: 'warning',
                     title: t('offline_mode', 'Offline Mode'),
-                    message: 'No internet connection. Some features may be limited.',
+                    message: t('noInternetSomeFeaturesLimited', 'No internet connection. Some features may be limited.'),
                     duration: 5000
                 });
             }
@@ -1211,7 +1211,7 @@ class ApplicationStartup {
                 App.managers.ui.addNotification({
                     type: 'error',
                     title: t('application_error', 'Application Error'),
-                    message: 'An unexpected error occurred. Check console for details.',
+                    message: t('unexpectedErrorCheckConsole', 'An unexpected error occurred. Check console for details.'),
                     duration: 7000
                 });
             }
@@ -1232,7 +1232,7 @@ class ApplicationStartup {
                 App.managers.ui.addNotification({
                     type: 'error',
                     title: t('promise_error', 'Promise Error'),
-                    message: 'An unexpected error occurred in a background operation.',
+                    message: t('unexpectedErrorInBackgroundOperation', 'An unexpected error occurred in a background operation.'),
                     duration: 7000
                 });
             }
@@ -1248,21 +1248,21 @@ class ApplicationStartup {
         errorDiv.innerHTML = `
             <div class="error-content">
                 <div class="error-icon">⚠️</div>
-                <h1>Initialization Failed</h1>
-                <p>The Autocab365 PWA failed to start properly.</p>
+                <h1>${t('initializationFailed', 'Initialization Failed')}</h1>
+                <p>${t('pwaFailedToStart', 'The Autocab365 PWA failed to start properly.')}</p>
                 <div class="error-details">
-                    <strong>Error:</strong> ${error.message}
+                    <strong>${t('error', 'Error')}:</strong> ${error.message}
                 </div>
                 <div class="error-actions">
                     <button onclick="location.reload()" class="btn-primary">
-                        🔄 Reload Application
+                        🔄 ${t('reloadApplication', 'Reload Application')}
                     </button>
                     <button onclick="this.showDiagnostics()" class="btn-secondary">
-                        🔍 Show Diagnostics
+                        🔍 ${t('showDiagnostics', 'Show Diagnostics')}
                     </button>
                 </div>
                 <p class="error-help">
-                    If this problem persists, please check the browser console (F12) for more details.
+                    ${t('ifProblemPersistsCheckConsole', 'If this problem persists, please check the browser console (F12) for more details.')}
                 </p>
             </div>
         `;

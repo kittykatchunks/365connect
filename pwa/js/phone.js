@@ -127,7 +127,7 @@ async function makeCall() {
             // First click: populate input with last dialed number
             dialInput.value = lastNumber;
             console.log('📞 Redial: Populated input with last dialed number:', lastNumber);
-            showInfo(`Press CALL again to redial ${lastNumber}`);
+            showInfo(t('pressCallToRedial', 'Press CALL again to redial {number}').replace('{number}', lastNumber));
             return;
         } else {
             showError(t('pleaseEnterNumberToCall', 'Please enter a number to call'));
@@ -154,7 +154,7 @@ async function makeCall() {
         
     } catch (error) {
         console.error('Failed to make outgoing call:', error);
-        showError('Failed to make call: ' + error.message);
+        showError(t('failedToMakeCall', 'Failed to make call: {error}').replace('{error}', error.message));
     }
 }
 
@@ -222,7 +222,7 @@ async function toggleMute(sessionId = null) {
         
     } catch (error) {
         console.error('Failed to toggle mute:', error);
-        showError('Failed to toggle mute: ' + error.message);
+        showError(t('failedToToggleMute', 'Failed to toggle mute: {error}').replace('{error}', error.message));
     }
 }
 
@@ -253,7 +253,7 @@ async function toggleHold(sessionId = null) {
         
     } catch (error) {
         console.error('❌ Failed to toggle hold:', error);
-        showError('Failed to toggle hold: ' + error.message);
+        showError(t('failedToToggleHold', 'Failed to toggle hold: {error}').replace('{error}', error.message));
     }
 }
 
@@ -385,7 +385,7 @@ async function hideTransferModal(transferCompleted = false) {
 async function performBlindTransfer() {
     const transferNumber = document.getElementById('transferNumber').value.trim();
     if (!transferNumber) {
-        showError('Please enter a number to transfer to');
+        showError(t('pleaseEnterTransferNumber', 'Please enter a number to transfer to'));
         return;
     }
     
@@ -408,7 +408,7 @@ async function performBlindTransfer() {
         }
 
         // Show immediate feedback
-        showInfo(`Initiating blind transfer to ${transferNumber}...`);
+        showInfo(t('initiatingBlindTransfer', 'Initiating blind transfer to {number}...').replace('{number}', transferNumber));
 
         console.log('🎯 About to call blindTransfer method...');
         // Start the blind transfer - the response handlers will manage completion
@@ -424,7 +424,7 @@ async function performBlindTransfer() {
 async function performAttendedTransfer() {
     const transferNumber = document.getElementById('transferNumber').value.trim();
     if (!transferNumber) {
-        showError('Please enter a number to transfer to');
+        showError(t('pleaseEnterTransferNumber', 'Please enter a number to transfer to'));
         return;
     }
     
@@ -498,11 +498,11 @@ async function completeAttendedTransfer() {
         await hideTransferModal(true); // Transfer completed successfully
         window.currentTransferSession = null;
         
-        showSuccess('Transfer completed successfully');
+        showSuccess(t('transferCompletedSuccessfully', 'Transfer completed successfully'));
         
     } catch (error) {
         console.error('Failed to complete attended transfer:', error);
-        showError('Transfer completion failed: ' + error.message);
+        showError(t('transferCompletionFailed', 'Transfer completion failed: {error}').replace('{error}', error.message));
     }
 }
 
@@ -527,11 +527,11 @@ function cancelAttendedTransfer() {
     App.managers.sip.cancelAttendedTransfer(originalSession.id)
         .then(() => {
             console.log('✅ Attended transfer cancelled successfully');
-            showSuccess('Transfer cancelled');
+            showSuccess(t('transferCancelled', 'Transfer cancelled'));
         })
         .catch(error => {
             console.error('❌ Failed to cancel attended transfer:', error);
-            showError('Failed to cancel transfer: ' + error.message);
+            showError(t('failedToCancelTransfer', 'Failed to cancel transfer: {error}').replace('{error}', error.message));
         })
         .finally(() => {
             // Return to transfer modal for another attempt
@@ -597,10 +597,10 @@ async function resumeOriginalCallAndCloseModal(originalSessionId, reason) {
                 console.log('📞 Resuming original call from hold');
                 await App.managers.sip.toggleHold(originalSessionId);
                 console.log('✅ Original call resumed successfully');
-                showSuccess('Consultation call ended. Original call resumed.');
+                showSuccess(t('consultationCallEndedResumed', 'Consultation call ended. Original call resumed.'));
             } else {
                 console.log('ℹ️ Original call was not on hold');
-                showInfo('Consultation call ended. You can now continue with the original call.');
+                showInfo(t('consultationCallEndedResumed', 'Consultation call ended. Original call resumed.'));
             }
         } else {
             console.warn('⚠️ Original session not found, cannot resume');

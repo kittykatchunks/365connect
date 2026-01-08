@@ -146,7 +146,7 @@ class CompanyNumbersManager {
         this.renderCompanyNumbers();
         this.updateCliSelector();
         
-        this.showSuccess(`Company "${company.name}" updated successfully`);
+        this.showSuccess(t('companyUpdatedSuccessfully', 'Company "{name}" updated successfully').replace('{name}', company.name));
         console.log('📞 CompanyNumbersManager: Company updated:', company);
         
         return company;
@@ -165,7 +165,7 @@ class CompanyNumbersManager {
         this.renderCompanyNumbers();
         this.updateCliSelector();
         
-        this.showSuccess(`Company "${company.name}" deleted successfully`);
+        this.showSuccess(t('companyDeletedSuccessfully', 'Company "{name}" deleted successfully').replace('{name}', company.name));
         console.log('📞 CompanyNumbersManager: Company deleted:', companyId);
     }
 
@@ -176,7 +176,7 @@ class CompanyNumbersManager {
         this.renderCompanyNumbers();
         this.updateCliSelector();
         
-        this.showSuccess('All company numbers deleted');
+        this.showSuccess(t('allCompanyNumbersDeleted', 'All company numbers deleted'));
         console.log('📞 CompanyNumbersManager: All companies deleted');
     }
 
@@ -229,7 +229,7 @@ class CompanyNumbersManager {
             }
         } catch (error) {
             console.error('📞 CompanyNumbersManager: Save failed:', error);
-            this.showError('Failed to save company numbers');
+            this.showError(t('failedToSaveCompanyNumbers', 'Failed to save company numbers'));
         }
     }
 
@@ -255,7 +255,7 @@ class CompanyNumbersManager {
     exportCompanyNumbers() {
         try {
             if (this.companyNumbers.length === 0) {
-                this.showWarning('No company numbers to export');
+                this.showWarning(t('noCompanyNumbersToExport', 'No company numbers to export'));
                 return;
             }
 
@@ -272,12 +272,12 @@ class CompanyNumbersManager {
                 link.click();
                 document.body.removeChild(link);
                 
-                this.showSuccess('Company numbers exported successfully');
+                this.showSuccess(t('companyNumbersExportedSuccessfully', 'Company numbers exported successfully'));
                 console.log('📞 CompanyNumbersManager: Company numbers exported to CSV');
             }
         } catch (error) {
             console.error('📞 CompanyNumbersManager: Export failed:', error);
-            this.showError('Failed to export company numbers: ' + error.message);
+            this.showError(t('failedToExportCompanyNumbers', 'Failed to export company numbers: {error}').replace('{error}', error.message));
         }
     }
 
@@ -325,7 +325,7 @@ class CompanyNumbersManager {
             const importedCompanies = this.parseCSV(text);
             
             if (importedCompanies.length === 0) {
-                this.showError('No valid company numbers found in CSV file');
+                this.showError(t('noValidCompanyNumbersInCSV', 'No valid company numbers found in CSV file'));
                 return;
             }
 
@@ -366,7 +366,7 @@ class CompanyNumbersManager {
                 console.warn('📞 CompanyNumbersManager: Import errors:', errors);
             }
 
-            this.showSuccess(`Import completed: ${successCount} companies added, ${errorCount} skipped`);
+            this.showSuccess(t('companyImportCompleted', 'Import completed: {success} companies added, {errors} skipped').replace('{success}', successCount).replace('{errors}', errorCount));
             console.log('📞 CompanyNumbersManager: CSV import completed:', { successCount, errorCount });
 
         } catch (error) {
@@ -742,7 +742,7 @@ class CompanyNumbersManager {
 
         const company = this.getCompanyById(selectedId);
         if (!company) {
-            this.showError('Selected company not found');
+            this.showError(t('selectedCompanyNotFound', 'Selected company not found'));
             return;
         }
 
@@ -773,14 +773,14 @@ class CompanyNumbersManager {
                 // Show just the phone number
                 this.updateCliDisplay();
                 
-                this.showSuccess(`CLI changed to ${company.name}`);
+                this.showSuccess(t('cliChangedTo', 'CLI changed to {name}').replace('{name}', company.name));
             } else {
                 throw new Error('SIP manager not available');
             }
             
         } catch (error) {
             console.error('📞 CompanyNumbersManager: CLI change failed:', error);
-            this.showError('Failed to change CLI: ' + error.message);
+            this.showError(t('failedToChangeCLI', 'Failed to change CLI: {error}').replace('{error}', error.message));
         }
     }
 

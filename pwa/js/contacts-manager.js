@@ -324,12 +324,12 @@ class ContactsManager {
                 link.click();
                 document.body.removeChild(link);
                 
-                this.showSuccess('Contacts exported successfully');
+                this.showSuccess(t('contactsExportedSuccessfully', 'Contacts exported successfully'));
                 console.log('📞 ContactsManager: Contacts exported to CSV');
             }
         } catch (error) {
             console.error('📞 ContactsManager: Export failed:', error);
-            this.showError('Failed to export contacts: ' + error.message);
+            this.showError(t('failedToExportContacts', 'Failed to export contacts: {error}').replace('{error}', error.message));
         }
     }
 
@@ -375,7 +375,7 @@ class ContactsManager {
             const importedContacts = this.parseCSV(text);
             
             if (importedContacts.length === 0) {
-                this.showError('No valid contacts found in CSV file');
+                this.showError(t('noValidContactsInCSV', 'No valid contacts found in CSV file'));
                 return;
             }
 
@@ -402,7 +402,7 @@ class ContactsManager {
             this.saveContacts();
             this.renderContacts();
 
-            this.showSuccess(`Import completed: ${successCount} contacts added, ${errorCount} skipped`);
+            this.showSuccess(t('contactsImportCompleted', 'Import completed: {success} contacts added, {errors} skipped').replace('{success}', successCount).replace('{errors}', errorCount));
             console.log('📞 ContactsManager: CSV import completed:', { successCount, errorCount });
 
         } catch (error) {
@@ -694,10 +694,10 @@ class ContactsManager {
             if (isEdit) {
                 const contactId = document.getElementById('contactId').value;
                 this.updateContact(contactId, contactData);
-                this.showSuccess('Contact updated successfully');
+                this.showSuccess(t('contactUpdatedSuccessfully', 'Contact updated successfully'));
             } else {
                 this.addContact(contactData);
-                this.showSuccess('Contact added successfully');
+                this.showSuccess(t('contactAddedSuccessfully', 'Contact added successfully'));
             }
             
             this.hideContactModal();
@@ -713,7 +713,7 @@ class ContactsManager {
     dialContact(contactId) {
         const contact = this.getContact(contactId);
         if (!contact || !contact.phoneNumber) {
-            this.showError('No phone number available for this contact');
+            this.showError(t('noPhoneNumberForContact', 'No phone number available for this contact'));
             return;
         }
 
@@ -728,7 +728,7 @@ class ContactsManager {
             dialInput.value = contact.phoneNumber;
             dialInput.focus();
             console.log('📞 ContactsManager: Number ready to dial:', contact.phoneNumber);
-            this.showSuccess(`Ready to call ${this.getFullDisplayName(contact)}`);
+            this.showSuccess(t('readyToCall', 'Ready to call {name}').replace('{name}', this.getFullDisplayName(contact)));
         }
     }
 
@@ -745,7 +745,7 @@ class ContactsManager {
         if (confirmed) {
             try {
                 this.deleteContact(contactId);
-                this.showSuccess('Contact deleted successfully');
+                this.showSuccess(t('contactDeletedSuccessfully', 'Contact deleted successfully'));
             } catch (error) {
                 this.showError('Failed to delete contact: ' + error.message);
             }

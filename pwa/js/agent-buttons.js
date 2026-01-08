@@ -692,20 +692,20 @@ class AgentButtonsManager {
         const passcode = passcodeInput.value.trim();
         
         if (!agentNumber) {
-            this.showNotification('error', 'Please enter an agent number');
+            this.showNotification('error', t('agentEnterAgentNumber', 'Please enter an agent number'));
             agentNumberInput.focus();
             return;
         }
         
         if (!/^\d+$/.test(agentNumber)) {
-            this.showNotification('error', 'Agent number must contain only digits');
+            this.showNotification('error', t('agentNumberOnlyDigits', 'Agent number must contain only digits'));
             agentNumberInput.focus();
             return;
         }
         
         // Validate passcode if entered (must be numeric)
         if (passcode && !/^\d+$/.test(passcode)) {
-            this.showNotification('error', 'Passcode must contain only digits');
+            this.showNotification('error', t('agentPasscodeOnlyDigits', 'Passcode must contain only digits'));
             passcodeInput.focus();
             return;
         }
@@ -759,7 +759,7 @@ class AgentButtonsManager {
             
         } catch (error) {
             console.error('Login failed:', error);
-            this.showNotification('error', 'Login failed: ' + error.message);
+            this.showNotification('error', t('agentLoginFailed', 'Login failed: {error}').replace('{error}', error.message));
             this.updateButtonState('login', 'idle');
             this.setAllButtonsEnabled(true);
         }
@@ -785,7 +785,7 @@ class AgentButtonsManager {
             
         } catch (error) {
             console.error('Logout failed:', error);
-            this.showNotification('error', 'Logout failed: ' + error.message);
+            this.showNotification('error', t('agentLogoutFailed', 'Logout failed: {error}').replace('{error}', error.message));
             this.updateButtonState('login', 'connected');
             this.setAllButtonsEnabled(true);
         }
@@ -793,7 +793,7 @@ class AgentButtonsManager {
     
     async handleQueue() {
         if (!this.isLoggedIn) {
-            this.showNotification('warning', 'Please login first');
+            this.showNotification('warning', t('agentPleaseLoginFirst', 'Please login first'));
             return;
         }
         
@@ -815,14 +815,14 @@ class AgentButtonsManager {
             
         } catch (error) {
             console.error('Queue operation failed:', error);
-            this.showNotification('error', 'Queue operation failed: ' + error.message);
+            this.showNotification('error', t('agentQueueOperationFailed', 'Queue operation failed: {error}').replace('{error}', error.message));
             this.updateButtonState('queue', 'idle');
         }
     }
     
     async handlePause() {
         if (!this.isLoggedIn) {
-            this.showNotification('warning', 'Please login first');
+            this.showNotification('warning', t('agentPleaseLoginFirst', 'Please login first'));
             return;
         }
         
@@ -911,7 +911,7 @@ class AgentButtonsManager {
             
         } catch (error) {
             console.error('Error fetching pause reasons:', error);
-            this.showNotification('error', 'Failed to fetch pause reasons, using fallback method');
+            this.showNotification('error', t('agentFailedFetchPauseReasons', 'Failed to fetch pause reasons, using fallback method'));
             // Fall back to standard DTMF pause
             await this.performPause();
         }
@@ -949,14 +949,14 @@ class AgentButtonsManager {
                 this.saveAgentState();
                 this.setAllButtonsEnabled(true);
                 this.updateButtonEnabledStates();
-                this.showNotification('success', 'Agent paused');
+                this.showNotification('success', t('agentPaused', 'Agent paused'));
             } else {
                 throw new Error(result.error || 'API call failed');
             }
             
         } catch (error) {
             console.error('Pause via API failed:', error);
-            this.showNotification('error', 'Pause failed: ' + error.message);
+            this.showNotification('error', t('agentPauseFailed', 'Pause failed: {error}').replace('{error}', error.message));
             this.updateButtonState('pause', 'idle');
             this.setAllButtonsEnabled(true);
         }
@@ -994,14 +994,14 @@ class AgentButtonsManager {
                 this.saveAgentState();
                 this.setAllButtonsEnabled(true);
                 this.updateButtonEnabledStates();
-                this.showNotification('success', 'Agent unpaused');
+                this.showNotification('success', t('agentUnpaused', 'Agent unpaused'));
             } else {
                 throw new Error(result.error || 'API call failed');
             }
             
         } catch (error) {
             console.error('Unpause via API failed:', error);
-            this.showNotification('error', 'Unpause failed: ' + error.message);
+            this.showNotification('error', t('agentUnpauseFailed', 'Unpause failed: {error}').replace('{error}', error.message));
             this.updateButtonState('pause', 'active');
             this.setAllButtonsEnabled(true);
         }
@@ -1028,7 +1028,7 @@ class AgentButtonsManager {
             
         } catch (error) {
             console.error('Pause failed:', error);
-            this.showNotification('error', 'Pause failed: ' + error.message);
+            this.showNotification('error', t('agentPauseFailed', 'Pause failed: {error}').replace('{error}', error.message));
             this.updateButtonState('pause', 'idle');
             this.setAllButtonsEnabled(true);
         }
@@ -1054,7 +1054,7 @@ class AgentButtonsManager {
             
         } catch (error) {
             console.error('Unpause failed:', error);
-            this.showNotification('error', 'Unpause failed: ' + error.message);
+            this.showNotification('error', t('agentUnpauseFailed', 'Unpause failed: {error}').replace('{error}', error.message));
             this.updateButtonState('pause', 'active');
             this.setAllButtonsEnabled(true);
         }
@@ -1110,7 +1110,7 @@ class AgentButtonsManager {
                 this.updateButtonEnabledStates();
                 this.updateAgentStatusDisplay('logged-in', this.currentAgentNumber, this.currentAgentName);
                 this.saveAgentState();
-                this.showNotification('success', 'Successfully logged in as agent ' + this.currentAgentNumber);
+                this.showNotification('success', t('agentSuccessfullyLoggedIn', 'Successfully logged in as agent {number}').replace('{number}', this.currentAgentNumber));
                 
                 // Notify busylight of agent login
                 if (window.App?.managers?.busylight) {
@@ -1134,7 +1134,7 @@ class AgentButtonsManager {
                 this.setAllButtonsEnabled(true);
                 // After logout, disable Queue and Pause
                 this.updateButtonEnabledStates();
-                this.showNotification('success', 'Successfully logged out');
+                this.showNotification('success', t('agentSuccessfullyLoggedOut', 'Successfully logged out'));
                 
                 // Unsubscribe from all BLF buttons on agent logout
                 if (window.BLFManager) {
@@ -1156,7 +1156,7 @@ class AgentButtonsManager {
                 
             case 'queue':
                 this.updateButtonState('queue', 'idle');
-                this.showNotification('info', 'Queue operation completed');
+                this.showNotification('info', t('agentQueueOperationCompleted', 'Queue operation completed'));
                 break;
                 
             case 'pause':
@@ -1167,7 +1167,7 @@ class AgentButtonsManager {
                 this.setAllButtonsEnabled(true);
                 this.updateButtonEnabledStates();
                 this.hideDtmfInputModal();
-                this.showNotification('success', 'Agent paused');
+                this.showNotification('success', t('agentPaused', 'Agent paused'));
                 break;
                 
             case 'unpause':
@@ -1177,7 +1177,7 @@ class AgentButtonsManager {
                 this.saveAgentState();
                 this.setAllButtonsEnabled(true);
                 this.updateButtonEnabledStates();
-                this.showNotification('success', 'Agent unpaused');
+                this.showNotification('success', t('agentUnpaused', 'Agent unpaused'));
                 break;
         }
     }
@@ -1206,7 +1206,7 @@ class AgentButtonsManager {
         const dtmfCode = input.value.trim();
         
         if (!dtmfCode) {
-            this.showNotification('warning', 'Please enter a pause code');
+            this.showNotification('warning', t('agentEnterPauseCode', 'Please enter a pause code'));
             input.focus();
             return;
         }
@@ -1226,7 +1226,7 @@ class AgentButtonsManager {
             // Don't show error if session was terminated (common for *63 calls)
             // The DTMF was likely sent successfully before the call ended
             if (!error.message || !error.message.includes('Session not found')) {
-                this.showNotification('error', 'Failed to send pause code');
+                this.showNotification('error', t('agentFailedSendPauseCode', 'Failed to send pause code'));
             } else {
                 console.log('Session ended during DTMF sequence - this is normal for feature codes');
                 this.hideDtmfInputModal();
@@ -1322,11 +1322,11 @@ class AgentButtonsManager {
                 pauseLabel: label
             });
             
-            this.showNotification('info', `Pausing with reason: ${label}`);
+            this.showNotification('info', t('agentPausingWithReason', 'Pausing with reason: {reason}').replace('{reason}', label));
             
         } catch (error) {
             console.error('Failed to select pause reason:', error);
-            this.showNotification('error', 'Failed to pause with reason: ' + error.message);
+            this.showNotification('error', t('agentFailedPauseWithReason', 'Failed to pause with reason: {error}').replace('{error}', error.message));
             this.updateButtonState('pause', 'idle');
             this.setAllButtonsEnabled(true);
         }
