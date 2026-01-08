@@ -737,6 +737,35 @@ class SipSessionManager {
                     notification.accept();
                     // Handle the BLF notification
                     this.handleBLFNotification(extension, buddy, notification);
+                },
+                onAccept: (response) => {
+                    console.log(`✅ BLF subscription accepted for extension ${extension}`, response.message.statusCode);
+                },
+                onReject: (response) => {
+                    const statusCode = response.message.statusCode;
+                    console.warn(`❌ BLF subscription rejected for extension ${extension}: ${statusCode} ${response.message.reasonPhrase}`);
+                    
+                    // Handle 404 NOT FOUND - extension is offline or doesn't exist
+                    if (statusCode === 404) {
+                        console.log(`📱 Extension ${extension} not found (offline), updating BLF state to inactive`);
+                        
+                        // Update the BLF state to indicate extension is offline
+                        const blfData = this.blfSubscriptions.get(extension);
+                        if (blfData) {
+                            blfData.state = 'offline';
+                            
+                            // Emit BLF state change to update UI
+                            this.emit('blfStateChanged', {
+                                extension,
+                                buddy,
+                                state: 'offline',
+                                remoteTarget: null
+                            });
+                        }
+                    }
+                    
+                    // Emit subscription failed event
+                    this.emit('blfSubscriptionFailed', { extension, buddy, statusCode, response });
                 }
             };
             

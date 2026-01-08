@@ -249,6 +249,10 @@ class BLFButtonManager {
                         // Initial subscription state - show as inactive until we get real state
                         button.classList.add('blf-inactive');
                         break;
+                    case 'offline':
+                        // Extension not found (404 response) - show as inactive/offline
+                        button.classList.add('blf-inactive');
+                        break;
                     case 'available':
                         // Explicitly available
                         button.classList.add('blf-available');
@@ -317,6 +321,11 @@ class BLFButtonManager {
                         // Initial subscription state - show as inactive until we get real state
                         button.classList.add('blf-inactive');
                         console.log(`📱 Button ${buttonData.number} set to INACTIVE (unknown state)`);
+                        break;
+                    case 'offline':
+                        // Extension not found (404 response) - show as inactive/offline
+                        button.classList.add('blf-inactive');
+                        console.log(`📱 Button ${buttonData.number} set to INACTIVE (offline/not found)`);
                         break;
                     case 'available':
                         // Explicitly available
