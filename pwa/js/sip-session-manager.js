@@ -739,30 +739,49 @@ class SipSessionManager {
                     this.handleBLFNotification(extension, buddy, notification);
                 },
                 onAccept: (response) => {
-                    console.log(`✅ BLF subscription accepted for extension ${extension}`, response.message.statusCode);
+                    console.log(`✅ BLF subscription ACCEPT response for extension ${extension}:`, response.message.statusCode);
+                    
+                    // Update state to indicate subscription is active
+                    const blfData = this.blfSubscriptions.get(extension);
+                    if (blfData) {
+                        blfData.subscriptionAccepted = true;
+                    }
                 },
                 onReject: (response) => {
                     const statusCode = response.message.statusCode;
-                    console.warn(`❌ BLF subscription rejected for extension ${extension}: ${statusCode} ${response.message.reasonPhrase}`);
+                    const reasonPhrase = response.message.reasonPhrase;
+                    console.warn(`❌ BLF subscription REJECT response for extension ${extension}: ${statusCode} ${reasonPhrase}`);
                     
-                    // Handle 404 NOT FOUND - extension is offline or doesn't exist
-                    if (statusCode === 404) {
-                        console.log(`📱 Extension ${extension} not found (offline), updating BLF state to inactive`);
-                        
-                        // Update the BLF state to indicate extension is offline
-                        const blfData = this.blfSubscriptions.get(extension);
-                        if (blfData) {
-                            blfData.state = 'offline';
-                            
-                            // Emit BLF state change to update UI
-                            this.emit('blfStateChanged', {
-                                extension,
-                                buddy,
-                                state: 'offline',
-                                remoteTarget: null
-                            });
-                        }
+                    // Get or create BLF data entry
+                    let blfData = this.blfSubscriptions.get(extension);
+                    if (!blfData) {
+                        console.warn(`⚠️ No BLF data found for ${extension}, creating entry for rejection handling`);
+                        blfData = {
+                            subscription,
+                            extension,
+                            buddy,
+                            state: 'offline',
+                            subscriptionRejected: true,
+                            rejectionCode: statusCode
+                        };
+                        this.blfSubscriptions.set(extension, blfData);
+                    } else {
+                        // Update existing entry
+                        blfData.state = 'offline';
+                        blfData.subscriptionRejected = true;
+                        blfData.rejectionCode = statusCode;
                     }
+                    
+                    // Emit BLF state change to update UI (404 or any rejection means offline)
+                    console.log(`📱 Emitting blfStateChanged for ${extension} with state: offline`);
+                    this.emit('blfStateChanged', {
+                        extension,
+                        buddy,
+                        state: 'offline',
+                        remoteTarget: null,
+                        statusCode,
+                        reasonPhrase
+                    });
                     
                     // Emit subscription failed event
                     this.emit('blfSubscriptionFailed', { extension, buddy, statusCode, response });
@@ -771,19 +790,43 @@ class SipSessionManager {
             
             // Monitor subscription state changes
             subscription.stateChange.addListener((newState) => {
+                console.log(`📡 BLF subscription state changed for extension ${extension}: ${newState}`);
+                
                 switch (newState) {
+                    case SIP.SubscriptionState.Initial:
+                        console.log(`📡 BLF subscription initializing for extension ${extension}`);
+                        break;
+                    case SIP.SubscriptionState.NotifyWait:
+                        console.log(`📡 BLF subscription waiting for NOTIFY for extension ${extension}`);
+                        break;
                     case SIP.SubscriptionState.Subscribed:
-                        //console.log(`BLF subscription accepted for extension ${extension}`);
+                        console.log(`✅ BLF subscription accepted for extension ${extension}`);
                         this.emit('blfSubscribed', { extension, buddy });
                         break;
                     case SIP.SubscriptionState.Terminated:
-                        //console.log(`BLF subscription terminated for extension ${extension}`);
+                        console.log(`📡 BLF subscription terminated for extension ${extension}`);
+                        
+                        // Check if subscription was rejected (never got to Subscribed state)
+                        // In this case, the extension is likely offline or doesn't exist
+                        const blfData = this.blfSubscriptions.get(extension);
+                        if (blfData && blfData.state === 'unknown') {
+                            console.warn(`❌ BLF subscription for ${extension} terminated before getting initial state - likely 404 NOT FOUND`);
+                            
+                            // Set state to offline and emit state change
+                            blfData.state = 'offline';
+                            this.emit('blfStateChanged', {
+                                extension,
+                                buddy,
+                                state: 'offline',
+                                remoteTarget: null
+                            });
+                        }
+                        
                         this.blfSubscriptions.delete(extension);
                         this.emit('blfUnsubscribed', { extension, buddy });
                         break;
                     default:
-                        // Log state changes for debugging
-                        console.log(`BLF subscription state changed for extension ${extension}: ${newState}`);
+                        console.log(`📡 BLF subscription unknown state for extension ${extension}: ${newState}`);
                         break;
                 }
             });
