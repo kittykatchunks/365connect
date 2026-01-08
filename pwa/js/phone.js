@@ -1879,19 +1879,21 @@ function setupSipConnectionMonitoring() {
         switch (current) {
             case 'connecting':
             case 'registering':
+                const t1 = window.languageManager?.t || ((key, def) => def);
                 App.managers.ui.addNotification({
                     type: 'info',
-                    title: 'Connecting',
-                    message: 'Registering with SIP server...',
+                    title: t1('connecting', 'Connecting'),
+                    message: t1('registering_with_sip_server', 'Registering with SIP server...'),
                     duration: 2000
                 });
                 break;
                 
             case 'registered':
+                const t2 = window.languageManager?.t || ((key, def) => def);
                 App.managers.ui.addNotification({
                     type: 'success',
-                    title: 'Connected',
-                    message: 'Successfully registered with SIP server',
+                    title: t2('connected', 'Connected'),
+                    message: t2('successfully_registered_with_sip', 'Successfully registered with SIP server'),
                     duration: 2000
                 });
                 break;
@@ -1899,10 +1901,11 @@ function setupSipConnectionMonitoring() {
             case 'unregistered':
                 // Only show notification if we were previously registered
                 if (previous === 'registered') {
+                    const t3 = window.languageManager?.t || ((key, def) => def);
                     App.managers.ui.addNotification({
                         type: 'info',
-                        title: 'Disconnected',
-                        message: 'Unregistered from SIP server',
+                        title: t3('disconnected', 'Disconnected'),
+                        message: t3('unregistered_from_sip_server', 'Unregistered from SIP server'),
                         duration: 2000
                     });
                 }
@@ -1968,14 +1971,15 @@ function setupSipConnectionMonitoring() {
     App.managers.sip.on('registrationFailed', (error) => {
         console.error('SIP registration failed:', error);
         
+        const t = window.languageManager?.t || ((key, def) => def);
         App.managers.ui.addNotification({
             type: 'error',
-            title: 'Registration Failed',
-            message: `Registration error: ${error.message || error}`,
+            title: t('registration_failed', 'Registration Failed'),
+            message: t('registration_error', 'Registration error: {error}').replace('{error}', error.message || error),
             duration: 7000,
             actions: [
                 {
-                    text: 'Retry',
+                    text: t('retry', 'Retry'),
                     class: 'btn-primary',
                     action: () => {
                         console.log('Retrying registration...');
@@ -1983,7 +1987,7 @@ function setupSipConnectionMonitoring() {
                     }
                 },
                 {
-                    text: 'Settings',
+                    text: t('settings', 'Settings'),
                     class: 'btn-secondary',
                     action: () => {
                         App.managers.ui.setCurrentView('settings');
