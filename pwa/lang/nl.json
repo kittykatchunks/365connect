@@ -183,6 +183,8 @@
     "iceGatheringTimeout": "ICE Verzamel Timeout (ms)",
     "iceGatheringTimeoutHelp": "WebRTC ICE kandidaat verzameling timeout in milliseconden (100-10000ms)",
     "saveSettings": "Instellingen Opslaan",
+    "settings_saved": "Instellingen opgeslagen",
+    "settings_saved_message": "Uw instellingen zijn succesvol opgeslagen",
     "resetToDefaults": "Standaardwaarden Herstellen",
     "loadingAutocab365Connect": "Autocab365 Connect Laden",
     "initializing": "Initialiseren...",

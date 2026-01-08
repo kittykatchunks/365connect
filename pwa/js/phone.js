@@ -1622,7 +1622,13 @@ async function saveSettings() {
         }
         
         // Force show settings saved notification even if onscreen notifications are disabled
-        showNotification('Settings saved', 'Your settings have been saved successfully', 'success', 2000, true);
+        showNotification(
+            t('settings_saved', 'Settings saved'), 
+            t('settings_saved_message', 'Your settings have been saved successfully'), 
+            'success', 
+            2000, 
+            true
+        );
         console.log('Settings saved successfully');
         
         // Update device name display

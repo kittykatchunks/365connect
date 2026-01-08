@@ -183,6 +183,8 @@
     "iceGatheringTimeout": "Délai de Collecte ICE (ms)",
     "iceGatheringTimeoutHelp": "Délai de collecte des candidats ICE de WebRTC en millisecondes (100-10000ms)",
     "saveSettings": "Enregistrer les Paramètres",
+    "settings_saved": "Paramètres enregistrés",
+    "settings_saved_message": "Vos paramètres ont été enregistrés avec succès",
     "resetToDefaults": "Réinitialiser aux Valeurs par Défaut",
     "loadingAutocab365Connect": "Chargement d'Autocab365 Connect",
     "initializing": "Initialisation...",
