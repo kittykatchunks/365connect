@@ -451,16 +451,20 @@ class BLFButtonManager {
                 const currentSession = window.App.managers.sip.getCurrentSession();
                 if (currentSession) {
                     await window.App.managers.sip.blindTransfer(currentSession.id, number);
-                    this.showToast(`Call transferred to ${displayName || number}`, 'success');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('call_transferred_to', 'Call transferred to') + ` ${displayName || number}`, 'success');
                 } else {
-                    this.showToast('No active call to transfer', 'warning');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('no_active_call_to_transfer', 'No active call to transfer'), 'warning');
                 }
             } else {
-                this.showToast('Transfer not available', 'error');
+                const t = window.languageManager?.t || ((key, def) => def);
+                this.showToast(t('transfer_not_available', 'Transfer not available'), 'error');
             }
         } catch (error) {
             console.error('❌ Blind transfer failed:', error);
-            this.showToast('Transfer failed', 'error');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('transfer_failed', 'Transfer failed'), 'error');
         }
     }
 
@@ -536,16 +540,20 @@ class BLFButtonManager {
                     // Start attended transfer (this will create a new session)
                     window.currentTransferSession = await window.App.managers.sip.attendedTransfer(currentSession.id, number);
                     
-                    this.showToast(`Calling ${displayName || number} for transfer`, 'info');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('calling_for_transfer', 'Calling {name} for transfer').replace('{name}', displayName || number), 'info');
                 } else {
-                    this.showToast('No active call to transfer', 'warning');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('no_active_call_to_transfer', 'No active call to transfer'), 'warning');
                 }
             } else {
-                this.showToast('Transfer not available', 'error');
+                const t = window.languageManager?.t || ((key, def) => def);
+                this.showToast(t('transfer_not_available', 'Transfer not available'), 'error');
             }
         } catch (error) {
             console.error('❌ Attended transfer failed:', error);
-            this.showToast('Transfer failed', 'error');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('transfer_failed', 'Transfer failed'), 'error');
             
             // On error, return to normal transfer modal
             if (typeof returnToTransferModal === 'function') {
@@ -767,7 +775,8 @@ class BLFButtonManager {
             this.saveBlfButtons();
             this.renderBlfButtons();
             
-            this.showToast('BLF button saved successfully', 'success');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('blf_button_saved', 'BLF button saved successfully'), 'success');
             this.hideBlfModal();
         }
     }
@@ -781,7 +790,8 @@ class BLFButtonManager {
             this.saveBlfButtons();
             this.renderBlfButtons();
             
-            this.showToast('BLF button cleared', 'info');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('blf_button_cleared', 'BLF button cleared'), 'info');
             this.hideBlfModal();
         }
     }
