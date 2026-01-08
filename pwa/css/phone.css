@@ -4749,7 +4749,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Idle state */
 .line-key.state-idle {
-    background: #6c757d;
+    background: #6c757d !important;
 }
 
 .line-key.state-idle .line-key-label,
@@ -4759,7 +4759,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Ringing state */
 .line-key.state-ringing {
-    background: #dc3545;
+    background: #dc3545 !important;
     animation: flash-red-bg 0.5s infinite;
 }
 
@@ -4771,7 +4771,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Active state */
 .line-key.state-active {
-    background: #28a745;
+    background: #28a745 !important;
     box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
 }
 
@@ -4783,7 +4783,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Hold state */
 .line-key.state-hold {
-    background: #ffc107;
+    background: #ffc107 !important;
     animation: flash-yellow-bg 1.5s infinite;
 }
 
@@ -4795,7 +4795,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Dialing state */
 .line-key.state-dialing {
-    background: #17a2b8;
+    background: #17a2b8 !important;
     animation: pulse-blue-bg 1s infinite;
 }
 
