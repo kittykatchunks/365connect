@@ -1319,6 +1319,12 @@ function loadSettingsIntoForm() {
     // Setup real-time BLF checkbox listener
     setupBlfCheckboxListener();
     
+    // Setup real-time Busylight checkbox listener
+    setupBusylightCheckboxListener();
+    
+    // Load busylight ring sound and volume settings
+    loadBusylightSettings();
+    
     // Load tab visibility settings
     if (typeof window.loadTabVisibilitySettings === 'function') {
         window.loadTabVisibilitySettings();
@@ -1349,6 +1355,32 @@ function setupBlfCheckboxListener() {
     }
 }
 
+function setupBusylightCheckboxListener() {
+    const busylightCheckbox = document.getElementById('BusylightEnabled');
+    if (busylightCheckbox) {
+        // Remove any existing listener to avoid duplicates
+        busylightCheckbox.removeEventListener('change', handleBusylightCheckboxChange);
+        
+        // Add the change listener
+        busylightCheckbox.addEventListener('change', handleBusylightCheckboxChange);
+        
+        // Set initial visibility state
+        handleBusylightCheckboxChange({ target: busylightCheckbox });
+        
+        console.log('✅ Busylight checkbox listener setup complete');
+    }
+}
+
+function handleBusylightCheckboxChange(event) {
+    const isChecked = event.target.checked;
+    const busylightOptions = document.getElementById('busylight-options');
+    
+    if (busylightOptions) {
+        busylightOptions.style.display = isChecked ? 'block' : 'none';
+        console.log('🔄 Busylight options visibility:', isChecked ? 'shown' : 'hidden');
+    }
+}
+
 function handleBlfCheckboxChange(event) {
     const isChecked = event.target.checked;
     console.log('🔄 BLF checkbox changed:', isChecked ? 'enabled' : 'disabled');
@@ -1369,6 +1401,26 @@ function handleBlfCheckboxChange(event) {
     }
     
     console.log('✅ BLF buttons updated in real-time');
+}
+
+function loadBusylightSettings() {
+    if (!window.localDB) return;
+    
+    // Load ring sound setting
+    const ringSound = window.localDB.getItem('BusylightRingSound', '3');
+    const ringSoundSelect = document.getElementById('BusylightRingSound');
+    if (ringSoundSelect) {
+        ringSoundSelect.value = ringSound;
+        console.log('Loaded busylight ring sound:', ringSound);
+    }
+    
+    // Load ring volume setting
+    const ringVolume = window.localDB.getItem('BusylightRingVolume', '50');
+    const ringVolumeSelect = document.getElementById('BusylightRingVolume');
+    if (ringVolumeSelect) {
+        ringVolumeSelect.value = ringVolume;
+        console.log('Loaded busylight ring volume:', ringVolume);
+    }
 }
 
 function loadSettingsFromDatabase() {
@@ -1526,6 +1578,17 @@ async function saveSettings() {
         if (App.managers.busylight) {
             const busylightEnabled = document.getElementById('BusylightEnabled');
             const isEnabled = busylightEnabled ? busylightEnabled.checked : false;
+            
+            // Update ring sound and volume
+            const ringSound = document.getElementById('BusylightRingSound');
+            const ringVolume = document.getElementById('BusylightRingVolume');
+            
+            if (ringSound && ringVolume) {
+                const soundValue = parseInt(ringSound.value, 10);
+                const volumeValue = parseInt(ringVolume.value, 10);
+                App.managers.busylight.updateAlertSettings(soundValue, volumeValue);
+                console.log('✅ Busylight alert settings updated:', { sound: soundValue, volume: volumeValue });
+            }
             
             // Use setEnabled method to properly initialize or disconnect
             App.managers.busylight.setEnabled(isEnabled).catch(error => {

@@ -178,6 +178,8 @@
     "ringtone6": "Ringtone 6",
     "alert": "Alert",
     "enableBusylight": "Enable Busylight",
+    "ringSound": "Ring Sound",
+    "ringVolume": "Ring Volume",
     "sipMessages": "SIP Messages",
     "sipMessagesHelp": "Enable detailed SIP message logging in browser console",
     "verboseLogging": "Verbose Logging",
