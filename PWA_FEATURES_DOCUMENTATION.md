@@ -422,7 +422,7 @@ Autocab365Connect is a fully-featured browser-based WebRTC SIP softphone Progres
 - **Auto-Population**: WebSocket URL auto-generated from PhantomID
 
 ### Interface Settings
-- **Language Selection**: Choose from 12+ supported languages
+- **Language Selection**: Choose from 8 fully supported languages (en, es, es-419, fr, fr-CA, nl, pt, pt-BR)
 - **Theme Mode**: Auto/Light/Dark theme selection
 - **BLF Enable/Disable**: Toggle BLF button system
 - **Tab Visibility Controls**:
@@ -503,36 +503,74 @@ Autocab365Connect is a fully-featured browser-based WebRTC SIP softphone Progres
 ## Internationalization (i18n)
 
 ### Supported Languages
-1. **English** (en) - Default
-2. **Spanish** (es) - Español
-3. **Spanish (Latin America)** (es-mx) - Español Latin America
-4. **French Canadian** (fr-ca) French Canadian
-5. **French** (fr) - Français
+The application supports 8 languages with full translation coverage:
+
+1. **English** (en) - Default / English
+2. **Spanish** (es) - Español (Spain)
+3. **Spanish (Latin America)** (es-419) - Español (Latinoamérica)
+4. **French** (fr) - Français (France)
+5. **French Canadian** (fr-CA) - Français (Canada)
 6. **Dutch** (nl) - Nederlands
-7. **Portuguese** (pt) - Português
-8. **Portuguese (Brazil)** (pt-br) - Português
+7. **Portuguese** (pt) - Português (Portugal)
+8. **Portuguese (Brazil)** (pt-BR) - Português (Brasil)
 
 ### Translation System
-- **i18next Framework**: Industry-standard i18n library
-- **HTTP Backend**: Load translations from JSON files
-- **Language Detection**: Auto-detect browser/system language
-- **Fallback Language**: English fallback for missing translations
-- **Dynamic Loading**: Load language packs on demand
-- **Language Persistence**: Remember user language preference
+- **i18next Framework**: Modern i18n framework (v23+) with full TypeScript support
+- **HTTP Backend**: Asynchronous JSON translation file loading via i18next-http-backend
+- **Browser Language Detection**: Auto-detect browser/system language via i18next-browser-languagedetector
+- **Fallback Language**: English (en) fallback for missing translations
+- **Dynamic Module Loading**: Translations loaded via Webpack dynamic imports
+- **Language Persistence**: User language preference saved to localStorage
+- **Translation Keys**: 363 comprehensive translation keys covering all UI elements
+- **Translation Files**: Located in `/pwa/lang/` directory as JSON files
 
 ### Translation Features
-- **Dynamic Translation**: Translate UI without page reload
-- **Translation Keys**: 200+ translation keys
-- **Placeholder Translation**: Translate input placeholders
-- **Title Translation**: Translate tooltips and titles
-- **Context Interpolation**: Variable substitution in translations
-- **HTML Translation**: Support for HTML in translations
+- **Data Attribute Translation**: Three translation methods:
+  - `data-translate`: Translate element text content
+  - `data-translate-title`: Translate tooltip/title attributes
+  - `data-translate-placeholder`: Translate input placeholder text
+- **Dynamic Translation**: Instant UI translation without page reload
+- **Smart Content Handling**: Preserves child elements (icons, buttons) when translating parent elements
+- **Context Interpolation**: Variable substitution in translations using `{{variable}}` syntax
+- **Parameter Replacement**: Legacy `{parameter}` format support for compatibility
+- **Missing Key Detection**: Debug logging for untranslated keys
 
 ### Language Manager
-- **Global t() Function**: Translation helper function available globally
-- **Auto Apply**: Automatically apply translations to DOM elements
-- **Language Change Events**: React to language changes
-- **WebHook Integration**: Trigger webhooks on language load
+- **Global Translation Functions**: 
+  - `window.t(key, defaultValue, params)` - Short form translation function
+  - `window.translate(key, defaultValue, params)` - Full translation function
+  - Both available globally after initialization
+- **Automatic DOM Translation**: 
+  - Auto-apply translations to all data-translate elements on language change
+  - Translation statistics logging (success/failure counts)
+- **Language Change Events**: 
+  - Custom `languageChanged` event dispatched on language switch
+  - Includes language code and full translation bundle in event detail
+- **WebHook Integration**: 
+  - `onLanguagePackLoaded()` webhook triggered after language loads
+  - Passes complete translation bundle to webhook
+- **Internationalization Helpers**:
+  - `formatNumber(value, options)` - Number formatting with current locale
+  - `formatDate(date, options)` - Date formatting with current locale
+  - `formatCurrency(value, currency, options)` - Currency formatting
+- **Dynamic Translation Addition**: Add custom translations via `addTranslations()` method
+- **Translation Inspector**: `getAllTranslations()` method for debugging loaded languages
+- **Language Validation**: `isLanguageLoaded()` to check if language bundle is available
+
+### Language Selection
+- **Settings Integration**: Language selector in Settings → Interface tab
+- **Dropdown Menu**: Native select with language names in their own scripts
+- **Instant Apply**: Language changes apply immediately without save/reload
+- **Browser Detection**: On first load, detects browser language and auto-selects if supported
+- **Persistent Choice**: Selected language saved to localStorage as `AppLanguage` key
+
+### Developer Features
+- **Webpack Integration**: i18next packages bundled via Webpack for optimal loading
+- **Module Export**: LanguageManager class exported for module usage
+- **Direct Instance Access**: `window.languageManager` provides access to manager instance
+- **i18next Instance**: `languageManager.getInstance()` exposes full i18next API
+- **Initialization Status**: `isInitialized` flag to check manager readiness
+- **Graceful Fallback**: Pre-initialization fallback functions prevent errors during app startup
 
 ---
 

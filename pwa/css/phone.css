@@ -4692,7 +4692,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .line-key {
     flex: 1;
-    padding: 12px 8px;
+    padding: 8px 6px;
     border: none;
     border-right: 1px solid var(--border-color);
     background: var(--secondary-bg);
@@ -4703,8 +4703,9 @@ body.view-dial .agent-keys-container { display: block; }
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    min-height: 65px;
+    justify-content: center;
+    gap: 2px;
+    min-height: 45px;
 }
 
 .line-key:last-child {
@@ -4724,13 +4725,9 @@ body.view-dial .agent-keys-container { display: block; }
     transform: scale(0.98);
 }
 
-/* Line key indicator (colored dot) */
+/* Line key indicator (hidden - using background colors instead) */
 .line-key-indicator {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--text-muted);
-    transition: all 0.3s ease;
+    display: none;
 }
 
 /* Line key label */
@@ -4752,116 +4749,92 @@ body.view-dial .agent-keys-container { display: block; }
 /* ========== LINE KEY STATES ========== */
 
 /* Idle state */
-.line-key.state-idle .line-key-indicator {
+.line-key.state-idle {
     background: #6c757d;
 }
 
+.line-key.state-idle .line-key-label,
 .line-key.state-idle .line-key-info {
-    color: var(--text-muted);
+    color: #ffffff;
 }
 
 /* Ringing state */
 .line-key.state-ringing {
-    border-color: #dc3545;
-    animation: flash-red-border 0.5s infinite;
-}
-
-.line-key.state-ringing .line-key-indicator {
     background: #dc3545;
-    animation: flash-red 0.5s infinite;
+    animation: flash-red-bg 0.5s infinite;
 }
 
+.line-key.state-ringing .line-key-label,
 .line-key.state-ringing .line-key-info {
-    color: #dc3545;
+    color: #ffffff;
     font-weight: 600;
 }
 
 /* Active state */
 .line-key.state-active {
-    border-color: #28a745;
-}
-
-.line-key.state-active .line-key-indicator {
     background: #28a745;
     box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
 }
 
+.line-key.state-active .line-key-label,
 .line-key.state-active .line-key-info {
-    color: #28a745;
+    color: #ffffff;
     font-weight: 600;
 }
 
 /* Hold state */
 .line-key.state-hold {
-    border-color: #ffc107;
-    animation: flash-yellow-border 1.5s infinite;
-}
-
-.line-key.state-hold .line-key-indicator {
     background: #ffc107;
-    animation: flash-yellow 1.5s infinite;
+    animation: flash-yellow-bg 1.5s infinite;
 }
 
+.line-key.state-hold .line-key-label,
 .line-key.state-hold .line-key-info {
-    color: #ffc107;
+    color: #000000;
     font-weight: 600;
 }
 
 /* Dialing state */
 .line-key.state-dialing {
-    border-color: #17a2b8;
-}
-
-.line-key.state-dialing .line-key-indicator {
     background: #17a2b8;
-    animation: pulse-blue 1s infinite;
+    animation: pulse-blue-bg 1s infinite;
 }
 
+.line-key.state-dialing .line-key-label,
 .line-key.state-dialing .line-key-info {
-    color: #17a2b8;
+    color: #ffffff;
     font-weight: 600;
 }
 
 /* ========== ANIMATIONS ========== */
 
-@keyframes flash-red {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-
-@keyframes flash-red-border {
+@keyframes flash-red-bg {
     0%, 100% { 
-        border-color: #dc3545;
-        box-shadow: 0 0 0 rgba(220, 53, 69, 0);
+        background: #dc3545;
     }
     50% { 
-        border-color: #ff6b6b;
+        background: #ff6b6b;
         box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
     }
 }
 
-@keyframes flash-yellow {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-@keyframes flash-yellow-border {
+@keyframes flash-yellow-bg {
     0%, 100% { 
-        border-color: #ffc107;
+        background: #ffc107;
     }
     50% { 
-        border-color: #ffd54f;
+        background: #ffd54f;
     }
 }
 
-@keyframes pulse-blue {
+@keyframes pulse-blue-bg {
     0%, 100% { 
+        background: #17a2b8;
         transform: scale(1);
-        opacity: 1;
     }
     50% { 
-        transform: scale(1.15);
-        opacity: 0.7;
+        background: #33c1d6;
+        transform: scale(1.02);
     }
 }
 
@@ -4873,13 +4846,8 @@ body.view-dial .agent-keys-container { display: block; }
     }
     
     .line-key {
-        padding: 10px 6px;
-        min-height: 55px;
-    }
-    
-    .line-key-indicator {
-        width: 14px;
-        height: 14px;
+        padding: 6px 4px;
+        min-height: 40px;
     }
     
     .line-key-label {
@@ -4893,13 +4861,8 @@ body.view-dial .agent-keys-container { display: block; }
 
 @media (max-width: 480px) {
     .line-key {
-        padding: 8px 4px;
-        min-height: 50px;
-    }
-    
-    .line-key-indicator {
-        width: 12px;
-        height: 12px;
+        padding: 5px 3px;
+        min-height: 38px;
     }
     
     .line-key-label {
