@@ -19,6 +19,7 @@ module.exports = (env, argv) => {
         './pwa/js/browser-cache.js',
         './pwa/js/tab-alert-manager.js',
         './pwa/js/sip-session-manager.js',
+        './pwa/js/line-key-manager.js',
         './pwa/js/ui-state-manager.js',
         './pwa/js/busylight-manager.js',
         './pwa/js/audio-settings-manager.js',
