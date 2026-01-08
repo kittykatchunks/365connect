@@ -1,4 +1,4 @@
-const cacheID = "autocab365connect_v6"; // Increment version - v6: Added line-key-manager.js and tab-alert-manager.js to cache
+const cacheID = "autocab365connect_v7"; // Increment version - v7: Force refresh for multi-line implementation fixes
 
 // Listen for skip waiting message from client
 self.addEventListener('message', (event) => {
