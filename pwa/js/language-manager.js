@@ -63,7 +63,7 @@ class LanguageManager {
                     },
                     
                     // Supported languages
-                    supportedLngs: ['en', 'de', 'es', 'fr', 'ja', 'nl', 'pl', 'pt-br', 'ru', 'tr', 'zh-hans', 'zh'],
+                    supportedLngs: ['en', 'es', 'es-419', 'fr', 'fr-CA', 'nl', 'pt', 'pt-BR'],
                     
                     // Load options
                     load: 'languageOnly', // Load only 'en' not 'en-US'

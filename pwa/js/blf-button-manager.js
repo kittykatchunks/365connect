@@ -10,8 +10,8 @@ class BLFButtonManager {
         this.currentEditingIndex = -1;
         this.isDirty = false;
         this.failedSubscriptions = new Set(); // Track extensions that failed to subscribe
-        this.retryTimer = null; // Timer for periodic retry attempts
-        this.retryInterval = 180000; // 180 seconds in milliseconds
+        this.retryTimer = null; // Timer for periodic polling attempts
+        this.retryInterval = 120000; // 120 seconds (2 minutes) in milliseconds
         
         this.init();
     }
@@ -963,74 +963,79 @@ class BLFButtonManager {
         }, 1000);
     }
     
-    // Start periodic retry timer for failed BLF subscriptions
+    // Start periodic polling timer for BLF subscriptions (every 2 minutes)
     startRetryTimer() {
         // Clear any existing timer
         this.stopRetryTimer();
         
-        // Only start timer if we have failed subscriptions or might get them
+        // Start periodic polling for all BLF subscriptions
         this.retryTimer = setInterval(() => {
-            this.retryFailedSubscriptions();
+            this.pollBlfSubscriptions();
         }, this.retryInterval);
         
-        console.log(`⏰ BLF retry timer started (${this.retryInterval / 1000}s interval)`);
+        console.log(`⏰ BLF subscription polling timer started (${this.retryInterval / 1000}s interval)`);
     }
     
-    // Stop periodic retry timer
+    // Stop periodic polling timer
     stopRetryTimer() {
         if (this.retryTimer) {
             clearInterval(this.retryTimer);
             this.retryTimer = null;
-            console.log('⏰ BLF retry timer stopped');
+            console.log('⏰ BLF subscription polling timer stopped');
         }
     }
     
-    // Retry subscriptions for failed BLF buttons
-    retryFailedSubscriptions() {
-        if (this.failedSubscriptions.size === 0) {
-            return;
-        }
-        
+    // Poll BLF subscriptions every 2 minutes for all enabled BLF buttons
+    // Excludes extensions in the range 701-799
+    pollBlfSubscriptions() {
         // Check if we're still registered
         if (!window.App?.managers?.sip?.isRegistered?.()) {
-            console.log('⚠️ Not registered, skipping BLF retry');
+            console.log('⚠️ Not registered, skipping BLF subscription poll');
             return;
         }
         
-        console.log(`🔄 Retrying ${this.failedSubscriptions.size} failed BLF subscription(s)`);
-        
-        // Create array from Set to iterate (avoid modifying during iteration)
-        const extensionsToRetry = Array.from(this.failedSubscriptions);
-        
-        extensionsToRetry.forEach((extension, index) => {
-            // Find button data for this extension
-            const buttonData = this.blfButtons.find(btn => 
-                btn && btn.type === 'blf' && btn.number === extension && btn.enabled !== false
-            );
-            
-            if (buttonData) {
-                // Stagger retries to avoid overwhelming server
-                setTimeout(() => {
-                    const displayName = buttonData.displayName || extension;
-                    const success = this.subscribeToBlfButton(extension, displayName);
-                    if (success) {
-                        console.log(`✅ Retry successful for extension ${extension}`);
-                    }
-                }, index * 100);
-            } else {
-                // Button no longer configured, remove from failed list
-                this.failedSubscriptions.delete(extension);
+        // Get all enabled BLF buttons, excluding 701-799 range
+        const blfButtonsToPoll = this.blfButtons.filter(buttonData => {
+            if (!buttonData || buttonData.type !== 'blf' || !buttonData.number || buttonData.enabled === false) {
+                return false;
             }
+            
+            // Exclude numbers in range 701-799
+            const extensionNum = parseInt(buttonData.number);
+            if (!isNaN(extensionNum) && extensionNum >= 701 && extensionNum <= 799) {
+                return false;
+            }
+            
+            return true;
         });
         
-        // Log status after retry attempt
+        if (blfButtonsToPoll.length === 0) {
+            console.log('📱 No BLF buttons to poll');
+            return;
+        }
+        
+        console.log(`🔄 Polling ${blfButtonsToPoll.length} BLF subscription(s) to ensure they're active`);
+        
+        // Attempt to subscribe to all enabled BLF buttons
+        // Stagger by 100ms to avoid overwhelming the server
+        blfButtonsToPoll.forEach((buttonData, index) => {
+            setTimeout(() => {
+                const displayName = buttonData.displayName || buttonData.number;
+                const success = this.subscribeToBlfButton(buttonData.number, displayName);
+                if (success) {
+                    console.log(`✅ BLF poll subscription successful for extension ${buttonData.number}`);
+                }
+            }, index * 100);
+        });
+        
+        // Log status after poll attempt
         setTimeout(() => {
             if (this.failedSubscriptions.size > 0) {
-                console.log(`⚠️ Still have ${this.failedSubscriptions.size} failed BLF subscription(s), will retry in ${this.retryInterval / 1000}s`);
+                console.log(`⚠️ Still have ${this.failedSubscriptions.size} failed BLF subscription(s), will poll again in ${this.retryInterval / 1000}s`);
             } else {
-                console.log('✅ All BLF subscriptions successful');
+                console.log(`✅ All ${blfButtonsToPoll.length} BLF subscriptions active`);
             }
-        }, extensionsToRetry.length * 100 + 500);
+        }, blfButtonsToPoll.length * 100 + 500);
     }
 
     handleBlfStateChange(data) {

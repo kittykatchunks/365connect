@@ -11,6 +11,9 @@
 - [X] Review and complete localisation (e.g. languages)
 - [X] If on another tab and an incoming call starts then the tab to maybe flash to alert the user, also check if answering with the windows notification of a call that the dial screen is automatically shown if on another tab
 
+### UI improvements
+- [X] Poll every two minutes to try to subscribe to notfications for BLF keys
+
 ### PWA & Installation
 - [x] Fix duplicate service worker registration
 - [x] Fix manifest.json error handling
