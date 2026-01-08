@@ -1378,6 +1378,11 @@ function handleBusylightCheckboxChange(event) {
     if (busylightOptions) {
         busylightOptions.style.display = isChecked ? 'block' : 'none';
         console.log('🔄 Busylight options visibility:', isChecked ? 'shown' : 'hidden');
+        
+        // Apply translations to the newly visible elements
+        if (isChecked && window.languageManager) {
+            window.languageManager.applyTranslations();
+        }
     }
 }
 
