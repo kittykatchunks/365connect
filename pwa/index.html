@@ -511,7 +511,7 @@
                                             </div>
                                         </div>
                                         <div class="setting-item">
-                                            <label>Theme Mode:</label>
+                                            <label data-translate="theme_mode">Theme Mode:</label>
                                             <div class="theme-toggle-control">
                                                 <select id="ThemeMode" name="ThemeMode">
                                                     <option value="auto" data-translate="auto_system">Auto (System)</option>
@@ -525,11 +525,11 @@
                                                 <input type="checkbox" 
                                                     id="BlfEnabled" 
                                                     name="BlfEnabled" />
-                                                Enable BLF Buttons
+                                                <span data-translate="enable_blf_buttons">Enable BLF Buttons</span>
                                             </label>
                                         </div>
                                         <div class="setting-item">
-                                            <label>Tab Visibility:</label>
+                                            <label data-translate="tab_visibility">Tab Visibility:</label>
                                             <!-- <label style="margin-bottom: var(--spacing-sm); font-weight: 600; color: var(--text-color-secondary);">Tab Visibility:</label> -->
                                             <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-left: var(--spacing-md);">
                                                 <label>
@@ -537,29 +537,29 @@
                                                         id="ShowContactsTab" 
                                                         name="ShowContactsTab" 
                                                         checked />
-                                                    Show Contacts Tab
+                                                    <span data-translate="show_contacts_tab">Show Contacts Tab</span>
                                                 </label>
                                                 <label>
                                                     <input type="checkbox" 
                                                         id="ShowActivityTab" 
                                                         name="ShowActivityTab" 
                                                         checked />
-                                                    Show Activity Tab
+                                                    <span data-translate="show_activity_tab">Show Activity Tab</span>
                                                 </label>
                                                 <label>
                                                     <input type="checkbox" 
                                                         id="ShowBlank1Tab" 
                                                         name="ShowBlank1Tab" />
-                                                    Show Company Numbers Tab
+                                                    <span data-translate="show_company_numbers_tab">Show Company Numbers Tab</span>
                                                 </label>
                                                 <label class="hidden">
                                                     <input type="checkbox" 
                                                         id="ShowBlank2Tab" 
                                                         name="ShowBlank2Tab" />
-                                                    Show Second Blank Tab
+                                                    <span data-translate="show_second_blank_tab">Show Second Blank Tab</span>
                                                 </label>
                                             </div>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="control_visible_tabs">
                                                 Control which navigation tabs are visible. Dial and Settings tabs are always shown.
                                             </div>
                                         </div>
@@ -569,9 +569,9 @@
                                                     id="OnscreenNotifications" 
                                                     name="OnscreenNotifications" 
                                                     checked />
-                                                Onscreen Notifications
+                                                <span data-translate="onscreen_notifications">Onscreen Notifications</span>
                                             </label>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="enable_disable_toast">
                                                 Enable or disable toast notifications displayed within the application.
                                             </div>
                                         </div>
@@ -595,7 +595,7 @@
                                                 <input type="checkbox" 
                                                     id="AutoAnswerEnabled" 
                                                     name="AutoAnswerEnabled" />
-                                                Auto Answer
+                                                <span data-translate="auto_answer">Auto Answer</span>
                                             </label>
                                         </div>
                                         <div class="setting-item hidden">
@@ -603,7 +603,7 @@
                                                 <input type="checkbox" 
                                                     id="CallWaitingEnabled" 
                                                     name="CallWaitingEnabled" />
-                                                Call Waiting
+                                                <span data-translate="call_waiting">Call Waiting</span>
                                             </label>
                                         </div>
                                         <div class="setting-item">
@@ -611,9 +611,9 @@
                                                 <input type="checkbox" 
                                                     id="IncomingCallNotifications" 
                                                     name="IncomingCallNotifications" />
-                                                Incoming Call Notifications
+                                                <span data-translate="incoming_call_notifications">Incoming Call Notifications</span>
                                             </label>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="show_system_notifications">
                                                 Show system notifications for incoming calls
                                                 <span id="notificationStatus" class="notification-status"></span>
                                             </div>
@@ -623,9 +623,9 @@
                                                 <input type="checkbox" 
                                                     id="AutoFocusOnNotificationAnswer" 
                                                     name="AutoFocusOnNotificationAnswer" />
-                                                Auto-focus window when answering from notification
+                                                <span data-translate="auto_focus_on_notification_answer">Auto-focus window when answering from notification</span>
                                             </label>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="auto_focus_on_notification_answer_help">
                                                 When enabled, clicking the notification to answer will bring the app window to focus and show the dial screen
                                             </div>
                                         </div>
@@ -634,9 +634,9 @@
                                                 <input type="checkbox" 
                                                     id="PreferBlindTransfer" 
                                                     name="PreferBlindTransfer" />
-                                                Prefer Blind Transfer
+                                                <span data-translate="prefer_blind_transfer">Prefer Blind Transfer</span>
                                             </label>
-                                            <small class="setting-help-text">When enabled, BLF buttons and Enter key in transfer modal will perform blind transfers instead of attended transfers</small>
+                                            <small class="setting-help-text" data-translate="prefer_blind_transfer_help">When enabled, BLF buttons and Enter key in transfer modal will perform blind transfers instead of attended transfers</small>
                                         </div>
                                     </div>
                                 </div>

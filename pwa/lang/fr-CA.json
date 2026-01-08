@@ -115,6 +115,8 @@
     "call_waiting": "Appel en Attente",
     "incoming_call_notifications": "Notifications d'Appels Entrants",
     "show_system_notifications": "Afficher les notifications système pour les appels entrants",
+    "auto_focus_on_notification_answer": "Focaliser automatiquement la fenêtre lors de la réponse depuis une notification",
+    "auto_focus_on_notification_answer_help": "Lorsqu'activé, cliquer sur la notification pour répondre mettra la fenêtre de l'application au premier plan et affichera l'écran de composition",
     "prefer_blind_transfer": "Préférer le Transfert à l'Aveugle",
     "prefer_blind_transfer_help": "Lorsqu'activé, les boutons BLF et la touche Entrée dans la fenêtre de transfert effectueront des transferts à l'aveugle au lieu de transferts supervisés",
     "speaker": "Haut-parleur",

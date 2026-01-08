@@ -115,6 +115,8 @@
     "call_waiting": "Wisselgesprek",
     "incoming_call_notifications": "Meldingen Inkomende Oproepen",
     "show_system_notifications": "Systeemmeldingen tonen voor inkomende oproepen",
+    "auto_focus_on_notification_answer": "Venster automatisch focussen bij beantwoorden vanuit notificatie",
+    "auto_focus_on_notification_answer_help": "Wanneer ingeschakeld, zal het klikken op de notificatie om te antwoorden het applicatievenster naar de voorgrond brengen en het belsysteem tonen",
     "prefer_blind_transfer": "Voorkeur voor Blinde Doorverbinding",
     "prefer_blind_transfer_help": "Indien ingeschakeld, voeren BLF-knoppen en de Enter-toets in de doorverbindingsmodaal blinde doorverbindingen uit in plaats van begeleidde doorverbindingen",
     "speaker": "Luidspreker",

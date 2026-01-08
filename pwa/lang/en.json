@@ -115,6 +115,8 @@
     "call_waiting": "Call Waiting",
     "incoming_call_notifications": "Incoming Call Notifications",
     "show_system_notifications": "Show system notifications for incoming calls",
+    "auto_focus_on_notification_answer": "Auto-focus window when answering from notification",
+    "auto_focus_on_notification_answer_help": "When enabled, clicking the notification to answer will bring the app window to focus and show the dial screen",
     "prefer_blind_transfer": "Prefer Blind Transfer",
     "prefer_blind_transfer_help": "When enabled, BLF buttons and Enter key in transfer modal will perform blind transfers instead of attended transfers",
     "speaker": "Speaker",
