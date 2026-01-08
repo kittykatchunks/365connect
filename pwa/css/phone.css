@@ -4685,7 +4685,7 @@ body.view-dial .agent-keys-container { display: block; }
     width: 100%;
     background: var(--primary-bg);
     margin-bottom: 15px;
-    border-radius: var(--border-radius);
+    /* border-radius: var(--border-radius); */
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
