@@ -1571,7 +1571,7 @@ input[type="checkbox"]:checked::after {
 
 .call-duration {
     font-weight: 600;
-    color: #ffffff; /* White text for contrast */
+    color: #ffffff !important; /* White text for contrast */
     background: rgba(0, 0, 0, 0.15);
     padding: 2px 6px;
     /* border-radius: 3px; */
@@ -3595,6 +3595,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .call-duration {
     padding: 2px 6px;
+    color: #ffffff;
     background: var(--border-color);
     /* border-radius: 10px; */
     font-size: 0.75rem;

@@ -30,8 +30,8 @@ _Add any observations or special instructions here_
 **Purpose:** Capture all states of a single call
 
 ### Steps:
-1. Ensure Line 1 is idle (green)
-2. Enter phone number "555-1234" in dial pad
+1. Ensure Line 1 is idle (grey)
+2. Enter phone number "07729470694" in dial pad
 3. Click "Call" button
 4. Wait for call to connect
 5. Click "Mute" button
@@ -42,8 +42,8 @@ _Add any observations or special instructions here_
 
 ### Screenshots to Capture:
 - [ ] Dial pad with number entered
-- [ ] Line 1 dialing state (flashing green), dial pad disabled
-- [ ] Line 1 active state (red), call timer showing, mute/hold/transfer buttons enabled
+- [ ] Line 1 dialing state (green), dial pad disabled
+- [ ] Line 1 active state (green), call timer showing, mute/hold/transfer buttons enabled
 - [ ] Mute button active state, microphone icon showing muted
 - [ ] Line 1 active again after unmute
 - [ ] Line 1 on hold (yellow), hold music indicator, call timer paused
