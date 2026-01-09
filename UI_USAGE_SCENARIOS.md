@@ -204,6 +204,10 @@ _Add any specific info regarding above screenshot requests_
 20. Whilst on active call select "Agent 201" BLF
 21. Call will immediately be transfered (Blind)
 22. Observe the BLF reflecting ringing, busy and then available for remote agent
+23. Initiate another incoming call and answer
+24. Whilst on active call select "Park 701" BLF
+25. Call will immediately be parked in Parking lot 701 (BLF will reflect by showing busy - solid red)
+26. Select the "Park 701" BLF key to retrieve the parked call
 
 ### What screenshots do you want me to capture:
 - [ ] Capture01 request
@@ -295,14 +299,15 @@ _Add any specific info regarding above screenshot requests_
 **Purpose:** Capture all settings tabs and options
 
 ### Steps:
-1. Click Settings icon/button
-2. Review Connection Section
-3. Change language to French in Interface Section
-4. Toggle theme (Auto/Light/Dark)
-5. Review Audio Section devices
-6. Click "Test" buttons
-7. Toggle Busylight and BLF in Features Section
-8. Enable SIP messages in Diagnostics Section
+1. Click Settings tab
+2. Review and open ALL Accordian Menu Section
+3. Note realtime microphone input monitor
+4. Change language to French in Interface Section
+5. Select "Save Settings" to reflect language change
+6. Revert and Save again
+7. Toggle theme (Auto/Light/Dark) - immediately refelected in UI
+8. Toggle Busylight to show additional options in Features Section
+9. Select dropdown option boxes
 
 ### What screenshots do you want me to capture:
 - [ ] Capture01 request
@@ -314,37 +319,35 @@ _Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 13: Busylight Integration**
-**Purpose:** Capture busylight status indicators
-
-### Steps:
-1. Ensure Busylight is connected and enabled
-2. Make an incoming call
-3. Answer call
-4. Put call on hold
-5. Disconnect Busylight service
-
-### What screenshots do you want me to capture:
-- [ ] Capture01 request
-- [ ] Capture02 request
-- [ ] Capture03 request
-
-### Notes:
-_Add any specific info regarding above screenshot requests_
-
----
-
-## **Scenario 14: Voicemail Access**
+## **Scenario 13: Voicemail Access**
 **Purpose:** Capture voicemail UI
 
 ### Steps:
 1. Observe voicemail count badge (if messages present)
-2. Click voicemail button
+2. Click voicemail reel icon to show access to voicemail
 
 ### What screenshots do you want me to capture:
 - [ ] Capture01 request
 - [ ] Capture02 request
 - [ ] Capture03 request
+
+### Notes:
+_Add any specific info regarding above screenshot requests_
+
+---
+
+## **Scenario 14: PWA Updates**
+**Purpose:** Capture PWA-specific UI
+
+### Steps:
+1. Deploy new version of service worker
+2. Click "Update Now"
+
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
+
 
 ### Notes:
 _Add any specific info regarding above screenshot requests_
@@ -373,27 +376,6 @@ _Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 16: PWA Installation & Updates**
-**Purpose:** Capture PWA-specific UI
-
-### Steps:
-1. In browser, trigger install prompt
-2. Click Install
-3. Open as installed PWA
-4. Deploy new version of service worker
-5. Click "Update Now"
-
-### What screenshots do you want me to capture:
-- [ ] Capture01 request
-- [ ] Capture02 request
-- [ ] Capture03 request
-
-
-### Notes:
-_Add any specific info regarding above screenshot requests_
-
----
-
 ## Screenshot Request Explaination:
 
 I have done a few examples below to give you idea of what I need for screen requests:
@@ -406,14 +388,14 @@ I have done a few examples below to give you idea of what I need for screen requ
 
 For each screenshot you require, I will name them with the following convention:
 ```
-Scenario##_Capture##.png
+Scenario##_Request##.png
 ```
 
 Example of screenshot naming convention I will return to you:
 ```
-Scenario02_Capture01.png
-Scenario04_Capture03.png
+Scenario02_Request01.png
+Scenario04_Request03.png
 ```
 
 **Document Status:** Ready for screenshot capture requests 
-**Total Scenarios:** 16
+**Total Scenarios:** 15

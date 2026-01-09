@@ -11,8 +11,12 @@
 - [X] Review and complete localisation (e.g. languages)
 - [X] If on another tab and an incoming call starts then the tab to maybe flash to alert the user, also check if answering with the windows notification of a call that the dial screen is automatically shown if on another tab
 
-### UI improvements
+### UI improvements/Features
 - [X] Poll every two minutes to try to subscribe to notfications for BLF keys
+- [ ] Option to override the default BLF transfer option for individual BLF keys.  To enable things like attended transfer to speeddial with mobile number whilst still having blind transfer to agents etc.
+
+### Issues Outstanding
+- [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)
 
 ### PWA & Installation
 - [x] Fix duplicate service worker registration
