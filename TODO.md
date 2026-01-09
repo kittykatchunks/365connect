@@ -13,11 +13,11 @@
 
 ### UI improvements/Features
 - [X] Poll every two minutes to try to subscribe to notfications for BLF keys
-- [ ] Option to override the default BLF transfer option for each individual BLF key.  To enable things like attended transfer to a speeddial with mobile number whilst still having blind transfer to agents etc.
-    - [ ] Creation of another tickbox in Modals used for creation/editing BLF buttons
-    - [ ] Selecting tickbox will use allow user to manually set the transfer method for the specific BLF key
-    - [ ] Label for tickbox should be 'Override default transfer method for this key'
-    - [ ] If tickbox is selected a dropdown should appear with two options available 'Blind'/'Attended' it should default to the opposite of the current selected default transfer method in settings
+- [X] Option to override the default BLF transfer option for each individual BLF key.  To enable things like attended transfer to a speeddial with mobile number whilst still having blind transfer to agents etc.
+    - [X] Creation of another tickbox in Modals used for creation/editing BLF buttons
+    - [X] Selecting tickbox will use allow user to manually set the transfer method for the specific BLF key
+    - [X] Label for tickbox should be 'Override default transfer method for this key'
+    - [X] If tickbox is selected a dropdown should appear with two options available 'Blind'/'Attended' it should default to the opposite of the current selected default transfer method in settings
 - [X] Ensure that manually creating Company Number entries that the Company ID is unique, maybe be good idea to automatically autofill the field in the Modal with the lowest available not used Company ID 
 - [X] Remove unnecessary fields of 'created at' and 'updated at' currently being stored in Company Numbers in local storage
 - [ ] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installtions)

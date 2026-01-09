@@ -385,7 +385,7 @@ class BLFButtonManager {
             if (hasActiveCall) {
                 // Initiate transfer for any button type when call is active
                 console.log(`📞 Active call detected, initiating transfer to ${buttonData.number}`);
-                this.initiateTransfer(buttonData.number, buttonData.displayName);
+                this.initiateTransfer(buttonData.number, buttonData.displayName, buttonData);
             } else {
                 // Regular dial functionality
                 console.log('📞 Dialing BLF button:', buttonData.number);
@@ -438,10 +438,17 @@ class BLFButtonManager {
                window.currentTransferSession;
     }
 
-    initiateTransfer(number, displayName) {
+    initiateTransfer(number, displayName, buttonData = null) {
         console.log(`📞 Initiating transfer to ${number} (${displayName || 'Unknown'})`);
         
-        const preferBlind = this.getTransferPreference();
+        // Check if this button has an override setting
+        let preferBlind = this.getTransferPreference();
+        
+        if (buttonData && buttonData.overrideTransfer && buttonData.transferMethod) {
+            // Use button-specific override
+            preferBlind = buttonData.transferMethod === 'blind';
+            console.log(`📞 Using button-specific transfer override: ${buttonData.transferMethod}`);
+        }
         
         if (preferBlind) {
             // Perform blind transfer immediately
@@ -605,6 +612,30 @@ class BLFButtonManager {
         if (speedDialCheckbox) speedDialCheckbox.checked = buttonType === 'speeddial';
         if (blfCheckbox) blfCheckbox.checked = buttonType === 'blf';
 
+        // Set override transfer method fields
+        const overrideTransferCheckbox = document.getElementById('blfOverrideTransfer');
+        const transferMethodGroup = document.getElementById('blfTransferMethodGroup');
+        const transferMethodSelect = document.getElementById('blfTransferMethod');
+        
+        if (overrideTransferCheckbox) {
+            overrideTransferCheckbox.checked = buttonData.overrideTransfer === true;
+        }
+        
+        if (transferMethodGroup && overrideTransferCheckbox) {
+            transferMethodGroup.style.display = overrideTransferCheckbox.checked ? 'block' : 'none';
+        }
+        
+        if (transferMethodSelect) {
+            // If override is set, use the stored value; otherwise default to opposite of current setting
+            if (buttonData.overrideTransfer && buttonData.transferMethod) {
+                transferMethodSelect.value = buttonData.transferMethod;
+            } else {
+                // Default to opposite of current default transfer method
+                const preferBlind = this.getTransferPreference();
+                transferMethodSelect.value = preferBlind ? 'attended' : 'blind';
+            }
+        }
+
         // Show modal
         const overlay = document.getElementById('modalOverlay');
         if (overlay) overlay.classList.remove('hidden');
@@ -665,6 +696,19 @@ class BLFButtonManager {
                             <input type="text" id="blfNumber" class="form-control" 
                                    data-translate-placeholder="extension_or_phone_number" placeholder="Extension or phone number">
                         </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="blfOverrideTransfer">
+                                Override default transfer method for this key
+                            </label>
+                        </div>
+                        <div class="form-group" id="blfTransferMethodGroup" style="display: none; margin-left: 20px;">
+                            <label for="blfTransferMethod">Transfer Method:</label>
+                            <select id="blfTransferMethod" class="form-control">
+                                <option value="blind">Blind</option>
+                                <option value="attended">Attended</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="blfModalCancel" data-translate="cancel">Cancel</button>
@@ -721,6 +765,26 @@ class BLFButtonManager {
             });
         }
 
+        // Override transfer method checkbox toggle
+        const overrideTransferCheckbox = document.getElementById('blfOverrideTransfer');
+        const transferMethodGroup = document.getElementById('blfTransferMethodGroup');
+        
+        if (overrideTransferCheckbox && transferMethodGroup) {
+            overrideTransferCheckbox.addEventListener('change', () => {
+                if (overrideTransferCheckbox.checked) {
+                    transferMethodGroup.style.display = 'block';
+                    // Set dropdown to opposite of current default when first shown
+                    const transferMethodSelect = document.getElementById('blfTransferMethod');
+                    if (transferMethodSelect) {
+                        const preferBlind = this.getTransferPreference();
+                        transferMethodSelect.value = preferBlind ? 'attended' : 'blind';
+                    }
+                } else {
+                    transferMethodGroup.style.display = 'none';
+                }
+            });
+        }
+
         // Enter key to save
         const modal = document.getElementById('blfModal');
         if (modal) {
@@ -748,6 +812,10 @@ class BLFButtonManager {
         
         // Use the first checked type, or default to speeddial
         const buttonType = checkedTypes.length > 0 ? checkedTypes[0] : 'speeddial';
+        
+        // Get override transfer settings
+        const overrideTransfer = document.getElementById('blfOverrideTransfer')?.checked || false;
+        const transferMethod = document.getElementById('blfTransferMethod')?.value || 'blind';
 
         if (!displayName && !number) {
             const t = window.languageManager?.t || ((key, def) => def);
@@ -761,7 +829,9 @@ class BLFButtonManager {
                 displayName: displayName,
                 number: number,
                 enabled: enabled,
-                type: buttonType
+                type: buttonType,
+                overrideTransfer: overrideTransfer,
+                transferMethod: overrideTransfer ? transferMethod : undefined
             };
             
             // Handle subscription changes
