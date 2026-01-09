@@ -20,7 +20,7 @@
     - [X] If tickbox is selected a dropdown should appear with two options available 'Blind'/'Attended' it should default to the opposite of the current selected default transfer method in settings
 - [X] Ensure that manually creating Company Number entries that the Company ID is unique, maybe be good idea to automatically autofill the field in the Modal with the lowest available not used Company ID 
 - [X] Remove unnecessary fields of 'created at' and 'updated at' currently being stored in Company Numbers in local storage
-- [X] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installtions)
+- [X] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installations)
     - [X] Addition of Import/Export buttons in Settings under Diagnostics menu
     - [X] When selecting Export button should export ALL exportable data to file
     - [X] Local storage fields of BlfButtons, CompanyNumbers, contacts and tabVisibilitySettings to be exported
@@ -38,6 +38,7 @@
     - [ ] If comparison shows differences then a warning message should be displayed stating 'All Company Numbers will be overwritten with new retrieved version, are you sure you wish to continue' with Okay/Cancel options available
     - [ ] If Okay selected, existing data removed from local storage and replaced with download data from API call
     - [ ] If Cancel selected, then ignore the data downloaded and continue as is
+    - [ ] Dont forget to internationalise the toast notifications
 
 ### Issues Outstanding
 - [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)
