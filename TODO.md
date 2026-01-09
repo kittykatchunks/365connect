@@ -13,18 +13,34 @@
 
 ### UI improvements/Features
 - [X] Poll every two minutes to try to subscribe to notfications for BLF keys
-- [ ] Option to override the default BLF transfer option for individual BLF keys.  To enable things like attended transfer to speeddial with mobile number whilst still having blind transfer to agents etc.
+- [ ] Option to override the default BLF transfer option for each individual BLF key.  To enable things like attended transfer to a speeddial with mobile number whilst still having blind transfer to agents etc.
+    - [ ] Creation of another tickbox in Modals used for creation/editing BLF buttons
+    - [ ] Selecting tickbox will use allow user to manually set the transfer method for the specific BLF key
+    - [ ] Label for tickbox should be 'Override default transfer method for this key'
+    - [ ] If tickbox is selected a dropdown should appear with two options available 'Blind'/'Attended' it should default to the opposite of the current selected default transfer method in settings
+- [X] Ensure that manually creating Company Number entries that the Company ID is unique, maybe be good idea to automatically autofill the field in the Modal with the lowest available not used Company ID 
+- [X] Remove unnecessary fields of 'created at' and 'updated at' currently being stored in Company Numbers in local storage
 - [ ] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installtions)
     - [ ] Addition of Import/Export buttons in Settings under Diagnostics menu
     - [ ] When selecting Export button should export ALL exportable data to file
-    - [ ] LIST DATA AVAILABLE HERE
+    - [ ] Local storage fields of BlfButtons, CompanyNumbers, contacts and tabVisibilitySettings to be exported
     - [ ] When selecting import a Modal should appear with the seperate Data parts available (user selectable) to Import
+    - [ ] The modal should have all 4 tickbox options selected by default they should be named simply as BLF Buttons, Contacts, Company Numbers, Tabs Available
     - [ ] This data WILL overwrite existing data so probably good idea to warn with options to Continue/Cancel
 - [ ] Find best way of increasing amount of BLF key available, may look at option in settings when BLF enabled to have dropdown with 20(default)/40/60 keys option.  Then maybe have a next/previous (or just next cycled around) to replace curreently shown with next 20 keys
+- [ ] Create API call for Company Numbers from the Phantom server
+    - [ ] This API call should only be enabled if Company Numbers tab is enabled in Settings
+    - [ ] The API call will be https://server1-XXXX.phantomapi.net:{port number}/api/companyNumbers
+    - [ ] On each loading of PWA the API should initiate call, there should also be option to refresh manually in Company Numbers tab (between delete all and the import/export buttons)
+    - [ ] If API call fails or returns nothing then an info toast should be displayed stating 'No company numbers available on Phantom'
+    - [ ] If API call results in successful retrieval of data then this should be compared to any currently stored data in local storage
+    - [ ] If comparison shows data to be identical then toast success notification should be displayed with message 'Your company numbers is the latest version'
+    - [ ] If comparison shows differences then a warning message should be displayed stating 'All Company Numbers will be overwritten with new retrieved version, are you sure you wish to continue' with Okay/Cancel options available
+    - [ ] If Okay selected, existing data removed from local storage and replaced with download data from API call
+    - [ ] If Cancel selected, then ignore the data downloaded and continue as is
 
 ### Issues Outstanding
 - [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)
-- [ ] Ensure index number in company numbers is unique before saving
 
 ### PWA & Installation
 - [x] Fix duplicate service worker registration

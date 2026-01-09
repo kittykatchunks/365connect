@@ -110,9 +110,7 @@ class CompanyNumbersManager {
         const company = {
             id: parseInt(companyData.id),
             name: companyData.name.trim(),
-            number: companyData.number.trim(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            number: companyData.number.trim()
         };
 
         this.companyNumbers.push(company);
@@ -140,7 +138,6 @@ class CompanyNumbersManager {
         const company = this.companyNumbers[index];
         company.name = updatedData.name?.trim() || company.name;
         company.number = updatedData.number?.trim() || company.number;
-        company.updatedAt = new Date().toISOString();
 
         this.saveCompanyNumbers();
         this.renderCompanyNumbers();
@@ -217,6 +214,16 @@ class CompanyNumbersManager {
         return [...this.companyNumbers].sort((a, b) => a.name.localeCompare(b.name));
     }
 
+    getLowestAvailableCompanyId() {
+        // Find the lowest available ID from 1-99
+        for (let i = 1; i <= 99; i++) {
+            if (!this.companyNumbers.find(c => c.id === i)) {
+                return i;
+            }
+        }
+        return null; // All IDs are used
+    }
+
     /* ====================================================================================== */
     /* STORAGE OPERATIONS */
     /* ====================================================================================== */
@@ -239,6 +246,24 @@ class CompanyNumbersManager {
                 const data = window.localDB.getItem(this.storageKey);
                 if (data) {
                     this.companyNumbers = JSON.parse(data);
+                    
+                    // Clean up old timestamp fields if they exist
+                    let needsCleanup = false;
+                    this.companyNumbers = this.companyNumbers.map(company => {
+                        if (company.hasOwnProperty('createdAt') || company.hasOwnProperty('updatedAt')) {
+                            needsCleanup = true;
+                            const { createdAt, updatedAt, ...cleanCompany } = company;
+                            return cleanCompany;
+                        }
+                        return company;
+                    });
+                    
+                    // Save cleaned data back to storage
+                    if (needsCleanup) {
+                        this.saveCompanyNumbers();
+                        console.log('📞 CompanyNumbersManager: Cleaned up old timestamp fields from storage');
+                    }
+                    
                     console.log('📞 CompanyNumbersManager: Loaded', this.companyNumbers.length, 'companies from storage');
                 }
             }
@@ -382,9 +407,7 @@ class CompanyNumbersManager {
         const company = {
             id: parseInt(companyData.id),
             name: companyData.name.trim(),
-            number: companyData.number.trim(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            number: companyData.number.trim()
         };
 
         this.companyNumbers.push(company);
@@ -590,6 +613,9 @@ class CompanyNumbersManager {
     }
 
     showAddCompanyModal() {
+        // Get the lowest available Company ID
+        const lowestAvailableId = this.getLowestAvailableCompanyId();
+        
         // Create modal HTML
         const modalHtml = `
             <div class="modal-content company-modal">
@@ -603,7 +629,7 @@ class CompanyNumbersManager {
                     <form id="addCompanyForm">
                         <div class="form-group">
                             <label for="companyId">Company ID (1-99) *</label>
-                            <input type="number" id="companyId" name="id" min="1" max="99" required />
+                            <input type="number" id="companyId" name="id" min="1" max="99" value="${lowestAvailableId || ''}" required />
                         </div>
                         <div class="form-group">
                             <label for="companyName">Company Name *</label>
