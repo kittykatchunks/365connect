@@ -86,7 +86,7 @@ class DataImportExportManager {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const importModal = document.getElementById('importDataModal');
-                if (importModal && importModal.classList.contains('show')) {
+                if (importModal && !importModal.classList.contains('hidden')) {
                     this.hideImportModal();
                 }
             }
@@ -192,14 +192,14 @@ class DataImportExportManager {
         // Show the modal
         const modal = document.getElementById('importDataModal');
         if (modal) {
-            modal.classList.add('show');
+            modal.classList.remove('hidden');
         }
     }
 
     hideImportModal() {
         const modal = document.getElementById('importDataModal');
         if (modal) {
-            modal.classList.remove('show');
+            modal.classList.add('hidden');
         }
 
         // Clear stored file data
