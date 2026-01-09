@@ -10,23 +10,33 @@
 **Purpose:** Capture onboarding flow and settings configuration
 
 ### Steps:
-1. Open the PWA for the first time (should show Welcome Overlay)
-2. Enter Phantom Server ID (e.g., "1234")
-3. Enter SIP Username and Password
-4. Click "Save Settings"
-5. Click "Register"
+1. Open the PWA for the first time
+2. This should show Welcome Overlay and toast notification to install PWA on windows system
+3. Select "Okay" from overlay
+4. Select "Install App" browser icon to install PWA
+5. Once install process finishes select "Settings" tab on PWA
+6. Once selected, the connections accordian menu should be open ready for entry of endpoint device details
+7. Enter Phantom Server ID (e.g., "388")
+8. Enter SIP Username and Password
+9. Click "Save Settings"
+10. Select "Interface" title, and change to "Light Mode" from Theme options (Doing this at this point to allow easier observation of items in following scenarios)
+11. Click "Save Settings" again
+12. Switch to "Dial" tab to demonstrate the default options displayed
+13. Click "Register"
+14. Observe toast notifications upon connection to Phantom server
+
 
 ### Screenshots to Capture:
-- [X] Welcome overlay with initial setup form
-- [X] Settings panel with populated fields
-- [X] Select Register Button to connect to Phantom
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 2: Basic Single Call Flow**
+## **Scenario 2: Basic Single Outgoing Call Flow**
 **Purpose:** Capture all states of a single call
 
 ### Steps:
@@ -40,62 +50,60 @@ _Add any observations or special instructions here_
 8. Click "Unhold"
 9. Click "End Call"
 
-### Screenshots to Capture:
-- [ ] Dial pad with number entered
-- [ ] Line 1 dialing state (green), dial pad disabled
-- [ ] Line 1 active state (green), call timer showing, mute/hold/transfer buttons enabled
-- [ ] Mute button active state, microphone icon showing muted
-- [ ] Line 1 active again after unmute
-- [ ] Line 1 on hold (yellow), hold music indicator, call timer paused
-- [ ] Line 1 active again after unhold
-- [ ] Line 1 returning to idle state
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 3: Incoming Call with Notifications**
-**Purpose:** Capture incoming call UI and notification system
+## **Scenario 3: Incoming Call Flow with/without System Notifications**
+**Purpose:** Capture incoming call UI and notification system and answering options
 
 ### Steps:
-1. Have someone call your extension
-2. Observe all notification indicators
-3. Click "Answer"
-4. End the call
+1. Create Incoming Call into PWA
+2. Observe all notification indicators - 'DIAL' tab and 'LINE 1' will flash red
+3. "Call" button will change to "Answer"
+4. Select "Answer" button
+5. Observer "Line 1" status (green)
+6. End the call
 
-### Screenshots to Capture:
-- [ ] Line key flashing red (ringing state)
-- [ ] Incoming call popup with caller ID
-- [ ] Browser tab title flashing
-- [ ] System notification (if enabled)
-- [ ] Answer/Reject buttons
-- [ ] Call answered state, transition to active
+### Note:
+1. There is also user selectable option for incoming call notifications that uses the windows desktop notifications capability (default - on).  However not customisable so design required
+
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
 ## **Scenario 4: Multi-Line Call Management**
-**Purpose:** Capture multiple simultaneous calls
+**Purpose:** Capture multiple simultaneous calls (VTD feature requires this method as often this service is used in response to an enquiry from a customer calling in)
 
 ### Steps:
-1. Start with an active call on Line 1 (red)
+1. Recieve and answer incoming call on Line 1 (green)
 2. Have second call come in
-3. Answer Line 2 (Line 1 should auto-hold)
-4. Click Line 1 to switch back
-5. Initiate a third call while 2 are on hold
+3. Select Line 2 (Line 1 should auto-hold - yellow)
+4. Use interface to answer and then end call on Line 2
+5. Click Line 1 to switch back to original call (still on hold - yellow)
+6. Unhold and continue conversation with caller (green)
+7. End call
 
-### Screenshots to Capture:
-- [ ] Line 1 active, Lines 2 & 3 idle
-- [ ] Line 1 active (red), Line 2 ringing (flashing red), notification for Line 2
-- [ ] Line 1 on hold (yellow), Line 2 active (red)
-- [ ] Line 2 on hold (yellow), Line 1 active (red)
-- [ ] All 3 lines with different states, no available lines indicator
+
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -103,20 +111,20 @@ _Add any observations or special instructions here_
 **Purpose:** Capture transfer workflow
 
 ### Steps:
-1. Have an active call on Line 1
-2. Click "Transfer" button
-3. Select "Blind Transfer" option
-4. Enter extension "200" or select from contacts
-5. Click "Transfer Now"
+1. Answer incoming call on Line 1
+2. Click "Transfer" button on interface
+3. Transfer Modal will appear
+4. Enter "201" in destination input box
+5. Select "Blind Transfer" option
+6. The PWA should then return to idle state
 
-### Screenshots to Capture:
-- [ ] Transfer modal/dialog opens
-- [ ] Blind Transfer option selected
-- [ ] Transfer destination entry field
-- [ ] Transfer in progress, then call cleared
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -124,21 +132,22 @@ _Add any observations or special instructions here_
 **Purpose:** Capture attended transfer workflow
 
 ### Steps:
-1. Have an active call on Line 1
-2. Click "Transfer" button
-3. Select "Attended Transfer"
-4. Enter extension "201"
-5. Wait for Line 2 to answer
-6. Click "Complete Transfer"
+1. Answer incoming call on Line 1
+2. Click "Transfer" button on interface
+3. Transfer Modal will appear
+4. Enter "201" in destination input box
+5. Select "Attended Transfer"
+6. Secondary Modal will appear showing "Transfer" (inactive ready to complete when answered) and "Cancel" to return to incoming call
+7. Wait for "201" to answer 
+8. Click "Transfer" now that it is active
 
-### Screenshots to Capture:
-- [ ] Attended Transfer option selected
-- [ ] Original call on hold (Line 1 yellow), new call dialing (Line 2 flashing green)
-- [ ] Both lines active - speaking to both parties
-- [ ] Both calls transferred and cleared
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -147,85 +156,91 @@ _Add any observations or special instructions here_
 
 ### Steps:
 1. Click "Login" button (logged out state)
-2. Enter agent number "500" and passcode
+2. Enter agent number "200" and passcode
 3. Click "Login"
 4. Wait for login success
-5. Click "Queue" button
-6. Click "Pause" button
-7. Select "Break" reason
-8. Click "Unpause"
-9. Click "Queue" to leave queue
+5. Click "Queue" button (this logged out of auto logged queues)
+6. Click "Queue" again (this logged back into queues to allow Pause)
+7. Click "Pause" button
+8. Select "Break" reason
+9. Click "Unpause"
 10. Click "Logout"
 
-### Screenshots to Capture:
-- [ ] Agent login modal
-- [ ] Login in progress, "Logging In..." text
-- [ ] Logged in state, agent number displayed, green button
-- [ ] Joined queue state, button active
-- [ ] Pause reason modal with predefined reasons
-- [ ] Paused state, button shows paused status
-- [ ] Resumed state
-- [ ] Left queue state
-- [ ] Logged out state
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 8: BLF Button Monitoring**
-**Purpose:** Capture BLF states and interactions
+## **Scenario 8: BLF Button Status Monitoring and Transfer Usage**
+**Purpose:** Capture BLF states and their usage without active call. Also the transfer interactions with active call (Blind and Attended dependant on settings option)
 
 ### Steps:
-1. Ensure BLF is enabled in settings
-2. Add BLF button for extension "203"
-3. Wait for subscription
-4. Have extension 100 receive a call
-5. Extension 100 answers
-6. During active call, click the BLF button
+1. Enable BLF in Interface under "Settings" tab (firstly with prefer blind option under Call not active - default setting)
+2. Select "Dial" tab again
+3. Right click on the BLF button requiring programming
+4. Observe BLF Modal to allowing programming.  I will right click each button until I have programmed all of the following
+5. Add BLF buttons for agent "201" and "202"
+6. Add BLF buttons for Call Park locations "701" and "702"
+7. Add Speeddial button for "Contact Name" and "Number"
+8. Observe differing status for BLF (offline - grey, online - green, speeddial - blue)
+9. Select "Agent 201" button and answer on remote ringing agent extension and observe BLF status (ringing state - flashing red and busy state - solid red)
+10. End call on remote agent (observe BLF status revert to green for "Agent 201" as now available)
+11. Select "Contact Name" speeddial button
+12. Observe this making call out to number (associated status - blue does not change as no method of monitoring remote numbers)
+13. End call to return to default idle display
+14. Initiate incoming call to 
+4. Have extension 200 receive an incoming call
+5. Extension 200 answers
+6. During active call, click the BLF button to transfer to 201
 
-### Screenshots to Capture:
-- [ ] BLF columns visible on sides
-- [ ] BLF configuration modal
-- [ ] BLF button showing idle (green) for available extension
-- [ ] BLF button flashing red (ringing)
-- [ ] BLF button red (busy)
-- [ ] Transfer initiated to monitored extension
-- [ ] Offline/unavailable BLF state (gray)
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
+
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 9: Contact Management**
-**Purpose:** Capture contact CRUD operations
+## **Scenario 9: Contact Management and Usage**
+**Purpose:** Capture contact operations
 
 ### Steps:
 1. Click "Contacts" tab
-2. Click "Add Contact" button
-3. Fill in: First Name "John", Last Name "Smith", Company "Acme Corp", Phone "555-9999"
-4. Click "Save"
-5. Click on contact card
-6. Click "Call" button from contact
-7. End call
-8. Click "Edit" on contact
-9. Click "Delete"
-10. Import CSV with multiple contacts
+2. Click "Add Contact" button to show contact addition Modal
+3. Fill in: First Name "John", Last Name "Smith", Company "Autocab Ltd", Phone "01614917718"
+4. Select "Save" to demonstrate confirmation toast message
+5. Click "+ Add Contact" button to show addition Modal again
+6. Fill in: First Name "Tom", Last Name "Cannon", Phone "07766112233"
+7. Click "Save"
+8. Click "+ Add Contact" button to show addition Modal again
+9. Fill in: Company "Autocab Ltd", Phone "01614917777"
+10. Click "Save"
+11. Hover and click "Edit" icon on contact to show update Modal
+12. Select "Save" to demonstrate confirmation toast message
+13. Select "Search contacts" input box and type "au" to demonstrate reductions on visible contacts to matching contacts only.
+14. Delete "au" from input box and type "to" as repeat of above demonstration
+15. Delete "to" to revert to all contacts showing again
+16. Click "Delete All" to review warning message
+17. Hover and click "Trash" icon on contact to review warning message
+18. Hover and click "Call" icon from a contact you want to call
+19. Show the switch to the dial tab and the number in the dial input screen ready to call
+20. Click "Call" and let the outgoing call connect to number before ending call
 
-### Screenshots to Capture:
-- [ ] Empty contacts state (if first time)
-- [ ] Add contact modal
-- [ ] Contact card displayed in list
-- [ ] Expanded contact details
-- [ ] Call initiated from contact, contact highlighted
-- [ ] Edit contact modal with pre-filled data
-- [ ] Delete confirmation dialog
-- [ ] Import dialog, file selection, import progress
-- [ ] Multiple contact cards in grid layout
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -235,42 +250,37 @@ _Add any observations or special instructions here_
 ### Steps:
 1. Click "Activity" tab
 2. Review different call types in history
-3. Hover over history entry
-4. Click call-back icon
-5. Search history by name or number
-6. Click "Clear History"
+3. Click "Clear All" to review warning message
+4. Click "Trash" icon to review warning message
+5. Click "Call" icon to show switch to dialpad and automatic callback to the number
 
-### Screenshots to Capture:
-- [ ] Call history list with date groupings ("Today", "Yesterday")
-- [ ] Different call types: Outgoing call (green icon)
-- [ ] Different call types: Incoming call (blue icon)
-- [ ] Different call types: Missed call (red icon with badge)
-- [ ] Hover state with call-back button
-- [ ] Call initiated from history
-- [ ] Filtered history results with search term highlighted
-- [ ] Confirmation dialog for clear history
+
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
 ## **Scenario 11: Company Numbers Management**
-**Purpose:** Capture CLI/P selection
+**Purpose:** Capture Comapny Number addition and edit
 
 ### Steps:
 1. Click "Company Numbers" tab
-2. Click radio button to select a number
-3. Make a call after selecting number
+2. Click "Add Company Number" and complete fields in Modal and Save
+3. Click Edit icon button to demonstrate editing of Name field
+4. Click "Delete All" to showing warning message
 
-### Screenshots to Capture:
-- [ ] List of available company numbers
-- [ ] Selected number highlighted, current CLIP indicator
-- [ ] Number in use badge/indicator
-- [ ] Outgoing call with selected CLIP
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -287,22 +297,13 @@ _Add any observations or special instructions here_
 7. Toggle Busylight and BLF in Features Section
 8. Enable SIP messages in Diagnostics Section
 
-### Screenshots to Capture:
-- [ ] Settings accordion/panel open
-- [ ] Connection Section - all connection fields
-- [ ] Language dropdown with options
-- [ ] Theme variations: Auto mode
-- [ ] Theme variations: Light mode
-- [ ] Theme variations: Dark mode
-- [ ] Audio device dropdowns (Speaker, Mic, Ringer)
-- [ ] Ringtone selector
-- [ ] Audio level indicator for microphone
-- [ ] Busylight settings (sound, volume)
-- [ ] BLF columns appearing/disappearing
-- [ ] Diagnostic options enabled
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -316,16 +317,13 @@ _Add any observations or special instructions here_
 4. Put call on hold
 5. Disconnect Busylight service
 
-### Screenshots to Capture:
-- [ ] Busylight status indicator (connected)
-- [ ] Busylight status indicator (disconnected)
-- [ ] Busylight ringing state (if visible in UI)
-- [ ] Busylight active/busy state
-- [ ] Busylight hold state
-- [ ] Error/disconnected state in UI
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -336,13 +334,13 @@ _Add any observations or special instructions here_
 1. Observe voicemail count badge (if messages present)
 2. Click voicemail button
 
-### Screenshots to Capture:
-- [ ] Voicemail count badge (if messages present)
-- [ ] Dialing voicemail (*97), voicemail icon active
-- [ ] Connected to voicemail state
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -358,17 +356,13 @@ _Add any observations or special instructions here_
 6. Attempt to answer call with no audio devices
 7. Exceed 3 concurrent calls
 
-### Screenshots to Capture:
-- [ ] Offline indicator, "Offline Mode" banner
-- [ ] "Back Online" notification
-- [ ] Registration failed error message
-- [ ] Error notification "Not connected"
-- [ ] Notification permission denied state/warning
-- [ ] Audio device error message
-- [ ] "No available lines" error/indicator
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
@@ -382,67 +376,37 @@ _Add any observations or special instructions here_
 4. Deploy new version of service worker
 5. Click "Update Now"
 
-### Screenshots to Capture:
-- [ ] "Install App" button/banner
-- [ ] Browser installation prompt
-- [ ] Standalone app mode (no browser chrome)
-- [ ] "Update Available" notification banner
-- [ ] App updating/reloading
+### What screenshots do you want me to capture:
+- [ ] Capture01 request
+- [ ] Capture02 request
+- [ ] Capture03 request
+
 
 ### Notes:
-_Add any observations or special instructions here_
+_Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 17: Accessibility Features**
-**Purpose:** Capture accessibility UI
+## Screenshot Request Explaination:
 
-### Steps:
-1. Tab through interface with keyboard only
-2. Enable screen reader mode
-3. Enable high contrast mode
+I have done a few examples below to give you idea of what I need for screen requests:
 
-### Screenshots to Capture:
-- [ ] Focus states on buttons and inputs
-- [ ] ARIA labels visible in inspector
-- [ ] High contrast theme rendering
+- [ ] BLF columns visible on sides
+- [ ] BLF configuration modal
+- [ ] BLF button showing idle (green) for available extension
+- [ ] BLF button flashing red (ringing)
+- [ ] BLF button red when answered (busy)
 
-### Notes:
-_Add any observations or special instructions here_
-
----
-
-## Screenshot Organization Template
-
-For each screenshot, please use the following naming convention:
+For each screenshot you require, I will name them with the following convention:
 ```
-Scenario##_Step##_Description.png
+Scenario##_Capture##.png
 ```
 
-Example:
+Example of screenshot naming convention I will return to you:
 ```
-Scenario02_Step03_Line1_Dialing_State.png
-Scenario04_Step05_Three_Lines_Active.png
+Scenario02_Capture01.png
+Scenario04_Capture03.png
 ```
 
-## Design Review Checklist
-
-After capturing all screenshots, ensure the following are documented:
-
-- [ ] All UI states for each feature
-- [ ] Visual feedback for user actions
-- [ ] Error states and messages
-- [ ] Loading/processing states
-- [ ] Color-coded status indicators
-- [ ] Button states (enabled/disabled/active)
-- [ ] Modal dialogs and overlays
-- [ ] Notification styles (toast, system, banner)
-- [ ] Icon usage and placement
-- [ ] Theme variations (light/dark)
-- [ ] Accessibility features (focus states, contrast)
-
----
-
-**Document Status:** Ready for screenshot capture  
-**Total Scenarios:** 17  
-**Estimated Screenshots:** 120+
+**Document Status:** Ready for screenshot capture requests 
+**Total Scenarios:** 16
