@@ -447,30 +447,8 @@ class BLFButtonManager {
             // Perform blind transfer immediately
             this.performBlindTransferToNumber(number, displayName);
         } else {
-            // Show transfer modal with number pre-filled (same as clicking Transfer button)
-            this.openTransferModalWithNumber(number, displayName);
-        }
-    }
-
-    openTransferModalWithNumber(number, displayName) {
-        console.log(`📞 Opening transfer modal with ${number} (${displayName || 'Unknown'})`);
-        
-        // Open the transfer modal using the global function
-        if (typeof showTransferModal === 'function') {
-            showTransferModal();
-            
-            // After modal opens, pre-fill the number
-            setTimeout(() => {
-                const transferInput = document.getElementById('transferNumber');
-                if (transferInput) {
-                    transferInput.value = number;
-                    console.log(`✅ Pre-filled transfer input with ${number}`);
-                }
-            }, 200); // Wait for modal to render
-        } else {
-            console.error('❌ showTransferModal function not available');
-            const t = window.languageManager?.t || ((key, def) => def);
-            this.showToast(t('transfer_not_available', 'Transfer not available'), 'error');
+            // Start attended transfer (which will show the modal with controls)
+            this.performAttendedTransferToNumber(number, displayName);
         }
     }
 

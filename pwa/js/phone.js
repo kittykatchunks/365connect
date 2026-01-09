@@ -4133,6 +4133,8 @@ window.loadSettingsIntoForm = loadSettingsIntoForm;
 window.updateRegisterButton = updateRegisterButton;
 window.showSuccessNotification = showSuccessNotification;
 window.showErrorNotification = showErrorNotification;
+window.showTransferModal = showTransferModal;
+window.hideTransferModal = hideTransferModal;
 
 /* ====================================================================================== */
 /* END OF FILE */
