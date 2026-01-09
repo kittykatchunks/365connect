@@ -176,11 +176,11 @@ _Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 8: BLF Button Status Monitoring and Transfer Usage**
+## **Scenario 8: (Two Parts) BLF Button Status Monitoring and Transfer Usage**
 **Purpose:** Capture BLF states and their usage without active call. Also the transfer interactions with active call (Blind and Attended dependant on settings option)
 
-### Steps:
-1. Enable BLF in Interface under "Settings" tab (firstly with prefer blind option under Call not active - default setting)
+### Steps (Part 1):
+1. Enable BLF in Interface section under "Settings" tab (firstly with prefer blind option under Call section not active - default setting)
 2. Select "Dial" tab again
 3. Right click on the BLF button requiring programming
 4. Observe BLF Modal to allowing programming.  I will right click each button until I have programmed all of the following
@@ -193,10 +193,17 @@ _Add any specific info regarding above screenshot requests_
 11. Select "Contact Name" speeddial button
 12. Observe this making call out to number (associated status - blue does not change as no method of monitoring remote numbers)
 13. End call to return to default idle display
-14. Initiate incoming call to 
-4. Have extension 200 receive an incoming call
-5. Extension 200 answers
-6. During active call, click the BLF button to transfer to 201
+
+### Steps (Part 2):
+14. Initiate incoming call and answer on interface
+15. Select "Agent 201" BLF key
+16. Attended transfer to 201 with attended transfer info modal appearing (BLF will show ringing state for remote agent - flashing red)
+17. Complete transfer once remote agent answers (BLF will then show busy - red for the remote agent)
+18. Select "Settings" and under Call section select the Prefer Blind option
+19. Initiate another incoming call and answer
+20. Whilst on active call select "Agent 201" BLF
+21. Call will immediately be transfered (Blind)
+22. Observe the BLF reflecting ringing, busy and then available for remote agent
 
 ### What screenshots do you want me to capture:
 - [ ] Capture01 request
