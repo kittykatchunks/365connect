@@ -29,6 +29,7 @@ module.exports = (env, argv) => {
         './pwa/js/contacts-manager.js',
         './pwa/js/company-numbers-manager.js',
         './pwa/js/blf-button-manager.js',
+        './pwa/js/data-import-export-manager.js',
         './pwa/js/agent-buttons.js',
         './pwa/js/phone.js',
         './pwa/js/app-startup.js',
