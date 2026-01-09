@@ -85,7 +85,7 @@ _Add any specific info regarding above screenshot requests_
 ---
 
 ## **Scenario 4: Multi-Line Call Management**
-**Purpose:** Capture multiple simultaneous calls (VTD feature requires this method as often this service is used in response to an enquiry from a customer calling in)
+**Purpose:** Capture simultaneous calls usage (VTD feature requires this method as often this service is used in response to an enquiry from a customer calling in)
 
 ### Steps:
 1. Recieve and answer incoming call on Line 1 (green)
