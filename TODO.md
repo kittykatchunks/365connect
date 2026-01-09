@@ -20,13 +20,13 @@
     - [X] If tickbox is selected a dropdown should appear with two options available 'Blind'/'Attended' it should default to the opposite of the current selected default transfer method in settings
 - [X] Ensure that manually creating Company Number entries that the Company ID is unique, maybe be good idea to automatically autofill the field in the Modal with the lowest available not used Company ID 
 - [X] Remove unnecessary fields of 'created at' and 'updated at' currently being stored in Company Numbers in local storage
-- [ ] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installtions)
-    - [ ] Addition of Import/Export buttons in Settings under Diagnostics menu
-    - [ ] When selecting Export button should export ALL exportable data to file
-    - [ ] Local storage fields of BlfButtons, CompanyNumbers, contacts and tabVisibilitySettings to be exported
-    - [ ] When selecting import a Modal should appear with the seperate Data parts available (user selectable) to Import
-    - [ ] The modal should have all 4 tickbox options selected by default they should be named simply as BLF Buttons, Contacts, Company Numbers, Tabs Available
-    - [ ] This data WILL overwrite existing data so probably good idea to warn with options to Continue/Cancel
+- [X] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installtions)
+    - [X] Addition of Import/Export buttons in Settings under Diagnostics menu
+    - [X] When selecting Export button should export ALL exportable data to file
+    - [X] Local storage fields of BlfButtons, CompanyNumbers, contacts and tabVisibilitySettings to be exported
+    - [X] When selecting import a Modal should appear with the seperate Data parts available (user selectable) to Import
+    - [X] The modal should have all 4 tickbox options selected by default they should be named simply as BLF Buttons, Contacts, Company Numbers, Tabs Available
+    - [X] This data WILL overwrite existing data so probably good idea to warn with options to Continue/Cancel
 - [ ] Find best way of increasing amount of BLF key available, may look at option in settings when BLF enabled to have dropdown with 20(default)/40/60 keys option.  Then maybe have a next/previous (or just next cycled around) to replace curreently shown with next 20 keys
 - [ ] Create API call for Company Numbers from the Phantom server
     - [ ] This API call should only be enabled if Company Numbers tab is enabled in Settings

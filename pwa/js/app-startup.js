@@ -261,6 +261,10 @@ class ApplicationStartup {
         App.managers.companyNumbers = new CompanyNumbersManager();
         console.log('✅ Company Numbers Manager created');
         
+        console.log('💾 Creating Data Import/Export Manager...');
+        App.managers.dataImportExport = new DataImportExportManager();
+        console.log('✅ Data Import/Export Manager created');
+        
         // Set up manager event communication
         this.setupManagerEventListeners();
         
@@ -374,6 +378,16 @@ class ApplicationStartup {
                 console.log('✅ Company Numbers Manager initialized');
             } catch (error) {
                 console.warn('⚠️ Failed to initialize Company Numbers Manager:', error);
+            }
+        }
+        
+        // Initialize Data Import/Export manager
+        if (App.managers.dataImportExport) {
+            try {
+                await App.managers.dataImportExport.initialize();
+                console.log('✅ Data Import/Export Manager initialized');
+            } catch (error) {
+                console.warn('⚠️ Failed to initialize Data Import/Export Manager:', error);
             }
         }
         

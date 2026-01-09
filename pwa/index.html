@@ -801,6 +801,18 @@
                                                 value="500" />
                                             <small class="setting-help-text" data-translate="iceGatheringTimeoutHelp">WebRTC ICE candidate gathering timeout in milliseconds (100-10000ms)</small>
                                         </div>
+                                        <div class="setting-item">
+                                            <label data-translate="importExportData">Import/Export Data:</label>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <button type="button" id="exportDataBtn" class="btn-secondary" style="flex: 1;">
+                                                    <i class="fa fa-download"></i> <span data-translate="exportData">Export Data</span>
+                                                </button>
+                                                <button type="button" id="importDataBtn" class="btn-secondary" style="flex: 1;">
+                                                    <i class="fa fa-upload"></i> <span data-translate="importData">Import Data</span>
+                                                </button>
+                                            </div>
+                                            <small class="setting-help-text" data-translate="importExportHelp">Export or import BLF buttons, contacts, company numbers, and tab settings</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -908,6 +920,7 @@
     <script type="text/javascript" src="js/contacts-manager.js"></script>
     <script type="text/javascript" src="js/company-numbers-manager.js"></script>
     <script type="text/javascript" src="js/blf-button-manager.js"></script>
+    <script type="text/javascript" src="js/data-import-export-manager.js"></script>
     <script type="text/javascript" src="js/agent-buttons.js"></script>
     <script type="text/javascript" src="js/phone.js"></script>
     
@@ -1041,6 +1054,61 @@
             });
         });
     </script>
+
+    <!-- Import Data Modal -->
+    <div id="importDataModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 data-translate="import_data">Import Data</h3>
+                <button class="modal-close" id="importModalClose">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label data-translate="select_file">Select File:</label>
+                    <input type="file" id="dataFileInput" accept=".json" style="margin-top: 10px;" />
+                    <small class="setting-help-text" data-translate="select_json_file">Select a JSON file exported from Connect365</small>
+                </div>
+                
+                <div class="setting-item" style="margin-top: 20px;">
+                    <label data-translate="select_data_to_import">Select data to import:</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importBlfButtons" checked />
+                            <span data-translate="blf_buttons">BLF Buttons</span>
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importContacts" checked />
+                            <span data-translate="contacts_label">Contacts</span>
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importCompanyNumbers" checked />
+                            <span data-translate="company_numbers_label">Company Numbers</span>
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importTabSettings" checked />
+                            <span data-translate="tabs_available">Tabs Available</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="warning-message" style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+                    <i class="fa fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    <strong data-translate="warning">Warning:</strong>
+                    <span data-translate="import_warning">This will overwrite existing data for the selected sections. Are you sure you wish to continue?</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px; border-top: 1px solid #ddd;">
+                <button type="button" id="importCancelBtn" class="btn-secondary">
+                    <span data-translate="cancel">Cancel</span>
+                </button>
+                <button type="button" id="importContinueBtn" class="btn-primary" disabled>
+                    <span data-translate="continue">Continue</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Transfer Modal -->
     <div id="transferModal" class="modal-overlay transfer-modal">

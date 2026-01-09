@@ -620,7 +620,7 @@ class CompanyNumbersManager {
         const modalHtml = `
             <div class="modal-content company-modal">
                 <div class="modal-header">
-                    <h2>Add Company Number</h2>
+                    <h2>${t('add_company_number', 'Add Company Number')}</h2>
                     <button class="modal-close" onclick="App.managers.companyNumbers?.closeModal()">
                         <i class="fa fa-times"></i>
                     </button>
@@ -628,20 +628,20 @@ class CompanyNumbersManager {
                 <div class="modal-body">
                     <form id="addCompanyForm">
                         <div class="form-group">
-                            <label for="companyId">Company ID (1-99) *</label>
+                            <label for="companyId">${t('company_id_label', 'Company ID (1-99)')} *</label>
                             <input type="number" id="companyId" name="id" min="1" max="99" value="${lowestAvailableId || ''}" required />
                         </div>
                         <div class="form-group">
-                            <label for="companyName">Company Name *</label>
+                            <label for="companyName">${t('company_name_label', 'Company Name')} *</label>
                             <input type="text" id="companyName" name="name" required />
                         </div>
                         <div class="form-group">
-                            <label for="companyNumber">Telephone Number *</label>
+                            <label for="companyNumber">${t('telephone_number_label', 'Telephone Number')} *</label>
                             <input type="tel" id="companyNumber" name="number" required />
                         </div>
                         <div class="modal-actions">
-                            <button type="submit" class="btn-primary">Add Company</button>
-                            <button type="button" class="btn-secondary" onclick="App.managers.companyNumbers?.closeModal()">Cancel</button>
+                            <button type="submit" class="btn-primary">${t('add_company_number', 'Add Company Number')}</button>
+                            <button type="button" class="btn-secondary" onclick="App.managers.companyNumbers?.closeModal()">${t('cancel', 'Cancel')}</button>
                         </div>
                     </form>
                 </div>

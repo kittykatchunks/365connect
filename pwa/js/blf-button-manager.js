@@ -699,14 +699,14 @@ class BLFButtonManager {
                         <div class="form-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" id="blfOverrideTransfer">
-                                Override default transfer method for this key
+                                <span data-translate="override_transfer_method">Override default transfer method for this key</span>
                             </label>
                         </div>
                         <div class="form-group" id="blfTransferMethodGroup" style="display: none; margin-left: 20px;">
-                            <label for="blfTransferMethod">Transfer Method:</label>
+                            <label for="blfTransferMethod" data-translate="transfer_method">Transfer Method:</label>
                             <select id="blfTransferMethod" class="form-control">
-                                <option value="blind">Blind</option>
-                                <option value="attended">Attended</option>
+                                <option value="blind" data-translate="blind_transfer">Blind</option>
+                                <option value="attended" data-translate="attended_transfer">Attended</option>
                             </select>
                         </div>
                     </div>
