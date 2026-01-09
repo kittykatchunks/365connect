@@ -284,6 +284,10 @@ _Add any specific info regarding above screenshot requests_
 2. Click "Add Company Number" and complete fields in Modal and Save
 3. Click Edit icon button to demonstrate editing of Name field
 4. Click "Delete All" to showing warning message
+5. Navigate to "Dial Tab"
+6. Observe new UI option to Select Company CLI
+7. Select Company CLIP to present from dropdown
+8. Select the appearing details to confirm
 
 ### What screenshots do you want me to capture:
 - [ ] Capture01 request
@@ -354,28 +358,6 @@ _Add any specific info regarding above screenshot requests_
 
 ---
 
-## **Scenario 15: Error States & Edge Cases**
-**Purpose:** Capture error handling UI
-
-### Steps:
-1. Disconnect from network
-2. Reconnect
-3. Enter invalid SIP credentials
-4. Try to make call while unregistered
-5. Deny notification permissions
-6. Attempt to answer call with no audio devices
-7. Exceed 3 concurrent calls
-
-### What screenshots do you want me to capture:
-- [ ] Capture01 request
-- [ ] Capture02 request
-- [ ] Capture03 request
-
-### Notes:
-_Add any specific info regarding above screenshot requests_
-
----
-
 ## Screenshot Request Explaination:
 
 I have done a few examples below to give you idea of what I need for screen requests:
@@ -398,4 +380,4 @@ Scenario04_Request03.png
 ```
 
 **Document Status:** Ready for screenshot capture requests 
-**Total Scenarios:** 15
+**Total Scenarios:** 14

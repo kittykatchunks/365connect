@@ -14,9 +14,17 @@
 ### UI improvements/Features
 - [X] Poll every two minutes to try to subscribe to notfications for BLF keys
 - [ ] Option to override the default BLF transfer option for individual BLF keys.  To enable things like attended transfer to speeddial with mobile number whilst still having blind transfer to agents etc.
+- [ ] Option to import/export parts of the local storage into file that can be used on other installations of the PWA (to make life easier for installtions)
+    - [ ] Addition of Import/Export buttons in Settings under Diagnostics menu
+    - [ ] When selecting Export button should export ALL exportable data to file
+    - [ ] LIST DATA AVAILABLE HERE
+    - [ ] When selecting import a Modal should appear with the seperate Data parts available (user selectable) to Import
+    - [ ] This data WILL overwrite existing data so probably good idea to warn with options to Continue/Cancel
+- [ ] Find best way of increasing amount of BLF key available, may look at option in settings when BLF enabled to have dropdown with 20(default)/40/60 keys option.  Then maybe have a next/previous (or just next cycled around) to replace curreently shown with next 20 keys
 
 ### Issues Outstanding
 - [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)
+- [ ] Ensure index number in company numbers is unique before saving
 
 ### PWA & Installation
 - [x] Fix duplicate service worker registration
