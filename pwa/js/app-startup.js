@@ -829,6 +829,15 @@ class ApplicationStartup {
                 const dialStyle = window.getComputedStyle(dialInputRow);
                 console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'), 'computed style:', dialStyle.display);
                 console.log('🖥️ dialInputRow position:', dialStyle.position, 'z-index:', dialStyle.zIndex, 'visibility:', dialStyle.visibility);
+                
+                // Focus the dial input to prevent line key button from capturing first keystroke
+                const dialInput = document.getElementById('dialInput');
+                if (dialInput) {
+                    setTimeout(() => {
+                        dialInput.focus();
+                        console.log('🎯 Dial input focused after line switch');
+                    }, 50); // Small delay to ensure DOM is fully updated
+                }
             }
             if (callStatusRow) {
                 callStatusRow.classList.add('hidden');
