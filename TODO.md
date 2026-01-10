@@ -39,7 +39,7 @@
     - [X] This data WILL overwrite existing data so probably good idea to warn with options to Continue/Cancel
 - [ ] Find best way of increasing amount of BLF key available, may look at option in settings when BLF enabled to have dropdown with 20(default)/40/60 keys option.  Then maybe have a next/previous (or just next cycled around) to replace curreently shown with next 20 keys
 - [X] I wish to rename the fields that we store each Company Number as to id -> company_id, number -> cid name can stay as is
-- [ ] Create API call for Company Numbers from the Phantom server
+- [X] Create API call for Company Numbers from the Phantom server
     - This API call should only be enabled if Company Numbers tab is enabled in Settings
     - The API call will be https://server1-XXXX.phantomapi.net:{port number}/api/companyNumbers
     - The returned data will be JSON object 'company_numbers' within the object each entry will have three parts named 'company_id','cid' and 'name'.  This entries should reflect the naming convention used by local storage CompanyNumbers
