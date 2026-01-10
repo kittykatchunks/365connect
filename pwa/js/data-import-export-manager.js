@@ -284,6 +284,8 @@ class DataImportExportManager {
                     if (window.App && window.App.managers && window.App.managers.blf) {
                         window.App.managers.blf.loadBlfButtons();
                         window.App.managers.blf.renderBlfButtons();
+                        // Subscribe to BLF buttons if SIP is registered
+                        window.App.managers.blf.subscribeToAllBlfButtons();
                     }
                 }
             }
