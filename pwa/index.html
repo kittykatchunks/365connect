@@ -107,7 +107,7 @@
             
             <!-- Contacts Controls - Only show for contacts -->
             <div id="contactsControlsContainer" class="contacts-controls-container hidden" data-view="contacts">
-                <!-- Top row: Add Contact (left) + Import/Export (right) -->
+                <!-- Top row: Add Contact (left) + Delete All (right) -->
                 <div class="contacts-top-controls">
                     <button id="addContactBtn" class="btn-primary add-contact-btn">
                         <i class="fa fa-plus"></i> <span data-translate="add_contact">Add Contact</span>
@@ -115,12 +115,6 @@
                     <div class="contacts-import-export">
                         <button id="deleteAllContactsBtn" class="btn-danger delete-all-btn" data-translate-title="deleteAllContacts" title="Delete all contacts">
                             <i class="fa fa-trash"></i> <span data-translate="delete_all">Delete All</span>
-                        </button>
-                        <button id="importContactsBtn" class="btn-secondary import-btn" data-translate-title="importContactsFromCSV" title="Import contacts from CSV">
-                            <i class="fa fa-upload"></i> <span data-translate="import">Import</span>
-                        </button>
-                        <button id="exportContactsBtn" class="btn-secondary export-btn" data-translate-title="exportContactsToCSV" title="Export contacts to CSV">
-                            <i class="fa fa-download"></i> <span data-translate="export">Export</span>
                         </button>
                     </div>
                 </div>
@@ -133,8 +127,6 @@
                         </button>
                     </div>
                 </div>
-                <!-- Hidden file input for CSV import -->
-                <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
             </div>
 
             <!-- Search Bar - Only show for other tabs that need it -->
@@ -405,12 +397,6 @@
                                 <button id="refreshCompanyNumbersBtn" class="btn-secondary refresh-btn" data-translate-title="refresh_company_numbers" title="Refresh company numbers from server">
                                     <i class="fa fa-refresh"></i> <span data-translate="refresh">Refresh</span>
                                 </button>
-                                <button id="importCompanyNumbersBtn" class="btn-secondary import-btn" data-translate-title="importCompanyNumbersFromCSV" title="Import company numbers from CSV">
-                                    <i class="fa fa-upload"></i> <span data-translate="import">Import</span>
-                                </button>
-                                <button id="exportCompanyNumbersBtn" class="btn-secondary export-btn" data-translate-title="exportCompanyNumbersToCSV" title="Export company numbers to CSV">
-                                    <i class="fa fa-download"></i> <span data-translate="export">Export</span>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -422,8 +408,6 @@
                             <p data-translate="add_company_numbers_cli">Add company numbers to enable CLI selection</p>
                         </div>
                     </div>
-                    <!-- Hidden file input for CSV import -->
-                    <input type="file" id="companyNumbersCsvFileInput" accept=".csv" class="hidden" />
                 </div>
             </div>
 
