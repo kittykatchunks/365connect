@@ -104,7 +104,7 @@
     "interface": "Interfaz",
     "audio": "Audio",
     "features": "Características",
-    "diagnostics_debugging": "Diagnósticos/Depuración",
+    "advanced": "Avanzado",
     "phantom_server_id": "ID de Servidor Phantom",
     "three_four_digit_phantom": "PhantomID de 3 o 4 dígitos",
     "username": "Usuario",

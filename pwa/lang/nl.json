@@ -104,7 +104,7 @@
     "interface": "Interface",
     "audio": "Audio",
     "features": "Functies",
-    "diagnostics_debugging": "Diagnostiek/Debugging",
+    "advanced": "Geavanceerd",
     "phantom_server_id": "Phantom Server ID",
     "three_four_digit_phantom": "3 of 4 cijferig PhantomID",
     "username": "Gebruikersnaam",
