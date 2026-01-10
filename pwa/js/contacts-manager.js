@@ -84,9 +84,7 @@ class ContactsManager {
             firstName: contactData.firstName?.trim() || '',
             lastName: contactData.lastName?.trim() || '',
             companyName: contactData.companyName?.trim() || '',
-            phoneNumber: contactData.phoneNumber?.trim() || '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            phoneNumber: contactData.phoneNumber?.trim() || ''
         };
 
         this.contacts.push(contact);
@@ -112,8 +110,7 @@ class ContactsManager {
             firstName: contactData.firstName?.trim() || '',
             lastName: contactData.lastName?.trim() || '',
             companyName: contactData.companyName?.trim() || '',
-            phoneNumber: contactData.phoneNumber?.trim() || '',
-            updatedAt: new Date().toISOString()
+            phoneNumber: contactData.phoneNumber?.trim() || ''
         };
 
         this.saveContacts();
