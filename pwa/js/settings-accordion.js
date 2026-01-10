@@ -185,8 +185,8 @@
                     // If this tab is currently active, switch to dial tab
                     if (tab.classList.contains('active')) {
                         // Switch to dial tab using UI State Manager if available
-                        if (App && App.managers && App.managers.ui && typeof App.managers.ui.switchView === 'function') {
-                            App.managers.ui.switchView('dial');
+                        if (App && App.managers && App.managers.ui && typeof App.managers.ui.setCurrentView === 'function') {
+                            App.managers.ui.setCurrentView('dial');
                         } else {
                             // Fallback: manually switch to dial tab
                             tab.classList.remove('active');
@@ -273,8 +273,8 @@
             if (isFirstTimeSetup()) {
                 console.log('🆕 First time setup detected');
                 // Switch to settings tab
-                if (App && App.managers && App.managers.ui && typeof App.managers.ui.switchView === 'function') {
-                    App.managers.ui.switchView('settings');
+                if (App && App.managers && App.managers.ui && typeof App.managers.ui.setCurrentView === 'function') {
+                    App.managers.ui.setCurrentView('settings');
                 }
                 // Open connection settings accordion
                 openConnectionSettings();
