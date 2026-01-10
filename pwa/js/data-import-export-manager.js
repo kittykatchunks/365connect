@@ -273,7 +273,7 @@ class DataImportExportManager {
                     importedCount++;
                     
                     // Auto-enable BLF buttons setting
-                    window.localDB.setItem('BlfEnabled', 'true');
+                    window.localDB.setItem('BlfEnabled', '1');
                     const blfEnabledCheckbox = document.getElementById('BlfEnabled');
                     if (blfEnabledCheckbox) {
                         blfEnabledCheckbox.checked = true;
@@ -281,11 +281,11 @@ class DataImportExportManager {
                     console.log('💾 Auto-enabled BLF Buttons setting');
                     
                     // Reload BLF buttons if manager exists
-                    if (window.App && window.App.managers && window.App.managers.blf) {
-                        window.App.managers.blf.loadBlfButtons();
-                        window.App.managers.blf.renderBlfButtons();
+                    if (window.BLFManager) {
+                        window.BLFManager.loadBlfButtons();
+                        window.BLFManager.renderBlfButtons();
                         // Subscribe to BLF buttons if SIP is registered
-                        window.App.managers.blf.subscribeToAllBlfButtons();
+                        window.BLFManager.subscribeToAllBlfButtons();
                     }
                 }
             }
