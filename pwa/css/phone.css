@@ -2195,6 +2195,12 @@ input[type="checkbox"]:checked::after {
     outline: none !important;
 }
 
+/* Disable jQuery UI selectable helper dashed borders globally */
+.ui-selectable-helper {
+    border: none !important;
+    display: none !important;
+}
+
 /* Ensure focus remains visible in scrollable areas */
 .content-area *:focus,
 .contactArea *:focus,
@@ -4122,6 +4128,14 @@ body.view-dial .agent-keys-container { display: block; }
 }
 
 /* ===== COMPANY NUMBERS CONTAINER ===== */
+
+/* Prevent jQuery UI selectable helper from showing dashed borders */
+.company-numbers-container .ui-selectable-helper,
+.company-numbers-list .ui-selectable-helper,
+.company-numbers-table .ui-selectable-helper {
+    border: none !important;
+    display: none !important;
+}
 
 .company-numbers-container {
     flex: 1;
