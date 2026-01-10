@@ -46,7 +46,7 @@ module.exports = (env, argv) => {
       publicPath: '/'
     },
     
-    devtool: isProduction ? 'source-map' : 'eval-source-map',
+    devtool: isProduction ? false : 'eval-source-map',
     
     module: {
       rules: [
