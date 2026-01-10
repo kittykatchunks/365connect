@@ -76,6 +76,15 @@
             header.classList.add('active');
             content.classList.add('active');
             localStorage.setItem('activeAccordionPanel', 'connectionSettings');
+            
+            // Focus on the first input field (PhantomID) after a short delay
+            // to ensure the panel is fully visible
+            setTimeout(() => {
+                const phantomIdInput = document.getElementById('PhantomID');
+                if (phantomIdInput) {
+                    phantomIdInput.focus();
+                }
+            }, 150);
         }
     }
     
