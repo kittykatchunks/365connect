@@ -530,15 +530,17 @@ class ContactsManager {
     }
 
     renderEmptyState(container) {
-        const message = this.searchQuery ? 'No contacts found matching your search' : 'No contacts yet';
-        const actionText = this.searchQuery ? 'Try a different search term' : 'Add your first contact';
+        const message = this.searchQuery ? t('no_contacts_found', 'No contacts found matching your search') : t('no_contacts_yet', 'No contacts yet');
+        const actionText = this.searchQuery ? t('try_different_search', 'Try a different search term') : t('add_first_contact', 'Add your first contact to get started');
+        const messageKey = this.searchQuery ? 'no_contacts_found' : 'no_contacts_yet';
+        const actionKey = this.searchQuery ? 'try_different_search' : 'add_first_contact';
         
         container.innerHTML = `
             <div class="no-contacts-message">
                 <i class="fa fa-users"></i>
-                <h3>${message}</h3>
-                <p>${actionText}</p>
-                ${!this.searchQuery ? '<button class="btn-primary" onclick="App.managers.contacts.showAddContactModal()">Add Contact</button>' : ''}
+                <h3 data-translate="${messageKey}">${message}</h3>
+                <p data-translate="${actionKey}">${actionText}</p>
+                ${!this.searchQuery ? `<button class="btn-primary" onclick="App.managers.contacts.showAddContactModal()" data-translate="add_contact">${t('add_contact', 'Add Contact')}</button>` : ''}
             </div>
         `;
     }

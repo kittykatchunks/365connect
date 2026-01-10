@@ -85,6 +85,8 @@
     "search_contacts": "Contacten zoeken...",
     "search": "Zoeken...",
     "no_contacts_yet": "Nog geen contacten",
+    "no_contacts_found": "Geen contacten gevonden die overeenkomen met uw zoekopdracht",
+    "try_different_search": "Probeer een andere zoekterm",
     "add_first_contact": "Voeg uw eerste contact toe om te beginnen",
     "call_history": "Oproepgeschiedenis",
     "clear_all": "Alles Wissen",

@@ -85,6 +85,8 @@
     "search_contacts": "Buscar contactos...",
     "search": "Buscar...",
     "no_contacts_yet": "Aún no hay contactos",
+    "no_contacts_found": "No se encontraron contactos que coincidan con su búsqueda",
+    "try_different_search": "Intente un término de búsqueda diferente",
     "add_first_contact": "Agregue su primer contacto para comenzar",
     "call_history": "Historial de Llamadas",
     "clear_all": "Limpiar Todo",

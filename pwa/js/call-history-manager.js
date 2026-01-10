@@ -284,8 +284,8 @@ class CallHistoryManager extends EventTarget {
             return `
                 <div class="no-history-message">
                     <i class="fa fa-phone-square"></i>
-                    <h3>No Call History</h3>
-                    <p>Your call history will appear here after you make or receive calls.</p>
+                    <h3 data-translate="no_call_history">${t('no_call_history', 'No Call History')}</h3>
+                    <p data-translate="call_history_will_appear">${t('call_history_will_appear', 'Your call history will appear here after you make or receive calls.')}</p>
                 </div>
             `;
         }

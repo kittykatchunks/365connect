@@ -500,9 +500,9 @@ class CompanyNumbersManager {
             container.innerHTML = `
                 <div class="no-company-numbers-message">
                     <i class="fa fa-building"></i>
-                    <h3>No company numbers yet</h3>
-                    <p>Add company numbers to enable CLI selection</p>
-                    <button class="btn-primary" onclick="App.managers.companyNumbers?.showAddCompanyModal()">Add Company Number</button>
+                    <h3 data-translate="no_company_numbers_yet">${t('no_company_numbers_yet', 'No company numbers yet')}</h3>
+                    <p data-translate="add_company_numbers_cli">${t('add_company_numbers_cli', 'Add company numbers to enable CLI selection')}</p>
+                    <button class="btn-primary" onclick="App.managers.companyNumbers?.showAddCompanyModal()" data-translate="add_company_number">${t('add_company_number', 'Add Company Number')}</button>
                 </div>
             `;
             return;
@@ -711,7 +711,7 @@ class CompanyNumbersManager {
         if (!dropdown) return;
 
         const currentValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Select Company CLI</option>';
+        dropdown.innerHTML = `<option value="" data-translate="select_company_cli">${t('select_company_cli', 'Select Company CLI')}</option>`;
         
         const sorted = this.getAllCompanies();
         sorted.forEach(company => {
