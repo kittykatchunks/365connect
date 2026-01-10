@@ -383,8 +383,6 @@
     "warning": "Warning",
     "import_warning": "This will overwrite existing data for the selected sections. Are you sure you wish to continue?",
     "continue": "Continue",
-    "storage_warning": "Storage Not Persistent",
-    "storage_warning_message": "Your settings may be cleared by the browser. For best results, install as a PWA app.",
     "override_transfer_method": "Override default transfer method for this key",
     "transfer_method": "Transfer Method:",
     "blind_transfer": "Blind",

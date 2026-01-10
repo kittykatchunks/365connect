@@ -174,47 +174,17 @@ class ApplicationStartup {
     async requestPersistentStorage() {
         if (navigator.storage && navigator.storage.persist) {
             try {
-                // Check if already persisted
-                const alreadyPersisted = await navigator.storage.persisted();
-                
-                if (alreadyPersisted) {
-                    console.log('✅ Storage is already persistent');
-                    return true;
-                }
-                
-                // Request persistent storage
                 const isPersisted = await navigator.storage.persist();
-                console.log(`💾 Persistent storage request result: ${isPersisted}`);
+                console.log(`💾 Persistent storage granted: ${isPersisted}`);
                 
                 if (!isPersisted) {
-                    console.warn('⚠️ Persistent storage NOT granted - data may be cleared by browser');
-                    console.warn('💡 To grant persistent storage:');
-                    console.warn('   1. Install as PWA (not just bookmark)');
-                    console.warn('   2. Use the app regularly');
-                    console.warn('   3. Check browser permissions');
-                    
-                    // Show user notification
-                    if (App.managers?.ui) {
-                        const t = window.languageManager?.t || ((key, def) => def);
-                        App.managers.ui.addNotification({
-                            type: 'warning',
-                            title: t('storage_warning', 'Storage Not Persistent'),
-                            message: t('storage_warning_message', 'Your settings may be cleared. Please install as a PWA app for persistent storage.'),
-                            duration: 10000
-                        });
-                    }
-                } else {
-                    console.log('✅ Persistent storage successfully granted!');
+                    console.warn('⚠️ Persistent storage not granted - data may be cleared by browser');
                 }
-                
-                return isPersisted;
             } catch (error) {
                 console.error('❌ Failed to request persistent storage:', error);
-                return false;
             }
         } else {
             console.warn('⚠️ Persistent Storage API not available in this browser');
-            return false;
         }
     }
     
