@@ -18,7 +18,8 @@
     - [X] Button and text in no-contacts-message
     - [X] Text in the no-history-message
     - [X] Button and text in the no-company-numbers-message
-- [ ] Investigate why when closing the PWA and restarting PC, when I select the PWA to open again it appears to be a fresh installation and has no stored local storage info
+    - [X] The 'Select Company CLI' option box title on 'Dial' tab
+- [X] Investigate why when closing the PWA and restarting PC, when I select the PWA to open again it appears to be a fresh installation and has no stored local storage info
 
 ### UI improvements/Features
 - [X] Poll every two minutes to try to subscribe to notfications for BLF keys
@@ -59,7 +60,7 @@
 - [ ] Test PWA installation on Edge, Chrome, Safari
 - [ ] Add PWA screenshots to manifest.json
 - [ ] Test offline functionality
-- [ ] Add PWA update notification when new version available
+- [X] Add PWA update notification when new version available
 
 ### Busylight Integration
 - [ ] Test busylight-bridge connection with actual hardware
@@ -79,31 +80,23 @@
 
 ### SIP & Calling Features
 - [ ] Test SIP registration with different servers
-- [ ] Improve error messages for SIP connection failures
 - [ ] Add call quality indicators
 - [ ] Test call transfer (blind and attended)
-- [ ] Add call recording UI indicators
 - [ ] Test voicemail MWI (Message Waiting Indicator)
 
 ### UI/UX Improvements
 - [ ] Test dark/light/auto theme switching
-- [ ] Add loading states for async operations
-- [ ] Improve mobile responsiveness
-- [ ] Add tooltips for complex features
-- [ ] Test keyboard shortcuts
+- [ ] Test keyboard usage ('+', '*', Numeric, Enter and Escape keys) for all possible call lifetime functionalities (idle on dial screen, during transfer modal display etc.)
 - [ ] Add accessibility (ARIA) labels
 
 ### BLF (Busy Lamp Field)
-- [ ] Test BLF with multiple extensions
-- [ ] Add BLF status change animations
-- [ ] Improve BLF button layout
-- [ ] Test BLF with different SIP servers
+- [ ] Test 1
 
 ### Audio Management
 - [ ] Test audio device switching during calls
 - [ ] Add audio device availability detection
 - [ ] Test ringtone playback on different devices
-- [ ] Add volume controls for ringer/speaker/mic
+- [ ] Add volume control for ringer
 
 ## 🔧 Low Priority
 
@@ -122,9 +115,9 @@
 - [ ] Document browser compatibility
 
 ### Features - Future
-- [ ] Add queue monitoring tab
-- [ ] 3 line capability
-- [ ] Add multi-language support expansion
+- [ ] Add 'Queue Monitor' optional Tab that will contain feature to monitor SLA's for selected Phantom queues
+- [X] 3 line capability
+- [X] Add multi-language support expansion
 - [X] Add contact import/export
 
 ## 🐛 Known Issues
@@ -172,15 +165,10 @@
 
 ## 💡 Ideas / Enhancements
 
-- [ ] Add presence status (Available, Busy, Away, DND)
-- [X] Add call parking
-- [ ] Add conference calling
-- [ ] Add call queuing
-- [ ] Add call statistics
-- [ ] Add browser extension for click-to-call
+- [ ] Idea 1
 
 ---
 
-**Last Updated:** January 5, 2026
+**Last Updated:** January 10, 2026
 **Project:** Autocab365Connect PWA
-**Maintainer:** James
+**Maintainer:** James Frayne

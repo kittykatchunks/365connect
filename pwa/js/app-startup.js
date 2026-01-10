@@ -166,6 +166,26 @@ class ApplicationStartup {
         
         window.localDB.removeItem(testKey);
         console.log('✅ LocalDB initialized and tested');
+        
+        // Request persistent storage to prevent data loss
+        await this.requestPersistentStorage();
+    }
+    
+    async requestPersistentStorage() {
+        if (navigator.storage && navigator.storage.persist) {
+            try {
+                const isPersisted = await navigator.storage.persist();
+                console.log(`💾 Persistent storage granted: ${isPersisted}`);
+                
+                if (!isPersisted) {
+                    console.warn('⚠️ Persistent storage not granted - data may be cleared by browser');
+                }
+            } catch (error) {
+                console.error('❌ Failed to request persistent storage:', error);
+            }
+        } else {
+            console.warn('⚠️ Persistent Storage API not available in this browser');
+        }
     }
     
     async initializeLanguage() {
@@ -1293,7 +1313,7 @@ class ApplicationStartup {
         document.body.appendChild(errorDiv);
     }
     
-    showDiagnostics() {
+    async showDiagnostics() {
         const diagnostics = {
             'Dependencies': {
                 'jQuery': typeof window.$,
@@ -1316,6 +1336,28 @@ class ApplicationStartup {
                 'User Agent': navigator.userAgent
             }
         };
+        
+        // Add storage diagnostics
+        if (navigator.storage) {
+            diagnostics['Storage Info'] = {};
+            try {
+                if (navigator.storage.persisted) {
+                    const persisted = await navigator.storage.persisted();
+                    diagnostics['Storage Info']['Persistent'] = persisted ? 'Yes ✅' : 'No ⚠️';
+                }
+                
+                if (navigator.storage.estimate) {
+                    const estimate = await navigator.storage.estimate();
+                    diagnostics['Storage Info']['Usage'] = `${(estimate.usage / 1024 / 1024).toFixed(2)} MB`;
+                    diagnostics['Storage Info']['Quota'] = `${(estimate.quota / 1024 / 1024).toFixed(2)} MB`;
+                    diagnostics['Storage Info']['% Used'] = `${((estimate.usage / estimate.quota) * 100).toFixed(2)}%`;
+                }
+            } catch (error) {
+                diagnostics['Storage Info']['Error'] = error.message;
+            }
+        } else {
+            diagnostics['Storage Info'] = { 'API': 'Not Available' };
+        }
         
         console.group('🔍 Application Diagnostics');
         Object.entries(diagnostics).forEach(([category, items]) => {
