@@ -396,6 +396,14 @@ class ApplicationStartup {
             try {
                 await App.managers.companyNumbers.initialize();
                 console.log('✅ Company Numbers Manager initialized');
+                
+                // Auto-sync from API on startup (silent mode - no success toast)
+                try {
+                    await App.managers.companyNumbers.syncCompanyNumbersFromApi(false);
+                    console.log('✅ Company Numbers API sync completed');
+                } catch (syncError) {
+                    console.warn('⚠️ Company Numbers API sync warning:', syncError);
+                }
             } catch (error) {
                 console.warn('⚠️ Failed to initialize Company Numbers Manager:', error);
             }

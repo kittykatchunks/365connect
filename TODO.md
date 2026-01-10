@@ -40,17 +40,24 @@
 - [ ] Find best way of increasing amount of BLF key available, may look at option in settings when BLF enabled to have dropdown with 20(default)/40/60 keys option.  Then maybe have a next/previous (or just next cycled around) to replace curreently shown with next 20 keys
 - [X] I wish to rename the fields that we store each Company Number as to id -> company_id, number -> cid name can stay as is
 - [ ] Create API call for Company Numbers from the Phantom server
-    - [ ] This API call should only be enabled if Company Numbers tab is enabled in Settings
-    - [ ] The API call will be https://server1-XXXX.phantomapi.net:{port number}/api/companyNumbers
-    - [ ] The returned data will be JSON object 'company_numbers' within the object each entry will have three parts named 'company_id','cid' and 'name'.  They will translate to 
-    - [ ] On each loading of PWA the API should initiate call, there should also be option to refresh manually in Company Numbers tab (between delete all and the import/export buttons)
-    - [ ] If API call fails or returns nothing then an info toast should be displayed stating 'No company numbers available on Phantom'
-    - [ ] If API call results in successful retrieval of data then this should be compared to any currently stored data in local storage
-    - [ ] If comparison shows data to be identical then toast success notification should be displayed with message 'Your company numbers is the latest version'
-    - [ ] If comparison shows differences then a warning message should be displayed stating 'All Company Numbers will be overwritten with new retrieved version, are you sure you wish to continue' with Okay/Cancel options available
-    - [ ] If Okay selected, existing data removed from local storage and replaced with download data from API call
-    - [ ] If Cancel selected, then ignore the data downloaded and continue as is
-    - [ ] Dont forget to internationalise the toast notifications
+    - This API call should only be enabled if Company Numbers tab is enabled in Settings
+    - The API call will be https://server1-XXXX.phantomapi.net:{port number}/api/companyNumbers
+    - The returned data will be JSON object 'company_numbers' within the object each entry will have three parts named 'company_id','cid' and 'name'.  This entries should reflect the naming convention used by local storage CompanyNumbers
+    - On each loading of PWA the API should initiate call, there should also be option to refresh manually in Company Numbers tab (between delete all and the import/export buttons)
+    - If API call fails or returns nothing then an info toast should be displayed stating 'No company numbers available on Phantom'
+    - If API call results in successful retrieval of data then this should be compared to any currently stored data in local storage.  The comparison should be per entry (e.g. the order of the entries do not need to match as long as firstly total entries are compared first (no need to go further with comparison if total entries are different as they cannot be identical). After totals checked as long as each entry is identical then it should show as identical) e.g. each entries fields company_id,name,cid must be identical in both json and CompanyNumbers in local storage to be identical
+    - If comparison shows data to be identical then toast success notification should be displayed with message 'Your company numbers is the latest version'
+    - If comparison shows differences then a warning message should be displayed stating 'All Company Numbers will be overwritten with new retrieved version, are you sure you wish to continue' with Okay/Cancel options available
+    - If Okay selected, existing data removed from local storage and replaced with downloaded data from API call
+    - If Cancel selected, then ignore the data downloaded and continue as is
+    - Dont forget to internationalise the toast notifications
+
+### Phantom development requests
+- [ ] Dependent of R&D review of security implications.  Assuming that PWA will be hosted on Phantom server, preferrably at https://server1-XXXX.phantomapi.net:19773/pwa that a .env file entry containing the phantom WEB API key could be updated automatically upon change of WEB API via the Phantom UI thus allow the PWA to make API requests without having to expose more functions to NoAuth
+- [ ] API for retrieval of table company_numbers from mysql database (phantom)
+    - API name I wish to use is 'companyNumbers'
+    - Returned data should be JSON object called 'company_numbers' with each entry within database returned with current name:value from database
+- [ ] 
 
 ### Issues Outstanding
 - [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)

@@ -85,6 +85,12 @@ class CompanyNumbersManager {
         if (cliConfirmBtn) {
             cliConfirmBtn.addEventListener('click', () => this.confirmCliChange());
         }
+
+        // Refresh button for API sync
+        const refreshBtn = document.getElementById('refreshCompanyNumbersBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.syncCompanyNumbersFromApi(true));
+        }
     }
 
     isCompanyNumbersTabVisible() {
@@ -877,6 +883,234 @@ class CompanyNumbersManager {
             this.currentSelectedCompany = null;
             this.updateCliDisplay();
         }
+    }
+
+    /* ====================================================================================== */
+    /* API SYNCHRONIZATION */
+    /* ====================================================================================== */
+
+    /**
+     * Check if Company Numbers tab is enabled in settings
+     */
+    isCompanyNumbersTabEnabled() {
+        const checkbox = document.getElementById('ShowBlank1Tab');
+        return checkbox && checkbox.checked;
+    }
+
+    /**
+     * Fetch company numbers from Phantom API
+     * @returns {Array|null} Array of company numbers or null on error
+     */
+    async fetchCompanyNumbersFromApi() {
+        try {
+            // Check if API manager is available
+            if (!App.managers.api) {
+                console.warn('📞 CompanyNumbersManager: API manager not available');
+                return null;
+            }
+
+            console.log('📞 CompanyNumbersManager: Fetching company numbers from Phantom API...');
+            
+            const result = await App.managers.api.get('companyNumbers');
+            
+            if (result.success && result.data && result.data.company_numbers) {
+                console.log('📞 CompanyNumbersManager: Fetched', result.data.company_numbers.length, 'company numbers from API');
+                return result.data.company_numbers;
+            } else {
+                console.warn('📞 CompanyNumbersManager: API returned no company numbers');
+                return null;
+            }
+        } catch (error) {
+            console.error('📞 CompanyNumbersManager: API fetch failed:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Compare API data with local storage data
+     * @param {Array} apiData - Company numbers from API
+     * @param {Array} localData - Company numbers from local storage
+     * @returns {boolean} True if identical, false if different
+     */
+    compareCompanyNumbers(apiData, localData) {
+        // Quick check: compare counts first
+        if (apiData.length !== localData.length) {
+            console.log('📞 CompanyNumbersManager: Different counts -', 
+                'API:', apiData.length, 'Local:', localData.length);
+            return false;
+        }
+
+        // If both empty, they're identical
+        if (apiData.length === 0) {
+            return true;
+        }
+
+        // Deep comparison: check each entry exists in both arrays
+        // Order doesn't matter, so we'll search for matches
+        for (const apiEntry of apiData) {
+            const match = localData.find(localEntry => 
+                localEntry.company_id === apiEntry.company_id &&
+                localEntry.cid === apiEntry.cid &&
+                localEntry.name === apiEntry.name
+            );
+
+            if (!match) {
+                console.log('📞 CompanyNumbersManager: Entry not found in local storage:', apiEntry);
+                return false;
+            }
+        }
+
+        // All entries match
+        console.log('📞 CompanyNumbersManager: All entries match between API and local storage');
+        return true;
+    }
+
+    /**
+     * Synchronize company numbers from Phantom API
+     * @param {boolean} showToasts - Whether to show toast notifications (true for manual refresh)
+     */
+    async syncCompanyNumbersFromApi(showToasts = false) {
+        try {
+            // Check if Company Numbers tab is enabled
+            if (!this.isCompanyNumbersTabEnabled()) {
+                console.log('📞 CompanyNumbersManager: Tab not enabled, skipping API sync');
+                return;
+            }
+
+            console.log('📞 CompanyNumbersManager: Starting API sync...');
+
+            // Fetch data from API
+            const apiData = await this.fetchCompanyNumbersFromApi();
+
+            // Handle no data or error
+            if (!apiData || apiData.length === 0) {
+                if (showToasts) {
+                    this.showWarning(t('no_company_numbers_on_phantom', 'No company numbers available on Phantom'));
+                }
+                return;
+            }
+
+            // Compare with local storage
+            const isIdentical = this.compareCompanyNumbers(apiData, this.companyNumbers);
+
+            if (isIdentical) {
+                // Data is up to date
+                if (showToasts) {
+                    this.showSuccess(t('company_numbers_latest_version', 'Your company numbers is the latest version'));
+                }
+                console.log('✅ CompanyNumbersManager: Company numbers are up to date');
+            } else {
+                // Data is different - show confirmation
+                const confirmed = await this.showApiSyncConfirmation(apiData);
+                
+                if (confirmed) {
+                    // User confirmed - replace data
+                    await this.replaceCompanyNumbersWithApiData(apiData);
+                    this.showSuccess(t('company_numbers_updated_successfully', 'Company numbers updated successfully from server'));
+                    console.log('✅ CompanyNumbersManager: Company numbers updated from API');
+                } else {
+                    // User cancelled - keep existing data
+                    console.log('📞 CompanyNumbersManager: User cancelled API sync');
+                }
+            }
+
+        } catch (error) {
+            console.error('📞 CompanyNumbersManager: API sync failed:', error);
+            if (showToasts) {
+                this.showError(t('failed_to_fetch_company_numbers', 'Failed to fetch company numbers from server'));
+            }
+        }
+    }
+
+    /**
+     * Replace local storage company numbers with API data
+     * @param {Array} apiData - Company numbers from API
+     */
+    async replaceCompanyNumbersWithApiData(apiData) {
+        try {
+            console.log('📞 CompanyNumbersManager: Replacing company numbers with API data...');
+
+            // Clear existing data
+            this.companyNumbers = [];
+
+            // Add all API data
+            apiData.forEach(entry => {
+                this.companyNumbers.push({
+                    company_id: entry.company_id,
+                    cid: entry.cid,
+                    name: entry.name
+                });
+            });
+
+            // Save to localStorage
+            this.saveCompanyNumbers();
+
+            // Update UI
+            this.renderCompanyNumbers();
+            this.updateCliSelector();
+
+            console.log('✅ CompanyNumbersManager: Successfully replaced company numbers with API data');
+
+        } catch (error) {
+            console.error('📞 CompanyNumbersManager: Failed to replace company numbers:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Show confirmation dialog for API sync
+     * @param {Array} apiData - Company numbers from API
+     * @returns {Promise<boolean>} True if user confirms, false if cancelled
+     */
+    async showApiSyncConfirmation(apiData) {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <h3><i class="fa fa-exclamation-triangle"></i> ${t('confirm_sync', 'Confirm Synchronization')}</h3>
+                </div>
+                <div class="modal-body">
+                    <p>${t('company_numbers_will_be_overwritten', 'All Company Numbers will be overwritten with new retrieved version, are you sure you wish to continue?')}</p>
+                    <p><strong>${apiData.length} ${t('company_numbers', 'company numbers')}</strong> ${t('will_be_imported', 'will be imported.')}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary cancel-btn">${t('cancel', 'Cancel')}</button>
+                    <button class="btn-primary confirm-btn">${t('okay', 'Okay')}</button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Handle button clicks
+            const cancelBtn = modal.querySelector('.cancel-btn');
+            const confirmBtn = modal.querySelector('.confirm-btn');
+
+            cancelBtn.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                resolve(false);
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                resolve(true);
+            });
+
+            // Handle overlay click (cancel)
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                    resolve(false);
+                }
+            });
+        });
     }
 
     /* ====================================================================================== */
