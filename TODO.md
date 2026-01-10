@@ -12,7 +12,7 @@
 - [X] If on another tab and an incoming call starts then the tab to maybe flash to alert the user, also check if answering with the windows notification of a call that the dial screen is automatically shown if on another tab
 - [X] On initial installation after the activeAccordianPanel is set, but I would also like to be on the 'Settings' tab as well with the Panel open ready for text entry
 - [X] Rename the 'Diagnostics/Debugging' menu title under 'Settings' tab to 'Advanced'.  Add new language prompts for this name change and remove the old one
-- [ ] Hide the 'Verbose Logging' tickbox, label and the explaintion of the option.  It is under 'Advanced' Menu under 'Settings' tab
+- [X] Hide the 'Verbose Logging' tickbox, label and the explaintion of the option.  It is under 'Advanced' Menu under 'Settings' tab
 - [ ] Investigate why when closing the PWA and restarting PC, when I select the PWA to open again it appears to be a fresh installation and has no stored local storage info 
 
 ### UI improvements/Features
