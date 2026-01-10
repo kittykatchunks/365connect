@@ -19,7 +19,7 @@
     - [X] Text in the no-history-message
     - [X] Button and text in the no-company-numbers-message
     - [X] The 'Select Company CLI' option box title on 'Dial' tab
-- [X] Investigate why when closing the PWA and restarting PC, when I select the PWA to open again it appears to be a fresh installation and has no stored local storage info
+- [ ] Investigate why when closing the PWA and restarting PC, when I select the PWA to open again it appears to be a fresh installation and has no stored local storage info
 
 ### UI improvements/Features
 - [X] Poll every two minutes to try to subscribe to notfications for BLF keys
