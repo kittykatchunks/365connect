@@ -103,14 +103,14 @@ class CompanyNumbersManager {
         }
 
         // Check for duplicate ID
-        if (this.companyNumbers.find(c => c.id === companyData.id)) {
-            throw new Error(`Company ID ${companyData.id} already exists.`);
+        if (this.companyNumbers.find(c => c.company_id === companyData.company_id)) {
+            throw new Error(`Company ID ${companyData.company_id} already exists.`);
         }
 
         const company = {
-            id: parseInt(companyData.id),
+            company_id: parseInt(companyData.company_id),
             name: companyData.name.trim(),
-            number: companyData.number.trim()
+            cid: companyData.cid.trim()
         };
 
         this.companyNumbers.push(company);
@@ -125,7 +125,7 @@ class CompanyNumbersManager {
     }
 
     updateCompanyNumber(companyId, updatedData) {
-        const index = this.companyNumbers.findIndex(c => c.id === companyId);
+        const index = this.companyNumbers.findIndex(c => c.company_id === companyId);
         if (index === -1) {
             throw new Error('Company not found');
         }
@@ -137,7 +137,7 @@ class CompanyNumbersManager {
 
         const company = this.companyNumbers[index];
         company.name = updatedData.name?.trim() || company.name;
-        company.number = updatedData.number?.trim() || company.number;
+        company.cid = updatedData.cid?.trim() || company.cid;
 
         this.saveCompanyNumbers();
         this.renderCompanyNumbers();
@@ -150,7 +150,7 @@ class CompanyNumbersManager {
     }
 
     deleteCompanyNumber(companyId) {
-        const index = this.companyNumbers.findIndex(c => c.id === companyId);
+        const index = this.companyNumbers.findIndex(c => c.company_id === companyId);
         if (index === -1) {
             throw new Error('Company not found');
         }
@@ -190,11 +190,11 @@ class CompanyNumbersManager {
     }
 
     validateCompanyNumber(companyData) {
-        if (!companyData.id || !companyData.name || !companyData.number) {
+        if (!companyData.company_id || !companyData.name || !companyData.cid) {
             return false;
         }
         
-        const id = parseInt(companyData.id);
+        const id = parseInt(companyData.company_id);
         if (isNaN(id) || id < 1 || id > 99) {
             return false;
         }
@@ -203,7 +203,7 @@ class CompanyNumbersManager {
     }
 
     getCompanyById(companyId) {
-        return this.companyNumbers.find(c => c.id === companyId);
+        return this.companyNumbers.find(c => c.company_id === companyId);
     }
 
     getCompanyByName(name) {
@@ -217,7 +217,7 @@ class CompanyNumbersManager {
     getLowestAvailableCompanyId() {
         // Find the lowest available ID from 1-99
         for (let i = 1; i <= 99; i++) {
-            if (!this.companyNumbers.find(c => c.id === i)) {
+            if (!this.companyNumbers.find(c => c.company_id === i)) {
                 return i;
             }
         }
@@ -311,13 +311,13 @@ class CompanyNumbersManager {
         const csvRows = [headers.join(',')];
         
         // Sort by ID for cleaner export
-        const sorted = [...this.companyNumbers].sort((a, b) => a.id - b.id);
+        const sorted = [...this.companyNumbers].sort((a, b) => a.company_id - b.company_id);
         
         sorted.forEach(company => {
             const row = [
-                company.id,
+                company.company_id,
                 this.escapeCSVField(company.name),
-                this.escapeCSVField(company.number)
+                this.escapeCSVField(company.cid)
             ];
             csvRows.push(row.join(','));
         });
@@ -366,11 +366,11 @@ class CompanyNumbersManager {
                 try {
                     if (this.validateCompanyNumber(companyData)) {
                         // Check for duplicate
-                        if (!this.companyNumbers.find(c => c.id === companyData.id)) {
+                        if (!this.companyNumbers.find(c => c.company_id === companyData.company_id)) {
                             this.addCompanyNumberSilent(companyData);
                             successCount++;
                         } else {
-                            errors.push(`ID ${companyData.id} already exists`);
+                            errors.push(`ID ${companyData.company_id} already exists`);
                             errorCount++;
                         }
                     } else {
@@ -405,9 +405,9 @@ class CompanyNumbersManager {
 
     addCompanyNumberSilent(companyData) {
         const company = {
-            id: parseInt(companyData.id),
+            company_id: parseInt(companyData.company_id),
             name: companyData.name.trim(),
-            number: companyData.number.trim()
+            cid: companyData.cid.trim()
         };
 
         this.companyNumbers.push(company);
@@ -432,15 +432,15 @@ class CompanyNumbersManager {
                 const value = values[index] || '';
                 
                 if (header.includes('id') || header === 'company id') {
-                    company.id = parseInt(value);
+                    company.company_id = parseInt(value);
                 } else if (header.includes('name') || header === 'company name') {
                     company.name = value;
                 } else if (header.includes('phone') || header.includes('number') || header.includes('tel')) {
-                    company.number = value;
+                    company.cid = value;
                 }
             });
 
-            if (company.id && company.name && company.number) {
+            if (company.company_id && company.name && company.cid) {
                 companies.push(company);
             }
         }
@@ -509,7 +509,7 @@ class CompanyNumbersManager {
         }
 
         // Sort by ID
-        const sorted = [...this.companyNumbers].sort((a, b) => a.id - b.id);
+        const sorted = [...this.companyNumbers].sort((a, b) => a.company_id - b.company_id);
 
         // Create table
         const table = document.createElement('table');
@@ -535,14 +535,14 @@ class CompanyNumbersManager {
         sorted.forEach(company => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${company.id}</td>
-                <td class="editable-cell" data-company-id="${company.id}" data-field="name">${this.escapeHtml(company.name)}</td>
-                <td class="editable-cell" data-company-id="${company.id}" data-field="number">${this.escapeHtml(company.number)}</td>
+                <td>${company.company_id}</td>
+                <td class="editable-cell" data-company-id="${company.company_id}" data-field="name">${this.escapeHtml(company.name)}</td>
+                <td class="editable-cell" data-company-id="${company.company_id}" data-field="cid">${this.escapeHtml(company.cid)}</td>
                 <td class="actions-cell">
-                    <button class="btn-icon btn-edit" onclick="App.managers.companyNumbers?.editCompanyInline(${company.id})" title="Edit">
+                    <button class="btn-icon btn-edit" onclick="App.managers.companyNumbers?.editCompanyInline(${company.company_id})" title="Edit">
                         <i class="fa fa-edit"></i>
                     </button>
-                    <button class="btn-icon btn-delete" onclick="App.managers.companyNumbers?.deleteCompanyWithConfirm(${company.id})" title="Delete">
+                    <button class="btn-icon btn-delete" onclick="App.managers.companyNumbers?.deleteCompanyWithConfirm(${company.company_id})" title="Delete">
                         <i class="fa fa-trash"></i>
                     </button>
                 </td>
@@ -629,7 +629,7 @@ class CompanyNumbersManager {
                     <form id="addCompanyForm">
                         <div class="form-group">
                             <label for="companyId">${t('company_id_label', 'Company ID (1-99)')} *</label>
-                            <input type="number" id="companyId" name="id" min="1" max="99" value="${lowestAvailableId || ''}" required />
+                            <input type="number" id="companyId" name="company_id" min="1" max="99" value="${lowestAvailableId || ''}" required />
                         </div>
                         <div class="form-group">
                             <label for="companyName">${t('company_name_label', 'Company Name')} *</label>
@@ -637,7 +637,7 @@ class CompanyNumbersManager {
                         </div>
                         <div class="form-group">
                             <label for="companyNumber">${t('telephone_number_label', 'Telephone Number')} *</label>
-                            <input type="tel" id="companyNumber" name="number" required />
+                            <input type="tel" id="companyNumber" name="cid" required />
                         </div>
                         <div class="modal-actions">
                             <button type="submit" class="btn-primary">${t('add_company_number', 'Add Company Number')}</button>
@@ -656,9 +656,9 @@ class CompanyNumbersManager {
         
         const formData = new FormData(event.target);
         const companyData = {
-            id: formData.get('id'),
+            company_id: formData.get('company_id'),
             name: formData.get('name'),
-            number: formData.get('number')
+            cid: formData.get('cid')
         };
         
         try {
@@ -716,7 +716,7 @@ class CompanyNumbersManager {
         const sorted = this.getAllCompanies();
         sorted.forEach(company => {
             const option = document.createElement('option');
-            option.value = company.id;
+            option.value = company.company_id;
             option.textContent = company.name;
             dropdown.appendChild(option);
         });
@@ -742,7 +742,7 @@ class CompanyNumbersManager {
             if (company) {
                 // Show orange button with company name and phone number
                 if (confirmNumber) {
-                    confirmNumber.textContent = `${company.name} - ${company.number}`;
+                    confirmNumber.textContent = `${company.name} - ${company.cid}`;
                 }
                 confirmBtn.style.display = 'block';
                 // Hide current number display
@@ -773,7 +773,7 @@ class CompanyNumbersManager {
         }
 
         // Dial the CLI change code: *82*{company_id}
-        const cliCode = `*82*${company.id}`;
+        const cliCode = `*82*${company.company_id}`;
         
         try {
             console.log('📞 CompanyNumbersManager: Changing CLI to company:', company);
@@ -815,7 +815,7 @@ class CompanyNumbersManager {
         if (!display) return;
 
         if (this.currentSelectedCompany) {
-            display.textContent = `${this.currentSelectedCompany.name} - ${this.currentSelectedCompany.number}`;
+            display.textContent = `${this.currentSelectedCompany.name} - ${this.currentSelectedCompany.cid}`;
             display.style.display = 'block';
         } else {
             display.textContent = '';
@@ -847,7 +847,7 @@ class CompanyNumbersManager {
 
         // Try to find a matching company by telephone number
         // The cid from API is the actual phone number being used as outgoing CLI
-        const matchingCompany = this.companyNumbers.find(c => c.number === currentCid.toString());
+        const matchingCompany = this.companyNumbers.find(c => c.cid === currentCid.toString());
 
         if (matchingCompany) {
             console.log('📞 CompanyNumbersManager: Found matching company for cid:', matchingCompany);

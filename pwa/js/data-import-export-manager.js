@@ -10,8 +10,7 @@ class DataImportExportManager {
         this.exportableKeys = {
             blfButtons: 'BlfButtons',
             contacts: 'contacts',
-            companyNumbers: 'CompanyNumbers',
-            tabVisibility: 'tabVisibilitySettings'
+            companyNumbers: 'CompanyNumbers'
         };
         
         console.log('💾 DataImportExportManager: Initialized');
@@ -129,13 +128,6 @@ class DataImportExportManager {
                 console.log('💾 Exported Company Numbers:', exportData.data.CompanyNumbers.length);
             }
 
-            // Export Tab Visibility Settings
-            const tabSettings = localStorage.getItem(this.exportableKeys.tabVisibility);
-            if (tabSettings) {
-                exportData.data.tabVisibilitySettings = JSON.parse(tabSettings);
-                console.log('💾 Exported Tab Visibility Settings');
-            }
-
             // Create JSON blob and download
             const dataStr = JSON.stringify(exportData, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
@@ -181,7 +173,6 @@ class DataImportExportManager {
         document.getElementById('importBlfButtons').checked = true;
         document.getElementById('importContacts').checked = true;
         document.getElementById('importCompanyNumbers').checked = true;
-        document.getElementById('importTabSettings').checked = true;
 
         // Disable continue button until file is selected
         const continueBtn = document.getElementById('importContinueBtn');
@@ -281,6 +272,14 @@ class DataImportExportManager {
                     console.log('💾 Imported BLF Buttons:', data.BlfButtons.length);
                     importedCount++;
                     
+                    // Auto-enable BLF buttons setting
+                    window.localDB.setItem('BlfEnabled', 'true');
+                    const blfEnabledCheckbox = document.getElementById('BlfEnabled');
+                    if (blfEnabledCheckbox) {
+                        blfEnabledCheckbox.checked = true;
+                    }
+                    console.log('💾 Auto-enabled BLF Buttons setting');
+                    
                     // Reload BLF buttons if manager exists
                     if (window.App && window.App.managers && window.App.managers.blf) {
                         window.App.managers.blf.loadBlfButtons();
@@ -311,23 +310,24 @@ class DataImportExportManager {
                     console.log('💾 Imported Company Numbers:', data.CompanyNumbers.length);
                     importedCount++;
                     
+                    // Auto-enable Company Numbers tab (Blank1Tab)
+                    window.localDB.setItem('ShowBlank1Tab', 'true');
+                    const showBlank1Checkbox = document.getElementById('ShowBlank1Tab');
+                    if (showBlank1Checkbox) {
+                        showBlank1Checkbox.checked = true;
+                    }
+                    console.log('💾 Auto-enabled Company Numbers tab');
+                    
+                    // Update tab visibility
+                    if (window.saveTabVisibilitySettings) {
+                        window.saveTabVisibilitySettings();
+                    }
+                    
                     // Reload company numbers if manager exists
                     if (window.App && window.App.managers && window.App.managers.companyNumbers) {
                         window.App.managers.companyNumbers.loadCompanyNumbers();
                         window.App.managers.companyNumbers.renderCompanyNumbers();
                     }
-                }
-            }
-
-            // Import Tab Visibility Settings
-            if (document.getElementById('importTabSettings').checked && data.tabVisibilitySettings) {
-                localStorage.setItem(this.exportableKeys.tabVisibility, JSON.stringify(data.tabVisibilitySettings));
-                console.log('💾 Imported Tab Visibility Settings');
-                importedCount++;
-                
-                // Reload tab visibility settings if function exists
-                if (window.loadTabVisibilitySettings) {
-                    window.loadTabVisibilitySettings();
                 }
             }
 
