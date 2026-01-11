@@ -749,8 +749,8 @@ function clearCurrentCallUI() {
     clearDialInput();
     
     // Update busy light to idle if available
-    if (App.managers?.busylight?.setState) {
-        App.managers.busylight.setState('idle');
+    if (App.managers?.busylight?.updateState) {
+        App.managers.busylight.updateState();
     }
     
     console.log('✅ Call UI cleared and reset to idle state');

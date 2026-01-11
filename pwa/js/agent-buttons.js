@@ -1114,7 +1114,7 @@ class AgentButtonsManager {
                 
                 // Notify busylight of agent login
                 if (window.App?.managers?.busylight) {
-                    window.App.managers.busylight.onAgentLoggedIn();
+                    await window.App.managers.busylight.updateState();
                 }
                 
                 // Query API to get updated agent information after login
@@ -1150,7 +1150,7 @@ class AgentButtonsManager {
                 
                 // Notify busylight of agent logout
                 if (window.App?.managers?.busylight) {
-                    window.App.managers.busylight.onAgentLoggedOut();
+                    await window.App.managers.busylight.updateState();
                 }
                 break;
                 
