@@ -61,6 +61,43 @@
 
 ### Issues Outstanding
 - [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)
+- [ ] Completely redesign and refactor the busylight-manager.js for the three line line version of PWA.  I need to remove all redundant code in this file, so maybe create new js file based using the current as guide but only include the following information. The following points explain the different status and colours that should be represented on the busylight
+    - 1> Here are the different PWA/Agent states and how the should be represented by the busylight device
+        - DISCONNECTED - OFF
+        - CONNECTED - ON - White
+        - IDLE - ON - Green
+        - IDLENOTIFY - SLOW FLASH - Green
+        - BUSY - ON - Red
+        - RINGING - FLASH - Red
+        - RINGWAITING - FLASH - Red
+        - HOLD - ON - Yellow
+        - 'RINGING' should be created using alert in busylight API, ensure that the alert number and volume from the settings in the PWA is also be sent in the API call
+        - 'RINGWAITING' should be created using alert in busylight API, ensure that the alert number from the settings in the PWA is also sent, but overide volume setting to send '0' (silent) in the API call
+        - You will need to represent the Slow Flash by sending seperate API calls to turn on solid green and then turn off light repeatedly (1000ms ON/1000ms OFF)
+    - 2> Below are the primary scenarios to represent on the busylight device
+        - Regardless of line key selected, when PWA open and not registered to SIP server - DISCONNECTED
+        - Regardless of line key selected, when registered with SIP server and no agent logged in - CONNECTED
+        - Regardless of line key selected, when registered with SIP server and agent logged in and no active calls - IDLE
+        - Regardless of line key selected, when registered with SIP server and agent logged in and no active calls with New Voicemail notification on PWA - IDLENOTIFY
+        - Regardless of line key selected, when registered with SIP server and agent logged in and currently active call (in any state) on any of the 3 line keys (and selected on that line key) and an incoming call starts ringing on one or more of the other line keys - RINGWAITING
+        - Regardless of line key selected, when registered with SIP server and agent logged in and no currently active calls on any line key and an incoming call starts ringing on any of the line keys - RINGING     
+    - 3> Below are the possible secondary scenarios that an agent may be in and what should be represented on busylight device.  Logic of what should be represented on the busylight device is simple, If one of the base rules in point 2 matches exactly then that should be represented on the busylight device. If not the following ponits should match remaining scenarios and will define what is to be represented on the busylight device.  The following secondary scenarios are valid for the line key currently selected only. So when selecting another line key then an evaluation for the status to be represented to the busylight device needs to be completed again
+        - Selected line key has no active call - IDLE
+        - Selected line key has incoming call - RINGING
+        - Selected line key has active call - BUSY
+        - Selected line key has active call on hold - HOLD
+    - 4> Example scenario(s) and what should be represented on Busylight device at each step
+        - a> Example step by step scenario is as follows
+            - Agent on active call on 'Line 1' - BUSY from secondary scenarios
+            - Agent still on active call on 'Line 1' when new incoming call is recieved to 'Line 2' - RINGWAITING from primary scenarios
+            - Agent manually puts current call on hold - RINGWAITING from primary scenarios
+            - Agent selects 'Line 2' to allow answering on new incoming call - RINGING from secondary scenarios
+            - Agent answers the incoming call on 'Line 2' - BUSY from secondary scenarios
+            - Agent terminates the call on 'Line 2' - IDLE from secondary scenarios
+            - Agent selects 'Line 1' to continue with the original call - HOLD from secondary scenarios
+            - Agent unholds 'Line 1' to converse with caller - BUSY from secondary scenarios
+            - Agent or caller terminates the call on 'Line 1' - IDLE from primary scenarios
+
 
 ### PWA & Installation
 - [x] Fix duplicate service worker registration
