@@ -51,13 +51,14 @@
     - If Okay selected, existing data removed from local storage and replaced with downloaded data from API call
     - If Cancel selected, then ignore the data downloaded and continue as is
     - Dont forget to internationalise the toast notifications
+- [ ] Add extra tickbox to appear when busylight functionality is enabled in UI Settings tab.  This tickbox should appear (labelled with 'Enable Voicemail Notification when Idle') with the other two busylight options of ringtone id and tone volume that currently show when busylight tickbox is selected. The selected tickbox will enable the IDLENOTIFY state in the busylightManager class otherwise if disabled the IDLENOTIFY state should just be substituted with IDLE state.  It should be off by default, but if ticked and saved then the additional state of IDLENOTIFY should be used in the busylightManager class.  Need to remember to internationalise the menu labeling etc.
 
 ### Phantom development requests
 - [ ] Dependent of R&D review of security implications.  Assuming that PWA will be hosted on Phantom server, preferrably at https://server1-XXXX.phantomapi.net:19773/pwa that a .env file entry containing the phantom WEB API key could be updated automatically upon change of WEB API via the Phantom UI thus allow the PWA to make API requests without having to expose more functions to NoAuth
 - [ ] API for retrieval of table company_numbers from mysql database (phantom)
     - API name I wish to use is 'companyNumbers'
     - Returned data should be JSON object called 'company_numbers' with each entry within database returned with current name:value from database
-- [ ] 
+- [ ] Improvement to current API PauseAgentfromPhone to allow for extra parameter that will then be used to pause with a pause reason.  The extra parameter could be the corresponding numeric code (0-9) for the associated pause reason.  We should be careful to allow for this parameter not being passed as phones currently use this API and the pause.php functionality may not be update until later (or never updated) - obviously if just want to create new API it wont cause an issue.
 
 ### Issues Outstanding
 - [ ] Possible issue with voicemail notications working correctly (voicemail status not showing changes immediately)

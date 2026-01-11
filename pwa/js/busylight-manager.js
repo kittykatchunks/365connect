@@ -30,6 +30,7 @@ class BusylightManager {
         // Alert settings from PWA settings
         this.alertNumber = 3; // 1-7 (default: Funky)
         this.alertVolume = 50; // 0/25/50/75/100
+        this.voicemailNotifyEnabled = false; // Whether to use IDLENOTIFY state
         
         // State definitions with colors
         this.stateConfig = {
@@ -64,6 +65,13 @@ class BusylightManager {
     }
 
     /**
+     * Check if IDLENOTIFY state should be used or substituted with IDLE
+     */
+    shouldUseIdleNotify() {
+        return this.voicemailNotifyEnabled && this.hasVoicemail;
+    }
+
+    /**
      * Load settings from localStorage
      */
     loadSettings() {
@@ -75,11 +83,13 @@ class BusylightManager {
         this.enabled = (window.localDB.getItem("BusylightEnabled", "0") === "1");
         this.alertNumber = parseInt(window.localDB.getItem("BusylightRingSound", "3"), 10);
         this.alertVolume = parseInt(window.localDB.getItem("BusylightRingVolume", "50"), 10);
+        this.voicemailNotifyEnabled = (window.localDB.getItem("BusylightVoicemailNotify", "0") === "1");
         
         console.log('[Busylight] Settings loaded:', {
             enabled: this.enabled,
             alertNumber: this.alertNumber,
-            alertVolume: this.alertVolume
+            alertVolume: this.alertVolume,
+            voicemailNotifyEnabled: this.voicemailNotifyEnabled
         });
     }
 
@@ -281,7 +291,7 @@ class BusylightManager {
             
             // 3. No active calls, check for voicemail
             if (activeLines.length === 0) {
-                return this.hasVoicemail ? 'IDLENOTIFY' : 'IDLE';
+                return this.shouldUseIdleNotify() ? 'IDLENOTIFY' : 'IDLE';
             }
             
             // 4. Has active call(s) and incoming call on OTHER line(s)
@@ -318,7 +328,7 @@ class BusylightManager {
                 
                 // Selected line is idle
                 if (selectedLineState.state === 'idle') {
-                    return this.hasVoicemail ? 'IDLENOTIFY' : 'IDLE';
+                    return this.shouldUseIdleNotify() ? 'IDLENOTIFY' : 'IDLE';
                 }
             }
         } else {
@@ -340,7 +350,7 @@ class BusylightManager {
         }
         
         // Default: logged in and idle
-        return this.hasVoicemail ? 'IDLENOTIFY' : 'IDLE';
+        return this.shouldUseIdleNotify() ? 'IDLENOTIFY' : 'IDLE';
     }
 
     /**
@@ -673,6 +683,7 @@ class BusylightManager {
             connected: this.connected,
             state: this.currentState,
             hasVoicemail: this.hasVoicemail,
+            voicemailNotifyEnabled: this.voicemailNotifyEnabled,
             isSlowFlashing: this.isSlowFlashing,
             alertNumber: this.alertNumber,
             alertVolume: this.alertVolume,
@@ -704,6 +715,7 @@ window.testBusylight = async function() {
     console.log('Connected:', manager.connected);
     console.log('State:', manager.currentState);
     console.log('Has Voicemail:', manager.hasVoicemail);
+    console.log('Voicemail Notify Enabled:', manager.voicemailNotifyEnabled);
     console.log('Slow Flashing:', manager.isSlowFlashing);
     console.log('Alert Number:', manager.alertNumber);
     console.log('Alert Volume:', manager.alertVolume);

@@ -1460,6 +1460,7 @@ function loadSettingsFromDatabase() {
         { id: 'BlfEnabled', key: 'BlfEnabled', defaultValue: '0' },
         { id: 'PreferBlindTransfer', key: 'PreferBlindTransfer', defaultValue: '0' },
         { id: 'BusylightEnabled', key: 'BusylightEnabled', defaultValue: '0' },
+        { id: 'BusylightVoicemailNotify', key: 'BusylightVoicemailNotify', defaultValue: '0' },
         { id: 'SipMessagesEnabled', key: 'SipMessagesEnabled', defaultValue: '0' },
         { id: 'VerboseLoggingEnabled', key: 'VerboseLoggingEnabled', defaultValue: '0' },
         { id: 'OnscreenNotifications', key: 'OnscreenNotifications', defaultValue: '1' }
