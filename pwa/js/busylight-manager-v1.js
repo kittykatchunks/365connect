@@ -20,6 +20,10 @@ class BusylightManager {
         this.maxRetryAttempts = 5;
         this.isRetrying = false;
         
+        // Cache SipUsername to avoid repeated localStorage access
+        this._cachedSipUsername = null;
+        this._sipUsernameCached = false;
+        
         // Monitoring
         this.monitoringInterval = null;
         this.monitoringIntervalMs = 15000; // 15 seconds
@@ -332,27 +336,48 @@ class BusylightManager {
     }
 
     /**
-     * Get Connect365 Username from connection settings for routing
+     * Get Connect365 Username from connection settings for routing (cached)
      * This is used as the unique identifier to route commands to the correct busylight-bridge
      */
     getConnect365Username() {
+        // Return cached value if already retrieved
+        if (this._sipUsernameCached) {
+            return this._cachedSipUsername;
+        }
+        
         try {
             // Get from connection settings (stored by connection manager)
             if (window.localDB) {
                 const username = window.localDB.getItem('SipUsername', '');
                 if (username) {
+                    this._cachedSipUsername = username;
+                    this._sipUsernameCached = true;
                     return username;
                 }
             }
             
             // Fallback: try to get from global App settings
             if (window.App?.settings?.SipUsername) {
+                this._cachedSipUsername = window.App.settings.SipUsername;
+                this._sipUsernameCached = true;
                 return window.App.settings.SipUsername;
             }
         } catch (error) {
             console.warn('[Busylight] Error getting Connect365 Username:', error);
         }
+        
+        // Cache null result as well to avoid repeated failed lookups
+        this._cachedSipUsername = null;
+        this._sipUsernameCached = true;
         return null;
+    }
+    
+    /**
+     * Invalidate cached SIP username (call when username changes)
+     */
+    invalidateSipUsernameCache() {
+        this._sipUsernameCached = false;
+        this._cachedSipUsername = null;
     }
 
     /**

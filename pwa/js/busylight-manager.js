@@ -17,6 +17,10 @@ class BusylightManager {
         // Load voicemail state from localStorage
         this.hasVoicemail = this.getVoicemailState();
         
+        // Cache SipUsername to avoid repeated localStorage access
+        this._cachedSipUsername = null;
+        this._sipUsernameCached = false;
+        
         // Connection monitoring
         this.monitoringInterval = null;
         this.monitoringIntervalMs = 15000; // 15 seconds
@@ -500,22 +504,45 @@ class BusylightManager {
     }
 
     /**
-     * Get SIP username for bridge routing
+     * Get SIP username for bridge routing (cached)
      */
     getSipUsername() {
+        // Return cached value if already retrieved
+        if (this._sipUsernameCached) {
+            return this._cachedSipUsername;
+        }
+        
         try {
             if (window.localDB) {
                 const username = window.localDB.getItem('SipUsername', '');
-                if (username) return username;
+                if (username) {
+                    this._cachedSipUsername = username;
+                    this._sipUsernameCached = true;
+                    return username;
+                }
             }
             
             if (window.App?.settings?.SipUsername) {
+                this._cachedSipUsername = window.App.settings.SipUsername;
+                this._sipUsernameCached = true;
                 return window.App.settings.SipUsername;
             }
         } catch (error) {
             console.warn('[Busylight] Error getting SIP username:', error);
         }
+        
+        // Cache null result as well to avoid repeated failed lookups
+        this._cachedSipUsername = null;
+        this._sipUsernameCached = true;
         return null;
+    }
+    
+    /**
+     * Invalidate cached SIP username (call when username changes)
+     */
+    invalidateSipUsernameCache() {
+        this._sipUsernameCached = false;
+        this._cachedSipUsername = null;
     }
 
     /**
