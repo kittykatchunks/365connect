@@ -2,17 +2,17 @@
 
 **Version:** 0.2.002
 
-Connect365 is a browser-based WebRTC SIP softphone Progressive Web App (PWA) designed for Autocab365 systems, powered by Phantom PBX. It provides a full-featured telephony experience with advanced features like Kuando Busylight integration, multi-language support, call history, contacts management, and BLF (Busy Lamp Field) monitoring.
+Autocab365Connect is a browser-based WebRTC SIP softphone Progressive Web App (PWA) designed for Autocab365, and is powered by the Autocab Phantom PBX. It provides a full-featured telephony experience with advanced features like Kuando Busylight integration, multi-language support, call history, contacts management, and BLF (Busy Lamp Field) monitoring.
 
 ## 🌟 Features
 
 ### Core Telephony
 - **WebRTC SIP Client** - Browser-based softphone using SIP.js 0.21.2
 - **Direct PBX Connection** - WebSocket connection to Asterisk/Phantom PBX (wss://your-pbx:8089/ws)
-- **Call Controls** - Make/receive calls, hold, transfer (Blind/Attended), mute
-- **Audio Management** - Input/output device selection, volume controls, audio quality settings
+- **Call Controls** - Make/receive calls, hold, transfer (Blind/Attended), mute and multi-line call handling
+- **Audio Management** - Input/output device selection, microphone input realtime monitor
 - **DTMF Support** - In-call dialpad for IVR navigation
-- **Call Timer** - Real-time call duration tracking
+- **Call Timer** - Real-time call duration tracking - AKA a timer on the screen
 
 ### Advanced Features
 - **Kuando Busylight Integration** - Hardware presence indicator support via bridge applications
@@ -28,17 +28,17 @@ Connect365 is a browser-based WebRTC SIP softphone Progressive Web App (PWA) des
 - **Dark/Light Mode** - Automatic theme based on system preferences
 
 ### Server Infrastructure
-- **Express Server** - Node.js serving layer with security middleware
-- **Phantom API Proxy** - Secure proxying to Phantom PBX API
+- **Express Server** - Node.js serving layer with security middleware - NotRequired on deployed version
+- **Phantom API Proxy** - Secure proxying to Phantom PBX API - NotRequired on deployed version
 - **Busylight Bridge Server** - WebSocket server for remote busylight routing (port 8089)
-- **HTTP/HTTPS Support** - Configurable with SSL certificate support
-- **CORS & Security** - Helmet, rate limiting, compression
-- **Detailed Logging** - Separate logs for HTTP/HTTPS/errors
+- **HTTP/HTTPS Support** - Configurable with SSL certificate support - NotRequired on deployed version
+- **CORS & Security** - Helmet, rate limiting, compression - NotRequired on deployed version
+- **Detailed Logging** - Separate logs for HTTP/HTTPS/errors - NotRequired on deployed version
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 18+ and npm (assuming Phantom already has this)
 - Phantom PBX with WebRTC enabled
 - SIP account credentials
 - (Optional) Kuando Busylight device and bridge application
@@ -93,10 +93,9 @@ Connect365 is a browser-based WebRTC SIP softphone Progressive Web App (PWA) des
 1. Open the application in your browser
 2. Navigate to Settings (⚙️ icon)
 3. Configure your SIP account:
-   - **Display Name:** Your name
    - **Username:** Your SIP extension
    - **Password:** Your SIP password
-   - **Server:** Your PBX WebSocket URL (wss://your-pbx:8089)
+   - **Server:** Your PBX WebSocket URL (Phantom ID only)
 4. Click "REGISTER" to connect
 5. Grant microphone permissions when prompted
 
@@ -201,7 +200,7 @@ npm run serve:prod
 
 ## 🔌 Busylight Integration
 
-Connect365 supports Kuando Busylight devices for presence indication. Two bridge applications are available:
+Connect365 supports Kuando Busylight devices for presence indication. One bridge applications will be available, a native .NET windows application (electron app was for testing mainly):
 
 ### Native Windows Bridge (Recommended)
 - **Technology:** C# .NET 8, WinForms
@@ -234,7 +233,7 @@ npm start
 Both bridges:
 - Connect to Kuando HTTP service (port 8989)
 - Provide WebSocket connection to server (port 8089)
-- Route requests using Connect365 username for multi-user support
+- Route requests using Connect365 username for multi-endpoint support
 
 See respective README files for detailed setup instructions.
 
@@ -292,7 +291,7 @@ All user data is stored locally in browser localStorage:
 
 **Privacy:** No data is sent to external servers except:
 - SIP signaling to your PBX
-- Phantom API calls (proxied through server)
+- Phantom API calls (proxied through server) - NotRequired on deployed version
 - Busylight bridge commands (WebSocket)
 
 ## 🐛 Troubleshooting
@@ -331,7 +330,6 @@ See [LICENSE](LICENSE) file for details.
 - **jQuery & jQuery UI** - UI framework
 - **Moment.js** - Date/time formatting
 - **Font Awesome** - Icons
-- **Croppie** - Image cropping for avatars
 
 ## 📞 Support
 
