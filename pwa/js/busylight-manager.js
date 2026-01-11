@@ -14,7 +14,8 @@ class BusylightManager {
         
         // State tracking
         this.currentState = 'DISCONNECTED';
-        this.hasVoicemail = false;
+        // Load voicemail state from localStorage
+        this.hasVoicemail = this.getVoicemailState();
         
         // Connection monitoring
         this.monitoringInterval = null;
@@ -44,6 +45,22 @@ class BusylightManager {
         
         // Load settings
         this.loadSettings();
+    }
+
+    /**
+     * Get voicemail notification state from localStorage
+     */
+    getVoicemailState() {
+        if (!window.localDB) return false;
+        return window.localDB.getItem('activeVmNotify', '0') === '1';
+    }
+
+    /**
+     * Set voicemail notification state in localStorage
+     */
+    setVoicemailState(hasVoicemail) {
+        if (!window.localDB) return;
+        window.localDB.setItem('activeVmNotify', hasVoicemail ? '1' : '0');
     }
 
     /**
@@ -614,6 +631,8 @@ class BusylightManager {
         
         if (hasVoicemail !== this.hasVoicemail) {
             this.hasVoicemail = hasVoicemail;
+            // Save to localStorage for persistence
+            this.setVoicemailState(hasVoicemail);
             console.log('[Busylight] Voicemail status:', hasVoicemail ? 'has voicemail' : 'no voicemail');
             await this.updateState();
         }

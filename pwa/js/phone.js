@@ -4049,6 +4049,11 @@ function updateVoicemailMWI(voicemailData) {
         
         // Update tooltip
         iconElement.title = `Voicemail (${newMessages} new message${newMessages > 1 ? 's' : ''})`;
+        
+        // Notify busylight manager
+        if (App.managers?.busylight) {
+            App.managers.busylight.onVoicemailUpdate(newMessages);
+        }
     } else {
         // Hide count and text
         countElement.classList.add('hidden');
@@ -4059,6 +4064,11 @@ function updateVoicemailMWI(voicemailData) {
         
         // Reset tooltip
         iconElement.title = 'Voicemail';
+        
+        // Notify busylight manager
+        if (App.managers?.busylight) {
+            App.managers.busylight.onVoicemailUpdate(0);
+        }
     }
 }
 
