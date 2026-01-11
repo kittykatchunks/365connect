@@ -1060,10 +1060,19 @@ class SipSessionManager {
             // Assign to LineKeyManager
             if (this.lineKeyManager) {
                 this.assignSessionToLine(sessionId, lineNumber, sessionData);
+                
+                // Auto-focus Line 1 if: no other active calls, Line 1 assigned, and Line 2/3 was selected
+                if (lineNumber === 1 && this.getActiveSessions().length === 1) {
+                    const currentlySelected = this.lineKeyManager.getSelectedLine();
+                    if (currentlySelected === 2 || currentlySelected === 3) {
+                        console.log(`📞 Auto-selecting Line 1 (outgoing call assigned to Line 1, was on Line ${currentlySelected})`);
+                        this.lineKeyManager.selectLine(1);
+                    }
+                }
             }
 
             // Start the session
-            await inviter.invite();
+            await inviter.invoke();
 
             // Update statistics
             this.stats.totalCalls++;
@@ -1150,6 +1159,15 @@ class SipSessionManager {
                 if (hasOtherActiveCalls) {
                     console.log('📞 Playing call waiting tone (other calls active)');
                     this.emit('callWaitingTone', { lineNumber, sessionData });
+                } else {
+                    // Auto-focus Line 1 if: no other active calls, Line 1 assigned, and Line 2/3 was selected
+                    if (lineNumber === 1) {
+                        const currentlySelected = this.lineKeyManager.getSelectedLine();
+                        if (currentlySelected === 2 || currentlySelected === 3) {
+                            console.log(`📞 Auto-selecting Line 1 (incoming call assigned to Line 1, was on Line ${currentlySelected})`);
+                            this.lineKeyManager.selectLine(1);
+                        }
+                    }
                 }
             }
 
