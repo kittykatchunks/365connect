@@ -1235,22 +1235,33 @@ class ApplicationStartup {
             console.log('📶 Application is back online');
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
-                    type: 'success',
-                    title: t('back_online', 'Back Online'),
-                    message: t('internetConnectionRestored', 'Internet connection restored'),
-                    duration: 3000
+                    type: 'warning',
+                    title: 'NETWORK/INTERNET RESTORED',
+                    message: 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.',
+                    duration: null, // Persist until user closes it
+                    forceShow: true
                 });
             }
         });
         
         window.addEventListener('offline', () => {
             console.log('📵 Application is offline');
+            
+            // Unregister from SIP when offline
+            if (App.managers?.sip) {
+                App.managers.sip.unregister(true).catch(err => {
+                    console.warn('Failed to unregister on offline:', err);
+                });
+            }
+            
+            // Show persistent error notification
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
-                    type: 'warning',
-                    title: t('offline_mode', 'Offline Mode'),
-                    message: t('noInternetSomeFeaturesLimited', 'No internet connection. Some features may be limited.'),
-                    duration: 5000
+                    type: 'error',
+                    title: 'CHECK NETWORK/INTERNET CONNECTION',
+                    message: 'You appear to have lost network or internet connection.',
+                    duration: null, // Persist until user closes it
+                    forceShow: true
                 });
             }
         });
