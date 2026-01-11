@@ -591,7 +591,7 @@ class BusylightManager {
 
     /**
      * Enable/disable busylight
-     * When enabled: runs test color sequence
+     * When enabled: runs test color sequence and updates to current state
      * When disabled: turns off device
      */
     async setEnabled(enabled) {
@@ -602,13 +602,29 @@ class BusylightManager {
         
         if (enabled) {
             console.log('[Busylight] Enabling from settings...');
-            await this.initialize();
             
-            // If already connected, run test sequence (happens when toggling in settings)
-            if (this.connected) {
-                console.log('[Busylight] Running test sequence...');
+            // Check connection
+            const connected = await this.checkConnection();
+            if (connected) {
+                console.log('[Busylight] Connected successfully');
+                this.connected = true;
+                this.retryAttempts = 0;
+                
+                // Run test sequence
                 await this.testConnection();
+                
+                // Add delay after test sequence to ensure commands complete
+                await this.sleep(500);
+                
+                // Update to current state
                 await this.updateState();
+                
+                // Start monitoring
+                this.startMonitoring();
+            } else {
+                console.warn('[Busylight] Failed initial connection - will retry via monitoring');
+                this.connected = false;
+                this.startMonitoring();
             }
         } else {
             console.log('[Busylight] Disabling from settings...');
