@@ -390,5 +390,9 @@
     "override_transfer_method": "Substituir o método de transferência padrão para esta tecla",
     "transfer_method": "Método de Transferência:",
     "blind_transfer": "Cega",
-    "attended_transfer": "Assistida"
+    "attended_transfer": "Assistida",
+    "networkInternetRestored": "Rede/Internet Restaurada",
+    "networkRestoredMessage": "Certifique-se de selecionar REGISTRAR para reconectar ao Phantom. Se AGENTE: Desconectado aparecer, você só precisa fazer login normalmente.",
+    "checkNetworkConnection": "Verificar Conexão de Rede/Internet",
+    "networkLostMessage": "Parece que você perdeu a conexão de rede ou internet."
 }

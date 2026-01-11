@@ -396,5 +396,9 @@
     "override_transfer_method": "Remplacer la méthode de transfert par défaut pour cette touche",
     "transfer_method": "Méthode de Transfert:",
     "blind_transfer": "Aveugle",
-    "attended_transfer": "Supervisé"
+    "attended_transfer": "Assisté",
+    "networkInternetRestored": "Réseau/Internet Rétabli",
+    "networkRestoredMessage": "Veuillez vous assurer de sélectionner ENREGISTRER pour vous reconnecter à Phantom. Si AGENT : Déconnecté s'affiche, vous devez simplement vous connecter normalement.",
+    "checkNetworkConnection": "Vérifier la Connexion Réseau/Internet",
+    "networkLostMessage": "Vous semblez avoir perdu votre connexion réseau ou internet."
 }

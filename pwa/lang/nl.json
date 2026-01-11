@@ -394,5 +394,9 @@
     "override_transfer_method": "Standaard doorschakelmethode voor deze toets overschrijven",
     "transfer_method": "Doorschakelmethode:",
     "blind_transfer": "Blind",
-    "attended_transfer": "Begeleid"
+    "attended_transfer": "Begeleid",
+    "networkInternetRestored": "Netwerk/Internet Hersteld",
+    "networkRestoredMessage": "Zorg ervoor dat u REGISTREREN selecteert om opnieuw verbinding te maken met Phantom. Als AGENT: Uitgelogd wordt weergegeven, hoeft u alleen maar normaal in te loggen.",
+    "checkNetworkConnection": "Controleer Netwerk/Internetverbinding",
+    "networkLostMessage": "U lijkt uw netwerk- of internetverbinding te hebben verloren."
 }

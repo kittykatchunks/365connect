@@ -396,5 +396,9 @@
     "override_transfer_method": "Override default transfer method for this key",
     "transfer_method": "Transfer Method:",
     "blind_transfer": "Blind",
-    "attended_transfer": "Attended"
+    "attended_transfer": "Attended",
+    "networkInternetRestored": "Network/Internet Restored",
+    "networkRestoredMessage": "Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.",
+    "checkNetworkConnection": "Check Network/Internet Connection",
+    "networkLostMessage": "You appear to have lost network or internet connection."
 }

@@ -1236,8 +1236,8 @@ class ApplicationStartup {
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
                     type: 'warning',
-                    title: 'NETWORK/INTERNET RESTORED',
-                    message: 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.',
+                    title: t('networkInternetRestored', 'Network/Internet Restored'),
+                    message: t('networkRestoredMessage', 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.'),
                     duration: null, // Persist until user closes it
                     forceShow: true
                 });
@@ -1258,8 +1258,8 @@ class ApplicationStartup {
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
                     type: 'error',
-                    title: 'CHECK NETWORK/INTERNET CONNECTION',
-                    message: 'You appear to have lost network or internet connection.',
+                    title: t('checkNetworkConnection', 'Check Network/Internet Connection'),
+                    message: t('networkLostMessage', 'You appear to have lost network or internet connection.'),
                     duration: null, // Persist until user closes it
                     forceShow: true
                 });

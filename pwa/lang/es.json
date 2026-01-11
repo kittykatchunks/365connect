@@ -394,5 +394,9 @@
     "override_transfer_method": "Anular el método de transferencia predeterminado para esta tecla",
     "transfer_method": "Método de Transferencia:",
     "blind_transfer": "Ciega",
-    "attended_transfer": "Atendida"
+    "attended_transfer": "Atendida",
+    "networkInternetRestored": "Red/Internet Restaurada",
+    "networkRestoredMessage": "Asegúrese de seleccionar REGISTRAR para volver a conectarse a Phantom. Si aparece AGENTE: Cerrado sesión, solo necesita iniciar sesión normalmente.",
+    "checkNetworkConnection": "Verificar Conexión de Red/Internet",
+    "networkLostMessage": "Parece que ha perdido la conexión de red o internet."
 }
