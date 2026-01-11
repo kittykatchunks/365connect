@@ -1061,8 +1061,12 @@ class SipSessionManager {
             if (this.lineKeyManager) {
                 this.assignSessionToLine(sessionId, lineNumber, sessionData);
                 
-                // Auto-focus Line 1 if: no other active calls, Line 1 assigned, and Line 2/3 was selected
-                if (lineNumber === 1 && this.getActiveSessions().length === 1) {
+                // Auto-focus Line 1 if: no other active calls exist, Line 1 assigned, and Line 2/3 was selected
+                // Check before session is stored, so count is 0 for no other calls
+                const otherActiveSessions = Array.from(this.sessions.values()).filter(s => 
+                    s.id !== sessionId && s.state !== 'terminated' && s.state !== 'failed'
+                );
+                if (lineNumber === 1 && otherActiveSessions.length === 0) {
                     const currentlySelected = this.lineKeyManager.getSelectedLine();
                     if (currentlySelected === 2 || currentlySelected === 3) {
                         console.log(`📞 Auto-selecting Line 1 (outgoing call assigned to Line 1, was on Line ${currentlySelected})`);
@@ -1166,6 +1170,10 @@ class SipSessionManager {
                         if (currentlySelected === 2 || currentlySelected === 3) {
                             console.log(`📞 Auto-selecting Line 1 (incoming call assigned to Line 1, was on Line ${currentlySelected})`);
                             this.lineKeyManager.selectLine(1);
+                            // Force UI update
+                            if (window.App?.managers?.appStartup) {
+                                window.App.managers.appStartup.updateLineKeyUI();
+                            }
                         }
                     }
                 }
