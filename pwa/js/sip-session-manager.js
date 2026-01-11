@@ -1072,7 +1072,7 @@ class SipSessionManager {
             }
 
             // Start the session
-            await inviter.invoke();
+            await inviter.invite();
 
             // Update statistics
             this.stats.totalCalls++;
