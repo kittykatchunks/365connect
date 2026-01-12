@@ -492,8 +492,8 @@ button:focus {
     padding: var(--spacing-sm) var(--spacing-md);
     border: none;
     /* border-radius: 20px; */
-    font-size: var(--font-size-xs);
-    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
@@ -516,7 +516,7 @@ button:focus {
 /* Registration States */
 .register-button.register-disconnected {
     background: var(--danger-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
     animation: registerPulse 2s ease-in-out infinite;
 }
 
