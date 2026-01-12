@@ -668,11 +668,11 @@ class BLFButtonManager {
                             <label>Button Type:</label>
                             <div class="checkbox-group">
                                 <label class="checkbox-label">
-                                    <input type="checkbox" value="speeddial" id="buttonTypeSpeedDial" checked>
+                                    <input type="radio" name="buttonType" value="speeddial" id="buttonTypeSpeedDial" checked>
                                     Speed Dial - Quick dial without presence monitoring
                                 </label>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" value="blf" id="buttonTypeBLF">
+                                    <input type="radio" name="buttonType" value="blf" id="buttonTypeBLF">
                                     BLF - Monitor presence and enable quick transfer
                                 </label>
                             </div>
@@ -734,26 +734,6 @@ class BLFButtonManager {
         const clearBtn = document.getElementById('blfModalClear');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => this.clearBlfButtonConfig());
-        }
-
-        // Checkbox mutual exclusion logic (behave like radio buttons)
-        const speedDialCheckbox = document.getElementById('buttonTypeSpeedDial');
-        const blfCheckbox = document.getElementById('buttonTypeBLF');
-        
-        if (speedDialCheckbox) {
-            speedDialCheckbox.addEventListener('change', () => {
-                if (speedDialCheckbox.checked && blfCheckbox) {
-                    blfCheckbox.checked = false;
-                }
-            });
-        }
-        
-        if (blfCheckbox) {
-            blfCheckbox.addEventListener('change', () => {
-                if (blfCheckbox.checked && speedDialCheckbox) {
-                    speedDialCheckbox.checked = false;
-                }
-            });
         }
 
         // Override transfer method checkbox toggle
