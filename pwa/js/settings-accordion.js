@@ -283,16 +283,6 @@
         }, 500);
         
         // ===== MODAL HANDLERS =====
-        
-        // BLF Configuration modal close handlers
-        const blfModalClose = document.getElementById('blfModalClose');
-        if (blfModalClose) {
-            blfModalClose.addEventListener('click', () => {
-                if (window.BLFManager && typeof window.BLFManager.hideBlfModal === 'function') {
-                    window.BLFManager.hideBlfModal();
-                }
-            });
-        }
 
         // Click outside modal to close
         document.addEventListener('click', (e) => {

@@ -401,9 +401,6 @@ class ContactsManager {
             <div class="modal-content contact-modal-content">
                 <div class="modal-header">
                     <h3>${title}</h3>
-                    <button class="modal-close" onclick="App.managers.contacts.hideContactModal()">
-                        <i class="fa fa-times"></i>
-                    </button>
                 </div>
                 <div class="modal-body">
                     <form id="contactForm">

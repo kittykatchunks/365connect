@@ -29,12 +29,6 @@ class BLFButtonManager {
     }
 
     setupEventListeners() {
-        // BLF Configuration modal close handlers
-        const blfModalClose = document.getElementById('blfModalClose');
-        if (blfModalClose) {
-            blfModalClose.addEventListener('click', () => this.hideBlfModal());
-        }
-
         // Click outside modal to close
         document.addEventListener('click', (e) => {
             const blfModal = document.getElementById('blfModal');
@@ -668,9 +662,6 @@ class BLFButtonManager {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>Configure BLF Button</h3>
-                        <button class="modal-close" id="blfModalClose">
-                            <i class="fa fa-times"></i>
-                        </button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">

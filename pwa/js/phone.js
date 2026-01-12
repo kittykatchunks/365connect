@@ -3377,7 +3377,6 @@ window.setupUIEventHandlers = function setupUIEventHandlers() {
     }
     
     // Transfer modal controls
-    const transferModalClose = document.getElementById('transferModalClose');
     const blindTransferBtn = document.getElementById('blindTransferBtn');
     const attendedTransferBtn = document.getElementById('attendedTransferBtn');
     const cancelTransferBtn = document.getElementById('cancelTransferBtn');
@@ -3385,11 +3384,6 @@ window.setupUIEventHandlers = function setupUIEventHandlers() {
     const cancelAttendedBtn = document.getElementById('cancelAttendedBtn');
     const transferModal = document.getElementById('transferModal');
     const transferNumber = document.getElementById('transferNumber');
-    
-    if (transferModalClose) {
-        transferModalClose.addEventListener('click', async () => await hideTransferModal());
-        console.log('✓ Transfer modal close handler attached');
-    }
     
     if (blindTransferBtn) {
         blindTransferBtn.addEventListener('click', () => performBlindTransfer());

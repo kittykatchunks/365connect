@@ -49,12 +49,6 @@ class DataImportExportManager {
             importDataBtn.addEventListener('click', () => this.showImportModal());
         }
 
-        // Import Modal - Close button
-        const importModalClose = document.getElementById('importModalClose');
-        if (importModalClose) {
-            importModalClose.addEventListener('click', () => this.hideImportModal());
-        }
-
         // Import Modal - Cancel button
         const importCancelBtn = document.getElementById('importCancelBtn');
         if (importCancelBtn) {

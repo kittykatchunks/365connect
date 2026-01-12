@@ -398,9 +398,6 @@ class CompanyNumbersManager {
             <div class="modal-content company-modal">
                 <div class="modal-header">
                     <h2>${t('add_company_number', 'Add Company Number')}</h2>
-                    <button class="modal-close" onclick="App.managers.companyNumbers?.closeModal()">
-                        <i class="fa fa-times"></i>
-                    </button>
                 </div>
                 <div class="modal-body">
                     <form id="addCompanyForm">
