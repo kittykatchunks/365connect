@@ -3448,13 +3448,6 @@ body.view-dial .agent-keys-container { display: block; }
     font-weight: 600;
 }
 
-.contacts-import-export {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-.import-btn,
-.export-btn,
 .delete-all-btn {
     display: flex;
     align-items: center;
@@ -3475,7 +3468,7 @@ body.view-dial .agent-keys-container { display: block; }
 .delete-all-btn:hover {
     background-color: var(--danger-hover-color);
     border-color: var(--danger-color);
-    color: var(--danger-color);
+    /* color: var(--danger-color); */
 }
 
 /* Search wrapper for contacts */
