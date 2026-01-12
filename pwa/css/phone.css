@@ -442,7 +442,7 @@ button:focus {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: var(--primary-color);
+    /* background-color: var(--primary-color); */
     opacity: 0.9;
 }
 
