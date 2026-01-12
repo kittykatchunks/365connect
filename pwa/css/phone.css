@@ -67,6 +67,7 @@
     --text-color-secondary: #6b7280;    /* Medium gray secondary text */
     --text-color-muted: #9ca3af;        /* Light gray muted text */
     --text-color-inverse: #ffffff;      /* White text on dark backgrounds */
+    --text-color-white: #ffffff;        /* Pure white text */
     --text-color-accent: #2563eb;       /* Brand blue for emphasis */
     
     /* Borders & Dividers */
@@ -134,6 +135,7 @@
     --text-color-secondary: #cbd5e1;    /* Slate 300 - Secondary text */
     --text-color-muted: #94a3b8;        /* Slate 400 - Muted text */
     --text-color-inverse: #0f172a;      /* Dark text on light backgrounds */
+    --text-color-white: #ffffff;        /* Pure white text */
     --text-color-accent: #60a5fa;       /* Light blue for emphasis */
     
     /* Borders & Dividers */
@@ -438,7 +440,7 @@ button:focus {
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -448,13 +450,13 @@ button:focus {
 .btn-secondary {
     background-color: var(--secondary-color);
     border-color: var(--secondary-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 .btn-success {
     background-color: var(--success-color);
     border-color: var(--success-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 .btn-success:hover,
@@ -465,13 +467,13 @@ button:focus {
 .btn-danger {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 .btn-warning {
     background-color: var(--warning-color);
     border-color: var(--warning-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 /* ===== REGISTRATION BUTTON ===== */
@@ -926,9 +928,9 @@ input[type="radio"]:checked::after {
 
 .audio-test-btn {
     background: var(--primary-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
     border: none;
-    /* border-radius: 50%; */
+    border-radius: 50%;
     width: 32px;
     height: 32px;
     display: flex;
