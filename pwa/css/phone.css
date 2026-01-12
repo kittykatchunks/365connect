@@ -348,7 +348,7 @@ html, body {
 
 .nav-tab.active {
     background-color: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .nav-tab i {
@@ -381,11 +381,11 @@ html, body {
 @keyframes tab-flash {
     0%, 100% {
         background-color: var(--primary-color);
-        color: var(--text-color-inverse);
+        color: var(--text-color);
     }
     50% {
         background-color: var(--danger-color);
-        color: var(--text-color-inverse);
+        color: var(--text-color);
         box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
     }
 }
@@ -438,7 +438,7 @@ button:focus {
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -448,13 +448,13 @@ button:focus {
 .btn-secondary {
     background-color: var(--secondary-color);
     border-color: var(--secondary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-success {
     background-color: var(--success-color);
     border-color: var(--success-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-success:hover,
@@ -514,13 +514,13 @@ button:focus {
 /* Registration States */
 .register-button.register-disconnected {
     background: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     animation: registerPulse 2s ease-in-out infinite;
 }
 
 .register-button.register-connecting {
     background: var(--warning-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .register-button.register-connecting .fa {
@@ -533,12 +533,12 @@ button:focus {
 
 .register-button.register-connected {
     background: var(--success-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .register-button.register-error {
     background: var(--danger-color-dark);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     animation: registerPulseError 1.5s ease-in-out infinite;
 }
 
@@ -634,7 +634,7 @@ input[type="checkbox"]:checked {
 input[type="checkbox"]:checked::after {
     content: '✓';
     position: absolute;
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     font-size: 14px;
     font-weight: bold;
     top: 50%;
@@ -666,7 +666,7 @@ input[type="radio"]:checked::after {
     position: absolute;
     width: 8px;
     height: 8px;
-    background-color: var(--text-color-inverse);
+    background-color: var(--text-color);
     border-radius: 50%;
     top: 50%;
     left: 50%;
@@ -743,7 +743,7 @@ input[type="radio"]:checked::after {
 
 .accordion-header.active {
     background-color: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .accordion-header .accordion-icon {
@@ -926,7 +926,7 @@ input[type="radio"]:checked::after {
 
 .audio-test-btn {
     background: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     border: none;
     /* border-radius: 50%; */
     width: 32px;
@@ -1464,7 +1464,7 @@ input[type="radio"]:checked::after {
 /* Call Status Display */
 .call-status {
     background-color: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     /* border-radius: var(--border-radius); */
     /* padding: var(--spacing-sm); */
     margin: var(--spacing-sm) 0;
@@ -1569,7 +1569,7 @@ input[type="radio"]:checked::after {
 
 .call-duration {
     font-weight: 600;
-    color: var(--text-color-inverse) !important; /* White text for contrast */
+    color: var(--text-color) !important; /* White text for contrast */
     background: var(--overlay-light);
     padding: 2px 6px;
     /* border-radius: 3px; */
@@ -1677,7 +1677,7 @@ input[type="radio"]:checked::after {
     left: 0;
     right: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     padding: 12px 20px;
     z-index: 10001;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -1737,7 +1737,7 @@ input[type="radio"]:checked::after {
 
 .dismiss-btn {
     background: transparent;
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     border: 1px solid var(--overlay-medium);
     padding: 8px 15px;
     border-radius: 5px;
@@ -1993,7 +1993,7 @@ select:focus {
 .pause-reason-button:hover {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -2464,7 +2464,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .btn-control:hover {
     background: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     transform: translateY(-1px);
 }
 
@@ -2482,7 +2482,7 @@ body.view-dial .agent-keys-container { display: block; }
 /* Active states for toggle buttons */
 .btn-control.active {
     background: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-control.active:hover {
@@ -2492,7 +2492,7 @@ body.view-dial .agent-keys-container { display: block; }
 /* Toggle button states */
 .btn-control.muted,
 .btn-control.on-hold {
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-control.muted {
@@ -2700,7 +2700,7 @@ body.view-dial .agent-keys-container { display: block; }
 .blf-modal .checkbox-label input[type="checkbox"]:checked::after {
     content: '✓';
     position: absolute;
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     font-size: 14px;
     font-weight: bold;
     top: 50%;
@@ -2955,7 +2955,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .btn-transfer.btn-primary,
 .btn-transfer.btn-secondary {
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-transfer.btn-primary {
@@ -2981,7 +2981,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .btn-transfer.btn-cancel:hover {
     background: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 /* Responsive design for call controls */
@@ -3180,7 +3180,7 @@ body.view-dial .agent-keys-container { display: block; }
 .history-date-header {
     padding: var(--spacing-md) var(--spacing-md);
     background: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     border-bottom: 2px solid var(--primary-color);
     font-weight: 700;
     font-size: 0.95rem;
@@ -3228,17 +3228,17 @@ body.view-dial .agent-keys-container { display: block; }
 
 .history-item.incoming .call-direction {
     background: var(--success-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .history-item.outgoing .call-direction {
     background: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .history-item.missed .call-direction {
     background: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .call-direction i {
@@ -3285,7 +3285,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .call-duration {
     padding: 2px 6px;
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     background: var(--border-color);
     /* border-radius: 10px; */
     font-size: 0.75rem;
@@ -3294,7 +3294,7 @@ body.view-dial .agent-keys-container { display: block; }
 .missed-indicator {
     padding: 2px 6px;
     background: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     /* border-radius: 10px; */
     font-size: 0.75rem;
     font-weight: 500;
@@ -3322,7 +3322,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .callback-button {
     background-color: var(--success-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .callback-button:hover {
@@ -3332,7 +3332,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .remove-call-button {
     background-color: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .remove-call-button:hover {
@@ -3468,7 +3468,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .delete-all-btn {
     background-color: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     border: 1px solid var(--danger-color);
 }
 
@@ -4085,7 +4085,7 @@ body.view-dial .agent-keys-container { display: block; }
     cursor: pointer;
     transition: all 0.2s ease;
     background-color: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     margin-top: var(--spacing-md);
     display: none;
     min-height: 48px;
@@ -4302,7 +4302,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 #busylight-save {
     background: var(--primary-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 #busylight-save:hover {
@@ -4409,7 +4409,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .line-key.state-idle .line-key-label,
 .line-key.state-idle .line-key-info {
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 /* Ringing state */
@@ -4420,7 +4420,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .line-key.state-ringing .line-key-label,
 .line-key.state-ringing .line-key-info {
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     font-weight: 600;
 }
 
@@ -4432,7 +4432,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .line-key.state-active .line-key-label,
 .line-key.state-active .line-key-info {
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     font-weight: 600;
 }
 
@@ -4456,7 +4456,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .line-key.state-dialing .line-key-label,
 .line-key.state-dialing .line-key-info {
-    color: var(--text-color-inverse);
+    color: var(--text-color);
     font-weight: 600;
 }
 
