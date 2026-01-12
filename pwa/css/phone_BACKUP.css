@@ -1,7 +1,6 @@
 /* ====================================================================================== */
 /* AUTOCAB365CONNECT PWA - MAIN STYLESHEET */
 /* Version: 0.2.001 */
-/* Reorganized by file-specific sections matching PHONE_CSS_USAGE.md */
 /* ====================================================================================== */
 
 /* ===== CSS CUSTOM PROPERTIES (VARIABLES) ===== */
@@ -200,6 +199,24 @@ html, body {
     transition: var(--theme-transition);
 }
 
+.center-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-color);
+    transition: var(--theme-transition);
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0; /* Allow flex shrinking for proper scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.container, .phone-container {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: var(--theme-transition);
+}
+
 /* ===== PANEL HEADERS ===== */
 
 .panel-header {
@@ -251,6 +268,12 @@ html, body {
     :root:not([data-theme="light"]) .app-logo img.logo-dark {
         display: block;
     }
+}
+
+.app-title {
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+    color: var(--text-color);
 }
 
 /* ===== NAVIGATION TABS ===== */
@@ -514,6 +537,71 @@ button:focus {
 #themeBtn .btn-text {
     font-size: var(--font-size-xs);
     font-weight: 600;
+}
+
+/* ===== THEME CONTROLS ===== */
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    /* border-radius: var(--border-radius); */
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: var(--theme-transition);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    min-width: 60px;
+    margin-right: var(--spacing-sm);
+}
+
+.theme-btn:hover {
+    background-color: var(--surface-color-hover);
+    transform: scale(1.02);
+}
+
+.theme-btn i {
+    font-size: 14px;
+}
+
+.theme-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-selector select {
+    flex: 1;
+    min-width: 150px;
+}
+
+.theme-preview-btn,
+.theme-toggle-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    white-space: nowrap;
+}
+
+.current-theme-display {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    /* border-radius: var(--border-radius); */
+}
+
+.current-theme-display span {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-color-secondary);
 }
 
 /* ===== FORM ELEMENTS ===== */
@@ -1489,6 +1577,26 @@ input[type="checkbox"]:checked::after {
     /* border-radius: 3px; */
 }
 
+/* Time and Date Display */
+.time-date-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.current-time {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-color-secondary);
+}
+
+.current-date {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-color-secondary);
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
     .status-row {
@@ -1581,6 +1689,159 @@ input[type="checkbox"]:checked::after {
     line-height: 1;
     margin-top: 1px;
 }
+
+/* ===== CONTACT/BUDDY LIST ===== */
+
+.contactArea {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0; /* Remove padding as parent content-area handles it */
+    min-height: 0; /* Allow flex shrinking for proper scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    max-height: 100%; /* Ensure height constraint for scrolling */
+}
+
+.buddy, .buddySelected {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    /* border-radius: var(--border-radius); */
+    cursor: pointer;
+    transition: var(--theme-transition);
+    background-color: var(--background-color);
+    border: 1px solid transparent;
+}
+
+.buddy:hover {
+    background-color: var(--surface-color);
+    border-color: var(--border-color);
+}
+
+.buddySelected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.buddyIcon {
+    width: 40px;
+    height: 40px;
+    /* border-radius: 50%; */
+    margin-right: var(--spacing-md);
+    background-size: cover;
+    background-position: center;
+    background-color: var(--surface-color);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+    color: var(--text-color-muted);
+}
+
+.contactNameText {
+    font-weight: 500;
+    flex: 1;
+    margin-right: var(--spacing-sm);
+    color: var(--text-color);
+}
+
+.presenceText {
+    font-size: var(--font-size-xs);
+    color: var(--text-color-secondary);
+    margin-right: var(--spacing-sm);
+}
+
+/* Presence Indicators */
+.dotOnline, .dotOffline, .dotInUse, .dotRinging, .dotOnHold {
+    width: 12px;
+    height: 12px;
+    /* border-radius: 50%; */
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.dotOnline { background-color: var(--success-color); }
+.dotOffline { background-color: var(--secondary-color); }
+.dotInUse { background-color: var(--danger-color); }
+.dotRinging { background-color: var(--warning-color); animation: pulse 1s infinite; }
+.dotOnHold { background-color: var(--info-color); }
+
+/* ===== CALL CONTROLS ===== */
+
+.CallControlContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    transition: var(--theme-transition);
+}
+
+.call-btn {
+    width: 50px;
+    height: 50px;
+    /* border-radius: 50%; */
+    border: none;
+    cursor: pointer;
+    transition: var(--theme-transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+    box-shadow: var(--box-shadow);
+}
+
+.call-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.call-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.call-btn.answer { background-color: var(--success-color); color: white; }
+.call-btn.hangup { 
+    background-color: var(--danger-color); 
+    color: white; 
+    width: 55px; 
+    height: 55px; 
+    font-size: 1.1em;
+}
+.call-btn.hold { background-color: var(--warning-color); color: white; }
+.call-btn.mute { background-color: var(--info-color); color: white; }
+
+/* Active states */
+.call-btn.active {
+    opacity: 0.8;
+    transform: scale(0.95);
+}
+
+/* ===== CONNECTION STATUS ===== */
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+}
+
+.connection-indicator {
+    width: 12px;
+    height: 12px;
+    /* border-radius: 50%; */
+    flex-shrink: 0;
+}
+
+.connection-disconnected { background-color: var(--danger-color); }
+.connection-connecting { background-color: var(--warning-color); animation: pulse 1s infinite; }
+.connection-connected, .connection-registered { background-color: var(--success-color); }
 
 /* ===== NOTIFICATIONS ===== */
 
@@ -1915,6 +2176,15 @@ input[type="checkbox"]:checked::after {
     scrollbar-color: var(--border-color) var(--surface-color);
 }
 
+/* Enhanced scrollable area styles */
+.scrollable-area {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+}
+
 /* Remove persistent focus outlines after click */
 *:focus {
     outline: none !important;
@@ -1933,6 +2203,8 @@ input[type="checkbox"]:checked::after {
 
 /* Ensure focus remains visible in scrollable areas */
 .content-area *:focus,
+.contactArea *:focus,
+.activity-feed *:focus,
 .settings-container *:focus {
     scroll-margin: var(--spacing-lg);
 }
@@ -1991,6 +2263,27 @@ input[type="checkbox"]:checked::after {
 /* ===== UTILITY CLASSES ===== */
 
 .hidden { display: none !important; }
+.visible { display: block !important; }
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.flex { display: flex; }
+.flex-column { flex-direction: column; }
+.flex-center { align-items: center; justify-content: center; }
+.flex-1 { flex: 1; }
+
+/* Spacing utilities */
+.m-0 { margin: 0; }
+.p-0 { padding: 0; }
+.m-sm { margin: var(--spacing-sm); }
+.p-sm { padding: var(--spacing-sm); }
+.m-md { margin: var(--spacing-md); }
+.p-md { padding: var(--spacing-md); }
+
+/* Text utilities */
+.text-primary { color: var(--text-color) !important; }
+.text-secondary { color: var(--text-color-secondary) !important; }
+.text-muted { color: var(--text-color-muted) !important; }
 
 /* ===== CONTAINER VISIBILITY RULES ===== */
 
@@ -2163,6 +2456,13 @@ body.view-dial .agent-keys-container { display: block; }
     margin-top: var(--spacing-lg);
 }
 
+.loading-bar {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
 /* ===== INITIALIZATION ERROR STYLES ===== */
 
 .initialization-error {
@@ -2285,6 +2585,91 @@ body.view-dial .agent-keys-container { display: block; }
 .activity-controls {
     display: flex;
     gap: var(--spacing-sm);
+}
+
+.activity-feed {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--spacing-md);
+    min-height: 0; /* Allow flex shrinking for proper scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    max-height: 100%; /* Ensure height constraint for scrolling */
+}
+
+.no-activity-message {
+    text-align: center;
+    color: var(--text-color-secondary);
+    padding: var(--spacing-xl);
+}
+
+.no-activity-message i {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--theme-transition);
+}
+
+.activity-item:hover {
+    background: var(--surface-color-hover);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    /* border-radius: 50%; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: var(--spacing-md);
+    font-size: var(--font-size-lg);
+}
+
+.activity-icon.call-incoming {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success-color);
+}
+
+.activity-icon.call-outgoing {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info-color);
+}
+
+.activity-icon.call-missed {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.activity-details {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.activity-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+}
+
+.activity-time {
+    font-size: var(--font-size-xs);
+    color: var(--text-color-muted);
+    margin-left: var(--spacing-md);
 }
 
 /* ===== CALL CONTROLS ===== */
