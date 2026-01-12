@@ -42,74 +42,74 @@
 
 :root {
     /* Brand Colors - Light Theme */
-    --primary-color: #010658;           /* Deep Blue - Primary brand color */
-    --primary-color-rgb: 1, 6, 88;
-    --primary-hover: #020980;           /* Slightly lighter for hover states */
+    --primary-color: #2563eb;           /* Modern Blue - Primary brand color */
+    --primary-color-rgb: 37, 99, 235;
+    --primary-hover: #1d4ed8;           /* Darker blue for hover states */
     
-    --secondary-color: #524df2;         /* Vibrant Purple - Secondary accent */
-    --secondary-color-rgb: 82, 77, 242;
-    --accent-pink: #f2529e;             /* Pink accent */
-    --accent-magenta: #bf14d9;          /* Magenta accent */
+    --secondary-color: #7c3aed;         /* Purple - Secondary accent */
+    --secondary-color-rgb: 124, 58, 237;
+    --accent-pink: #ec4899;             /* Pink accent */
+    --accent-magenta: #a855f7;          /* Magenta accent */
     
     /* Semantic Colors */
-    --success-color: #22c55e;           /* Green for success states */
+    --success-color: #10b981;           /* Green for success states */
     --danger-color: #ef4444;            /* Red for danger/errors */
     --warning-color: #f59e0b;           /* Amber for warnings */
     --info-color: #3b82f6;              /* Blue for info */
     
     /* Background & Surface */
     --background-color: #ffffff;         /* Pure white background */
-    --surface-color: #f2f2f2;           /* Light gray surface */
-    --surface-color-hover: #e8e8e8;     /* Darker gray for hover */
+    --surface-color: #f9fafb;           /* Very light gray surface */
+    --surface-color-hover: #f3f4f6;     /* Light gray for hover */
     
     /* Text Colors */
-    --text-color: #333333;              /* Dark gray primary text */
-    --text-color-secondary: #666666;    /* Medium gray secondary text */
-    --text-color-muted: #999999;        /* Light gray muted text */
+    --text-color: #111827;              /* Almost black primary text */
+    --text-color-secondary: #6b7280;    /* Medium gray secondary text */
+    --text-color-muted: #9ca3af;        /* Light gray muted text */
     --text-color-inverse: #ffffff;      /* White text on dark backgrounds */
-    --text-color-accent: #010658;       /* Brand blue for emphasis */
+    --text-color-accent: #2563eb;       /* Brand blue for emphasis */
     
     /* Borders & Dividers */
-    --border-color: #e0e0e0;            /* Light gray borders */
+    --border-color: #e5e7eb;            /* Light gray borders */
 }
 
 /* ===== DARK THEME OVERRIDE ===== */
 
 [data-theme="dark"] {
     /* Brand Colors - Dark Theme */
-    --primary-color: #524df2;           /* Vibrant Purple - Primary for dark mode */
-    --primary-color-rgb: 82, 77, 242;
-    --primary-hover: #6b66ff;           /* Lighter purple for hover */
+    --primary-color: #3b82f6;           /* Bright Blue - Primary for dark mode */
+    --primary-color-rgb: 59, 130, 246;
+    --primary-hover: #60a5fa;           /* Lighter blue for hover */
     
-    --secondary-color: #f2529e;         /* Pink - Secondary accent */
-    --secondary-color-rgb: 242, 82, 158;
-    --accent-pink: #ff6bb3;             /* Lighter pink accent */
-    --accent-magenta: #d946ef;          /* Lighter magenta accent */
+    --secondary-color: #8b5cf6;         /* Purple - Secondary accent */
+    --secondary-color-rgb: 139, 92, 246;
+    --accent-pink: #ec4899;             /* Pink accent */
+    --accent-magenta: #a855f7;          /* Magenta accent */
     
     /* Semantic Colors - Adjusted for dark mode */
-    --success-color: #008000;           /* Lighter green for visibility */
-    --danger-color: #ff0000;            /* Lighter red for visibility */
-    --warning-color: #fbbf24;           /* Lighter amber for warnings */
+    --success-color: #10b981;           /* Green for visibility */
+    --danger-color: #f87171;            /* Lighter red for visibility */
+    --warning-color: #fbbf24;           /* Amber for warnings */
     --info-color: #60a5fa;              /* Lighter blue for info */
     
     /* Background & Surface */
-    --background-color: #010658;        /* Deep blue background */
-    --surface-color: #333333;           /* Dark gray surface */
-    --surface-color-hover: #444444;     /* Lighter gray for hover */
+    --background-color: #0f172a;        /* Slate 900 - Dark background */
+    --surface-color: #1e293b;           /* Slate 800 - Card surface */
+    --surface-color-hover: #334155;     /* Slate 700 - Hover state */
     
     /* Text Colors */
-    --text-color: #ffffff;              /* White primary text */
-    --text-color-secondary: #f2f2f2;    /* Off-white secondary text */
-    --text-color-muted: #999999;        /* Gray muted text */
-    --text-color-inverse: #010658;      /* Deep blue text on light backgrounds */
-    --text-color-accent: #524df2;       /* Purple for emphasis */
+    --text-color: #f1f5f9;              /* Slate 100 - Primary text */
+    --text-color-secondary: #cbd5e1;    /* Slate 300 - Secondary text */
+    --text-color-muted: #94a3b8;        /* Slate 400 - Muted text */
+    --text-color-inverse: #0f172a;      /* Dark text on light backgrounds */
+    --text-color-accent: #60a5fa;       /* Light blue for emphasis */
     
     /* Borders & Dividers */
-    --border-color: #444444;            /* Dark gray borders */
+    --border-color: #334155;            /* Slate 700 - Borders */
     
     /* Shadows - Deeper for dark mode */
-    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --box-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --box-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
 /* ===== AUTO THEME (SYSTEM PREFERENCE) ===== */
@@ -117,37 +117,37 @@
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
         /* Brand Colors - Auto Dark Theme (matches manual dark theme) */
-        --primary-color: #524df2;           /* Vibrant Purple */
-        --primary-color-rgb: 82, 77, 242;
-        --primary-hover: #6b66ff;
+        --primary-color: #3b82f6;           /* Bright Blue */
+        --primary-color-rgb: 59, 130, 246;
+        --primary-hover: #60a5fa;
         
-        --secondary-color: #f2529e;         /* Pink */
-        --secondary-color-rgb: 242, 82, 158;
-        --accent-pink: #ff6bb3;
-        --accent-magenta: #d946ef;
+        --secondary-color: #8b5cf6;         /* Purple */
+        --secondary-color-rgb: 139, 92, 246;
+        --accent-pink: #ec4899;
+        --accent-magenta: #a855f7;
         
         /* Semantic Colors */
-        --success-color: #34d399;
+        --success-color: #10b981;
         --danger-color: #f87171;
         --warning-color: #fbbf24;
         --info-color: #60a5fa;
         
         /* Background & Surface */
-        --background-color: #010658;
-        --surface-color: #333333;
-        --surface-color-hover: #444444;
+        --background-color: #0f172a;
+        --surface-color: #1e293b;
+        --surface-color-hover: #334155;
         
         /* Text Colors */
-        --text-color: #ffffff;
-        --text-color-secondary: #f2f2f2;
-        --text-color-muted: #999999;
-        --text-color-inverse: #010658;
-        --text-color-accent: #524df2;
+        --text-color: #f1f5f9;
+        --text-color-secondary: #cbd5e1;
+        --text-color-muted: #94a3b8;
+        --text-color-inverse: #0f172a;
+        --text-color-accent: #60a5fa;
         
         /* Borders & Shadows */
-        --border-color: #444444;
-        --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        --box-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+        --border-color: #334155;
+        --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        --box-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.6);
     }
 }
 
