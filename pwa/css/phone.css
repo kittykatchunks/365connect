@@ -348,7 +348,7 @@ html, body {
 
 .nav-tab.active {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .nav-tab i {
@@ -381,11 +381,11 @@ html, body {
 @keyframes tab-flash {
     0%, 100% {
         background-color: var(--primary-color);
-        color: white;
+        color: var(--text-color-inverse);
     }
     50% {
         background-color: var(--danger-color);
-        color: white;
+        color: var(--text-color-inverse);
         box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
     }
 }
@@ -644,7 +644,7 @@ input[type="checkbox"]:checked {
 input[type="checkbox"]:checked::after {
     content: '✓';
     position: absolute;
-    color: white;
+    color: var(--text-color-inverse);
     font-size: 14px;
     font-weight: bold;
     top: 50%;
@@ -1474,7 +1474,7 @@ input[type="radio"]:checked::after {
 /* Call Status Display */
 .call-status {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
     /* border-radius: var(--border-radius); */
     /* padding: var(--spacing-sm); */
     margin: var(--spacing-sm) 0;
@@ -2003,7 +2003,7 @@ select:focus {
 .pause-reason-button:hover {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
