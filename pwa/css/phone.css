@@ -71,6 +71,38 @@
     
     /* Borders & Dividers */
     --border-color: #e5e7eb;            /* Light gray borders */
+    
+    /* State Colors */
+    --state-idle: #6b7280;              /* Gray for idle state */
+    --state-dialing: #17a2b8;           /* Cyan for dialing state */
+    
+    /* Color Variants for Animations */
+    --danger-color-dark: #b91c1c;       /* Darker red for animations */
+    --danger-color-light: #ff6b6b;      /* Lighter red for animations */
+    --warning-color-dark: #d97706;      /* Darker amber for animations */
+    --warning-color-light: #ffd54f;     /* Lighter amber for animations */
+    --info-color-light: #33c1d6;        /* Lighter cyan for animations */
+    
+    /* Overlay Backgrounds */
+    --overlay-bg: rgba(0, 0, 0, 0.5);   /* Dark overlay for modals */
+    --overlay-bg-light: rgba(0, 0, 0, 0.3); /* Lighter overlay */
+    --overlay-light: rgba(255, 255, 255, 0.1); /* Light white overlay */
+    --overlay-medium: rgba(255, 255, 255, 0.5); /* Medium white overlay */
+    --overlay-strong: rgba(255, 255, 255, 0.8); /* Strong white overlay */
+    
+    /* Alpha Backgrounds for State Indicators */
+    --danger-bg-alpha: rgba(239, 68, 68, 0.1);   /* Danger background tint */
+    --danger-bg-alpha-strong: rgba(239, 68, 68, 0.3); /* Stronger danger tint */
+    --warning-bg-alpha: rgba(245, 158, 11, 0.1); /* Warning background tint */
+    --warning-bg-alpha-strong: rgba(245, 158, 11, 0.3); /* Stronger warning tint */
+    
+    /* Special Accents */
+    --accent-indigo: #667eea;           /* Indigo accent */
+    --accent-purple: #524df2;           /* Purple accent for selected states */
+    --text-on-light-bg: #000000;        /* Black text on light backgrounds */
+    --text-gray-dark: #333333;          /* Dark gray text */
+    --text-gray-medium: #555555;        /* Medium gray text */
+    --text-gray-light: #666666;         /* Light gray text */
 }
 
 /* ===== DARK THEME OVERRIDE ===== */
@@ -110,6 +142,38 @@
     /* Shadows - Deeper for dark mode */
     --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     --box-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.6);
+    
+    /* State Colors - Dark Theme */
+    --state-idle: #6b7280;              /* Gray for idle state */
+    --state-dialing: #17a2b8;           /* Cyan for dialing state */
+    
+    /* Color Variants - Dark Theme */
+    --danger-color-dark: #dc2626;       /* Darker red for dark mode */
+    --danger-color-light: #fca5a5;      /* Lighter red for dark mode */
+    --warning-color-dark: #ea580c;      /* Darker amber for dark mode */
+    --warning-color-light: #fcd34d;     /* Lighter amber for dark mode */
+    --info-color-light: #67e8f9;        /* Lighter cyan for dark mode */
+    
+    /* Overlay Backgrounds - Dark Theme */
+    --overlay-bg: rgba(0, 0, 0, 0.7);   /* Darker overlay for dark mode */
+    --overlay-bg-light: rgba(0, 0, 0, 0.5); /* Lighter overlay for dark mode */
+    --overlay-light: rgba(255, 255, 255, 0.05); /* Light white overlay */
+    --overlay-medium: rgba(255, 255, 255, 0.3); /* Medium white overlay */
+    --overlay-strong: rgba(255, 255, 255, 0.6); /* Strong white overlay */
+    
+    /* Alpha Backgrounds - Dark Theme */
+    --danger-bg-alpha: rgba(248, 113, 113, 0.15);
+    --danger-bg-alpha-strong: rgba(248, 113, 113, 0.35);
+    --warning-bg-alpha: rgba(251, 191, 36, 0.15);
+    --warning-bg-alpha-strong: rgba(251, 191, 36, 0.35);
+    
+    /* Special Accents - Dark Theme */
+    --accent-indigo: #818cf8;           /* Lighter indigo for dark mode */
+    --accent-purple: #7c73e6;           /* Lighter purple for dark mode */
+    --text-on-light-bg: #f1f5f9;        /* Light text (reversed for dark mode) */
+    --text-gray-dark: #e2e8f0;          /* Light gray (reversed) */
+    --text-gray-medium: #cbd5e1;        /* Medium light gray (reversed) */
+    --text-gray-light: #94a3b8;         /* Lighter gray (reversed) */
 }
 
 /* ===== AUTO THEME (SYSTEM PREFERENCE) ===== */
@@ -320,7 +384,7 @@ html, body {
         color: white;
     }
     50% {
-        background-color: #ff3b30;
+        background-color: var(--danger-color);
         color: white;
         box-shadow: 0 0 20px rgba(255, 59, 48, 0.6);
     }
@@ -483,7 +547,7 @@ button:focus {
 }
 
 .register-button.register-error {
-    background: #8b0000;
+    background: var(--danger-color-dark);
     color: white;
     animation: registerPulseError 1.5s ease-in-out infinite;
 }
@@ -676,7 +740,7 @@ input[type="radio"]:checked::after {
     justify-content: space-between;
     align-items: center;
     font-size: var(--font-size-lg);
-    font-weight: 600;
+    /*font-weight: 600;*/
     color: var(--text-color);
     transition: var(--theme-transition);
     position: relative;
@@ -1233,8 +1297,8 @@ input[type="radio"]:checked::after {
 }
 
 .dial-input-row .dial-input-wrapper input {
-    background-color: #f5f5f5; /* Light gray background matching call info display */
-    color: #000000; /* Black text */
+    background-color: var(--surface-color); /* Light gray background matching call info display */
+    color: var(--text-on-light-bg); /* Black text */
     border: 2px solid var(--border-color);
     font-size: var(--font-size-xl);
     padding: var(--spacing-lg);
@@ -1251,7 +1315,7 @@ input[type="radio"]:checked::after {
     right: var(--spacing-sm);
     background: none;
     border: none;
-    color: #666666; /* Darker gray for clear icon */
+    color: var(--text-gray-light); /* Darker gray for clear icon */
     cursor: pointer;
     padding: var(--spacing-xs);
     /* border-radius: var(--border-radius); */
@@ -1259,7 +1323,7 @@ input[type="radio"]:checked::after {
 
 .clear-dial-btn:hover {
     background-color: var(--surface-color-hover);
-    color: #333333; /* Even darker on hover */
+    color: var(--text-gray-dark); /* Even darker on hover */
 }
 
 /* ===== SIP STATUS DISPLAY ===== */
@@ -1424,60 +1488,60 @@ input[type="radio"]:checked::after {
     padding: var(--spacing-md);
     /* border-radius: var(--border-radius); */
     /* Uniform light gray background for all call states - line keys show status */
-    background: #f5f5f5;
+    background: var(--surface-color);
     transition: background-color 0.3s ease;
 }
 
 /* Call state background colors - removed as line keys show status */
 .call-info-display.call-ringing {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 .call-info-display.call-dialing {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 .call-info-display.call-connected {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 .call-info-display.call-on-hold {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 /* Dark theme call state colors */
 [data-theme="dark"] .call-info-display.call-ringing {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 [data-theme="dark"] .call-info-display.call-dialing {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 [data-theme="dark"] .call-info-display.call-connected {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 [data-theme="dark"] .call-info-display.call-on-hold {
-    background: #f5f5f5; /* Uniform light gray */
+    background: var(--surface-color); /* Uniform light gray */
 }
 
 /* Auto theme (system preference) */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .call-info-display.call-ringing {
-        background: #f5f5f5; /* Uniform light gray */
+        background: var(--surface-color); /* Uniform light gray */
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-dialing {
-        background: #f5f5f5; /* Uniform light gray */
+        background: var(--surface-color); /* Uniform light gray */
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-connected {
-        background: #f5f5f5; /* Uniform light gray */
+        background: var(--surface-color); /* Uniform light gray */
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-on-hold {
-        background: #f5f5f5; /* Uniform light gray */
+        background: var(--surface-color); /* Uniform light gray */
     }
 }
 
@@ -1490,12 +1554,12 @@ input[type="radio"]:checked::after {
 .caller-number {
     font-size: var(--font-size-lg);
     font-weight: 600;
-    color: #000000; /* Black text on light gray background */
+    color: var(--text-on-light-bg); /* Black text on light gray background */
 }
 
 .caller-name {
     font-size: var(--font-size-md);
-    color: #333333; /* Dark gray text */
+    color: var(--text-gray-dark); /* Dark gray text */
     font-weight: 500;
 }
 
@@ -1504,7 +1568,7 @@ input[type="radio"]:checked::after {
     justify-content: space-between;
     align-items: center;
     font-size: var(--font-size-xs);
-    color: #555555; /* Medium gray text */
+    color: var(--text-gray-medium); /* Medium gray text */
 }
 
 .call-direction {
@@ -1515,8 +1579,8 @@ input[type="radio"]:checked::after {
 
 .call-duration {
     font-weight: 600;
-    color: #ffffff !important; /* White text for contrast */
-    background: rgba(0, 0, 0, 0.15);
+    color: var(--text-color-inverse) !important; /* White text for contrast */
+    background: var(--overlay-light);
     padding: 2px 6px;
     /* border-radius: 3px; */
 }
@@ -1663,7 +1727,7 @@ input[type="radio"]:checked::after {
 
 .update-btn {
     background: white;
-    color: #667eea;
+    color: var(--accent-indigo);
     border: none;
     padding: 8px 20px;
     border-radius: 5px;
@@ -1684,7 +1748,7 @@ input[type="radio"]:checked::after {
 .dismiss-btn {
     background: transparent;
     color: white;
-    border: 1px solid rgba(255,255,255,0.5);
+    border: 1px solid var(--overlay-medium);
     padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
@@ -1692,12 +1756,12 @@ input[type="radio"]:checked::after {
 }
 
 .dismiss-btn:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.8);
+    background: var(--overlay-light);
+    border-color: var(--overlay-strong);
 }
 
 .dismiss-btn:active {
-    background: rgba(255,255,255,0.2);
+    background: var(--overlay-medium);
 }
 
 /* Toast Notifications */
@@ -1824,7 +1888,7 @@ input[type="radio"]:checked::after {
     bottom: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -2738,21 +2802,21 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Busy - solid red border */
 .blf-button.blf-busy {
-    border-left: 4px solid #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    border-left: 4px solid var(--danger-color);
+    background: var(--danger-bg-alpha);
 }
 
 /* Ringing - fast flashing red border */
 .blf-button.blf-ringing {
-    border-left: 4px solid #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    border-left: 4px solid var(--danger-color);
+    background: var(--danger-bg-alpha);
     animation: blfRingingFast 0.5s ease-in-out infinite alternate;
 }
 
 /* Hold - slow flashing amber/yellow border */
 .blf-button.blf-hold {
-    border-left: 4px solid #f59e0b;
-    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid var(--warning-color);
+    background: var(--warning-bg-alpha);
     animation: blfHoldSlow 2s ease-in-out infinite alternate;
 }
 
@@ -2792,34 +2856,34 @@ body.view-dial .agent-keys-container { display: block; }
 /* Fast flashing red for ringing state */
 @keyframes blfRingingFast {
     0% {
-        border-left-color: #ef4444;
-        background: rgba(239, 68, 68, 0.1);
+        border-left-color: var(--danger-color);
+        background: var(--danger-bg-alpha);
     }
     100% {
-        border-left-color: #b91c1c;
-        background: rgba(239, 68, 68, 0.3);
+        border-left-color: var(--danger-color-dark);
+        background: var(--danger-bg-alpha-strong);
     }
 }
 
 /* Slow flashing amber for hold state */
 @keyframes blfHoldSlow {
     0% {
-        border-left-color: #f59e0b;
-        background: rgba(245, 158, 11, 0.1);
+        border-left-color: var(--warning-color);
+        background: var(--warning-bg-alpha);
     }
     100% {
-        border-left-color: #d97706;
-        background: rgba(245, 158, 11, 0.3);
+        border-left-color: var(--warning-color-dark);
+        background: var(--warning-bg-alpha-strong);
     }
 }
 
 /* Legacy animation for backward compatibility */
 @keyframes blfRinging {
     0% {
-        background: rgba(245, 158, 11, 0.1);
+        background: var(--warning-bg-alpha);
     }
     100% {
-        background: rgba(245, 158, 11, 0.3);
+        background: var(--warning-bg-alpha-strong);
     }
 }
 
@@ -3235,7 +3299,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .call-duration {
     padding: 2px 6px;
-    color: #ffffff;
+    color: var(--text-color-inverse);
     background: var(--border-color);
     /* border-radius: 10px; */
     font-size: 0.75rem;
@@ -4091,11 +4155,11 @@ body.view-dial .agent-keys-container { display: block; }
 /* Welcome overlay uses .modal-overlay with heavy-blur and high-priority modifiers */
 .welcome-overlay {
     pointer-events: all;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: var(--overlay-bg-light);
 }
 
 [data-theme="dark"] .welcome-overlay {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg);
 }
 
 .welcome-content {
@@ -4269,15 +4333,15 @@ body.view-dial .agent-keys-container { display: block; }
 }
 
 .busylight-status-testing {
-    color: #ffc107;
+    color: var(--warning-color);
 }
 
 .busylight-status-success {
-    color: #28a745;
+    color: var(--success-color);
 }
 
 .busylight-status-error {
-    color: #dc3545;
+    color: var(--danger-color);
 }
 /* ====================================================================================== */
 /* LINE KEYS - MULTI-LINE SUPPORT */
@@ -4354,59 +4418,59 @@ body.view-dial .agent-keys-container { display: block; }
 
 /* Idle state */
 .line-key.state-idle {
-    background: #6c757d !important;
+    background: var(--state-idle) !important;
 }
 
 .line-key.state-idle .line-key-label,
 .line-key.state-idle .line-key-info {
-    color: #ffffff;
+    color: var(--text-color-inverse);
 }
 
 /* Ringing state */
 .line-key.state-ringing {
-    background: #dc3545 !important;
+    background: var(--danger-color) !important;
     animation: flash-red-bg 0.5s infinite;
 }
 
 .line-key.state-ringing .line-key-label,
 .line-key.state-ringing .line-key-info {
-    color: #ffffff;
+    color: var(--text-color-inverse);
     font-weight: 600;
 }
 
 /* Active state */
 .line-key.state-active {
-    background: #28a745 !important;
+    background: var(--success-color) !important;
     box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
 }
 
 .line-key.state-active .line-key-label,
 .line-key.state-active .line-key-info {
-    color: #ffffff;
+    color: var(--text-color-inverse);
     font-weight: 600;
 }
 
 /* Hold state */
 .line-key.state-hold {
-    background: #ffc107 !important;
+    background: var(--warning-color) !important;
     animation: flash-yellow-bg 1.5s infinite;
 }
 
 .line-key.state-hold .line-key-label,
 .line-key.state-hold .line-key-info {
-    color: #000000;
+    color: var(--text-on-light-bg);
     font-weight: 600;
 }
 
 /* Dialing state */
 .line-key.state-dialing {
-    background: #17a2b8 !important;
+    background: var(--state-dialing) !important;
     animation: pulse-blue-bg 1s infinite;
 }
 
 .line-key.state-dialing .line-key-label,
 .line-key.state-dialing .line-key-info {
-    color: #ffffff;
+    color: var(--text-color-inverse);
     font-weight: 600;
 }
 
@@ -4414,30 +4478,30 @@ body.view-dial .agent-keys-container { display: block; }
 
 @keyframes flash-red-bg {
     0%, 100% { 
-        background: #dc3545;
+        background: var(--danger-color);
     }
     50% { 
-        background: #ff6b6b;
+        background: var(--danger-color-light);
         box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
     }
 }
 
 @keyframes flash-yellow-bg {
     0%, 100% { 
-        background: #ffc107;
+        background: var(--warning-color);
     }
     50% { 
-        background: #ffd54f;
+        background: var(--warning-color-light);
     }
 }
 
 @keyframes pulse-blue-bg {
     0%, 100% { 
-        background: #17a2b8;
+        background: var(--state-dialing);
         transform: scale(1);
     }
     50% { 
-        background: #33c1d6;
+        background: var(--info-color-light);
         transform: scale(1.02);
     }
 }
@@ -4484,9 +4548,9 @@ body.view-dial .agent-keys-container { display: block; }
 }
 
 [data-theme="dark"] .line-key {
-    border-right-color: rgba(255, 255, 255, 0.1);
+    border-right-color: var(--overlay-light);
 }
 
 [data-theme="dark"] .line-key.selected {
-    background: rgba(82, 77, 242, 0.2);
+    background: var(--accent-purple);
 }
