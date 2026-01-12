@@ -1841,6 +1841,23 @@ input[type="checkbox"]:checked::after {
     border-top: 1px solid var(--border-color);
 }
 
+/* ===== UNIFIED FORM CONTROL STYLES ===== */
+
+/* Generic form input focus state - used by all modals */
+.form-control:focus,
+.transfer-input:focus,
+.blf-modal .form-control:focus,
+.company-modal input:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
 /* Pause Reason Modal */
 .pause-reason-modal .modal-content {
     min-width: 450px;
@@ -2444,19 +2461,7 @@ body.view-dial .agent-keys-container { display: block; }
     z-index: 10002;
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-    margin: 0;
-    color: var(--text-color);
-}
+/* Using generic .modal-header defined above */
 
 .modal-close {
     background: none;
@@ -2504,11 +2509,7 @@ body.view-dial .agent-keys-container { display: block; }
     -ms-user-select: text;
 }
 
-.transfer-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
+/* Using unified form focus style defined above */
 
 .transfer-actions {
     display: flex;
@@ -2576,11 +2577,7 @@ body.view-dial .agent-keys-container { display: block; }
     outline: none;
 }
 
-.blf-modal .form-control:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
+/* Using unified form focus style defined above */
 
 .blf-modal .checkbox-label {
     display: flex;
@@ -3638,14 +3635,7 @@ body.view-dial .agent-keys-container { display: block; }
     flex-shrink: 0;
 }
 
-.modal-actions {
-    display: flex;
-    gap: var(--spacing-md);
-    justify-content: flex-end;
-    padding-top: var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-    margin-top: var(--spacing-lg);
-}
+/* Using generic .modal-actions defined above */
 
 /* ===== RESPONSIVE DESIGN ===== */
 
@@ -3949,10 +3939,7 @@ body.view-dial .agent-keys-container { display: block; }
     font-size: var(--font-size-md);
 }
 
-.company-modal input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
+/* Using unified form focus style defined above */
 
 /* ===== CLI SELECTOR (DIAL TAB) ===== */
 
