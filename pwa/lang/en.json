@@ -185,6 +185,7 @@
     "enableBusylight": "Enable Busylight",
     "ringSound": "Ring Sound",
     "ringVolume": "Ring Volume",
+    "newFeaturesComingSoon": "New features will be added in future updates",
     "enableVoicemailNotify": "Enable Voicemail Notification when Idle",
     "sipMessages": "SIP Messages",
     "sipMessagesHelp": "Enable detailed SIP message logging in browser console",

@@ -184,6 +184,7 @@
     "alert": "Waarschuwing",
     "enableBusylight": "Busylight Inschakelen",    "ringSound": "Beltoon",
     "ringVolume": "Belvolume",
+    "newFeaturesComingSoon": "Nieuwe functies worden toegevoegd in toekomstige updates",
     "enableVoicemailNotify": "Voicemail-melding inschakelen bij inactief",    "sipMessages": "SIP Berichten",
     "sipMessagesHelp": "Gedetailleerde SIP-berichtenregistratie inschakelen in browserconsole",
     "verboseLogging": "Uitgebreide Logboekregistratie",

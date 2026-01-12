@@ -185,6 +185,7 @@
     "enableBusylight": "Activer Busylight",
     "ringSound": "Sonnerie",
     "ringVolume": "Volume de sonnerie",
+    "newFeaturesComingSoon": "De nouvelles fonctionnalités seront ajoutées dans les mises à jour futures",
     "enableVoicemailNotify": "Activer la notification de messagerie vocale en repos",
     "sipMessages": "Messages SIP",
     "sipMessagesHelp": "Activer la journalisation détaillée des messages SIP dans la console du navigateur",

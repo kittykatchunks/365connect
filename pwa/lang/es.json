@@ -183,6 +183,7 @@
     "enableBusylight": "Habilitar Luz de Ocupado",
     "ringSound": "Sonido de timbre",
     "ringVolume": "Volumen de timbre",
+    "newFeaturesComingSoon": "Se agregarán nuevas funciones en futuras actualizaciones",
     "enableVoicemailNotify": "Habilitar notificación de correo de voz en reposo",
     "sipMessages": "Mensajes SIP",
     "sipMessagesHelp": "Habilitar registro detallado de mensajes SIP en la consola del navegador",
