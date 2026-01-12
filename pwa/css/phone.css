@@ -442,7 +442,6 @@ button:focus {
 }
 
 .btn-primary:hover:not(:disabled) {
-    /* background-color: var(--primary-color); */
     opacity: 0.9;
 }
 
@@ -458,23 +457,14 @@ button:focus {
     color: var(--text-color-inverse);
 }
 
-.btn-success:hover {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
-    opacity: 1.4;
-    color: var(--text-color-inverse);
+.btn-success:hover,
+.btn-danger:hover {
+    opacity: 0.9;
 }
 
 .btn-danger {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
-    color: var(--text-color-inverse);
-}
-
-.btn-danger:hover {
-    background-color: var(--danger-color);
-    border-color: var(--danger-color);
-    opacity: 1.4;
     color: var(--text-color-inverse);
 }
 
@@ -2431,33 +2421,14 @@ body.view-dial .agent-keys-container { display: block; }
     display: none;
 }
 
-.btn-control {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-md) var(--spacing-sm);
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    /* border-radius: var(--border-radius); */
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 60px;
-    font-size: var(--font-size-sm);
-    text-align: center;
-    min-width: 0; /* Allow flex shrink */
-}
-
-/* Make call-button (CALL/END) same size as control buttons */
+/* Base control button styles - shared by btn-control and call-button */
+.btn-control,
 .call-button {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-sm) var(--spacing-sm);
     border: 1px solid var(--border-color);
     /* border-radius: var(--border-radius); */
     cursor: pointer;
@@ -2468,8 +2439,26 @@ body.view-dial .agent-keys-container { display: block; }
     min-width: 0; /* Allow flex shrink */
 }
 
+.btn-control {
+    padding: var(--spacing-md) var(--spacing-sm);
+    background: var(--surface-color);
+    color: var(--text-color);
+}
+
+.call-button {
+    padding: var(--spacing-sm) var(--spacing-sm);
+}
+
+.btn-control i,
 .call-button i {
     font-size: var(--font-size-lg);
+}
+
+.btn-control i {
+    margin-bottom: var(--spacing-xs);
+}
+
+.call-button i {
     margin-bottom: var(--spacing-sm);
 }
 
@@ -2481,11 +2470,6 @@ body.view-dial .agent-keys-container { display: block; }
 
 .btn-control:active {
     transform: translateY(0);
-}
-
-.btn-control i {
-    font-size: var(--font-size-lg);
-    margin-bottom: var(--spacing-xs);
 }
 
 .btn-control .btn-label {
@@ -2505,30 +2489,26 @@ body.view-dial .agent-keys-container { display: block; }
     background: var(--danger-color-hover);
 }
 
-/* Hold button on-hold state (use warning color instead of danger) */
+/* Toggle button states */
+.btn-control.muted,
 .btn-control.on-hold {
-    background: var(--warning-color);
     color: var(--text-color-inverse);
 }
 
-.btn-control.on-hold:hover {
-    background: var(--warning-color-hover);
-}
-
-/* Mute button states */
 .btn-control.muted {
     background: var(--danger-color);
-    color: var(--text-color-inverse);
 }
 
 .btn-control.muted i::before {
     content: '\f131'; /* fa-microphone-slash */
 }
 
-/* Hold button states */
 .btn-control.on-hold {
     background: var(--warning-color);
-    color: var(--text-color-inverse);
+}
+
+.btn-control.on-hold:hover {
+    background: var(--warning-color-hover);
 }
 
 .btn-control.on-hold i::before {
@@ -2962,17 +2942,24 @@ body.view-dial .agent-keys-container { display: block; }
     gap: var(--spacing-xs);
 }
 
-.btn-transfer:hover {
+/* Shared hover/active states for transfer and control buttons */
+.btn-transfer:hover,
+.btn-control:hover {
     transform: translateY(-1px);
 }
 
-.btn-transfer:active {
+.btn-transfer:active,
+.btn-control:active {
     transform: translateY(0);
+}
+
+.btn-transfer.btn-primary,
+.btn-transfer.btn-secondary {
+    color: var(--text-color-inverse);
 }
 
 .btn-transfer.btn-primary {
     background: var(--primary-color);
-    color: var(--text-color-inverse);
 }
 
 .btn-transfer.btn-primary:hover {
@@ -2981,7 +2968,6 @@ body.view-dial .agent-keys-container { display: block; }
 
 .btn-transfer.btn-secondary {
     background: var(--info-color);
-    color: var(--text-color-inverse);
 }
 
 .btn-transfer.btn-secondary:hover {
