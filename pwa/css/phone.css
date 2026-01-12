@@ -3350,7 +3350,7 @@ body.view-dial .agent-keys-container { display: block; }
     .clear-history-btn,
     .refresh-history-btn {
         padding: var(--spacing-xs) var(--spacing-sm);
-        font-size: var(--font-size-xs);
+        font-size: var(--font-size-sm);
         min-width: 70px;
     }
     
@@ -3720,11 +3720,9 @@ body.view-dial .agent-keys-container { display: block; }
         gap: var(--spacing-xs);
     }
     
-    .import-btn,
-    .export-btn,
     .delete-all-btn {
         padding: var(--spacing-xs) var(--spacing-sm);
-        font-size: var(--font-size-xs);
+        font-size: var(--font-size-sm);
         min-width: 70px;
     }
     
