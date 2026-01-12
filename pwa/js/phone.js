@@ -304,6 +304,7 @@ async function showTransferModal() {
             attendedActions.classList.add('hidden');
         }
         
+        modal.classList.remove('hidden');
         modal.classList.add('show');
         console.log('✅ Modal shown, focusing input');
         
@@ -334,6 +335,7 @@ async function hideTransferModal(transferCompleted = false) {
     const modal = document.getElementById('transferModal');
     if (modal) {
         modal.classList.remove('show');
+        modal.classList.add('hidden');
         
         // Reset transfer modal UI state when closing
         const transferActions = document.getElementById('transferActions');
