@@ -465,13 +465,13 @@ button:focus {
 .btn-danger {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 .btn-warning {
     background-color: var(--warning-color);
     border-color: var(--warning-color);
-    color: var(--text-color-inverse);
+    color: var(--text-color);
 }
 
 /* ===== REGISTRATION BUTTON ===== */
