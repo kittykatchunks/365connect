@@ -1289,7 +1289,8 @@ input[type="checkbox"]:checked::after {
 }
 
 .dial-input-row .dial-input-wrapper input {
-    background-color: var(--text-color-muted);
+    background-color: #f5f5f5; /* Light gray background matching call info display */
+    color: #000000; /* Black text */
     border: 2px solid var(--border-color);
     font-size: var(--font-size-xl);
     padding: var(--spacing-lg);
@@ -1306,7 +1307,7 @@ input[type="checkbox"]:checked::after {
     right: var(--spacing-sm);
     background: none;
     border: none;
-    color: var(--text-color-muted);
+    color: #666666; /* Darker gray for clear icon */
     cursor: pointer;
     padding: var(--spacing-xs);
     /* border-radius: var(--border-radius); */
@@ -1314,7 +1315,7 @@ input[type="checkbox"]:checked::after {
 
 .clear-dial-btn:hover {
     background-color: var(--surface-color-hover);
-    color: var(--text-color);
+    color: #333333; /* Even darker on hover */
 }
 
 /* ===== SIP STATUS DISPLAY ===== */
@@ -1478,59 +1479,61 @@ input[type="checkbox"]:checked::after {
     width: 100%;
     padding: var(--spacing-md);
     /* border-radius: var(--border-radius); */
+    /* Uniform light gray background for all call states - line keys show status */
+    background: #f5f5f5;
     transition: background-color 0.3s ease;
 }
 
-/* Call state background colors */
+/* Call state background colors - removed as line keys show status */
 .call-info-display.call-ringing {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); /* Orange for incoming ringing */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 .call-info-display.call-dialing {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Blue for outgoing dialing */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 .call-info-display.call-connected {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green for connected */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 .call-info-display.call-on-hold {
-    background: var(--warning-color); /* Matches hold button color */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 /* Dark theme call state colors */
 [data-theme="dark"] .call-info-display.call-ringing {
-    background: linear-gradient(135deg, #d97706 0%, #b45309 100%); /* Darker orange for dark theme */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 [data-theme="dark"] .call-info-display.call-dialing {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); /* Darker blue for dark theme */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 [data-theme="dark"] .call-info-display.call-connected {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%); /* Darker green for dark theme */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 [data-theme="dark"] .call-info-display.call-on-hold {
-    background: var(--warning-color); /* Matches hold button color */
+    background: #f5f5f5; /* Uniform light gray */
 }
 
 /* Auto theme (system preference) */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .call-info-display.call-ringing {
-        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        background: #f5f5f5; /* Uniform light gray */
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-dialing {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: #f5f5f5; /* Uniform light gray */
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-connected {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: #f5f5f5; /* Uniform light gray */
     }
     
     :root:not([data-theme="light"]) .call-info-display.call-on-hold {
-        background: var(--warning-color); /* Matches hold button color */
+        background: #f5f5f5; /* Uniform light gray */
     }
 }
 
@@ -1543,12 +1546,12 @@ input[type="checkbox"]:checked::after {
 .caller-number {
     font-size: var(--font-size-lg);
     font-weight: 600;
-    color: white;
+    color: #000000; /* Black text on light gray background */
 }
 
 .caller-name {
     font-size: var(--font-size-md);
-    color: rgba(255, 255, 255, 0.9);
+    color: #333333; /* Dark gray text */
     font-weight: 500;
 }
 
@@ -1557,7 +1560,7 @@ input[type="checkbox"]:checked::after {
     justify-content: space-between;
     align-items: center;
     font-size: var(--font-size-xs);
-    color: rgba(255, 255, 255, 0.8);
+    color: #555555; /* Medium gray text */
 }
 
 .call-direction {
@@ -1568,7 +1571,8 @@ input[type="checkbox"]:checked::after {
 
 .call-duration {
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff !important; /* White text for contrast */
+    background: rgba(0, 0, 0, 0.15);
     padding: 2px 6px;
     /* border-radius: 3px; */
 }
@@ -1841,6 +1845,91 @@ input[type="checkbox"]:checked::after {
 
 /* ===== NOTIFICATIONS ===== */
 
+/* Update Notification Banner */
+.update-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    z-index: 10001;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.update-banner:not(.hidden) {
+    transform: translateY(0);
+}
+
+.update-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+}
+
+.update-icon {
+    font-size: 24px;
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.update-message {
+    flex: 1;
+    font-weight: 500;
+    min-width: 200px;
+}
+
+.update-btn {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.update-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.update-btn:active {
+    transform: scale(0.98);
+}
+
+.dismiss-btn {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.5);
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.dismiss-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.8);
+}
+
+.dismiss-btn:active {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Toast Notifications */
 .notification-container {
     position: fixed;
     top: 20px;
@@ -2104,6 +2193,12 @@ input[type="checkbox"]:checked::after {
 /* Remove focus-visible outline (keyboard navigation) */
 *:focus-visible {
     outline: none !important;
+}
+
+/* Disable jQuery UI selectable helper dashed borders globally */
+.ui-selectable-helper {
+    border: none !important;
+    display: none !important;
 }
 
 /* Ensure focus remains visible in scrollable areas */
@@ -2663,6 +2758,16 @@ body.view-dial .agent-keys-container { display: block; }
 
 .btn-control.active:hover {
     background: var(--danger-color-hover);
+}
+
+/* Hold button on-hold state (use warning color instead of danger) */
+.btn-control.on-hold {
+    background: var(--warning-color);
+    color: var(--text-color-inverse);
+}
+
+.btn-control.on-hold:hover {
+    background: var(--warning-color-hover);
 }
 
 /* Mute button states */
@@ -3496,6 +3601,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .call-duration {
     padding: 2px 6px;
+    color: #ffffff;
     background: var(--border-color);
     /* border-radius: 10px; */
     font-size: 0.75rem;
@@ -4022,6 +4128,14 @@ body.view-dial .agent-keys-container { display: block; }
 }
 
 /* ===== COMPANY NUMBERS CONTAINER ===== */
+
+/* Prevent jQuery UI selectable helper from showing dashed borders */
+.company-numbers-container .ui-selectable-helper,
+.company-numbers-list .ui-selectable-helper,
+.company-numbers-table .ui-selectable-helper {
+    border: none !important;
+    display: none !important;
+}
 
 .company-numbers-container {
     flex: 1;
@@ -4578,4 +4692,215 @@ body.view-dial .agent-keys-container { display: block; }
 
 .busylight-status-error {
     color: #dc3545;
+}
+/* ====================================================================================== */
+/* LINE KEYS - MULTI-LINE SUPPORT */
+/* ====================================================================================== */
+
+.line-keys-container {
+    display: flex;
+    gap: 0;
+    padding: 0;
+    width: 100%;
+    background: var(--primary-bg);
+    margin-bottom: 15px;
+    /* border-radius: var(--border-radius); */
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.line-key {
+    flex: 1;
+    padding: 8px 6px;
+    border: none;
+    border-right: 1px solid var(--border-color);
+    background: var(--secondary-bg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 45px;
+}
+
+.line-key:last-child {
+    border-right: none;
+}
+
+.line-key:hover:not(.state-ringing):not(.state-active):not(.state-hold):not(.state-dialing) {
+    opacity: 0.8;
+}
+
+.line-key.selected {
+    box-shadow: inset 0 0 0 3px var(--primary-color);
+}
+
+.line-key:active {
+    transform: scale(0.98);
+}
+
+/* Line key indicator (hidden - using background colors instead) */
+.line-key-indicator {
+    display: none;
+}
+
+/* Line key label */
+.line-key-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Line key info (status text) */
+.line-key-info {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ========== LINE KEY STATES ========== */
+
+/* Idle state */
+.line-key.state-idle {
+    background: #6c757d !important;
+}
+
+.line-key.state-idle .line-key-label,
+.line-key.state-idle .line-key-info {
+    color: #ffffff;
+}
+
+/* Ringing state */
+.line-key.state-ringing {
+    background: #dc3545 !important;
+    animation: flash-red-bg 0.5s infinite;
+}
+
+.line-key.state-ringing .line-key-label,
+.line-key.state-ringing .line-key-info {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Active state */
+.line-key.state-active {
+    background: #28a745 !important;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.6);
+}
+
+.line-key.state-active .line-key-label,
+.line-key.state-active .line-key-info {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Hold state */
+.line-key.state-hold {
+    background: #ffc107 !important;
+    animation: flash-yellow-bg 1.5s infinite;
+}
+
+.line-key.state-hold .line-key-label,
+.line-key.state-hold .line-key-info {
+    color: #000000;
+    font-weight: 600;
+}
+
+/* Dialing state */
+.line-key.state-dialing {
+    background: #17a2b8 !important;
+    animation: pulse-blue-bg 1s infinite;
+}
+
+.line-key.state-dialing .line-key-label,
+.line-key.state-dialing .line-key-info {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* ========== ANIMATIONS ========== */
+
+@keyframes flash-red-bg {
+    0%, 100% { 
+        background: #dc3545;
+    }
+    50% { 
+        background: #ff6b6b;
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+    }
+}
+
+@keyframes flash-yellow-bg {
+    0%, 100% { 
+        background: #ffc107;
+    }
+    50% { 
+        background: #ffd54f;
+    }
+}
+
+@keyframes pulse-blue-bg {
+    0%, 100% { 
+        background: #17a2b8;
+        transform: scale(1);
+    }
+    50% { 
+        background: #33c1d6;
+        transform: scale(1.02);
+    }
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 768px) {
+    .line-keys-container {
+        margin-bottom: 10px;
+    }
+    
+    .line-key {
+        padding: 6px 4px;
+        min-height: 40px;
+    }
+    
+    .line-key-label {
+        font-size: 11px;
+    }
+    
+    .line-key-info {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    .line-key {
+        padding: 5px 3px;
+        min-height: 38px;
+    }
+    
+    .line-key-label {
+        font-size: 10px;
+    }
+    
+    .line-key-info {
+        font-size: 8px;
+    }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .line-keys-container {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .line-key {
+    border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .line-key.selected {
+    background: rgba(82, 77, 242, 0.2);
 }

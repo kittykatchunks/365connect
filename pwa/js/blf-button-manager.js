@@ -10,8 +10,8 @@ class BLFButtonManager {
         this.currentEditingIndex = -1;
         this.isDirty = false;
         this.failedSubscriptions = new Set(); // Track extensions that failed to subscribe
-        this.retryTimer = null; // Timer for periodic retry attempts
-        this.retryInterval = 180000; // 180 seconds in milliseconds
+        this.retryTimer = null; // Timer for periodic polling attempts
+        this.retryInterval = 120000; // 120 seconds (2 minutes) in milliseconds
         
         this.init();
     }
@@ -249,6 +249,10 @@ class BLFButtonManager {
                         // Initial subscription state - show as inactive until we get real state
                         button.classList.add('blf-inactive');
                         break;
+                    case 'offline':
+                        // Extension not found (404 response) - show as inactive/offline
+                        button.classList.add('blf-inactive');
+                        break;
                     case 'available':
                         // Explicitly available
                         button.classList.add('blf-available');
@@ -318,6 +322,11 @@ class BLFButtonManager {
                         button.classList.add('blf-inactive');
                         console.log(`📱 Button ${buttonData.number} set to INACTIVE (unknown state)`);
                         break;
+                    case 'offline':
+                        // Extension not found (404 response) - show as inactive/offline
+                        button.classList.add('blf-inactive');
+                        console.log(`📱 Button ${buttonData.number} set to INACTIVE (offline/not found)`);
+                        break;
                     case 'available':
                         // Explicitly available
                         button.classList.add('blf-available');
@@ -376,7 +385,7 @@ class BLFButtonManager {
             if (hasActiveCall) {
                 // Initiate transfer for any button type when call is active
                 console.log(`📞 Active call detected, initiating transfer to ${buttonData.number}`);
-                this.initiateTransfer(buttonData.number, buttonData.displayName);
+                this.initiateTransfer(buttonData.number, buttonData.displayName, buttonData);
             } else {
                 // Regular dial functionality
                 console.log('📞 Dialing BLF button:', buttonData.number);
@@ -429,16 +438,23 @@ class BLFButtonManager {
                window.currentTransferSession;
     }
 
-    initiateTransfer(number, displayName) {
+    initiateTransfer(number, displayName, buttonData = null) {
         console.log(`📞 Initiating transfer to ${number} (${displayName || 'Unknown'})`);
         
-        const preferBlind = this.getTransferPreference();
+        // Check if this button has an override setting
+        let preferBlind = this.getTransferPreference();
+        
+        if (buttonData && buttonData.overrideTransfer && buttonData.transferMethod) {
+            // Use button-specific override
+            preferBlind = buttonData.transferMethod === 'blind';
+            console.log(`📞 Using button-specific transfer override: ${buttonData.transferMethod}`);
+        }
         
         if (preferBlind) {
             // Perform blind transfer immediately
             this.performBlindTransferToNumber(number, displayName);
         } else {
-            // Start attended transfer
+            // Start attended transfer (which will show the modal with controls)
             this.performAttendedTransferToNumber(number, displayName);
         }
     }
@@ -451,16 +467,20 @@ class BLFButtonManager {
                 const currentSession = window.App.managers.sip.getCurrentSession();
                 if (currentSession) {
                     await window.App.managers.sip.blindTransfer(currentSession.id, number);
-                    this.showToast(`Call transferred to ${displayName || number}`, 'success');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('call_transferred_to', 'Call transferred to') + ` ${displayName || number}`, 'success');
                 } else {
-                    this.showToast('No active call to transfer', 'warning');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('no_active_call_to_transfer', 'No active call to transfer'), 'warning');
                 }
             } else {
-                this.showToast('Transfer not available', 'error');
+                const t = window.languageManager?.t || ((key, def) => def);
+                this.showToast(t('transfer_not_available', 'Transfer not available'), 'error');
             }
         } catch (error) {
             console.error('❌ Blind transfer failed:', error);
-            this.showToast('Transfer failed', 'error');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('transfer_failed', 'Transfer failed'), 'error');
         }
     }
 
@@ -536,16 +556,20 @@ class BLFButtonManager {
                     // Start attended transfer (this will create a new session)
                     window.currentTransferSession = await window.App.managers.sip.attendedTransfer(currentSession.id, number);
                     
-                    this.showToast(`Calling ${displayName || number} for transfer`, 'info');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('calling_for_transfer', 'Calling {name} for transfer').replace('{name}', displayName || number), 'info');
                 } else {
-                    this.showToast('No active call to transfer', 'warning');
+                    const t = window.languageManager?.t || ((key, def) => def);
+                    this.showToast(t('no_active_call_to_transfer', 'No active call to transfer'), 'warning');
                 }
             } else {
-                this.showToast('Transfer not available', 'error');
+                const t = window.languageManager?.t || ((key, def) => def);
+                this.showToast(t('transfer_not_available', 'Transfer not available'), 'error');
             }
         } catch (error) {
             console.error('❌ Attended transfer failed:', error);
-            this.showToast('Transfer failed', 'error');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('transfer_failed', 'Transfer failed'), 'error');
             
             // On error, return to normal transfer modal
             if (typeof returnToTransferModal === 'function') {
@@ -587,6 +611,30 @@ class BLFButtonManager {
         const buttonType = buttonData.type || 'speeddial';
         if (speedDialCheckbox) speedDialCheckbox.checked = buttonType === 'speeddial';
         if (blfCheckbox) blfCheckbox.checked = buttonType === 'blf';
+
+        // Set override transfer method fields
+        const overrideTransferCheckbox = document.getElementById('blfOverrideTransfer');
+        const transferMethodGroup = document.getElementById('blfTransferMethodGroup');
+        const transferMethodSelect = document.getElementById('blfTransferMethod');
+        
+        if (overrideTransferCheckbox) {
+            overrideTransferCheckbox.checked = buttonData.overrideTransfer === true;
+        }
+        
+        if (transferMethodGroup && overrideTransferCheckbox) {
+            transferMethodGroup.style.display = overrideTransferCheckbox.checked ? 'block' : 'none';
+        }
+        
+        if (transferMethodSelect) {
+            // If override is set, use the stored value; otherwise default to opposite of current setting
+            if (buttonData.overrideTransfer && buttonData.transferMethod) {
+                transferMethodSelect.value = buttonData.transferMethod;
+            } else {
+                // Default to opposite of current default transfer method
+                const preferBlind = this.getTransferPreference();
+                transferMethodSelect.value = preferBlind ? 'attended' : 'blind';
+            }
+        }
 
         // Show modal
         const overlay = document.getElementById('modalOverlay');
@@ -648,6 +696,19 @@ class BLFButtonManager {
                             <input type="text" id="blfNumber" class="form-control" 
                                    data-translate-placeholder="extension_or_phone_number" placeholder="Extension or phone number">
                         </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="blfOverrideTransfer">
+                                <span data-translate="override_transfer_method">Override default transfer method for this key</span>
+                            </label>
+                        </div>
+                        <div class="form-group" id="blfTransferMethodGroup" style="display: none; margin-left: 20px;">
+                            <label for="blfTransferMethod" data-translate="transfer_method">Transfer Method:</label>
+                            <select id="blfTransferMethod" class="form-control">
+                                <option value="blind" data-translate="blind_transfer">Blind</option>
+                                <option value="attended" data-translate="attended_transfer">Attended</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="blfModalCancel" data-translate="cancel">Cancel</button>
@@ -704,6 +765,26 @@ class BLFButtonManager {
             });
         }
 
+        // Override transfer method checkbox toggle
+        const overrideTransferCheckbox = document.getElementById('blfOverrideTransfer');
+        const transferMethodGroup = document.getElementById('blfTransferMethodGroup');
+        
+        if (overrideTransferCheckbox && transferMethodGroup) {
+            overrideTransferCheckbox.addEventListener('change', () => {
+                if (overrideTransferCheckbox.checked) {
+                    transferMethodGroup.style.display = 'block';
+                    // Set dropdown to opposite of current default when first shown
+                    const transferMethodSelect = document.getElementById('blfTransferMethod');
+                    if (transferMethodSelect) {
+                        const preferBlind = this.getTransferPreference();
+                        transferMethodSelect.value = preferBlind ? 'attended' : 'blind';
+                    }
+                } else {
+                    transferMethodGroup.style.display = 'none';
+                }
+            });
+        }
+
         // Enter key to save
         const modal = document.getElementById('blfModal');
         if (modal) {
@@ -731,6 +812,10 @@ class BLFButtonManager {
         
         // Use the first checked type, or default to speeddial
         const buttonType = checkedTypes.length > 0 ? checkedTypes[0] : 'speeddial';
+        
+        // Get override transfer settings
+        const overrideTransfer = document.getElementById('blfOverrideTransfer')?.checked || false;
+        const transferMethod = document.getElementById('blfTransferMethod')?.value || 'blind';
 
         if (!displayName && !number) {
             const t = window.languageManager?.t || ((key, def) => def);
@@ -744,7 +829,9 @@ class BLFButtonManager {
                 displayName: displayName,
                 number: number,
                 enabled: enabled,
-                type: buttonType
+                type: buttonType,
+                overrideTransfer: overrideTransfer,
+                transferMethod: overrideTransfer ? transferMethod : undefined
             };
             
             // Handle subscription changes
@@ -767,7 +854,8 @@ class BLFButtonManager {
             this.saveBlfButtons();
             this.renderBlfButtons();
             
-            this.showToast('BLF button saved successfully', 'success');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('blf_button_saved', 'BLF button saved successfully'), 'success');
             this.hideBlfModal();
         }
     }
@@ -781,7 +869,8 @@ class BLFButtonManager {
             this.saveBlfButtons();
             this.renderBlfButtons();
             
-            this.showToast('BLF button cleared', 'info');
+            const t = window.languageManager?.t || ((key, def) => def);
+            this.showToast(t('blf_button_cleared', 'BLF button cleared'), 'info');
             this.hideBlfModal();
         }
     }
@@ -963,74 +1052,79 @@ class BLFButtonManager {
         }, 1000);
     }
     
-    // Start periodic retry timer for failed BLF subscriptions
+    // Start periodic polling timer for BLF subscriptions (every 2 minutes)
     startRetryTimer() {
         // Clear any existing timer
         this.stopRetryTimer();
         
-        // Only start timer if we have failed subscriptions or might get them
+        // Start periodic polling for all BLF subscriptions
         this.retryTimer = setInterval(() => {
-            this.retryFailedSubscriptions();
+            this.pollBlfSubscriptions();
         }, this.retryInterval);
         
-        console.log(`⏰ BLF retry timer started (${this.retryInterval / 1000}s interval)`);
+        console.log(`⏰ BLF subscription polling timer started (${this.retryInterval / 1000}s interval)`);
     }
     
-    // Stop periodic retry timer
+    // Stop periodic polling timer
     stopRetryTimer() {
         if (this.retryTimer) {
             clearInterval(this.retryTimer);
             this.retryTimer = null;
-            console.log('⏰ BLF retry timer stopped');
+            console.log('⏰ BLF subscription polling timer stopped');
         }
     }
     
-    // Retry subscriptions for failed BLF buttons
-    retryFailedSubscriptions() {
-        if (this.failedSubscriptions.size === 0) {
-            return;
-        }
-        
+    // Poll BLF subscriptions every 2 minutes for all enabled BLF buttons
+    // Excludes extensions in the range 701-799
+    pollBlfSubscriptions() {
         // Check if we're still registered
         if (!window.App?.managers?.sip?.isRegistered?.()) {
-            console.log('⚠️ Not registered, skipping BLF retry');
+            console.log('⚠️ Not registered, skipping BLF subscription poll');
             return;
         }
         
-        console.log(`🔄 Retrying ${this.failedSubscriptions.size} failed BLF subscription(s)`);
-        
-        // Create array from Set to iterate (avoid modifying during iteration)
-        const extensionsToRetry = Array.from(this.failedSubscriptions);
-        
-        extensionsToRetry.forEach((extension, index) => {
-            // Find button data for this extension
-            const buttonData = this.blfButtons.find(btn => 
-                btn && btn.type === 'blf' && btn.number === extension && btn.enabled !== false
-            );
-            
-            if (buttonData) {
-                // Stagger retries to avoid overwhelming server
-                setTimeout(() => {
-                    const displayName = buttonData.displayName || extension;
-                    const success = this.subscribeToBlfButton(extension, displayName);
-                    if (success) {
-                        console.log(`✅ Retry successful for extension ${extension}`);
-                    }
-                }, index * 100);
-            } else {
-                // Button no longer configured, remove from failed list
-                this.failedSubscriptions.delete(extension);
+        // Get all enabled BLF buttons, excluding 701-799 range
+        const blfButtonsToPoll = this.blfButtons.filter(buttonData => {
+            if (!buttonData || buttonData.type !== 'blf' || !buttonData.number || buttonData.enabled === false) {
+                return false;
             }
+            
+            // Exclude numbers in range 701-799
+            const extensionNum = parseInt(buttonData.number);
+            if (!isNaN(extensionNum) && extensionNum >= 701 && extensionNum <= 799) {
+                return false;
+            }
+            
+            return true;
         });
         
-        // Log status after retry attempt
+        if (blfButtonsToPoll.length === 0) {
+            console.log('📱 No BLF buttons to poll');
+            return;
+        }
+        
+        console.log(`🔄 Polling ${blfButtonsToPoll.length} BLF subscription(s) to ensure they're active`);
+        
+        // Attempt to subscribe to all enabled BLF buttons
+        // Stagger by 100ms to avoid overwhelming the server
+        blfButtonsToPoll.forEach((buttonData, index) => {
+            setTimeout(() => {
+                const displayName = buttonData.displayName || buttonData.number;
+                const success = this.subscribeToBlfButton(buttonData.number, displayName);
+                if (success) {
+                    console.log(`✅ BLF poll subscription successful for extension ${buttonData.number}`);
+                }
+            }, index * 100);
+        });
+        
+        // Log status after poll attempt
         setTimeout(() => {
             if (this.failedSubscriptions.size > 0) {
-                console.log(`⚠️ Still have ${this.failedSubscriptions.size} failed BLF subscription(s), will retry in ${this.retryInterval / 1000}s`);
+                console.log(`⚠️ Still have ${this.failedSubscriptions.size} failed BLF subscription(s), will poll again in ${this.retryInterval / 1000}s`);
             } else {
-                console.log('✅ All BLF subscriptions successful');
+                console.log(`✅ All ${blfButtonsToPoll.length} BLF subscriptions active`);
             }
-        }, extensionsToRetry.length * 100 + 500);
+        }, blfButtonsToPoll.length * 100 + 500);
     }
 
     handleBlfStateChange(data) {

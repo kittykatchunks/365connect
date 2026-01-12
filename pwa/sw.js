@@ -1,4 +1,11 @@
-const cacheID = "autocab365connect_v5"; // Increment version - v5: Fixed PWA manifest issues and duplicate service worker registration
+const cacheID = "autocab365connect_v9"; // Increment version - v7: Force refresh for multi-line implementation fixes
+
+// Listen for skip waiting message from client
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
 
 const CacheItems = [
     // Core files
@@ -21,9 +28,11 @@ const CacheItems = [
     "js/company-numbers-manager.js",
     "js/contacts-manager.js",
     "js/language-manager.js",
+    "js/line-key-manager.js",
     "js/phone.js",
     "js/settings-accordion.js",
     "js/sip-session-manager.js",
+    "js/tab-alert-manager.js",
     "js/ui-state-manager.js",
 
     

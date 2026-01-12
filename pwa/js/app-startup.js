@@ -166,6 +166,26 @@ class ApplicationStartup {
         
         window.localDB.removeItem(testKey);
         console.log('✅ LocalDB initialized and tested');
+        
+        // Request persistent storage to prevent data loss
+        await this.requestPersistentStorage();
+    }
+    
+    async requestPersistentStorage() {
+        if (navigator.storage && navigator.storage.persist) {
+            try {
+                const isPersisted = await navigator.storage.persist();
+                console.log(`💾 Persistent storage granted: ${isPersisted}`);
+                
+                if (!isPersisted) {
+                    console.warn('⚠️ Persistent storage not granted - data may be cleared by browser');
+                }
+            } catch (error) {
+                console.error('❌ Failed to request persistent storage:', error);
+            }
+        } else {
+            console.warn('⚠️ Persistent Storage API not available in this browser');
+        }
     }
     
     async initializeLanguage() {
@@ -223,8 +243,14 @@ class ApplicationStartup {
         console.log('📞 Creating SIP Session Manager...');
         App.managers.sip = new SipSessionManager();
         console.log('✅ SIP Session Manager created');
+                console.log('📱 Creating Line Key Manager...');
+        App.managers.lineKeys = new LineKeyManager();
+        console.log('✅ Line Key Manager created');
         
-        console.log('� Creating Busylight Manager...');
+        // Link LineKeyManager to SipSessionManager
+        App.managers.sip.setLineKeyManager(App.managers.lineKeys);
+        console.log('✅ Line Key Manager linked to SIP Manager');
+                console.log('� Creating Busylight Manager...');
         App.managers.busylight = new BusylightManager();
         // Initialize busylight after creation
         try {
@@ -255,8 +281,15 @@ class ApplicationStartup {
         App.managers.companyNumbers = new CompanyNumbersManager();
         console.log('✅ Company Numbers Manager created');
         
+        console.log('💾 Creating Data Import/Export Manager...');
+        App.managers.dataImportExport = new DataImportExportManager();
+        console.log('✅ Data Import/Export Manager created');
+        
         // Set up manager event communication
         this.setupManagerEventListeners();
+        
+        // Set up line key UI handlers
+        this.setupLineKeyHandlers();
         
         console.log('✅ All managers created and linked successfully');
     }
@@ -363,8 +396,26 @@ class ApplicationStartup {
             try {
                 await App.managers.companyNumbers.initialize();
                 console.log('✅ Company Numbers Manager initialized');
+                
+                // Auto-sync from API on startup (silent mode - no success toast)
+                try {
+                    await App.managers.companyNumbers.syncCompanyNumbersFromApi(false);
+                    console.log('✅ Company Numbers API sync completed');
+                } catch (syncError) {
+                    console.warn('⚠️ Company Numbers API sync warning:', syncError);
+                }
             } catch (error) {
                 console.warn('⚠️ Failed to initialize Company Numbers Manager:', error);
+            }
+        }
+        
+        // Initialize Data Import/Export manager
+        if (App.managers.dataImportExport) {
+            try {
+                await App.managers.dataImportExport.initialize();
+                console.log('✅ Data Import/Export Manager initialized');
+            } catch (error) {
+                console.warn('⚠️ Failed to initialize Data Import/Export Manager:', error);
             }
         }
         
@@ -394,6 +445,7 @@ class ApplicationStartup {
         sip.on('sessionCreated', (sessionData) => {
             ui.addCall(sessionData.lineNumber, sessionData);
             if (typeof updateCallControls === 'function') updateCallControls(true);
+            this.updateCallControls(); // Update buttons for the new session
             
             if (sessionData.direction === 'incoming') {
                 if (typeof showIncomingCallNotification === 'function') {
@@ -406,7 +458,36 @@ class ApplicationStartup {
         sip.on('sessionAnswered', (sessionData) => {
             ui.updateCallState(sessionData.lineNumber, 'active');
             if (typeof startCallTimer === 'function') startCallTimer(sessionData);
+            this.updateCallControls(); // Update buttons when call is answered
             // Busylight handles call answered via its own event listener
+        });
+        
+        sip.on('sessionHeld', (data) => {
+            console.log('Session hold state changed:', data);
+            const session = sip.sessions.get(data.sessionId);
+            if (session) {
+                const lineKeys = App.managers.lineKeys;
+                if (lineKeys) {
+                    const lineNumber = lineKeys.getLineBySession(data.sessionId);
+                    if (lineNumber) {
+                        // Update line key state based on hold status
+                        const newState = data.onHold ? 'hold' : 'active';
+                        lineKeys.updateLineState(lineNumber, newState, data.sessionId, {
+                            remoteNumber: session.remoteNumber,
+                            remoteIdentity: session.remoteIdentity,
+                            displayName: session.remoteIdentity || session.remoteNumber
+                        });
+                        this.updateLineKeyUI();
+                        this.updateCallControls();
+                    }
+                }
+            }
+        });
+        
+        sip.on('sessionStateChanged', (data) => {
+            // Update call controls whenever any session state changes
+            this.updateCallControls();
+            this.updateLineKeyUI();
         });
         
         sip.on('sessionTerminated', (sessionData) => {
@@ -453,7 +534,7 @@ class ApplicationStartup {
         api.on('error', (errorData) => {
             console.error('Phantom API error:', errorData);
             if (typeof showErrorNotification === 'function') {
-                showErrorNotification('API Error', errorData.message || 'API request failed');
+                showErrorNotification(t('apiError', 'API Error'), errorData.message || t('apiRequestFailed', 'API request failed'));
             }
         });
         
@@ -461,7 +542,7 @@ class ApplicationStartup {
             if (result.success) {
                 console.log('Phantom API connection test passed');
                 if (typeof showSuccessNotification === 'function') {
-                    showSuccessNotification('API Connected', 'Phantom API connection successful');
+                    showSuccessNotification(t('apiConnected', 'API Connected'), t('phantomApiConnectionSuccessful', 'Phantom API connection successful'));
                 }
             } else {
                 console.warn('Phantom API connection test failed:', result.error);
@@ -594,6 +675,414 @@ class ApplicationStartup {
         console.log('✅ Manager event listeners established');
     }
 
+    setupLineKeyHandlers() {
+        const { lineKeys, sip } = App.managers;
+        
+        console.log('📱 Setting up line key event handlers...');
+        
+        // Set up click handlers for line keys
+        for (let i = 1; i <= 3; i++) {
+            const lineKeyElement = document.getElementById(`lineKey${i}`);
+            if (lineKeyElement) {
+                lineKeyElement.addEventListener('click', () => {
+                    console.log(`📞 Line ${i} clicked`);
+                    lineKeys.selectLine(i);
+                    this.updateLineKeyUI();
+                });
+            }
+        }
+        
+        // Listen to line state changes from LineKeyManager
+        lineKeys.on('lineStateChanged', (data) => {
+            console.log('📊 Line state changed:', data);
+            this.updateLineKeyUI();
+            this.updateCallDisplayForSelectedLine();
+            
+            // If a line becomes idle, check if all lines are idle and auto-select line 1
+            if (data.currentState === 'idle') {
+                const allLinesIdle = [1, 2, 3].every(lineNum => {
+                    const lineState = lineKeys.getLineState(lineNum);
+                    return lineState === 'idle';
+                });
+                
+                if (allLinesIdle) {
+                    const currentlySelected = lineKeys.getSelectedLine();
+                    if (currentlySelected !== 1) {
+                        console.log('📞 All lines idle, auto-selecting line 1');
+                        lineKeys.selectLine(1);
+                        this.updateLineKeyUI();
+                    }
+                }
+            }
+        });
+        
+        // Listen to line selection changes
+        lineKeys.on('lineChanged', (data) => {
+            console.log('📞 Line selection changed:', data);
+            
+            // Auto-hold the previous line if it has an active call
+            if (data.previousLine && sip) {
+                const previousSession = sip.getSessionByLine(data.previousLine);
+                console.log(`🔍 Checking previous line ${data.previousLine} for auto-hold:`, previousSession ? {
+                    id: previousSession.id,
+                    state: previousSession.state,
+                    onHold: previousSession.onHold
+                } : 'no session');
+                
+                if (previousSession && 
+                    (previousSession.state === 'active' || previousSession.state === 'established') && 
+                    !previousSession.onHold) {
+                    console.log(`🔄 Auto-holding line ${data.previousLine}, session ${previousSession.id}`);
+                    sip.holdSession(previousSession.id).then(() => {
+                        console.log(`✅ Successfully auto-held line ${data.previousLine}`);
+                        this.updateCallControls();
+                        this.updateLineKeyUI();
+                    }).catch(err => {
+                        console.error('❌ Failed to auto-hold previous line:', err);
+                    });
+                } else if (previousSession) {
+                    console.log(`⏭️ Skipping auto-hold: state=${previousSession.state}, onHold=${previousSession.onHold}`);
+                }
+            }
+            
+            this.updateLineKeyUI();
+            this.updateCallDisplayForSelectedLine();
+            this.updateCallControls();
+        });
+        
+        // Listen to call waiting tone event from SIP manager
+        if (sip) {
+            sip.on('callWaitingTone', (data) => {
+                console.log('🔔 Call waiting tone triggered for line:', data.lineNumber);
+                this.playCallWaitingTone();
+            });
+        }
+        
+        // Initial UI update
+        this.updateLineKeyUI();
+        
+        console.log('✅ Line key handlers established');
+    }
+    
+    updateLineKeyUI() {
+        const lineKeys = App.managers.lineKeys;
+        if (!lineKeys) return;
+        
+        const selectedLine = lineKeys.getSelectedLine();
+        
+        for (let i = 1; i <= 3; i++) {
+            const lineKeyElement = document.getElementById(`lineKey${i}`);
+            if (!lineKeyElement) continue;
+            
+            const lineInfo = lineKeys.getLineDisplayInfo(i);
+            if (!lineInfo) continue;
+            
+            // Update selected state
+            if (i === selectedLine) {
+                lineKeyElement.classList.add('selected');
+            } else {
+                lineKeyElement.classList.remove('selected');
+            }
+            
+            // Remove all state classes
+            lineKeyElement.classList.remove('state-idle', 'state-ringing', 'state-active', 'state-hold', 'state-dialing');
+            
+            // Add current state class
+            lineKeyElement.classList.add(`state-${lineInfo.state}`);
+            
+            // Update info text
+            const infoElement = lineKeyElement.querySelector('.line-key-info');
+            if (infoElement) {
+                if (lineInfo.state === 'idle') {
+                    infoElement.textContent = lineInfo.statusText;
+                } else if (lineInfo.callerDisplay) {
+                    // Always show caller info (not timer)
+                    infoElement.textContent = lineInfo.callerDisplay.substring(0, 15); // Truncate long names
+                } else {
+                    infoElement.textContent = lineInfo.statusText;
+                }
+            }
+        }
+    }
+    
+    updateCallDisplayForSelectedLine() {
+        const lineKeys = App.managers.lineKeys;
+        const sip = App.managers.sip;
+        if (!lineKeys || !sip) return;
+        
+        const selectedLine = lineKeys.getSelectedLine();
+        const sessionData = sip.getSessionByLine(selectedLine);
+        
+        console.log('🖥️ updateCallDisplayForSelectedLine - Line:', selectedLine, 'Session:', sessionData ? {
+            id: sessionData.id,
+            state: sessionData.state,
+            onHold: sessionData.onHold
+        } : 'none');
+        
+        const dialInputRow = document.getElementById('dialInputRow');
+        const callStatusRow = document.getElementById('callStatusRow');
+        
+        if (sessionData && sessionData.state !== 'terminated') {
+            // Show call info, hide dial input
+            console.log('🖥️ Showing call status, hiding dial input');
+            if (dialInputRow) {
+                dialInputRow.classList.add('hidden');
+                dialInputRow.style.display = ''; // Clear inline styles
+                console.log('🖥️ dialInputRow hidden:', dialInputRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(dialInputRow).display);
+            }
+            if (callStatusRow) {
+                callStatusRow.classList.remove('hidden');
+                callStatusRow.style.display = ''; // Clear inline styles
+                console.log('🖥️ callStatusRow visible:', !callStatusRow.classList.contains('hidden'), 'computed style:', window.getComputedStyle(callStatusRow).display);
+            }
+            
+            // Update call info
+            const callerNumber = document.getElementById('callerNumber');
+            const callerName = document.getElementById('callerName');
+            const callDirection = document.getElementById('callDirection');
+            const callDuration = document.getElementById('callDuration');
+            
+            if (callerNumber) {
+                callerNumber.textContent = sessionData.remoteNumber || sessionData.target || 'Unknown';
+            }
+            
+            if (callerName) {
+                if (sessionData.remoteIdentity && sessionData.remoteIdentity !== sessionData.remoteNumber) {
+                    callerName.textContent = sessionData.remoteIdentity;
+                    callerName.classList.remove('hidden');
+                } else {
+                    callerName.classList.add('hidden');
+                }
+            }
+            
+            if (callDirection) {
+                const directionText = sessionData.direction === 'incoming' ? 'Incoming' : 'Outgoing';
+                callDirection.textContent = directionText;
+            }
+            
+            // Duration will be updated by timer
+            
+        } else {
+            // Show dial input, hide call info
+            console.log('🖥️ Hiding call status, showing dial input');
+            if (dialInputRow) {
+                dialInputRow.classList.remove('hidden');
+                dialInputRow.style.display = ''; // Clear inline styles
+                const dialStyle = window.getComputedStyle(dialInputRow);
+                console.log('🖥️ dialInputRow visible:', !dialInputRow.classList.contains('hidden'), 'computed style:', dialStyle.display);
+                console.log('🖥️ dialInputRow position:', dialStyle.position, 'z-index:', dialStyle.zIndex, 'visibility:', dialStyle.visibility);
+                
+                // Focus the dial input to prevent line key button from capturing first keystroke
+                const dialInput = document.getElementById('dialInput');
+                if (dialInput) {
+                    setTimeout(() => {
+                        dialInput.focus();
+                        console.log('🎯 Dial input focused after line switch');
+                    }, 50); // Small delay to ensure DOM is fully updated
+                }
+            }
+            if (callStatusRow) {
+                callStatusRow.classList.add('hidden');
+                callStatusRow.style.display = ''; // Clear inline styles
+                const callStyle = window.getComputedStyle(callStatusRow);
+                console.log('🖥️ callStatusRow hidden:', callStatusRow.classList.contains('hidden'), 'computed style:', callStyle.display);
+                console.log('🖥️ callStatusRow position:', callStyle.position, 'z-index:', callStyle.zIndex, 'visibility:', callStyle.visibility);
+                
+                // Clear call info text to prevent stale data
+                const callerNumber = document.getElementById('callerNumber');
+                const callerName = document.getElementById('callerName');
+                const callDirection = document.getElementById('callDirection');
+                const callDuration = document.getElementById('callDuration');
+                if (callerNumber) callerNumber.textContent = '--';
+                if (callerName) {
+                    callerName.textContent = '--';
+                    callerName.classList.add('hidden');
+                }
+                if (callDirection) callDirection.textContent = '--';
+                if (callDuration) callDuration.textContent = '00:00';
+                console.log('🖥️ Call info cleared');
+            }
+        }
+    }
+    
+    updateCallControls() {
+        const lineKeys = App.managers.lineKeys;
+        const sip = App.managers.sip;
+        if (!lineKeys || !sip) return;
+        
+        const selectedLine = lineKeys.getSelectedLine();
+        const sessionData = sip.getSessionByLine(selectedLine);
+        
+        console.log('🎛️ updateCallControls for line', selectedLine, 'sessionData:', sessionData ? {
+            id: sessionData.id,
+            state: sessionData.state,
+            onHold: sessionData.onHold,
+            muted: sessionData.muted
+        } : 'null');
+        
+        // Get UI elements
+        const callControls = document.getElementById('callControls');
+        const dialActions = document.querySelector('.dial-actions');
+        const callBtn = document.getElementById('callBtn');
+        const hangupBtn = document.getElementById('hangupBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const holdBtn = document.getElementById('holdBtn');
+        const transferBtn = document.getElementById('transferBtn');
+        const endCallBtn = document.getElementById('endCallBtn');
+        
+        // Default: hide call controls, show dial actions
+        if (callControls) callControls.classList.add('hidden');
+        if (dialActions) {
+            dialActions.classList.remove('hidden');
+            dialActions.style.display = ''; // Clear any inline styles from phone.js showCallControls()
+        }
+        
+        // Always reset CALL button to default state first
+        console.log('🎛️ Resetting buttons - callBtn:', !!callBtn, 'hangupBtn:', !!hangupBtn);
+        if (callBtn) {
+            callBtn.classList.remove('hidden');
+            callBtn.style.display = ''; // Clear any inline styles
+            // Reset button class to btn-success (green)
+            callBtn.className = 'btn-success call-button uppercase';
+            // Use innerHTML to reset button content (preserves icon and bypasses translation system)
+            callBtn.innerHTML = '<i class="fa fa-phone"></i> <span data-translate="call">CALL</span>';
+            console.log('🎛️ CALL button reset to CALL');
+            console.log('🎛️ Button classes:', callBtn.className);
+            console.log('🎛️ Button computed background:', window.getComputedStyle(callBtn).backgroundColor);
+            callBtn.onclick = null; // Reset to default
+        } else {
+            console.log('❌ callBtn element not found!');
+        }
+        if (hangupBtn) {
+            hangupBtn.classList.remove('hidden');
+            hangupBtn.style.display = ''; // Clear any inline styles
+        }
+        
+        if (!sessionData) {
+            // No session on this line - CALL/END buttons already shown above
+            console.log('🎛️ No session - showing CALL/END buttons');
+            return;
+        }
+        
+        // Handle different call states
+        console.log('🔍 Session state:', sessionData.state, 'for line', selectedLine);
+        
+        switch (sessionData.state) {
+            case 'ringing':
+                // Incoming call - show dial actions but change to ANSWER/END
+                console.log('🎛️ Processing RINGING state - should show ANSWER/END');
+                if (dialActions) {
+                    dialActions.classList.remove('hidden');
+                    dialActions.style.display = ''; // Clear inline styles
+                }
+                if (callBtn) {
+                    callBtn.classList.remove('hidden');
+                    callBtn.style.display = ''; // Force visible
+                    const callBtnLabel = callBtn.querySelector('span');
+                    if (callBtnLabel) {
+                        callBtnLabel.textContent = 'ANSWER';
+                        console.log('✅ Set button text to ANSWER');
+                    }
+                    callBtn.onclick = () => {
+                        console.log('📞 ANSWER button clicked for session:', sessionData.id);
+                        sip.answerSession(sessionData.id);
+                    };
+                }
+                if (hangupBtn) {
+                    hangupBtn.classList.remove('hidden');
+                    hangupBtn.style.display = ''; // Force visible
+                }
+                if (callControls) callControls.classList.add('hidden');
+                console.log('🎛️ Ringing - ANSWER/END buttons should now be visible');
+                break;
+                
+            case 'dialing':
+            case 'connecting':
+                // Outgoing call connecting - show only END button
+                if (dialActions) dialActions.classList.remove('hidden');
+                if (callBtn) callBtn.classList.add('hidden');
+                if (hangupBtn) hangupBtn.classList.remove('hidden');
+                if (callControls) callControls.classList.add('hidden');
+                console.log('🎛️ Dialing/Connecting - showing END button only');
+                break;
+                
+            case 'active':
+            case 'established':
+                // Active call (including on hold) - show call controls (MUTE/HOLD/TRANSFER/END)
+                if (dialActions) dialActions.classList.add('hidden');
+                if (callControls) callControls.classList.remove('hidden');
+                
+                // Update mute button state
+                if (muteBtn) {
+                    if (sessionData.muted) {
+                        muteBtn.classList.add('active');
+                    } else {
+                        muteBtn.classList.remove('active');
+                    }
+                }
+                
+                // Update hold button state
+                if (holdBtn) {
+                    holdBtn.classList.remove('active'); // Remove active class entirely
+                    if (sessionData.onHold) {
+                        holdBtn.classList.add('on-hold');
+                        const holdLabel = holdBtn.querySelector('.btn-label');
+                        if (holdLabel) holdLabel.textContent = 'RESUME';
+                    } else {
+                        holdBtn.classList.remove('on-hold');
+                        const holdLabel = holdBtn.querySelector('.btn-label');
+                        if (holdLabel) holdLabel.textContent = 'HOLD';
+                    }
+                }
+                console.log('🎛️ Active/Established - showing MUTE/HOLD/TRANSFER/END buttons', sessionData.onHold ? '(ON HOLD)' : '(ACTIVE)');
+                break;
+                
+            default:
+                // Any other state - show CALL/END buttons
+                if (dialActions) dialActions.classList.remove('hidden');
+                if (callBtn) {
+                    callBtn.classList.remove('hidden');
+                    const callBtnLabel = callBtn.querySelector('span');
+                    if (callBtnLabel) callBtnLabel.textContent = 'CALL';
+                    callBtn.onclick = null; // Reset to default handler
+                }
+                if (hangupBtn) hangupBtn.classList.remove('hidden');
+                if (callControls) callControls.classList.add('hidden');
+                console.log('🎛️ Other state:', sessionData.state, '- showing CALL/END buttons');
+        }
+    }
+    
+    playCallWaitingTone() {
+        // Create audio context if needed
+        if (!window.audioContext) {
+            window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const ctx = window.audioContext;
+        const now = ctx.currentTime;
+        
+        // Play two short beeps
+        for (let i = 0; i < 2; i++) {
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.value = 440; // A4 note
+            oscillator.type = 'sine';
+            
+            const startTime = now + (i * 0.5); // 0.5s apart
+            gainNode.gain.setValueAtTime(0.3, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.3);
+        }
+        
+        console.log('🔔 Call waiting tone played');
+    }
+
     async requestNotificationPermissions() {
         console.log('🔔 Requesting notification permissions...');
         
@@ -626,7 +1115,7 @@ class ApplicationStartup {
                         App.managers.ui.addNotification({
                             type: 'success',
                             title: t('notifications_enabled', 'Notifications Enabled'),
-                            message: 'You will now receive desktop notifications for incoming calls',
+                            message: t('desktopNotificationsForIncomingCalls', 'You will now receive desktop notifications for incoming calls'),
                             duration: 5000
                         });
                     }
@@ -638,7 +1127,7 @@ class ApplicationStartup {
                         App.managers.ui.addNotification({
                             type: 'warning',
                             title: t('notifications_disabled', 'Notifications Disabled'),
-                            message: 'Desktop notifications for incoming calls are disabled. You can enable them in browser settings.',
+                            message: t('desktopNotificationsDisabledEnableInBrowser', 'Desktop notifications for incoming calls are disabled. You can enable them in browser settings.'),
                             duration: 8000
                         });
                     }
@@ -724,10 +1213,10 @@ class ApplicationStartup {
                     App.managers.ui.addNotification({
                         type: 'info',
                         title: t('install_app', 'Install App'),
-                        message: 'Install Autocab365 PWA for better performance',
+                        message: t('installPwaForBetterPerformance', 'Install Autocab365 PWA for better performance'),
                         duration: 10000,
                         actions: [{
-                            text: 'Install',
+                            text: t('install', 'Install'),
                             class: 'btn-primary',
                             action: () => {
                                 e.prompt();
@@ -746,22 +1235,33 @@ class ApplicationStartup {
             console.log('📶 Application is back online');
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
-                    type: 'success',
-                    title: t('back_online', 'Back Online'),
-                    message: 'Internet connection restored',
-                    duration: 3000
+                    type: 'warning',
+                    title: t('networkInternetRestored', 'Network/Internet Restored'),
+                    message: t('networkRestoredMessage', 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.'),
+                    duration: null, // Persist until user closes it
+                    forceShow: true
                 });
             }
         });
         
         window.addEventListener('offline', () => {
             console.log('📵 Application is offline');
+            
+            // Unregister from SIP when offline
+            if (App.managers?.sip) {
+                App.managers.sip.unregister(true).catch(err => {
+                    console.warn('Failed to unregister on offline:', err);
+                });
+            }
+            
+            // Show persistent error notification
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
-                    type: 'warning',
-                    title: t('offline_mode', 'Offline Mode'),
-                    message: 'No internet connection. Some features may be limited.',
-                    duration: 5000
+                    type: 'error',
+                    title: t('checkNetworkConnection', 'Check Network/Internet Connection'),
+                    message: t('networkLostMessage', 'You appear to have lost network or internet connection.'),
+                    duration: null, // Persist until user closes it
+                    forceShow: true
                 });
             }
         });
@@ -773,7 +1273,7 @@ class ApplicationStartup {
                 App.managers.ui.addNotification({
                     type: 'error',
                     title: t('application_error', 'Application Error'),
-                    message: 'An unexpected error occurred. Check console for details.',
+                    message: t('unexpectedErrorCheckConsole', 'An unexpected error occurred. Check console for details.'),
                     duration: 7000
                 });
             }
@@ -794,7 +1294,7 @@ class ApplicationStartup {
                 App.managers.ui.addNotification({
                     type: 'error',
                     title: t('promise_error', 'Promise Error'),
-                    message: 'An unexpected error occurred in a background operation.',
+                    message: t('unexpectedErrorInBackgroundOperation', 'An unexpected error occurred in a background operation.'),
                     duration: 7000
                 });
             }
@@ -810,21 +1310,21 @@ class ApplicationStartup {
         errorDiv.innerHTML = `
             <div class="error-content">
                 <div class="error-icon">⚠️</div>
-                <h1>Initialization Failed</h1>
-                <p>The Autocab365 PWA failed to start properly.</p>
+                <h1>${t('initializationFailed', 'Initialization Failed')}</h1>
+                <p>${t('pwaFailedToStart', 'The Autocab365 PWA failed to start properly.')}</p>
                 <div class="error-details">
-                    <strong>Error:</strong> ${error.message}
+                    <strong>${t('error', 'Error')}:</strong> ${error.message}
                 </div>
                 <div class="error-actions">
                     <button onclick="location.reload()" class="btn-primary">
-                        🔄 Reload Application
+                        🔄 ${t('reloadApplication', 'Reload Application')}
                     </button>
                     <button onclick="this.showDiagnostics()" class="btn-secondary">
-                        🔍 Show Diagnostics
+                        🔍 ${t('showDiagnostics', 'Show Diagnostics')}
                     </button>
                 </div>
                 <p class="error-help">
-                    If this problem persists, please check the browser console (F12) for more details.
+                    ${t('ifProblemPersistsCheckConsole', 'If this problem persists, please check the browser console (F12) for more details.')}
                 </p>
             </div>
         `;
@@ -832,7 +1332,7 @@ class ApplicationStartup {
         document.body.appendChild(errorDiv);
     }
     
-    showDiagnostics() {
+    async showDiagnostics() {
         const diagnostics = {
             'Dependencies': {
                 'jQuery': typeof window.$,
@@ -855,6 +1355,28 @@ class ApplicationStartup {
                 'User Agent': navigator.userAgent
             }
         };
+        
+        // Add storage diagnostics
+        if (navigator.storage) {
+            diagnostics['Storage Info'] = {};
+            try {
+                if (navigator.storage.persisted) {
+                    const persisted = await navigator.storage.persisted();
+                    diagnostics['Storage Info']['Persistent'] = persisted ? 'Yes ✅' : 'No ⚠️';
+                }
+                
+                if (navigator.storage.estimate) {
+                    const estimate = await navigator.storage.estimate();
+                    diagnostics['Storage Info']['Usage'] = `${(estimate.usage / 1024 / 1024).toFixed(2)} MB`;
+                    diagnostics['Storage Info']['Quota'] = `${(estimate.quota / 1024 / 1024).toFixed(2)} MB`;
+                    diagnostics['Storage Info']['% Used'] = `${((estimate.usage / estimate.quota) * 100).toFixed(2)}%`;
+                }
+            } catch (error) {
+                diagnostics['Storage Info']['Error'] = error.message;
+            }
+        } else {
+            diagnostics['Storage Info'] = { 'API': 'Not Available' };
+        }
         
         console.group('🔍 Application Diagnostics');
         Object.entries(diagnostics).forEach(([category, items]) => {

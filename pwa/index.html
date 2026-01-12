@@ -107,7 +107,7 @@
             
             <!-- Contacts Controls - Only show for contacts -->
             <div id="contactsControlsContainer" class="contacts-controls-container hidden" data-view="contacts">
-                <!-- Top row: Add Contact (left) + Import/Export (right) -->
+                <!-- Top row: Add Contact (left) + Delete All (right) -->
                 <div class="contacts-top-controls">
                     <button id="addContactBtn" class="btn-primary add-contact-btn">
                         <i class="fa fa-plus"></i> <span data-translate="add_contact">Add Contact</span>
@@ -115,12 +115,6 @@
                     <div class="contacts-import-export">
                         <button id="deleteAllContactsBtn" class="btn-danger delete-all-btn" data-translate-title="deleteAllContacts" title="Delete all contacts">
                             <i class="fa fa-trash"></i> <span data-translate="delete_all">Delete All</span>
-                        </button>
-                        <button id="importContactsBtn" class="btn-secondary import-btn" data-translate-title="importContactsFromCSV" title="Import contacts from CSV">
-                            <i class="fa fa-upload"></i> <span data-translate="import">Import</span>
-                        </button>
-                        <button id="exportContactsBtn" class="btn-secondary export-btn" data-translate-title="exportContactsToCSV" title="Export contacts to CSV">
-                            <i class="fa fa-download"></i> <span data-translate="export">Export</span>
                         </button>
                     </div>
                 </div>
@@ -133,8 +127,6 @@
                         </button>
                     </div>
                 </div>
-                <!-- Hidden file input for CSV import -->
-                <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
             </div>
 
             <!-- Search Bar - Only show for other tabs that need it -->
@@ -240,6 +232,25 @@
                                 <span class="status-label" data-translate="agent">Agent:</span>
                                 <span id="agentStatus" class="status-value agent-logged-out" data-translate="logged_out">Logged Out</span>
                             </div>
+                        </div>
+                        
+                        <!-- Line Keys Section (Multi-line support) -->
+                        <div id="lineKeysContainer" class="line-keys-container">
+                            <button id="lineKey1" class="line-key selected" data-line="1">
+                                <div class="line-key-indicator"></div>
+                                <div class="line-key-label" data-translate="line_1">Line 1</div>
+                                <div class="line-key-info" data-translate="line_idle">Idle</div>
+                            </button>
+                            <button id="lineKey2" class="line-key" data-line="2">
+                                <div class="line-key-indicator"></div>
+                                <div class="line-key-label" data-translate="line_2">Line 2</div>
+                                <div class="line-key-info" data-translate="line_idle">Idle</div>
+                            </button>
+                            <button id="lineKey3" class="line-key" data-line="3">
+                                <div class="line-key-indicator"></div>
+                                <div class="line-key-label" data-translate="line_3">Line 3</div>
+                                <div class="line-key-info" data-translate="line_idle">Idle</div>
+                            </button>
                         </div>
                     </div>
                     
@@ -383,11 +394,8 @@
                                 <button id="deleteAllCompanyNumbersBtn" class="btn-danger delete-all-btn" data-translate-title="deleteAllCompanyNumbers" title="Delete all company numbers">
                                     <i class="fa fa-trash"></i> <span data-translate="delete_all">Delete All</span>
                                 </button>
-                                <button id="importCompanyNumbersBtn" class="btn-secondary import-btn" data-translate-title="importCompanyNumbersFromCSV" title="Import company numbers from CSV">
-                                    <i class="fa fa-upload"></i> <span data-translate="import">Import</span>
-                                </button>
-                                <button id="exportCompanyNumbersBtn" class="btn-secondary export-btn" data-translate-title="exportCompanyNumbersToCSV" title="Export company numbers to CSV">
-                                    <i class="fa fa-download"></i> <span data-translate="export">Export</span>
+                                <button id="refreshCompanyNumbersBtn" class="btn-secondary refresh-btn" data-translate-title="refresh_company_numbers" title="Refresh company numbers from server">
+                                    <i class="fa fa-refresh"></i> <span data-translate="refresh">Refresh</span>
                                 </button>
                             </div>
                         </div>
@@ -400,8 +408,6 @@
                             <p data-translate="add_company_numbers_cli">Add company numbers to enable CLI selection</p>
                         </div>
                     </div>
-                    <!-- Hidden file input for CSV import -->
-                    <input type="file" id="companyNumbersCsvFileInput" accept=".csv" class="hidden" />
                 </div>
             </div>
 
@@ -480,13 +486,19 @@
                                             <select id="AppLanguage" name="AppLanguage">
                                                 <option value="en">English</option>
                                                 <option value="es">Español (Spanish)</option>
+                                                <option value="es-419">Español (Latin America)</option>
+                                                <option value="fr">Français (French)</option>
+                                                <option value="fr-CA">Français Canadien (French Canadian)</option>
+                                                <option value="nl">Nederlands (Dutch)</option>
+                                                <option value="pt">Português (Portuguese)</option>
+                                                <option value="pt-BR">Português do Brasil (Portuguese Brazil)</option>
                                             </select>
                                             <div class="setting-help-text" data-translate="select_language_help">
                                                 Select your preferred language for the application interface.
                                             </div>
                                         </div>
                                         <div class="setting-item">
-                                            <label>Theme Mode:</label>
+                                            <label data-translate="theme_mode">Theme Mode:</label>
                                             <div class="theme-toggle-control">
                                                 <select id="ThemeMode" name="ThemeMode">
                                                     <option value="auto" data-translate="auto_system">Auto (System)</option>
@@ -500,11 +512,11 @@
                                                 <input type="checkbox" 
                                                     id="BlfEnabled" 
                                                     name="BlfEnabled" />
-                                                Enable BLF Buttons
+                                                <span data-translate="enable_blf_buttons">Enable BLF Buttons</span>
                                             </label>
                                         </div>
                                         <div class="setting-item">
-                                            <label>Tab Visibility:</label>
+                                            <label data-translate="tab_visibility">Tab Visibility:</label>
                                             <!-- <label style="margin-bottom: var(--spacing-sm); font-weight: 600; color: var(--text-color-secondary);">Tab Visibility:</label> -->
                                             <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-left: var(--spacing-md);">
                                                 <label>
@@ -512,29 +524,29 @@
                                                         id="ShowContactsTab" 
                                                         name="ShowContactsTab" 
                                                         checked />
-                                                    Show Contacts Tab
+                                                    <span data-translate="show_contacts_tab">Show Contacts Tab</span>
                                                 </label>
                                                 <label>
                                                     <input type="checkbox" 
                                                         id="ShowActivityTab" 
                                                         name="ShowActivityTab" 
                                                         checked />
-                                                    Show Activity Tab
+                                                    <span data-translate="show_activity_tab">Show Activity Tab</span>
                                                 </label>
                                                 <label>
                                                     <input type="checkbox" 
                                                         id="ShowBlank1Tab" 
                                                         name="ShowBlank1Tab" />
-                                                    Show Company Numbers Tab
+                                                    <span data-translate="show_company_numbers_tab">Show Company Numbers Tab</span>
                                                 </label>
                                                 <label class="hidden">
                                                     <input type="checkbox" 
                                                         id="ShowBlank2Tab" 
                                                         name="ShowBlank2Tab" />
-                                                    Show Second Blank Tab
+                                                    <span data-translate="show_second_blank_tab">Show Second Blank Tab</span>
                                                 </label>
                                             </div>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="control_visible_tabs">
                                                 Control which navigation tabs are visible. Dial and Settings tabs are always shown.
                                             </div>
                                         </div>
@@ -544,9 +556,9 @@
                                                     id="OnscreenNotifications" 
                                                     name="OnscreenNotifications" 
                                                     checked />
-                                                Onscreen Notifications
+                                                <span data-translate="onscreen_notifications">Onscreen Notifications</span>
                                             </label>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="enable_disable_toast">
                                                 Enable or disable toast notifications displayed within the application.
                                             </div>
                                         </div>
@@ -570,7 +582,7 @@
                                                 <input type="checkbox" 
                                                     id="AutoAnswerEnabled" 
                                                     name="AutoAnswerEnabled" />
-                                                Auto Answer
+                                                <span data-translate="auto_answer">Auto Answer</span>
                                             </label>
                                         </div>
                                         <div class="setting-item hidden">
@@ -578,7 +590,7 @@
                                                 <input type="checkbox" 
                                                     id="CallWaitingEnabled" 
                                                     name="CallWaitingEnabled" />
-                                                Call Waiting
+                                                <span data-translate="call_waiting">Call Waiting</span>
                                             </label>
                                         </div>
                                         <div class="setting-item">
@@ -586,9 +598,9 @@
                                                 <input type="checkbox" 
                                                     id="IncomingCallNotifications" 
                                                     name="IncomingCallNotifications" />
-                                                Incoming Call Notifications
+                                                <span data-translate="incoming_call_notifications">Incoming Call Notifications</span>
                                             </label>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="show_system_notifications">
                                                 Show system notifications for incoming calls
                                                 <span id="notificationStatus" class="notification-status"></span>
                                             </div>
@@ -598,9 +610,9 @@
                                                 <input type="checkbox" 
                                                     id="AutoFocusOnNotificationAnswer" 
                                                     name="AutoFocusOnNotificationAnswer" />
-                                                Auto-focus window when answering from notification
+                                                <span data-translate="auto_focus_on_notification_answer">Auto-focus window when answering from notification</span>
                                             </label>
-                                            <div class="setting-help-text">
+                                            <div class="setting-help-text" data-translate="auto_focus_on_notification_answer_help">
                                                 When enabled, clicking the notification to answer will bring the app window to focus and show the dial screen
                                             </div>
                                         </div>
@@ -609,9 +621,9 @@
                                                 <input type="checkbox" 
                                                     id="PreferBlindTransfer" 
                                                     name="PreferBlindTransfer" />
-                                                Prefer Blind Transfer
+                                                <span data-translate="prefer_blind_transfer">Prefer Blind Transfer</span>
                                             </label>
-                                            <small class="setting-help-text">When enabled, BLF buttons and Enter key in transfer modal will perform blind transfers instead of attended transfers</small>
+                                            <small class="setting-help-text" data-translate="prefer_blind_transfer_help">When enabled, BLF buttons and Enter key in transfer modal will perform blind transfers instead of attended transfers</small>
                                         </div>
                                     </div>
                                 </div>
@@ -704,16 +716,52 @@
                                                 <span data-translate="enableBusylight">Enable Busylight</span>
                                             </label>
                                         </div>
+                                        <div class="setting-item" id="busylight-options" style="display: none; padding-left: 20px;">
+                                            <div style="margin-bottom: 10px;">
+                                                <label for="BusylightRingSound" style="display: block; margin-bottom: 5px;">
+                                                    <span data-translate="ringSound">Ring Sound</span>:
+                                                </label>
+                                                <select id="BusylightRingSound" name="BusylightRingSound" style="width: 200px;">
+                                                    <option value="1">1 - OpenOffice</option>
+                                                    <option value="2">2 - Quiet</option>
+                                                    <option value="3" selected>3 - Funky</option>
+                                                    <option value="4">4 - FairyTale</option>
+                                                    <option value="5">5 - KuandoTrain</option>
+                                                    <option value="6">6 - Telephone</option>
+                                                    <option value="7">7 - HighPitch</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="BusylightRingVolume" style="display: block; margin-bottom: 5px;">
+                                                    <span data-translate="ringVolume">Ring Volume</span>:
+                                                </label>
+                                                <select id="BusylightRingVolume" name="BusylightRingVolume" style="width: 200px;">
+                                                    <option value="0">Silent</option>
+                                                    <option value="25">25%</option>
+                                                    <option value="50" selected>50%</option>
+                                                    <option value="75">75%</option>
+                                                    <option value="100">100%</option>
+                                                </select>
+                                            </div>
+                                            <div style="margin-top: 10px;">
+                                                <label>
+                                                    <input type="checkbox" 
+                                                        id="BusylightVoicemailNotify" 
+                                                        name="BusylightVoicemailNotify" />
+                                                    <span data-translate="enableVoicemailNotify">Enable Voicemail Notification when Idle</span>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Diagnostics/Debugging Settings Accordion -->
+                            <!-- Advanced Settings Accordion -->
                             <div class="accordion-item">
                                 <button type="button" class="accordion-header" data-target="diagnosticsSettings">
                                     <div class="header-title">
                                         <i class="fa fa-bug header-icon"></i>
-                                        <span data-translate="diagnostics_debugging">Diagnostics/Debugging</span>
+                                        <span data-translate="advanced">Advanced</span>
                                     </div>
                                     <i class="fa fa-chevron-right accordion-icon"></i>
                                 </button>
@@ -728,7 +776,7 @@
                                             </label>
                                             <small class="setting-help-text" data-translate="sipMessagesHelp">Enable detailed SIP message logging in browser console</small>
                                         </div>
-                                        <div class="setting-item">
+                                        <div class="setting-item" style="display: none;">
                                             <label>
                                                 <input type="checkbox" 
                                                     id="VerboseLoggingEnabled" 
@@ -747,6 +795,18 @@
                                                 step="100"
                                                 value="500" />
                                             <small class="setting-help-text" data-translate="iceGatheringTimeoutHelp">WebRTC ICE candidate gathering timeout in milliseconds (100-10000ms)</small>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label data-translate="importExportData">Import/Export Data:</label>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <button type="button" id="exportDataBtn" class="btn-secondary" style="flex: 1;">
+                                                    <i class="fa fa-upload"></i> <span data-translate="exportData">Export Data</span>
+                                                </button>
+                                                <button type="button" id="importDataBtn" class="btn-secondary" style="flex: 1;">
+                                                    <i class="fa fa-download"></i> <span data-translate="importData">Import Data</span>
+                                                </button>
+                                            </div>
+                                            <small class="setting-help-text" data-translate="importExportHelp">Export or import BLF buttons, contacts, company numbers, and tab settings</small>
                                         </div>
                                     </div>
                                 </div>
@@ -784,6 +844,16 @@
     
     <!-- Notification Container -->
     <div id="notificationContainer" class="notification-container"></div>
+    
+    <!-- Update Notification Banner -->
+    <div id="updateBanner" class="update-banner hidden">
+        <div class="update-content">
+            <span class="update-icon">🔄</span>
+            <span class="update-message" data-translate="new_version_available">A new version is available!</span>
+            <button id="updateBtn" class="update-btn" data-translate="update_now">Update Now</button>
+            <button id="dismissUpdateBtn" class="dismiss-btn" data-translate="later">Later</button>
+        </div>
+    </div>
     
     <!-- Modal Overlay -->
     <div id="modalOverlay" class="modal-overlay hidden"></div>
@@ -835,6 +905,7 @@
     <script type="text/javascript" src="js/browser-cache.js"></script>
     <script type="text/javascript" src="js/tab-alert-manager.js"></script>
     <script type="text/javascript" src="js/sip-session-manager.js"></script>
+    <script type="text/javascript" src="js/line-key-manager.js"></script>
     <script type="text/javascript" src="js/ui-state-manager.js"></script>
     <script type="text/javascript" src="js/busylight-manager.js"></script>
     <script type="text/javascript" src="js/audio-settings-manager.js"></script>
@@ -844,6 +915,7 @@
     <script type="text/javascript" src="js/contacts-manager.js"></script>
     <script type="text/javascript" src="js/company-numbers-manager.js"></script>
     <script type="text/javascript" src="js/blf-button-manager.js"></script>
+    <script type="text/javascript" src="js/data-import-export-manager.js"></script>
     <script type="text/javascript" src="js/agent-buttons.js"></script>
     <script type="text/javascript" src="js/phone.js"></script>
     
@@ -860,6 +932,22 @@
                 navigator.serviceWorker.register('sw.js', { scope: '/' })
                     .then(function(registration) {
                         console.log('✓ Service Worker registered successfully:', registration.scope);
+                        
+                        // Check for updates every hour
+                        setInterval(() => {
+                            registration.update();
+                        }, 3600000);
+                        
+                        // Listen for new service worker waiting to activate
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    showUpdateNotification();
+                                }
+                            });
+                        });
                     })
                     .catch(function(error) {
                         console.warn('❌ Service Worker registration failed:', error);
@@ -868,6 +956,30 @@
         } else {
             console.warn('Service Workers are not supported in this browser');
         }
+        
+        // Update notification functions
+        function showUpdateNotification() {
+            const banner = document.getElementById('updateBanner');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('updateBtn')?.addEventListener('click', () => {
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+                }
+                window.location.reload();
+            });
+            
+            document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
+                const banner = document.getElementById('updateBanner');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
+            });
+        });
     </script>
     
     <!-- Keyboard Input Handler for Dial Tab -->
@@ -937,6 +1049,57 @@
             });
         });
     </script>
+
+    <!-- Import Data Modal -->
+    <div id="importDataModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 data-translate="import_data">Import Data</h3>
+                <button class="modal-close" id="importModalClose">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label data-translate="select_file">Select File:</label>
+                    <input type="file" id="dataFileInput" accept=".json" style="margin-top: 10px;" />
+                    <small class="setting-help-text" data-translate="select_json_file">Select a JSON file exported from Connect365</small>
+                </div>
+                
+                <div class="setting-item" style="margin-top: 20px;">
+                    <label data-translate="select_data_to_import">Select data to import:</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importBlfButtons" checked />
+                            <span data-translate="blf_buttons">BLF Buttons</span>
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importContacts" checked />
+                            <span data-translate="contacts_label">Contacts</span>
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="importCompanyNumbers" checked />
+                            <span data-translate="company_numbers_label">Company Numbers</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="warning-message" style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+                    <i class="fa fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    <strong data-translate="warning">Warning:</strong>
+                    <span data-translate="import_warning">This will overwrite existing data for the selected sections. Are you sure you wish to continue?</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px; border-top: 1px solid #ddd;">
+                <button type="button" id="importCancelBtn" class="btn-secondary">
+                    <span data-translate="cancel">Cancel</span>
+                </button>
+                <button type="button" id="importContinueBtn" class="btn-primary" disabled>
+                    <span data-translate="continue">Continue</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Transfer Modal -->
     <div id="transferModal" class="modal-overlay transfer-modal">

@@ -127,7 +127,7 @@ async function makeCall() {
             // First click: populate input with last dialed number
             dialInput.value = lastNumber;
             console.log('📞 Redial: Populated input with last dialed number:', lastNumber);
-            showInfo(`Press CALL again to redial ${lastNumber}`);
+            showInfo(t('pressCallToRedial', 'Press CALL again to redial {number}').replace('{number}', lastNumber));
             return;
         } else {
             showError(t('pleaseEnterNumberToCall', 'Please enter a number to call'));
@@ -154,7 +154,7 @@ async function makeCall() {
         
     } catch (error) {
         console.error('Failed to make outgoing call:', error);
-        showError('Failed to make call: ' + error.message);
+        showError(t('failedToMakeCall', 'Failed to make call: {error}').replace('{error}', error.message));
     }
 }
 
@@ -183,6 +183,13 @@ async function hangupCall(sessionId = null) {
     
     if (App.managers.sip) {
         try {
+            // If no sessionId provided, use selected line's session
+            if (!sessionId && App.managers.lineKeys) {
+                const selectedLine = App.managers.lineKeys.getSelectedLine();
+                const session = App.managers.sip.getSessionByLine(selectedLine);
+                sessionId = session ? session.id : null;
+            }
+            
             await App.managers.sip.hangupCall(sessionId);
         } catch (error) {
             console.error('Failed to hangup call:', error);
@@ -199,11 +206,23 @@ async function toggleMute(sessionId = null) {
     }
     
     try {
+        // If no sessionId provided, use selected line's session
+        if (!sessionId && App.managers.lineKeys) {
+            const selectedLine = App.managers.lineKeys.getSelectedLine();
+            const session = App.managers.sip.getSessionByLine(selectedLine);
+            sessionId = session ? session.id : null;
+        }
+        
+        if (!sessionId) {
+            console.warn('No session to mute');
+            return;
+        }
+        
         await App.managers.sip.toggleMute(sessionId);
         
     } catch (error) {
         console.error('Failed to toggle mute:', error);
-        showError('Failed to toggle mute: ' + error.message);
+        showError(t('failedToToggleMute', 'Failed to toggle mute: {error}').replace('{error}', error.message));
     }
 }
 
@@ -216,13 +235,25 @@ async function toggleHold(sessionId = null) {
     }
     
     try {
+        // If no sessionId provided, use selected line's session
+        if (!sessionId && App.managers.lineKeys) {
+            const selectedLine = App.managers.lineKeys.getSelectedLine();
+            const session = App.managers.sip.getSessionByLine(selectedLine);
+            sessionId = session ? session.id : null;
+        }
+        
+        if (!sessionId) {
+            console.warn('No session to hold');
+            return;
+        }
+        
         console.log('📞 Calling SIP manager toggleHold');
         await App.managers.sip.toggleHold(sessionId);
         console.log('✅ Hold toggle successful');
         
     } catch (error) {
         console.error('❌ Failed to toggle hold:', error);
-        showError('Failed to toggle hold: ' + error.message);
+        showError(t('failedToToggleHold', 'Failed to toggle hold: {error}').replace('{error}', error.message));
     }
 }
 
@@ -354,7 +385,7 @@ async function hideTransferModal(transferCompleted = false) {
 async function performBlindTransfer() {
     const transferNumber = document.getElementById('transferNumber').value.trim();
     if (!transferNumber) {
-        showError('Please enter a number to transfer to');
+        showError(t('pleaseEnterTransferNumber', 'Please enter a number to transfer to'));
         return;
     }
     
@@ -377,7 +408,7 @@ async function performBlindTransfer() {
         }
 
         // Show immediate feedback
-        showInfo(`Initiating blind transfer to ${transferNumber}...`);
+        showInfo(t('initiatingBlindTransfer', 'Initiating blind transfer to {number}...').replace('{number}', transferNumber));
 
         console.log('🎯 About to call blindTransfer method...');
         // Start the blind transfer - the response handlers will manage completion
@@ -393,7 +424,7 @@ async function performBlindTransfer() {
 async function performAttendedTransfer() {
     const transferNumber = document.getElementById('transferNumber').value.trim();
     if (!transferNumber) {
-        showError('Please enter a number to transfer to');
+        showError(t('pleaseEnterTransferNumber', 'Please enter a number to transfer to'));
         return;
     }
     
@@ -467,11 +498,11 @@ async function completeAttendedTransfer() {
         await hideTransferModal(true); // Transfer completed successfully
         window.currentTransferSession = null;
         
-        showSuccess('Transfer completed successfully');
+        showSuccess(t('transferCompletedSuccessfully', 'Transfer completed successfully'));
         
     } catch (error) {
         console.error('Failed to complete attended transfer:', error);
-        showError('Transfer completion failed: ' + error.message);
+        showError(t('transferCompletionFailed', 'Transfer completion failed: {error}').replace('{error}', error.message));
     }
 }
 
@@ -496,11 +527,11 @@ function cancelAttendedTransfer() {
     App.managers.sip.cancelAttendedTransfer(originalSession.id)
         .then(() => {
             console.log('✅ Attended transfer cancelled successfully');
-            showSuccess('Transfer cancelled');
+            showSuccess(t('transferCancelled', 'Transfer cancelled'));
         })
         .catch(error => {
             console.error('❌ Failed to cancel attended transfer:', error);
-            showError('Failed to cancel transfer: ' + error.message);
+            showError(t('failedToCancelTransfer', 'Failed to cancel transfer: {error}').replace('{error}', error.message));
         })
         .finally(() => {
             // Return to transfer modal for another attempt
@@ -566,10 +597,10 @@ async function resumeOriginalCallAndCloseModal(originalSessionId, reason) {
                 console.log('📞 Resuming original call from hold');
                 await App.managers.sip.toggleHold(originalSessionId);
                 console.log('✅ Original call resumed successfully');
-                showSuccess('Consultation call ended. Original call resumed.');
+                showSuccess(t('consultationCallEndedResumed', 'Consultation call ended. Original call resumed.'));
             } else {
                 console.log('ℹ️ Original call was not on hold');
-                showInfo('Consultation call ended. You can now continue with the original call.');
+                showInfo(t('consultationCallEndedResumed', 'Consultation call ended. Original call resumed.'));
             }
         } else {
             console.warn('⚠️ Original session not found, cannot resume');
@@ -718,8 +749,8 @@ function clearCurrentCallUI() {
     clearDialInput();
     
     // Update busy light to idle if available
-    if (App.managers?.busylight?.setState) {
-        App.managers.busylight.setState('idle');
+    if (App.managers?.busylight?.updateState) {
+        App.managers.busylight.updateState();
     }
     
     console.log('✅ Call UI cleared and reset to idle state');
@@ -1288,6 +1319,12 @@ function loadSettingsIntoForm() {
     // Setup real-time BLF checkbox listener
     setupBlfCheckboxListener();
     
+    // Setup real-time Busylight checkbox listener
+    setupBusylightCheckboxListener();
+    
+    // Load busylight ring sound and volume settings
+    loadBusylightSettings();
+    
     // Load tab visibility settings
     if (typeof window.loadTabVisibilitySettings === 'function') {
         window.loadTabVisibilitySettings();
@@ -1318,6 +1355,37 @@ function setupBlfCheckboxListener() {
     }
 }
 
+function setupBusylightCheckboxListener() {
+    const busylightCheckbox = document.getElementById('BusylightEnabled');
+    if (busylightCheckbox) {
+        // Remove any existing listener to avoid duplicates
+        busylightCheckbox.removeEventListener('change', handleBusylightCheckboxChange);
+        
+        // Add the change listener
+        busylightCheckbox.addEventListener('change', handleBusylightCheckboxChange);
+        
+        // Set initial visibility state
+        handleBusylightCheckboxChange({ target: busylightCheckbox });
+        
+        console.log('✅ Busylight checkbox listener setup complete');
+    }
+}
+
+function handleBusylightCheckboxChange(event) {
+    const isChecked = event.target.checked;
+    const busylightOptions = document.getElementById('busylight-options');
+    
+    if (busylightOptions) {
+        busylightOptions.style.display = isChecked ? 'block' : 'none';
+        console.log('🔄 Busylight options visibility:', isChecked ? 'shown' : 'hidden');
+        
+        // Apply translations to the newly visible elements
+        if (isChecked && window.languageManager) {
+            window.languageManager.applyTranslations();
+        }
+    }
+}
+
 function handleBlfCheckboxChange(event) {
     const isChecked = event.target.checked;
     console.log('🔄 BLF checkbox changed:', isChecked ? 'enabled' : 'disabled');
@@ -1338,6 +1406,26 @@ function handleBlfCheckboxChange(event) {
     }
     
     console.log('✅ BLF buttons updated in real-time');
+}
+
+function loadBusylightSettings() {
+    if (!window.localDB) return;
+    
+    // Load ring sound setting
+    const ringSound = window.localDB.getItem('BusylightRingSound', '3');
+    const ringSoundSelect = document.getElementById('BusylightRingSound');
+    if (ringSoundSelect) {
+        ringSoundSelect.value = ringSound;
+        console.log('Loaded busylight ring sound:', ringSound);
+    }
+    
+    // Load ring volume setting
+    const ringVolume = window.localDB.getItem('BusylightRingVolume', '50');
+    const ringVolumeSelect = document.getElementById('BusylightRingVolume');
+    if (ringVolumeSelect) {
+        ringVolumeSelect.value = ringVolume;
+        console.log('Loaded busylight ring volume:', ringVolume);
+    }
 }
 
 function loadSettingsFromDatabase() {
@@ -1372,6 +1460,7 @@ function loadSettingsFromDatabase() {
         { id: 'BlfEnabled', key: 'BlfEnabled', defaultValue: '0' },
         { id: 'PreferBlindTransfer', key: 'PreferBlindTransfer', defaultValue: '0' },
         { id: 'BusylightEnabled', key: 'BusylightEnabled', defaultValue: '0' },
+        { id: 'BusylightVoicemailNotify', key: 'BusylightVoicemailNotify', defaultValue: '0' },
         { id: 'SipMessagesEnabled', key: 'SipMessagesEnabled', defaultValue: '0' },
         { id: 'VerboseLoggingEnabled', key: 'VerboseLoggingEnabled', defaultValue: '0' },
         { id: 'OnscreenNotifications', key: 'OnscreenNotifications', defaultValue: '1' }
@@ -1496,6 +1585,17 @@ async function saveSettings() {
             const busylightEnabled = document.getElementById('BusylightEnabled');
             const isEnabled = busylightEnabled ? busylightEnabled.checked : false;
             
+            // Update ring sound and volume
+            const ringSound = document.getElementById('BusylightRingSound');
+            const ringVolume = document.getElementById('BusylightRingVolume');
+            
+            if (ringSound && ringVolume) {
+                const soundValue = parseInt(ringSound.value, 10);
+                const volumeValue = parseInt(ringVolume.value, 10);
+                App.managers.busylight.updateAlertSettings(soundValue, volumeValue);
+                console.log('✅ Busylight alert settings updated:', { sound: soundValue, volume: volumeValue });
+            }
+            
             // Use setEnabled method to properly initialize or disconnect
             App.managers.busylight.setEnabled(isEnabled).catch(error => {
                 console.warn('Failed to update busylight state:', error);
@@ -1528,7 +1628,13 @@ async function saveSettings() {
         }
         
         // Force show settings saved notification even if onscreen notifications are disabled
-        showNotification('Settings saved', 'Your settings have been saved successfully', 'success', 2000, true);
+        showNotification(
+            t('settings_saved', 'Settings saved'), 
+            t('settings_saved_message', 'Your settings have been saved successfully'), 
+            'success', 
+            2000, 
+            true
+        );
         console.log('Settings saved successfully');
         
         // Update device name display
@@ -1848,19 +1954,21 @@ function setupSipConnectionMonitoring() {
         switch (current) {
             case 'connecting':
             case 'registering':
+                const t1 = window.languageManager?.t || ((key, def) => def);
                 App.managers.ui.addNotification({
                     type: 'info',
-                    title: 'Connecting',
-                    message: 'Registering with SIP server...',
+                    title: t1('connecting', 'Connecting'),
+                    message: t1('registering_with_sip_server', 'Registering with SIP server...'),
                     duration: 2000
                 });
                 break;
                 
             case 'registered':
+                const t2 = window.languageManager?.t || ((key, def) => def);
                 App.managers.ui.addNotification({
                     type: 'success',
-                    title: 'Connected',
-                    message: 'Successfully registered with SIP server',
+                    title: t2('connected', 'Connected'),
+                    message: t2('successfully_registered_with_sip', 'Successfully registered with SIP server'),
                     duration: 2000
                 });
                 break;
@@ -1868,10 +1976,11 @@ function setupSipConnectionMonitoring() {
             case 'unregistered':
                 // Only show notification if we were previously registered
                 if (previous === 'registered') {
+                    const t3 = window.languageManager?.t || ((key, def) => def);
                     App.managers.ui.addNotification({
                         type: 'info',
-                        title: 'Disconnected',
-                        message: 'Unregistered from SIP server',
+                        title: t3('disconnected', 'Disconnected'),
+                        message: t3('unregistered_from_sip_server', 'Unregistered from SIP server'),
                         duration: 2000
                     });
                 }
@@ -1937,14 +2046,15 @@ function setupSipConnectionMonitoring() {
     App.managers.sip.on('registrationFailed', (error) => {
         console.error('SIP registration failed:', error);
         
+        const t = window.languageManager?.t || ((key, def) => def);
         App.managers.ui.addNotification({
             type: 'error',
-            title: 'Registration Failed',
-            message: `Registration error: ${error.message || error}`,
+            title: t('registration_failed', 'Registration Failed'),
+            message: t('registration_error', 'Registration error: {error}').replace('{error}', error.message || error),
             duration: 7000,
             actions: [
                 {
-                    text: 'Retry',
+                    text: t('retry', 'Retry'),
                     class: 'btn-primary',
                     action: () => {
                         console.log('Retrying registration...');
@@ -1952,7 +2062,7 @@ function setupSipConnectionMonitoring() {
                     }
                 },
                 {
-                    text: 'Settings',
+                    text: t('settings', 'Settings'),
                     class: 'btn-secondary',
                     action: () => {
                         App.managers.ui.setCurrentView('settings');
@@ -1991,16 +2101,31 @@ function setupSipConnectionMonitoring() {
         console.log('🔔 Incoming call detected, starting ringtone and notification');
         updateCallButton(session);
         
+        // Check if there's already an active call on another line
+        const activeSessions = App.managers.sip.getActiveSessions();
+        const hasExistingCall = activeSessions.some(s => s.id !== session.id && (s.state === 'established' || s.state === 'active'));
+        
         // Start playing ringtone if audio manager is available
         if (App.managers.audio) {
-            App.managers.audio.startRinging();
-            console.log('✅ Ringtone started for incoming call');
+            if (hasExistingCall) {
+                // Use alert tone for second incoming call
+                App.managers.audio.startRinging(true); // true = use alert tone
+                console.log('✅ Alert tone started for second incoming call');
+            } else {
+                // Use normal ringtone for first call
+                App.managers.audio.startRinging();
+                console.log('✅ Ringtone started for incoming call');
+            }
         } else {
             console.warn('⚠️ Audio manager not available, no ringtone will play');
         }
         
-        // Send system notification if enabled
-        sendIncomingCallNotification(session);
+        // Send system notification only if no existing call (don't notify for second call)
+        if (!hasExistingCall) {
+            sendIncomingCallNotification(session);
+        } else {
+            console.log('📵 Skipping notification - already on active call');
+        }
     });
     
     App.managers.sip.on('sessionAnswered', (session) => {
@@ -2284,8 +2409,8 @@ function updateCallButton(sessionData) {
     const incomingSession = App.managers.sip ? App.managers.sip.getIncomingSession() : null;
     
     if (incomingSession && sessionData.direction === 'incoming' && sessionData.state !== 'established') {
-        // Incoming call - show ANSWER button
-        callBtn.classList.add('btn-primary');
+        // Incoming call - show ANSWER button (keep green background)
+        callBtn.classList.add('btn-success');
         if (icon) icon.className = 'fa fa-phone';
         callBtn.innerHTML = '<i class="fa fa-phone"></i> ANSWER';
         callBtn.title = 'Answer Incoming Call';
@@ -3925,6 +4050,11 @@ function updateVoicemailMWI(voicemailData) {
         
         // Update tooltip
         iconElement.title = `Voicemail (${newMessages} new message${newMessages > 1 ? 's' : ''})`;
+        
+        // Notify busylight manager
+        if (App.managers?.busylight) {
+            App.managers.busylight.onVoicemailUpdate(newMessages);
+        }
     } else {
         // Hide count and text
         countElement.classList.add('hidden');
@@ -3935,6 +4065,11 @@ function updateVoicemailMWI(voicemailData) {
         
         // Reset tooltip
         iconElement.title = 'Voicemail';
+        
+        // Notify busylight manager
+        if (App.managers?.busylight) {
+            App.managers.busylight.onVoicemailUpdate(0);
+        }
     }
 }
 
@@ -4009,6 +4144,8 @@ window.loadSettingsIntoForm = loadSettingsIntoForm;
 window.updateRegisterButton = updateRegisterButton;
 window.showSuccessNotification = showSuccessNotification;
 window.showErrorNotification = showErrorNotification;
+window.showTransferModal = showTransferModal;
+window.hideTransferModal = hideTransferModal;
 
 /* ====================================================================================== */
 /* END OF FILE */

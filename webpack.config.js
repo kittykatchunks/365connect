@@ -19,6 +19,7 @@ module.exports = (env, argv) => {
         './pwa/js/browser-cache.js',
         './pwa/js/tab-alert-manager.js',
         './pwa/js/sip-session-manager.js',
+        './pwa/js/line-key-manager.js',
         './pwa/js/ui-state-manager.js',
         './pwa/js/busylight-manager.js',
         './pwa/js/audio-settings-manager.js',
@@ -28,6 +29,7 @@ module.exports = (env, argv) => {
         './pwa/js/contacts-manager.js',
         './pwa/js/company-numbers-manager.js',
         './pwa/js/blf-button-manager.js',
+        './pwa/js/data-import-export-manager.js',
         './pwa/js/agent-buttons.js',
         './pwa/js/phone.js',
         './pwa/js/app-startup.js',
@@ -44,7 +46,7 @@ module.exports = (env, argv) => {
       publicPath: '/'
     },
     
-    devtool: isProduction ? 'source-map' : 'eval-source-map',
+    devtool: isProduction ? false : 'eval-source-map',
     
     module: {
       rules: [

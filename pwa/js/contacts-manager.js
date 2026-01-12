@@ -53,17 +53,6 @@ class ContactsManager {
             deleteAllBtn.addEventListener('click', () => this.confirmDeleteAllContacts());
         }
 
-        // Import/Export buttons
-        const importBtn = document.getElementById('importContactsBtn');
-        if (importBtn) {
-            importBtn.addEventListener('click', () => this.importContacts());
-        }
-
-        const exportBtn = document.getElementById('exportContactsBtn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.exportContacts());
-        }
-
         // Search input
         const searchInput = document.getElementById('contactSearchInput');
         if (searchInput) {
@@ -76,12 +65,6 @@ class ContactsManager {
                     this.handleSearch('');
                 });
             }
-        }
-
-        // File input for CSV import
-        const csvFileInput = document.getElementById('csvFileInput');
-        if (csvFileInput) {
-            csvFileInput.addEventListener('change', (e) => this.handleCSVImport(e));
         }
     }
 
@@ -101,9 +84,7 @@ class ContactsManager {
             firstName: contactData.firstName?.trim() || '',
             lastName: contactData.lastName?.trim() || '',
             companyName: contactData.companyName?.trim() || '',
-            phoneNumber: contactData.phoneNumber?.trim() || '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            phoneNumber: contactData.phoneNumber?.trim() || ''
         };
 
         this.contacts.push(contact);
@@ -129,8 +110,7 @@ class ContactsManager {
             firstName: contactData.firstName?.trim() || '',
             lastName: contactData.lastName?.trim() || '',
             companyName: contactData.companyName?.trim() || '',
-            phoneNumber: contactData.phoneNumber?.trim() || '',
-            updatedAt: new Date().toISOString()
+            phoneNumber: contactData.phoneNumber?.trim() || ''
         };
 
         this.saveContacts();
@@ -306,201 +286,6 @@ class ContactsManager {
     }
 
     /* ====================================================================================== */
-    /* CSV IMPORT/EXPORT */
-    /* ====================================================================================== */
-
-    exportContacts() {
-        try {
-            const csvData = this.contactsToCSV();
-            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `contacts-${new Date().toISOString().split('T')[0]}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                this.showSuccess('Contacts exported successfully');
-                console.log('📞 ContactsManager: Contacts exported to CSV');
-            }
-        } catch (error) {
-            console.error('📞 ContactsManager: Export failed:', error);
-            this.showError('Failed to export contacts: ' + error.message);
-        }
-    }
-
-    contactsToCSV() {
-        const headers = ['First Name', 'Last Name', 'Company Name', 'Phone Number'];
-        const csvRows = [headers.join(',')];
-        
-        this.contacts.forEach(contact => {
-            const row = [
-                this.escapeCSVField(contact.firstName),
-                this.escapeCSVField(contact.lastName),
-                this.escapeCSVField(contact.companyName),
-                this.escapeCSVField(contact.phoneNumber)
-            ];
-            csvRows.push(row.join(','));
-        });
-        
-        return csvRows.join('\n');
-    }
-
-    escapeCSVField(field) {
-        if (!field) return '';
-        const str = field.toString();
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-            return '"' + str.replace(/"/g, '""') + '"';
-        }
-        return str;
-    }
-
-    importContacts() {
-        const fileInput = document.getElementById('csvFileInput');
-        if (fileInput) {
-            fileInput.click();
-        }
-    }
-
-    async handleCSVImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        try {
-            const text = await this.readFileAsText(file);
-            const importedContacts = this.parseCSV(text);
-            
-            if (importedContacts.length === 0) {
-                this.showError('No valid contacts found in CSV file');
-                return;
-            }
-
-            // Show confirmation dialog
-            const confirmed = confirm(`Import ${importedContacts.length} contacts? This will add to existing contacts.`);
-            if (!confirmed) return;
-
-            let successCount = 0;
-            let errorCount = 0;
-
-            importedContacts.forEach(contactData => {
-                try {
-                    if (this.validateContact(contactData)) {
-                        this.addContactSilent(contactData);
-                        successCount++;
-                    } else {
-                        errorCount++;
-                    }
-                } catch (error) {
-                    errorCount++;
-                }
-            });
-
-            this.saveContacts();
-            this.renderContacts();
-
-            this.showSuccess(`Import completed: ${successCount} contacts added, ${errorCount} skipped`);
-            console.log('📞 ContactsManager: CSV import completed:', { successCount, errorCount });
-
-        } catch (error) {
-            console.error('📞 ContactsManager: CSV import failed:', error);
-            this.showError('Failed to import CSV: ' + error.message);
-        }
-
-        // Clear file input
-        event.target.value = '';
-    }
-
-    addContactSilent(contactData) {
-        const contact = {
-            id: this.generateContactId(),
-            firstName: contactData.firstName?.trim() || '',
-            lastName: contactData.lastName?.trim() || '',
-            companyName: contactData.companyName?.trim() || '',
-            phoneNumber: contactData.phoneNumber?.trim() || '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        this.contacts.push(contact);
-        return contact;
-    }
-
-    parseCSV(text) {
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
-        if (lines.length < 2) return [];
-
-        const headers = this.parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
-        const contacts = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = this.parseCSVLine(lines[i]);
-            if (values.length === 0) continue;
-
-            const contact = {};
-            
-            // Map CSV columns to contact fields
-            headers.forEach((header, index) => {
-                const value = values[index] || '';
-                
-                if (header.includes('first') && header.includes('name')) {
-                    contact.firstName = value;
-                } else if (header.includes('last') && header.includes('name')) {
-                    contact.lastName = value;
-                } else if (header.includes('company')) {
-                    contact.companyName = value;
-                } else if (header.includes('phone') || header.includes('number') || header.includes('tel')) {
-                    contact.phoneNumber = value;
-                }
-            });
-
-            contacts.push(contact);
-        }
-
-        return contacts;
-    }
-
-    parseCSVLine(line) {
-        const result = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            const nextChar = line[i + 1];
-            
-            if (char === '"') {
-                if (inQuotes && nextChar === '"') {
-                    current += '"';
-                    i++; // Skip next quote
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
-        }
-        
-        result.push(current.trim());
-        return result;
-    }
-
-    readFileAsText(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = (e) => reject(new Error('Failed to read file'));
-            reader.readAsText(file);
-        });
-    }
-
-    /* ====================================================================================== */
     /* UI RENDERING */
     /* ====================================================================================== */
 
@@ -530,15 +315,17 @@ class ContactsManager {
     }
 
     renderEmptyState(container) {
-        const message = this.searchQuery ? 'No contacts found matching your search' : 'No contacts yet';
-        const actionText = this.searchQuery ? 'Try a different search term' : 'Add your first contact';
+        const message = this.searchQuery ? t('no_contacts_found', 'No contacts found matching your search') : t('no_contacts_yet', 'No contacts yet');
+        const actionText = this.searchQuery ? t('try_different_search', 'Try a different search term') : t('add_first_contact', 'Add your first contact to get started');
+        const messageKey = this.searchQuery ? 'no_contacts_found' : 'no_contacts_yet';
+        const actionKey = this.searchQuery ? 'try_different_search' : 'add_first_contact';
         
         container.innerHTML = `
             <div class="no-contacts-message">
                 <i class="fa fa-users"></i>
-                <h3>${message}</h3>
-                <p>${actionText}</p>
-                ${!this.searchQuery ? '<button class="btn-primary" onclick="App.managers.contacts.showAddContactModal()">Add Contact</button>' : ''}
+                <h3 data-translate="${messageKey}">${message}</h3>
+                <p data-translate="${actionKey}">${actionText}</p>
+                ${!this.searchQuery ? `<button class="btn-primary" onclick="App.managers.contacts.showAddContactModal()" data-translate="add_contact">${t('add_contact', 'Add Contact')}</button>` : ''}
             </div>
         `;
     }
@@ -694,10 +481,10 @@ class ContactsManager {
             if (isEdit) {
                 const contactId = document.getElementById('contactId').value;
                 this.updateContact(contactId, contactData);
-                this.showSuccess('Contact updated successfully');
+                this.showSuccess(t('contactUpdatedSuccessfully', 'Contact updated successfully'));
             } else {
                 this.addContact(contactData);
-                this.showSuccess('Contact added successfully');
+                this.showSuccess(t('contactAddedSuccessfully', 'Contact added successfully'));
             }
             
             this.hideContactModal();
@@ -713,7 +500,7 @@ class ContactsManager {
     dialContact(contactId) {
         const contact = this.getContact(contactId);
         if (!contact || !contact.phoneNumber) {
-            this.showError('No phone number available for this contact');
+            this.showError(t('noPhoneNumberForContact', 'No phone number available for this contact'));
             return;
         }
 
@@ -728,7 +515,7 @@ class ContactsManager {
             dialInput.value = contact.phoneNumber;
             dialInput.focus();
             console.log('📞 ContactsManager: Number ready to dial:', contact.phoneNumber);
-            this.showSuccess(`Ready to call ${this.getFullDisplayName(contact)}`);
+            this.showSuccess(t('readyToCall', 'Ready to call {name}').replace('{name}', this.getFullDisplayName(contact)));
         }
     }
 
@@ -745,7 +532,7 @@ class ContactsManager {
         if (confirmed) {
             try {
                 this.deleteContact(contactId);
-                this.showSuccess('Contact deleted successfully');
+                this.showSuccess(t('contactDeletedSuccessfully', 'Contact deleted successfully'));
             } catch (error) {
                 this.showError('Failed to delete contact: ' + error.message);
             }

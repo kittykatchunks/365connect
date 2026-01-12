@@ -241,6 +241,32 @@ class BrowserCache {
             return false;
         }
     }
+    
+    /**
+     * Get storage quota information (if available)
+     * @returns {Promise<Object|null>} - Storage quota info or null
+     */
+    async getStorageQuota() {
+        if (navigator.storage && navigator.storage.estimate) {
+            try {
+                const estimate = await navigator.storage.estimate();
+                const persisted = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+                
+                return {
+                    usage: estimate.usage,
+                    quota: estimate.quota,
+                    usageMB: (estimate.usage / 1024 / 1024).toFixed(2),
+                    quotaMB: (estimate.quota / 1024 / 1024).toFixed(2),
+                    percentUsed: ((estimate.usage / estimate.quota) * 100).toFixed(2),
+                    persistent: persisted
+                };
+            } catch (error) {
+                console.error('Failed to get storage estimate:', error);
+                return null;
+            }
+        }
+        return null;
+    }
 }
 
 // Create global cache instances
@@ -256,6 +282,7 @@ window.localDB = {
     setJSON: (key, data) => window.browserCache.setJSON(key, data),
     clear: () => window.browserCache.clear(),
     getAllKeys: () => window.browserCache.getAllKeys(),
+    getStorageQuota: () => window.browserCache.getStorageQuota(),
     healthCheck: () => ({
         status: window.browserCache.isAvailable() ? 'healthy' : 'error',
         message: window.browserCache.isAvailable() ? 'Storage available' : 'Storage not available',
