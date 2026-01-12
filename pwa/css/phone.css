@@ -438,7 +438,7 @@ button:focus {
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -449,39 +449,39 @@ button:focus {
 .btn-secondary {
     background-color: var(--secondary-color);
     border-color: var(--secondary-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .btn-success {
     background-color: var(--success-color);
     border-color: var(--success-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .btn-success:hover {
     background-color: var(--success-color);
     border-color: var(--success-color);
     opacity: 1.4;
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .btn-danger {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .btn-danger:hover {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
     opacity: 1.4;
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .btn-warning {
     background-color: var(--warning-color);
     border-color: var(--warning-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 /* ===== REGISTRATION BUTTON ===== */
@@ -524,13 +524,13 @@ button:focus {
 /* Registration States */
 .register-button.register-disconnected {
     background: var(--danger-color);
-    color: white;
+    color: var(--text-color-inverse);
     animation: registerPulse 2s ease-in-out infinite;
 }
 
 .register-button.register-connecting {
     background: var(--warning-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .register-button.register-connecting .fa {
@@ -543,12 +543,12 @@ button:focus {
 
 .register-button.register-connected {
     background: var(--success-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .register-button.register-error {
     background: var(--danger-color-dark);
-    color: white;
+    color: var(--text-color-inverse);
     animation: registerPulseError 1.5s ease-in-out infinite;
 }
 
@@ -676,7 +676,7 @@ input[type="radio"]:checked::after {
     position: absolute;
     width: 8px;
     height: 8px;
-    background-color: white;
+    background-color: var(--text-color-inverse);
     border-radius: 50%;
     top: 50%;
     left: 50%;
@@ -753,7 +753,7 @@ input[type="radio"]:checked::after {
 
 .accordion-header.active {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .accordion-header .accordion-icon {
@@ -936,7 +936,7 @@ input[type="radio"]:checked::after {
 
 .audio-test-btn {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
     border: none;
     /* border-radius: 50%; */
     width: 32px;
@@ -1687,7 +1687,7 @@ input[type="radio"]:checked::after {
     left: 0;
     right: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    color: var(--text-color-inverse);
     padding: 12px 20px;
     z-index: 10001;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -1747,7 +1747,7 @@ input[type="radio"]:checked::after {
 
 .dismiss-btn {
     background: transparent;
-    color: white;
+    color: var(--text-color-inverse);
     border: 1px solid var(--overlay-medium);
     padding: 8px 15px;
     border-radius: 5px;
@@ -2720,7 +2720,7 @@ body.view-dial .agent-keys-container { display: block; }
 .blf-modal .checkbox-label input[type="checkbox"]:checked::after {
     content: '✓';
     position: absolute;
-    color: white;
+    color: var(--text-color-inverse);
     font-size: 14px;
     font-weight: bold;
     top: 50%;
@@ -3194,7 +3194,7 @@ body.view-dial .agent-keys-container { display: block; }
 .history-date-header {
     padding: var(--spacing-md) var(--spacing-md);
     background: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
     border-bottom: 2px solid var(--primary-color);
     font-weight: 700;
     font-size: 0.95rem;
@@ -3242,17 +3242,17 @@ body.view-dial .agent-keys-container { display: block; }
 
 .history-item.incoming .call-direction {
     background: var(--success-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .history-item.outgoing .call-direction {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .history-item.missed .call-direction {
     background: var(--danger-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .call-direction i {
@@ -3308,7 +3308,7 @@ body.view-dial .agent-keys-container { display: block; }
 .missed-indicator {
     padding: 2px 6px;
     background: var(--danger-color);
-    color: white;
+    color: var(--text-color-inverse);
     /* border-radius: 10px; */
     font-size: 0.75rem;
     font-weight: 500;
@@ -3336,7 +3336,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .callback-button {
     background-color: var(--success-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .callback-button:hover {
@@ -3346,7 +3346,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .remove-call-button {
     background-color: var(--danger-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 .remove-call-button:hover {
@@ -3482,7 +3482,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 .delete-all-btn {
     background-color: var(--danger-color);
-    color: white;
+    color: var(--text-color-inverse);
     border: 1px solid var(--danger-color);
 }
 
@@ -4099,7 +4099,7 @@ body.view-dial .agent-keys-container { display: block; }
     cursor: pointer;
     transition: all 0.2s ease;
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
     margin-top: var(--spacing-md);
     display: none;
     min-height: 48px;
@@ -4316,7 +4316,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 #busylight-save {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-color-inverse);
 }
 
 #busylight-save:hover {
