@@ -522,7 +522,7 @@ button:focus {
 
 .register-button.register-connecting {
     background: var(--warning-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 .register-button.register-connecting .fa {
@@ -535,12 +535,12 @@ button:focus {
 
 .register-button.register-connected {
     background: var(--success-color);
-    color: var(--text-color);
+    color: var(--text-color-white);
 }
 
 .register-button.register-error {
     background: var(--danger-color-dark);
-    color: var(--text-color);
+    color: var(--text-color-white);
     animation: registerPulseError 1.5s ease-in-out infinite;
 }
 
