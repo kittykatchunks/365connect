@@ -1235,7 +1235,7 @@ class ApplicationStartup {
             console.log('📶 Application is back online');
             if (App.managers?.ui) {
                 App.managers.ui.addNotification({
-                    type: 'warning',
+                    type: 'error',
                     title: t('networkInternetRestored', 'Network/Internet Restored'),
                     message: t('networkRestoredMessage', 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.'),
                     duration: null, // Persist until user closes it
