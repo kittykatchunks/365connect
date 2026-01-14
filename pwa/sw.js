@@ -1,4 +1,4 @@
-const cacheID = "autocab365connect_v9"; // Increment version - v7: Force refresh for multi-line implementation fixes
+const cacheID = "autocab365connect_v10"; // Increment version - v10: Domain security issues
 
 // Listen for skip waiting message from client
 self.addEventListener('message', (event) => {
