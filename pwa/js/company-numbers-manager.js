@@ -77,7 +77,7 @@ class CompanyNumbersManager {
     }
 
     isCompanyNumbersTabVisible() {
-        const tab = document.getElementById('navBlank1');
+        const tab = document.getElementById('navCompanyNumbers');
         return tab && !tab.classList.contains('disabled') && !tab.classList.contains('tab-hidden');
     }
 
@@ -661,7 +661,7 @@ class CompanyNumbersManager {
      * Check if Company Numbers tab is enabled in settings
      */
     isCompanyNumbersTabEnabled() {
-        const checkbox = document.getElementById('ShowBlank1Tab');
+        const checkbox = document.getElementById('ShowCompanyNumbersTab');
         return checkbox && checkbox.checked;
     }
 

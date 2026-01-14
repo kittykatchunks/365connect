@@ -306,11 +306,11 @@ class DataImportExportManager {
                     console.log('💾 Imported Company Numbers:', data.CompanyNumbers.length);
                     importedCount++;
                     
-                    // Auto-enable Company Numbers tab (Blank1Tab)
-                    window.localDB.setItem('ShowBlank1Tab', 'true');
-                    const showBlank1Checkbox = document.getElementById('ShowBlank1Tab');
-                    if (showBlank1Checkbox) {
-                        showBlank1Checkbox.checked = true;
+                    // Auto-enable Company Numbers tab (ShowCompanyNumbersTab)
+                    window.localDB.setItem('ShowCompanyNumbersTab', 'true');
+                    const showCompanyNumbersCheckbox = document.getElementById('ShowCompanyNumbersTab');
+                    if (showCompanyNumbersCheckbox) {
+                        showCompanyNumbersCheckbox.checked = true;
                     }
                     console.log('💾 Auto-enabled Company Numbers tab');
                     

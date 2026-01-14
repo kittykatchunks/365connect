@@ -94,11 +94,11 @@
                 <button id="navActivity" class="nav-tab" data-view="activity">
                     <i class="far fa-clock"></i> <span data-translate="activity">Activity</span>
                 </button>
-                <button id="navBlank1" class="nav-tab disabled" data-view="blank1">
+                <button id="navCompanyNumbers" class="nav-tab disabled" data-view="companyNumbers">
                     <i class="fa fa-building"></i> <span data-translate="company_numbers">Company Numbers</span>
                 </button>
-                <button id="navBlank2" class="nav-tab disabled" data-view="blank2">
-                    <i class="fa fa-circle-o"></i> <span>-</span>
+                <button id="navQueueMonitor" class="nav-tab disabled" data-view="queueMonitor">
+                    <i class="fa fa-chart-line"></i> <span data-translate="queue_monitor">Queue Monitor</span>
                 </button>
                 <button id="navSettings" class="nav-tab" data-view="settings">
                     <i class="fa fa-cog"></i> <span data-translate="settings">Settings</span>
@@ -382,7 +382,7 @@
                 </div>
             </div>
 
-            <div id="blank1Area" class="content-area hidden">
+            <div id="companyNumbersArea" class="content-area hidden">
                 <div class="company-numbers-container">
                     <!-- Company Numbers Controls -->
                     <div class="company-numbers-controls">
@@ -411,12 +411,12 @@
                 </div>
             </div>
 
-            <div id="blank2Area" class="content-area hidden">
+            <div id="queueMonitorArea" class="content-area hidden">
                 <div class="blank-container">
                     <div class="blank-content">
-                        <i class="fa fa-circle-o blank-icon"></i>
-                        <h3 data-translate="reserved_tab">Reserved Tab</h3>
-                        <p data-translate="reserved_for_future">This tab is reserved for future functionality.</p>
+                        <i class="fa fa-chart-line blank-icon"></i>
+                        <h3 data-translate="queue_monitor_tab">Queue Monitor</h3>
+                        <p data-translate="queue_monitor_coming_soon">Queue monitoring for SLA breaches coming soon.</p>
                     </div>
                 </div>
             </div>
@@ -535,15 +535,15 @@
                                                 </label>
                                                 <label>
                                                     <input type="checkbox" 
-                                                        id="ShowBlank1Tab" 
-                                                        name="ShowBlank1Tab" />
+                                                        id="ShowCompanyNumbersTab" 
+                                                        name="ShowCompanyNumbersTab" />
                                                     <span data-translate="show_company_numbers_tab">Show Company Numbers Tab</span>
                                                 </label>
-                                                <label class="hidden">
+                                                <label>
                                                     <input type="checkbox" 
-                                                        id="ShowBlank2Tab" 
-                                                        name="ShowBlank2Tab" />
-                                                    <span data-translate="show_second_blank_tab">Show Second Blank Tab</span>
+                                                        id="ShowQueueMonitorTab" 
+                                                        name="ShowQueueMonitorTab" />
+                                                    <span data-translate="enable_queue_monitoring">Enable Queue Monitoring for SLA breaches</span>
                                                 </label>
                                             </div>
                                             <div class="setting-help-text" data-translate="control_visible_tabs">

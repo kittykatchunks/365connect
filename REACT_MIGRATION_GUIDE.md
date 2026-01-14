@@ -26,7 +26,7 @@ Autocab365Connect is a **WebRTC SIP phone PWA** for taxi dispatch systems. The a
 - BLF (Busy Lamp Field) monitoring
 - Agent login/queue/pause operations
 - Contact and call history management
-- Company number CLI selection
+- Company number CLIP selection
 - Hardware busylight integration
 
 ### Tech Stack (Current)
@@ -160,7 +160,7 @@ Reference: `pwa/js/app-startup.js:31-72`
 ```typescript
 interface AppState {
   initialized: boolean;
-  currentView: 'dial' | 'contacts' | 'activity' | 'blank1' | 'blank2' | 'settings';
+  currentView: 'dial' | 'contacts' | 'activity' | 'companyNumbers' | 'queueMonitor' | 'settings';
   theme: 'auto' | 'light' | 'dark';
   language: string;
 }
@@ -379,8 +379,8 @@ Reference: `pwa/index.html:81-101`
 | `navDial` | dial | `fa-phone` | Always |
 | `navContacts` | contacts | `fa-users` | Configurable |
 | `navActivity` | activity | `far fa-clock` | Configurable |
-| `navBlank1` | blank1 | `fa-building` | Configurable (Company Numbers) |
-| `navBlank2` | blank2 | `fa-circle-o` | Hidden |
+| `navCompanyNumbers` | companyNumbers | `fa-building` | Configurable (Company Numbers) |
+| `navQueueMonitor` | queueMonitor | `fa-chart-line` | Configurable (Queue Monitor) |
 | `navSettings` | settings | `fa-cog` | Always |
 
 **Tab Visibility Logic:**
@@ -390,8 +390,8 @@ Reference: `pwa/js/settings-accordion.js` - `updateTabVisibility()`
 interface TabVisibility {
   contacts: boolean;  // ShowContactsTab setting
   activity: boolean;  // ShowActivityTab setting
-  blank1: boolean;    // ShowBlank1Tab setting (Company Numbers)
-  blank2: boolean;    // ShowBlank2Tab setting
+  companyNumbers: boolean;    // ShowCompanyNumbersTab setting
+  queueMonitor: boolean;      // ShowQueueMonitorTab setting (Enable Queue Monitoring for SLA breaches)
 }
 ```
 

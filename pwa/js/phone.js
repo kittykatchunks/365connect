@@ -1671,13 +1671,13 @@ function resetSettings() {
             // Reset tab visibility checkboxes to defaults
             const showContactsTab = document.getElementById('ShowContactsTab');
             const showActivityTab = document.getElementById('ShowActivityTab');
-            const showBlank1Tab = document.getElementById('ShowBlank1Tab');
-            const showBlank2Tab = document.getElementById('ShowBlank2Tab');
+            const showCompanyNumbersTab = document.getElementById('ShowCompanyNumbersTab');
+            const showQueueMonitorTab = document.getElementById('ShowQueueMonitorTab');
             
             if (showContactsTab) showContactsTab.checked = true;
             if (showActivityTab) showActivityTab.checked = true;
-            if (showBlank1Tab) showBlank1Tab.checked = false;
-            if (showBlank2Tab) showBlank2Tab.checked = false;
+            if (showCompanyNumbersTab) showCompanyNumbersTab.checked = false;
+            if (showQueueMonitorTab) showQueueMonitorTab.checked = false;
             
             // Update tab visibility
             if (typeof window.updateTabVisibility === 'function') {

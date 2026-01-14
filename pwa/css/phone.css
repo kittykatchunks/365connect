@@ -1214,13 +1214,13 @@ input[type="radio"]:checked::after {
 
 /* Ensure other tabs have proper single-column layout */
 #contactArea.content-area,
-#blank2Area.content-area {
+#queueMonitorArea.content-area {
     flex-direction: column;
     padding: var(--spacing-md);
 }
 
 #contactArea.content-area.active,
-#blank2Area.content-area.active {
+#queueMonitorArea.content-area.active {
     display: flex !important;
     flex-direction: column;
 }

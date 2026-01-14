@@ -120,8 +120,8 @@
     const tabVisibilitySettings = {
         'ShowContactsTab': 'navContacts',
         'ShowActivityTab': 'navActivity', 
-        'ShowBlank1Tab': 'navBlank1',
-        'ShowBlank2Tab': 'navBlank2'
+        'ShowCompanyNumbersTab': 'navCompanyNumbers',
+        'ShowQueueMonitorTab': 'navQueueMonitor'
     };
     
     // Initialize tab visibility functionality
@@ -154,8 +154,8 @@
                     tab.classList.remove('tab-hidden');
                     tab.classList.remove('disabled');
                     
-                    // Special handling for Company Numbers tab (ShowBlank1Tab)
-                    if (settingId === 'ShowBlank1Tab') {
+                    // Special handling for Company Numbers tab (ShowCompanyNumbersTab)
+                    if (settingId === 'ShowCompanyNumbersTab') {
                         // Show CLI selector in dial tab
                         const cliSelector = document.getElementById('cliSelectorContainer');
                         if (cliSelector) {
@@ -170,8 +170,8 @@
                 } else {
                     tab.classList.add('tab-hidden');
                     
-                    // Special handling for Company Numbers tab (ShowBlank1Tab)
-                    if (settingId === 'ShowBlank1Tab') {
+                    // Special handling for Company Numbers tab (ShowCompanyNumbersTab)
+                    if (settingId === 'ShowCompanyNumbersTab') {
                         // Hide CLI selector in dial tab
                         const cliSelector = document.getElementById('cliSelectorContainer');
                         if (cliSelector) {

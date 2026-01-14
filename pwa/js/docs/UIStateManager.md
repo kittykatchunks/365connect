@@ -28,7 +28,7 @@
   - `destroy()` — cleanup timers, notifications, and DOM container.
 
 - **DOM integrations & selectors used:**
-  - Areas: `#contactArea`, `#dialArea`, `#activityArea`, `#settingsArea`, `#blank1Area`, `#blank2Area` and their nav tabs `#navContacts`, `#navDial`, etc.
+  - Areas: `#contactArea`, `#dialArea`, `#activityArea`, `#settingsArea`, `#companyNumbersArea`, `#queueMonitorArea` and their nav tabs `#navContacts`, `#navDial`, `#navCompanyNumbers`, `#navQueueMonitor`, etc.
   - Notification container: `#notificationContainer` (created if missing).
   - Connection SIP elements: `#connectionIndicator`, `#connectionText`, `#sipExtension`, `#agentStatus`.
   - Call UI elements: `#callStatusRow`, `#dialInputRow`, `#callerNumber`, `#callerName`, `.call-info-display`, `#callDuration`.

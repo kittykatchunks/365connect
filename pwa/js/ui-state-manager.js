@@ -196,19 +196,19 @@ class UIStateManager extends EventTarget {
                 }, 100);
                 break;
 
-            case 'blank1':
-                targetArea = document.getElementById('blank1Area');
-                targetTab = document.getElementById('navBlank1');
-                // Blank tabs are disabled, no functionality
+            case 'companyNumbers':
+                targetArea = document.getElementById('companyNumbersArea');
+                targetTab = document.getElementById('navCompanyNumbers');
+                // Company Numbers tab - disabled check
                 if (targetTab && targetTab.classList.contains('disabled')) {
                     return; // Exit early for disabled tabs
                 }
                 break;
                 
-            case 'blank2':
-                targetArea = document.getElementById('blank2Area');
-                targetTab = document.getElementById('navBlank2');
-                // Blank tabs are disabled, no functionality
+            case 'queueMonitor':
+                targetArea = document.getElementById('queueMonitorArea');
+                targetTab = document.getElementById('navQueueMonitor');
+                // Queue Monitor tab - disabled check
                 if (targetTab && targetTab.classList.contains('disabled')) {
                     return; // Exit early for disabled tabs
                 }
