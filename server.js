@@ -117,7 +117,25 @@ app.use((req, res, next) => {
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Adjust based on your PWA needs
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: [
+        "'self'",
+        "wss://*.phantomapi.net:*",
+        "https://*.phantomapi.net:*",
+        "ws://localhost:*",
+        "http://localhost:*"
+      ],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      fontSrc: ["'self'", "data:"],
+      mediaSrc: ["'self'", "blob:"],
+      workerSrc: ["'self'", "blob:"],
+      manifestSrc: ["'self'"]
+    }
+  }
 }));
 
 app.use(cors({
