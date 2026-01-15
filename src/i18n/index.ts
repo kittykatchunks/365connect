@@ -27,8 +27,102 @@ const resources = {
   'pt-BR': { translation: ptBR }
 };
 
+// Latin American countries that should use es-419
+const LATIN_AMERICAN_COUNTRIES = [
+  'AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'SV', 'GT',
+  'HN', 'MX', 'NI', 'PA', 'PY', 'PE', 'PR', 'UY', 'VE'
+];
+
+/**
+ * Custom language detector that:
+ * 1. Checks localStorage first (user preference)
+ * 2. Maps Latin American Spanish locales to es-419
+ * 3. Falls back to 'en' for unsupported locales
+ */
+const languageDetector = new LanguageDetector();
+languageDetector.addDetector({
+  name: 'customBrowserDetector',
+  lookup() {
+    // Check verbose logging
+    const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+    
+    // Check if user has set a language preference (from settings or Zustand store)
+    const storedLang = localStorage.getItem('settings-store');
+    if (storedLang) {
+      try {
+        const parsed = JSON.parse(storedLang);
+        const settingsLang = parsed?.state?.settings?.interface?.language;
+        if (settingsLang) {
+          if (verboseLogging) {
+            console.log('[i18n] Using language from settings store:', settingsLang);
+          }
+          return settingsLang;
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+    
+    // No stored preference - detect from browser
+    const browserLang = navigator.language || (navigator as { userLanguage?: string }).userLanguage;
+    if (verboseLogging) {
+      console.log('[i18n] Detecting browser locale:', browserLang);
+    }
+    
+    if (!browserLang) {
+      if (verboseLogging) {
+        console.log('[i18n] No browser language detected, falling back to en');
+      }
+      return 'en';
+    }
+    
+    // Parse locale (e.g., 'es-MX', 'pt-BR', 'en-US')
+    const [langCode, countryCode] = browserLang.split('-');
+    const normalizedLang = langCode.toLowerCase();
+    const normalizedCountry = countryCode?.toUpperCase();
+    
+    // Special handling for Spanish in Latin America
+    if (normalizedLang === 'es' && normalizedCountry && LATIN_AMERICAN_COUNTRIES.includes(normalizedCountry)) {
+      if (verboseLogging) {
+        console.log(`[i18n] Detected Latin American Spanish (${normalizedCountry}), using es-419`);
+      }
+      return 'es-419';
+    }
+    
+    // Check for exact locale match (e.g., 'pt-BR', 'fr-CA')
+    const fullLocale = `${normalizedLang}-${normalizedCountry}`;
+    if (normalizedCountry && resources[fullLocale as keyof typeof resources]) {
+      if (verboseLogging) {
+        console.log('[i18n] Matched full locale:', fullLocale);
+      }
+      return fullLocale;
+    }
+    
+    // Check for language match (e.g., 'es', 'fr', 'pt')
+    if (resources[normalizedLang as keyof typeof resources]) {
+      if (verboseLogging) {
+        console.log('[i18n] Matched language code:', normalizedLang);
+      }
+      return normalizedLang;
+    }
+    
+    // Fallback to English for unsupported languages
+    if (verboseLogging) {
+      console.log('[i18n] Unsupported locale', browserLang, '- falling back to en');
+    }
+    return 'en';
+  },
+  cacheUserLanguage(lng: string) {
+    // Store in Zustand settings-store (handled by settingsStore)
+    // This is called when language is changed programmatically
+    if (localStorage.getItem('autocab365_VerboseLogging') === 'true') {
+      console.log('[i18n] Caching language preference:', lng);
+    }
+  }
+});
+
 i18n
-  .use(LanguageDetector)
+  .use(languageDetector)
   .use(initReactI18next)
   .init({
     resources,
@@ -36,9 +130,8 @@ i18n
     supportedLngs: ['en', 'es', 'es-419', 'fr', 'fr-CA', 'nl', 'pt', 'pt-BR'],
     
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      lookupLocalStorage: 'autocab365_AppLanguage',
-      caches: ['localStorage']
+      order: ['customBrowserDetector'],
+      caches: []  // Don't use default caching - we handle it via Zustand
     },
     
     interpolation: {
@@ -54,8 +147,12 @@ export default i18n;
 
 // Export a function to change language
 export function changeLanguage(lang: string): Promise<void> {
+  const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+  if (verboseLogging) {
+    console.log('[i18n] Changing language to:', lang);
+  }
   return i18n.changeLanguage(lang).then(() => {
-    localStorage.setItem('autocab365_AppLanguage', lang);
+    // Return void after language change
   });
 }
 

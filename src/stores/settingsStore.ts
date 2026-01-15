@@ -7,6 +7,7 @@ import { devtools, persist } from 'zustand/middleware';
 import type { AppSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { saveServerSettingsToLocalStorage } from '@/utils/serverConfig';
+import { changeLanguage } from '@/i18n';
 
 interface SettingsState {
   settings: AppSettings;
@@ -148,9 +149,22 @@ export const useSettingsStore = create<SettingsState>()(
         })),
         
         // Interface actions
-        setLanguage: (language) => set((state) => ({
-          settings: { ...state.settings, interface: { ...state.settings.interface, language } }
-        })),
+        setLanguage: (language) => {
+          const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting language:', language);
+          }
+          
+          // Update i18next
+          changeLanguage(language).catch((err) => {
+            console.error('[SettingsStore] Failed to change language:', err);
+          });
+          
+          // Update store (this will persist via Zustand)
+          set((state) => ({
+            settings: { ...state.settings, interface: { ...state.settings.interface, language } }
+          }));
+        },
         setTheme: (theme) => set((state) => ({
           settings: { ...state.settings, interface: { ...state.settings.interface, theme } }
         })),
@@ -249,8 +263,19 @@ export const useSettingsStore = create<SettingsState>()(
             console.log('[SettingsStore] Rehydrated from localStorage:', {
               hasConfig: !!state.sipConfig,
               phantomId: connection.phantomId,
-              username: connection.username
+              username: connection.username,
+              language: state.settings.interface.language
             });
+            
+            // Sync language with i18next on rehydration
+            const language = state.settings.interface.language;
+            if (language) {
+              import('@/i18n').then(({ changeLanguage }) => {
+                changeLanguage(language).catch((err) => {
+                  console.error('[SettingsStore] Failed to sync language on rehydration:', err);
+                });
+              });
+            }
           }
         }
       }

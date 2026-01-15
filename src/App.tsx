@@ -170,6 +170,7 @@ function App() {
   const setInitialized = useAppStore((state) => state.setInitialized);
   const setLoading = useAppStore((state) => state.setLoading);
   const effectiveTheme = useUIStore((state) => state.effectiveTheme);
+  const settingsLanguage = useSettingsStore((state) => state.settings.interface.language);
   
   // Initialize theme watcher
   useEffect(() => {
@@ -183,18 +184,25 @@ function App() {
     document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
   }, [effectiveTheme]);
   
+  // Sync i18next with settings store language
+  useEffect(() => {
+    const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+    
+    // Only change if different from current i18n language
+    if (settingsLanguage && i18n.language !== settingsLanguage) {
+      if (verboseLogging) {
+        console.log('[App] Syncing language from settings:', settingsLanguage);
+      }
+      i18n.changeLanguage(settingsLanguage);
+    }
+  }, [settingsLanguage, i18n]);
+  
   // Initialize application
   useEffect(() => {
     const initializeApp = async () => {
       try {
         // Simulate initialization (will be replaced with actual init logic)
         await new Promise((resolve) => setTimeout(resolve, 800));
-        
-        // Load saved language preference
-        const savedLang = localStorage.getItem('language');
-        if (savedLang) {
-          i18n.changeLanguage(savedLang);
-        }
         
         setInitialized(true);
         setLoading(false);
@@ -205,7 +213,7 @@ function App() {
     };
     
     initializeApp();
-  }, [i18n, setInitialized, setLoading]);
+  }, [setInitialized, setLoading]);
   
   // Show loading screen while initializing
   if (loading || !initialized) {
