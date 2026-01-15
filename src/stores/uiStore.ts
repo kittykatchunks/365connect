@@ -71,12 +71,26 @@ interface UIState {
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
+// Helper to get initial theme from settings store
+function getInitialTheme(): Theme {
+  try {
+    const stored = localStorage.getItem('settings-store');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed?.state?.settings?.interface?.theme || 'auto';
+    }
+  } catch (e) {
+    // Ignore parse errors
+  }
+  return 'auto';
+}
+
 export const useUIStore = create<UIState>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial state
-        theme: 'auto',
+        // Initial state - sync theme from settings
+        theme: getInitialTheme(),
         accentColor: 'blue',
         effectiveTheme: 'light',
         notifications: [],
@@ -186,9 +200,14 @@ export function initializeThemeWatcher() {
   
   mediaQuery.addEventListener('change', handler);
   
-  // Subscribe to theme changes - use Zustand v4 API
+  // Subscribe to theme changes ONLY (not effectiveTheme changes)
+  // Track previous theme to prevent reacting to effectiveTheme updates
+  let previousTheme = theme;
   const unsubscribe = useUIStore.subscribe((state) => {
-    updateEffectiveTheme(state.theme);
+    if (state.theme !== previousTheme) {
+      previousTheme = state.theme;
+      updateEffectiveTheme(state.theme);
+    }
   });
   
   return () => {

@@ -170,13 +170,6 @@ function App() {
   const setInitialized = useAppStore((state) => state.setInitialized);
   const setLoading = useAppStore((state) => state.setLoading);
   const effectiveTheme = useUIStore((state) => state.effectiveTheme);
-  const setUITheme = useUIStore((state) => state.setTheme);
-  const settingsTheme = useSettingsStore((state) => state.settings.interface.theme);
-  
-  // Sync theme from settings to UI store on mount
-  useEffect(() => {
-    setUITheme(settingsTheme);
-  }, []);
   
   // Initialize theme watcher
   useEffect(() => {
