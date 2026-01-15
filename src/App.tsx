@@ -97,6 +97,7 @@ function MainLayout() {
   const removeNotification = useUIStore((state) => state.removeNotification);
   const sipConfig = useSettingsStore((state) => state.sipConfig);
   const setCurrentView = useAppStore((state) => state.setCurrentView);
+  const setOpenSettingsWithConnection = useAppStore((state) => state.setOpenSettingsWithConnection);
   
   // Check if first time setup (no PhantomID or credentials)
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -113,8 +114,9 @@ function MainLayout() {
   
   // Handle opening settings from welcome
   const handleWelcomeOpenSettings = useCallback(() => {
+    setOpenSettingsWithConnection(true);
     setCurrentView('settings');
-  }, [setCurrentView]);
+  }, [setCurrentView, setOpenSettingsWithConnection]);
   
   return (
     <MainContainer>

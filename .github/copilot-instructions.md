@@ -3,6 +3,14 @@
 ## Project Overview
 This is a **WebRTC SIP phone PWA** built for Autocab365 taxi dispatch systems, powered by Phantom PBX. It's based on the Browser Phone project with heavy customization for commercial deployment.
 
+## **CRITICAL: Active Development Folders**
+**⚠️ DO NOT MODIFY FILES IN THE `pwa/` FOLDER ⚠️**
+
+- **`src/`** - Active React/TypeScript application - **MAKE ALL CHANGES HERE**
+- **`pwa/`** - Legacy reference code only - **READ ONLY - NO MODIFICATIONS**
+
+The `pwa/` folder contains the original vanilla JavaScript implementation and serves as a reference for patterns, features, and implementation details. All new development and modifications must be done in the `src/` React application.
+
 ## Architecture Fundamentals
 
 ### Core Components

@@ -26,6 +26,7 @@ interface AppState {
   
   // Navigation
   currentView: ViewType;
+  openSettingsWithConnection: boolean; // Flag to open connection settings when navigating to settings
   
   // Agent state
   agentState: AgentState;
@@ -40,6 +41,7 @@ interface AppState {
   setInitialized: (value: boolean) => void;
   setLoading: (loading: boolean, message?: string) => void;
   setCurrentView: (view: ViewType) => void;
+  setOpenSettingsWithConnection: (value: boolean) => void;
   
   // Agent actions
   setAgentState: (state: AgentState) => void;
@@ -63,6 +65,7 @@ export const useAppStore = create<AppState>()(
         loading: true,
         loadingMessage: 'Loading Autocab365 Connect',
         currentView: 'dial',
+        openSettingsWithConnection: false,
         
         // Agent initial state
         agentState: 'logged-out',
@@ -82,6 +85,8 @@ export const useAppStore = create<AppState>()(
         }),
         
         setCurrentView: (view) => set({ currentView: view }),
+        
+        setOpenSettingsWithConnection: (value) => set({ openSettingsWithConnection: value }),
         
         // Agent actions
         setAgentState: (agentState) => set({ agentState }),

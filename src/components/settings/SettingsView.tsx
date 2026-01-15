@@ -33,7 +33,7 @@ import {
   Button
 } from '@/components/ui';
 import { ImportExportModal } from '@/components/modals';
-import { useSettingsStore } from '@/stores';
+import { useSettingsStore, useAppStore } from '@/stores';
 import { useAudioDevices } from '@/hooks';
 
 export function SettingsView() {
@@ -41,6 +41,8 @@ export function SettingsView() {
   
   // Store bindings
   const settings = useSettingsStore((state) => state.settings);
+  const openWithConnection = useAppStore((state) => state.openSettingsWithConnection);
+  const setOpenSettingsWithConnection = useAppStore((state) => state.setOpenSettingsWithConnection);
   const setPhantomID = useSettingsStore((state) => state.setPhantomID);
   const setSIPCredentials = useSettingsStore((state) => state.setSIPCredentials);
   const setVMAccess = useSettingsStore((state) => state.setVMAccess);
@@ -92,6 +94,17 @@ export function SettingsView() {
     setLocalPassword(settings.connection.password);
     setLocalVmAccess(settings.connection.vmAccess);
   }, [settings.connection.phantomId, settings.connection.username, settings.connection.password, settings.connection.vmAccess]);
+  
+  // Reset the openSettingsWithConnection flag after component mounts
+  useEffect(() => {
+    if (openWithConnection) {
+      // Reset the flag after a brief delay to allow the accordion to open
+      const timer = setTimeout(() => {
+        setOpenSettingsWithConnection(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [openWithConnection, setOpenSettingsWithConnection]);
   
   // Save connection settings handler - only saves when button clicked
   const handleSaveConnectionSettings = useCallback(() => {
@@ -217,7 +230,7 @@ export function SettingsView() {
       />
       
       <div className="settings-content">
-        <Accordion type="single" defaultValue="connection">
+        <Accordion type="single" defaultValue={openWithConnection ? 'connection' : undefined}>
           {/* Connection Settings */}
           <AccordionItem value="connection">
             <AccordionTrigger value="connection">
@@ -265,8 +278,6 @@ export function SettingsView() {
                     {t('settings.vm_access_hint', 'Number to dial for voicemail')}
                   </span>
                 </div>
-                
-                <div className="settings-divider" />
                 
                 <Button 
                   variant="primary"
