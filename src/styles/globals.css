@@ -918,6 +918,9 @@ a {
   gap: var(--spacing-md);
   flex: 1;
   min-height: 0;
+  /* Negative margin to offset parent padding and allow BLF to reach edges */
+  margin-left: calc(var(--spacing-md) * -1);
+  margin-right: calc(var(--spacing-md) * -1);
 }
 
 .dial-view-content {
@@ -926,11 +929,24 @@ a {
   gap: var(--spacing-md);
   flex: 1;
   min-width: 0;
+  /* Add back horizontal padding for content */
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .dial-blf-left,
 .dial-blf-right {
   flex-shrink: 0;
+}
+
+/* Ensure left BLF starts at screen edge */
+.dial-blf-left {
+  padding-left: var(--spacing-md);
+}
+
+/* Ensure right BLF ends at screen edge */
+.dial-blf-right {
+  padding-right: var(--spacing-md);
 }
 
 /* Dial Input */
@@ -1314,7 +1330,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2xs);
-  width: 60px;
+  width: 70px;
 }
 
 .blf-btn-container {

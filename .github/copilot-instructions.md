@@ -11,6 +11,21 @@ This is a **WebRTC SIP phone PWA** built for Autocab365 taxi dispatch systems, p
 
 The `pwa/` folder contains the original vanilla JavaScript implementation and serves as a reference for patterns, features, and implementation details. All new development and modifications must be done in the `src/` React application.
 
+### Feature Implementation Reference Pattern
+**When the user mentions functionality of any element, button, or feature:**
+1. **ALWAYS check the `pwa/` folder first** to understand the original implementation
+2. Identify the corresponding files (e.g., UI in `pwa/index.html` or `pwa/css/phone.css`, logic in `pwa/js/` managers)
+3. Analyze the exact behavior, event handlers, state changes, and user flow
+4. Replicate the same functionality in the React version (`src/`) with equivalent behavior
+5. Ensure feature parity - the React implementation should match the original UX and logic
+
+**Example workflow:**
+- User says: "The mute button isn't working correctly"
+- Action: Check `pwa/index.html` for mute button markup, `pwa/js/sip-session-manager.js` for mute logic
+- Implement: Match the original behavior in React components and hooks in `src/`
+
+This ensures consistency and maintains the proven functionality from the original PWA version.
+
 ## Architecture Fundamentals
 
 ### Core Components
