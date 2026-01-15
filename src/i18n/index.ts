@@ -5,6 +5,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 // Import translation files
 import en from './locales/en.json';
@@ -44,7 +45,7 @@ languageDetector.addDetector({
   name: 'customBrowserDetector',
   lookup() {
     // Check verbose logging
-    const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+    const verboseLogging = isVerboseLoggingEnabled();
     
     // Check if user has set a language preference (from settings or Zustand store)
     const storedLang = localStorage.getItem('settings-store');
@@ -115,7 +116,7 @@ languageDetector.addDetector({
   cacheUserLanguage(lng: string) {
     // Store in Zustand settings-store (handled by settingsStore)
     // This is called when language is changed programmatically
-    if (localStorage.getItem('autocab365_VerboseLogging') === 'true') {
+    if (isVerboseLoggingEnabled()) {
       console.log('[i18n] Caching language preference:', lng);
     }
   }
@@ -147,7 +148,7 @@ export default i18n;
 
 // Export a function to change language
 export function changeLanguage(lang: string): Promise<void> {
-  const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+  const verboseLogging = isVerboseLoggingEnabled();
   if (verboseLogging) {
     console.log('[i18n] Changing language to:', lang);
   }

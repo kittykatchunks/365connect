@@ -37,3 +37,24 @@ export function formatDuration(seconds: number): string {
   
   return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
+
+/**
+ * Get verbose logging setting
+ * Matches PWA pattern: window.localDB?.getItem('VerboseLogging', 'false') === 'true'
+ * Checks localStorage directly to avoid circular dependencies
+ */
+export function isVerboseLoggingEnabled(): boolean {
+  try {
+    // Check Zustand persist storage first (where settings are stored)
+    const settingsStore = localStorage.getItem('settings-store');
+    if (settingsStore) {
+      const parsed = JSON.parse(settingsStore);
+      return parsed?.state?.settings?.advanced?.verboseLogging === true;
+    }
+    
+    // Fallback to direct localStorage check (legacy)
+    return localStorage.getItem('autocab365_VerboseLogging') === 'true';
+  } catch {
+    return false;
+  }
+}

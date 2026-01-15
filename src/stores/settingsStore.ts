@@ -8,6 +8,7 @@ import type { AppSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { saveServerSettingsToLocalStorage } from '@/utils/serverConfig';
 import { changeLanguage } from '@/i18n';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 interface SettingsState {
   settings: AppSettings;
@@ -150,7 +151,7 @@ export const useSettingsStore = create<SettingsState>()(
         
         // Interface actions
         setLanguage: (language) => {
-          const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+          const verboseLogging = isVerboseLoggingEnabled();
           if (verboseLogging) {
             console.log('[SettingsStore] Setting language:', language);
           }

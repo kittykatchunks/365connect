@@ -20,6 +20,7 @@ import type {
   SessionCreateOptions,
 } from '../types/sip';
 import { isValidDTMFTone, mapDialogStateToBLF } from '../types/sip';
+import { isVerboseLoggingEnabled } from '../utils';
 
 // ==================== Type Guards ====================
 
@@ -836,7 +837,7 @@ export class SIPService {
   // ==================== DTMF ====================
 
   async sendDTMF(sessionId: string, tone: string): Promise<void> {
-    const verboseLogging = true; // TODO: Get from settings
+    const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
       console.log(`[SIPService] 📞 Attempting to send DTMF: ${tone} to session ${sessionId}`);

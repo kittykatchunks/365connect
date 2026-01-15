@@ -6,6 +6,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSIPContext } from '../contexts/SIPContext';
 import { useSIPStore } from '../stores/sipStore';
+import { isVerboseLoggingEnabled } from '../utils';
 import type { SessionData, LineNumber } from '../types/sip';
 
 export interface UseSIPReturn {
@@ -162,7 +163,7 @@ export function useSIP(): UseSIPReturn {
   
   // DTMF - use current session if no sessionId provided
   const sendDTMF = useCallback(async (tone: string, sessionId?: string) => {
-    const verboseLogging = true; // TODO: Get from settings
+    const verboseLogging = isVerboseLoggingEnabled();
     
     const targetSessionId = sessionId || currentSession?.id;
     if (!targetSessionId) {
@@ -177,7 +178,7 @@ export function useSIP(): UseSIPReturn {
   }, [sipContext, currentSession]);
   
   const sendDTMFSequence = useCallback(async (sequence: string, sessionId?: string) => {
-    const verboseLogging = true; // TODO: Get from settings
+    const verboseLogging = isVerboseLoggingEnabled();
     
     const targetSessionId = sessionId || currentSession?.id;
     if (!targetSessionId) {

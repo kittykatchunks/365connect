@@ -15,7 +15,7 @@ import { AgentKeys } from './AgentKeys';
 import { TransferModal } from '@/components/modals';
 import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore } from '@/stores';
-import { formatDuration } from '@/utils';
+import { formatDuration, isVerboseLoggingEnabled } from '@/utils';
 
 export function DialView() {
   const { t } = useTranslation();
@@ -52,7 +52,7 @@ export function DialView() {
   
   // Handle digit press
   const handleDigit = useCallback(async (digit: string) => {
-    const verboseLogging = true; // TODO: Get from settings
+    const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
       console.log('[DialView] Digit pressed:', digit, 'isInCall:', isInCall);
