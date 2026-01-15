@@ -12,8 +12,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "serve": "node server.js",
-    "serve:prod": "NODE_ENV=production node server.js"
+    "serve": "node server.cjs",
+    "serve:prod": "NODE_ENV=production node server.cjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.17",
