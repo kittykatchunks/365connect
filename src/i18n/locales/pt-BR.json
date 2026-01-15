@@ -74,6 +74,14 @@
     "blf_monitor_presence": "BLF - Monitorar presença e habilitar transferência rápida",
     "display_name": "Nome de Exibição",
     "number_extension": "Número/Ramal",
+    "tabs": {
+        "dial": "Discar",
+        "contacts": "Contatos",
+        "activity": "Atividade",
+        "company_numbers": "Números da Empresa",
+        "queue_monitor": "Monitor de Fila",
+        "settings": "Configurações"
+    },
     "dial": "Discar",
     "contacts": "Contatos",
     "activity": "Atividade",

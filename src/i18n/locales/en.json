@@ -74,6 +74,14 @@
     "blf_monitor_presence": "BLF - Monitor presence and enable quick transfer",
     "display_name": "Display Name",
     "number_extension": "Number/Extension",
+    "tabs": {
+        "dial": "Dial",
+        "contacts": "Contacts",
+        "activity": "Activity",
+        "company_numbers": "Company Numbers",
+        "queue_monitor": "Queue Monitor",
+        "settings": "Settings"
+    },
     "dial": "Dial",
     "contacts": "Contacts",
     "activity": "Activity",

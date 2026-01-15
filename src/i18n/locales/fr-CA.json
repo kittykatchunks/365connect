@@ -74,6 +74,14 @@
     "blf_monitor_presence": "BLF - Surveiller la présence et activer le transfert rapide",
     "display_name": "Nom d'Affichage",
     "number_extension": "Numéro/Extension",
+    "tabs": {
+        "dial": "Composer",
+        "contacts": "Contacts",
+        "activity": "Activité",
+        "company_numbers": "Numéros d'Entreprise",
+        "queue_monitor": "Moniteur de File d'Attente",
+        "settings": "Paramètres"
+    },
     "dial": "Composer",
     "contacts": "Contacts",
     "activity": "Activité",

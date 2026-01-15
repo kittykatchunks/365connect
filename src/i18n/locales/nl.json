@@ -74,6 +74,14 @@
     "blf_monitor_presence": "BLF - Aanwezigheid monitoren en snelle doorverbinding inschakelen",
     "display_name": "Weergave Naam",
     "number_extension": "Nummer/Toestel",
+    "tabs": {
+        "dial": "Kiezen",
+        "contacts": "Contacten",
+        "activity": "Activiteit",
+        "company_numbers": "Bedrijfsnummers",
+        "queue_monitor": "Wachtrijmonitor",
+        "settings": "Instellingen"
+    },
     "dial": "Kiezen",
     "contacts": "Contacten",
     "activity": "Activiteit",

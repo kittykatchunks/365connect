@@ -73,8 +73,14 @@
     "clear": "Limpiar",
     "blf_monitor_presence": "BLF - Monitorear presencia y habilitar transferencia rápida",
     "display_name": "Nombre para Mostrar",
-    "number_extension": "Número/Extensión",
-    "dial": "Marcar",
+    "number_extension": "Número/Extensión",    "tabs": {
+        "dial": "Marcar",
+        "contacts": "Contactos",
+        "activity": "Actividad",
+        "company_numbers": "Números de la Empresa",
+        "queue_monitor": "Monitor de Colas",
+        "settings": "Configuración"
+    },    "dial": "Marcar",
     "contacts": "Contactos",
     "activity": "Actividad",
     "company_numbers": "Números de Empresa",
