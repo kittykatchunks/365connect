@@ -939,16 +939,6 @@ a {
   flex-shrink: 0;
 }
 
-/* Ensure left BLF starts at screen edge */
-.dial-blf-left {
-  padding-left: var(--spacing-md);
-}
-
-/* Ensure right BLF ends at screen edge */
-.dial-blf-right {
-  padding-right: var(--spacing-md);
-}
-
 /* Dial Input */
 .dial-input-container {
   display: flex;
