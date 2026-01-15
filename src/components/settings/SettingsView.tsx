@@ -2,7 +2,7 @@
 // Settings View - Complete User Settings
 // ============================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Wifi, 
@@ -84,6 +84,14 @@ export function SettingsView() {
   const [localUsername, setLocalUsername] = useState(settings.connection.username);
   const [localPassword, setLocalPassword] = useState(settings.connection.password);
   const [localVmAccess, setLocalVmAccess] = useState(settings.connection.vmAccess);
+  
+  // Sync local state with store on mount (for persisted values after refresh)
+  useEffect(() => {
+    setLocalPhantomId(settings.connection.phantomId);
+    setLocalUsername(settings.connection.username);
+    setLocalPassword(settings.connection.password);
+    setLocalVmAccess(settings.connection.vmAccess);
+  }, [settings.connection.phantomId, settings.connection.username, settings.connection.password, settings.connection.vmAccess]);
   
   // Save connection settings handler - only saves when button clicked
   const handleSaveConnectionSettings = useCallback(() => {
