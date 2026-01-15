@@ -1,343 +1,199 @@
-# Connect365
+# Autocab365 Connect - React PWA
 
-**Version:** 0.2.002
+A modern WebRTC SIP phone Progressive Web Application built with React 19, TypeScript, and Vite.
 
-Autocab365Connect is a browser-based WebRTC SIP softphone Progressive Web App (PWA) designed for Autocab365, and is powered by the Autocab Phantom PBX. It provides a full-featured telephony experience with advanced features like Kuando Busylight integration, multi-language support, call history, contacts management, and BLF (Busy Lamp Field) monitoring.
+## Overview
 
-## 🌟 Features
+Autocab365 Connect is a commercial-grade softphone designed for Autocab365 taxi dispatch systems, powered by Phantom PBX. This React version is a complete modernization of the original Browser Phone project.
 
-### Core Telephony
-- **WebRTC SIP Client** - Browser-based softphone using SIP.js 0.21.2
-- **Direct PBX Connection** - WebSocket connection to Asterisk/Phantom PBX (wss://your-pbx:8089/ws)
-- **Call Controls** - Make/receive calls, hold, transfer (Blind/Attended), mute and multi-line call handling
-- **Audio Management** - Input/output device selection, microphone input realtime monitor
-- **DTMF Support** - In-call dialpad for IVR navigation
-- **Call Timer** - Real-time call duration tracking - AKA a timer on the screen
+## Tech Stack
 
-### Advanced Features
-- **Kuando Busylight Integration** - Hardware presence indicator support via bridge applications
-  - Native Windows bridge (C# .NET 8) - Lightweight, ~30MB footprint
-  - Remote bridge routing via WebSocket server
-- **BLF (Busy Lamp Field)** - Monitor extension status and click-to-dial
-- **Line Keys** - Programmable speed dial buttons
-- **Call History** - Comprehensive call logging with 
-- **Contacts Management** - Built-in contact database with comprehensive searching
-- **Company Numbers** - Database of CLIP Company numbers allowing quick easy access change this for outgoing calls 
-- **Multi-Language Support** - English, Spanish (ES/419), French (FR/CA), Dutch, Portuguese (PT/BR)
-- **Progressive Web App** - Installable, offline-capable, works like a native app
-- **Dark/Light Mode** - Automatic theme based on system preferences
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite 7
+- **State Management**: Zustand
+- **Styling**: Tailwind CSS 4 + CSS Custom Properties
+- **SIP/WebRTC**: SIP.js 0.21.2
+- **Internationalization**: react-i18next
+- **Testing**: Vitest + React Testing Library
+- **PWA**: vite-plugin-pwa with Workbox
 
-### Server Infrastructure
-- **Express Server** - Node.js serving layer with security middleware - NotRequired on deployed version
-- **Phantom API Proxy** - Secure proxying to Phantom PBX API - NotRequired on deployed version
-- **Busylight Bridge Server** - WebSocket server for remote busylight routing (port 8089)
-- **HTTP/HTTPS Support** - Configurable with SSL certificate support - NotRequired on deployed version
-- **CORS & Security** - Helmet, rate limiting, compression - NotRequired on deployed version
-- **Detailed Logging** - Separate logs for HTTP/HTTPS/errors - NotRequired on deployed version
-
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm (assuming Phantom already has this)
-- Phantom PBX with WebRTC enabled
-- SIP account credentials
-- (Optional) Kuando Busylight device and bridge application
+
+- Node.js 18 or higher
+- npm 9 or higher
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Connect365
-   ```
+```bash
+# Install dependencies
+npm install
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**
-   
-   Create a `.env` file in the root directory:
-   ```env
-   # Server Configuration
-   PORT=3000
-   NODE_ENV=production
-   
-   # Phantom API
-   PHANTOM_API_BASE_URL=https://server1-<YourPhantomID>.phantomapi.net
-   
-   # SSL (Optional - for HTTPS)
-   SSL_KEY_PATH=./certs/key.pem
-   SSL_CERT_PATH=./certs/cert.pem
-   
-   # Busylight Bridge (Optional)
-   BRIDGE_WSS_PORT=8089
-   ```
-
-4. **Start the server**
-   ```bash
-   # Production mode
-   npm start
-   
-   # Development mode (with nodemon)
-   npm run dev
-   ```
-
-5. **Access the application**
-   - HTTP: `http://localhost:3000`
-   - HTTPS: `https://localhost:3000` (if SSL configured)
-
-### First-Time Setup in Browser
-
-1. Open the application in your browser
-2. Navigate to Settings (⚙️ icon)
-3. Configure your SIP account:
-   - **Username:** Your SIP extension
-   - **Password:** Your SIP password
-   - **Server:** Your PBX WebSocket URL (Phantom ID only)
-4. Click "REGISTER" to connect
-5. Grant microphone permissions when prompted
-
-## 📦 Project Structure
-
-```
-Connect365/
-├── server.js                    # Main Express server
-├── bridge-server.js             # Busylight bridge WebSocket server
-├── package.json                 # Dependencies and scripts
-├── webpack.config.js            # Webpack build configuration
-├── .env                         # Environment configuration (create this)
-│
-├── pwa/                         # Progressive Web App source
-│   ├── index.html              # Main application HTML
-│   ├── manifest.json           # PWA manifest
-│   ├── sw.js                   # Service worker
-│   ├── css/
-│   │   └── phone.css          # Application styles
-│   ├── js/                     # Application JavaScript modules
-│   │   ├── app-startup.js     # Application initialization
-│   │   ├── phone.js           # Main phone UI controller
-│   │   ├── sip-session-manager.js    # SIP/WebRTC logic
-│   │   ├── busylight-manager.js      # Busylight integration
-│   │   ├── contacts-manager.js       # Contacts database
-│   │   ├── call-history-manager.js   # Call history
-│   │   ├── blf-button-manager.js     # BLF monitoring
-│   │   └── ...                        # Other modules
-│   ├── lang/                   # Translation files
-│   ├── lib/                    # Third-party libraries
-│   ├── icons/                  # PWA icons
-│   ├── images/                 # Application images
-│   └── media/                  # Audio files (ringtones, etc.)
-│
-├── busylight-bridge/            # Busylight bridge applications
-│   ├── native-windows/         # C# .NET 8 native Windows app
-│   │   ├── BusylightBridge/   # C# source code
-│   │   ├── installer/         # NSIS installer scripts
-│   │   ├── build.ps1          # Build script
-│   │   └── README.md          # Native bridge documentation
-│   └── electron/               # Electron cross-platform app
-│       ├── main.js            # Electron main process
-│       ├── package.json       # Electron dependencies
-│       └── README.md          # Electron bridge documentation
-│
-├── certs/                       # SSL certificates (optional)
-├── logs/                        # Server logs (auto-created)
-│   ├── http-access.log
-│   ├── https-access.log
-│   └── error.log
-│
-└── Documentation files:
-    ├── README.md                # This file
-    ├── BUILD_GUIDE.md          # Webpack build instructions
-    ├── BUSYLIGHT_COMPATIBILITY_UPDATE.md
-    ├── BUSYLIGHT_REFACTOR_PROPOSAL.md
-    ├── PHANTOM_API_README.md
-    ├── PWA_FEATURES_DOCUMENTATION.md
-    ├── TESTING_SIP_PROXY.md
-    ├── TODO.md
-    ├── UI_USAGE_SCENARIOS.md
-    └── WEBSOCKET_FIX_SUMMARY.md
+# Start development server
+npm run dev
 ```
 
-## 🔨 Development
+### Available Scripts
 
-### Build System
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server on port 5173 |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run tests in watch mode |
+| `npm run test:run` | Run tests once |
+| `npm run test:coverage` | Run tests with coverage report |
 
-The project uses Webpack for bundling and optimization:
+## Project Structure
+
+```
+react-app/
+├── public/              # Static assets
+├── src/
+│   ├── components/      # UI Components
+│   │   ├── activity/    # Call history views
+│   │   ├── company-numbers/ # Company directory
+│   │   ├── contacts/    # Contact management
+│   │   ├── dial/        # Dialpad and call controls
+│   │   ├── layout/      # Shell components
+│   │   ├── modals/      # Modal dialogs
+│   │   ├── queue-monitor/ # Queue status
+│   │   ├── settings/    # Configuration panels
+│   │   └── ui/          # Shared UI primitives
+│   ├── contexts/        # React contexts (SIP)
+│   ├── hooks/           # Custom React hooks
+│   ├── stores/          # Zustand state stores
+│   ├── styles/          # Global CSS
+│   ├── types/           # TypeScript definitions
+│   ├── utils/           # Utility functions
+│   └── test/            # Test setup and utilities
+├── vite.config.ts       # Vite configuration
+└── tsconfig.json        # TypeScript configuration
+```
+
+## Architecture
+
+### Manager Pattern (Zustand Stores)
+
+The application uses Zustand stores to manage different domains:
+
+- **useAppStore**: Global app state (loading, theme, views)
+- **useSIPStore**: SIP registration and call sessions
+- **useContactsStore**: Contact list management
+- **useActivityStore**: Call history
+- **useSettingsStore**: User preferences
+- **useUIStore**: Toasts, theme, UI state
+
+### SIP/WebRTC Integration
+
+The `SIPProvider` context wraps the entire application and provides:
+- SIP registration management
+- Call initiation (audio/video)
+- DTMF sending
+- Session state management
+- Auto-reconnection
+
+```tsx
+// Using SIP functionality in components
+const { makeCall, answerCall, hangUp, isRegistered } = useSIP();
+```
+
+### Configuration System
+
+Server configuration is auto-generated from a PhantomID:
+
+```typescript
+// PhantomID 388 generates:
+// wss://server1-388.phantomapi.net:8089/ws
+const config = generateServerSettings(phantomID);
+```
+
+## Key Features
+
+### Progressive Web App
+- Installable on desktop and mobile
+- Offline capability with service worker
+- Push notifications support
+
+### Theming
+- Light/Dark/Auto theme support
+- CSS custom properties for customization
+- Respects system preference
+
+### Internationalization
+- Multi-language support via i18next
+- Language files in `src/i18n/locales/`
+
+### Performance Optimizations
+- Lazy loading for non-critical views
+- Code splitting per view
+- Efficient re-renders with Zustand selectors
+
+## Testing
+
+Tests use Vitest with React Testing Library:
 
 ```bash
-# Development build (with source maps)
-npm run build:dev
+# Run all tests
+npm run test:run
 
-# Production build (minified & optimized)
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test
+```
+
+### Test Coverage
+
+- **Utilities**: serverConfig, phoneNumber, webrtc
+- **Hooks**: useLocalStorage, useTabAlert
+- **Components**: (Add as needed)
+
+## Building for Production
+
+```bash
+# Build optimized production bundle
 npm run build
 
-# Watch mode (auto-rebuild on changes)
-npm run watch
+# Preview the build locally
+npm run preview
 ```
 
-**Build output:** `/dist` folder (~5.1MB total)
+### Build Output
 
-### Server Modes
+The build creates optimized chunks:
+- Main bundle with core app logic
+- Lazy-loaded chunks per view
+- Service worker for PWA
+- Web manifest for installation
 
-```bash
-# Development (serves from /pwa source)
-npm run serve:dev
+## Browser Compatibility
 
-# Production (serves from /dist build)
-npm run serve:prod
+Requires WebRTC support:
+- Chrome 60+
+- Firefox 55+
+- Safari 11+
+- Edge 79+
+
+## Environment Variables
+
+Create a `.env` file for environment-specific settings:
+
+```env
+VITE_DEFAULT_PHANTOM_ID=388
+VITE_APP_NAME=Autocab365 Connect
 ```
 
-### Serving Endpoints
+## Contributing
 
-- **`/`** - PWA application
-- **`/api/phantom/*`** - Proxied Phantom API requests
-- **`/api/busylight/*`** - Busylight bridge proxy (if bridge URL configured)
-- **`/api/config`** - Client configuration endpoint
-- **`/health`** - Health check endpoint
-- **WebSocket `/ws/busylight-bridge`** (port 8089) - Busylight bridge connections
+1. Follow the existing code patterns
+2. Use TypeScript strictly
+3. Add tests for new functionality
+4. Run `npm run lint` before committing
 
-## 🔌 Busylight Integration
+## License
 
-Connect365 supports Kuando Busylight devices for presence indication. One bridge applications will be available, a native .NET windows application (electron app was for testing mainly):
-
-### Native Windows Bridge (Recommended)
-- **Technology:** C# .NET 8, WinForms
-- **Size:** ~15-30MB installed
-- **Memory:** ~30-50MB RAM
-- **Location:** `busylight-bridge/native-windows/`
-- **Features:** System tray app, auto-start, native Windows integration
-
-**Quick Start:**
-```powershell
-cd busylight-bridge/native-windows
-.\build.ps1
-# Run installer from publish/ folder
-```
-
-### Electron Bridge (Cross-Platform)
-- **Technology:** Electron, Node.js
-- **Size:** ~150-200MB installed
-- **Memory:** ~100-200MB RAM
-- **Location:** `busylight-bridge/electron/`
-- **Features:** Cross-platform, system tray, auto-start
-
-**Quick Start:**
-```bash
-cd busylight-bridge/electron
-npm install
-npm start
-```
-
-Both bridges:
-- Connect to Kuando HTTP service (port 8989)
-- Provide WebSocket connection to server (port 8089)
-- Route requests using Connect365 username for multi-endpoint support
-
-See respective README files for detailed setup instructions.
-
-## 🌐 Deployment
-
-### Production Checklist
-- [ ] Set `NODE_ENV=production` in `.env`
-- [ ] Configure SSL certificates for HTTPS
-- [ ] Update CORS settings in `server.js` for your domain
-- [ ] Build production assets: `npm run build`
-- [ ] Use process manager (PM2) or systemd service
-- [ ] Configure firewall (ports 3000, 8089)
-- [ ] Set up reverse proxy (nginx/Apache) if needed
-- [ ] Enable logging and monitoring
-
-### Using PM2
-```bash
-npm install -g pm2
-pm2 start server.js --name connect365
-pm2 save
-pm2 startup
-```
-
-### Docker Support
-(See `Dockerfile` if available, or create one based on Node.js 18 Alpine)
-
-## 🔧 Configuration
-
-### SIP Settings (in-app)
-- Display Name, Username, Password
-- Server address (WebSocket URL)
-- Advanced: STUN/TURN servers, codec preferences
-
-### Audio Settings (in-app)
-- Input/output device selection
-- Ring device selection
-- Volume controls
-- Echo cancellation, noise suppression
-
-### Busylight Settings (in-app)
-- Bridge mode (local/remote)
-- Remote server URL
-- Status color customization
-- Test controls
-
-## 🗂️ Data Storage
-
-All user data is stored locally in browser localStorage:
-- SIP credentials (consider security implications)
-- Call history
-- Contacts
-- UI preferences
-- Language selection
-- Audio device preferences
-
-**Privacy:** No data is sent to external servers except:
-- SIP signaling to your PBX
-- Phantom API calls (proxied through server) - NotRequired on deployed version
-- Busylight bridge commands (WebSocket)
-
-## 🐛 Troubleshooting
-
-### Cannot Register to SIP
-- Verify WebSocket URL format: `wss://your-server:8089`
-- Check credentials
-- Ensure PBX allows WebRTC connections
-- Check browser console for errors
-- Verify CORS settings on PBX
-
-### No Audio in Calls
-- Grant microphone permissions
-- Check audio device selection in Settings
-- Verify device is not in use by another application
-- Check browser audio settings
-
-### Busylight Not Working
-- Ensure Kuando HTTP service is running (port 8989)
-- Verify bridge application is running
-- Check bridge connection status in app
-- For remote mode, verify server WebSocket port 8089 is accessible
-
-### Build Errors
-- Clear node_modules: `rm -rf node_modules && npm install`
-- Clear webpack cache: `rm -rf .cache dist`
-- Check Node.js version: `node --version` (requires 18+)
-
-## 📄 License
-
-See [LICENSE](LICENSE) file for details.
-
-## 🙏 Credits
-
-- **SIP.js** - SIP over WebSocket library
-- **jQuery & jQuery UI** - UI framework
-- **Moment.js** - Date/time formatting
-- **Font Awesome** - Icons
-
-## 📞 Support
-
-For issues, feature requests, or questions:
-- Check documentation files in the repository
-- Review [TODO.md](TODO.md) for known issues and planned features
-- Consult PBX administrator for SIP configuration issues
-
----
-
-**Connect365** - Professional browser-based telephony for Autocab365 systems.
+See [LICENSE](../LICENSE) file in the root directory.
