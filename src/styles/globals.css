@@ -2686,20 +2686,6 @@ a {
   margin: 0;
 }
 
-/* Agent Login Modal */
-.agent-login-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.agent-login-description {
-  padding: var(--spacing-sm);
-  background-color: var(--surface-color);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-}
-
 /* Welcome Overlay */
 .welcome-overlay {
   position: fixed;

@@ -5,7 +5,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserCheck, Lock, X, Loader2 } from 'lucide-react';
-import { Modal, Button, Input } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 
 interface AgentLoginModalProps {
   isOpen: boolean;
@@ -85,21 +85,28 @@ export function AgentLoginModal({
     }
   }, [isLoading, onClose]);
   
+  if (!isOpen) return null;
+  
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={t('agent.login_title', 'Agent Login')}
-      size="sm"
-    >
-      <form onSubmit={handleSubmit} className="agent-login-content">
-        <p className="agent-login-description text-muted">
-          {t('agent.login_description', 'Enter your agent credentials to log into the call queue.')}
-        </p>
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{t('agent.login_title', 'Agent Login')}</h2>
+          <Button variant="ghost" size="sm" onClick={handleClose} className="modal-close" disabled={isLoading}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-body">
+          {error && (
+            <div className="form-error">
+              {error}
+            </div>
+          )}
         
         {/* Agent Number */}
         <div className="form-group">
-          <label htmlFor="agent-number" className="form-label">
+          <label htmlFor="agent-number">
             {t('agent.number_label', 'Agent Number')} *
           </label>
           <Input
@@ -119,9 +126,9 @@ export function AgentLoginModal({
         
         {/* Passcode */}
         <div className="form-group">
-          <label htmlFor="agent-passcode" className="form-label">
+          <label htmlFor="agent-passcode">
             {t('agent.passcode_label', 'Passcode')}
-            <span className="form-label-optional"> ({t('common.optional', 'Optional')})</span>
+            <span className="text-muted"> ({t('common.optional', 'Optional')})</span>
           </label>
           <Input
             ref={passcodeInputRef}
@@ -136,17 +143,10 @@ export function AgentLoginModal({
             icon={<Lock className="w-4 h-4" />}
             autoComplete="off"
           />
-          <p className="form-hint">
+          <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: 'var(--spacing-xs)' }}>
             {t('agent.passcode_hint', 'Leave blank if no passcode required')}
           </p>
         </div>
-        
-        {/* Error Display */}
-        {error && (
-          <div className="form-error">
-            {error}
-          </div>
-        )}
         
         {/* Actions */}
         <div className="modal-footer">
@@ -178,8 +178,9 @@ export function AgentLoginModal({
             )}
           </Button>
         </div>
-      </form>
-    </Modal>
+        </form>
+      </div>
+    </div>
   );
 }
 
