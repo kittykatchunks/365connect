@@ -23,9 +23,9 @@ const app = express();
 const HTTPS_PORT = process.env.HTTPS_PORT || 444;
 const HTTP_PORT = process.env.HTTP_PORT || 8080;
 
-// SSL Certificate paths - same as main server.js (relative to project root)
-const SSL_CERT_PATH = process.env.SSL_CERT_PATH || path.join(__dirname, '..', 'certs', 'fullchain.pem');
-const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, '..', 'certs', 'privkey.pem');
+// SSL Certificate paths - in project root certs folder
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'fullchain.pem');
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'privkey.pem');
 
 // Enable compression
 app.use(compression());
