@@ -4,8 +4,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash2, Save } from 'lucide-react';
-import { Modal, Button, Input, Select } from '@/components/ui';
+import { Trash2, Save, X } from 'lucide-react';
+import { Button, Input, Select } from '@/components/ui';
 import { useBLFStore } from '@/stores';
 import type { BLFButtonType } from '@/types';
 
@@ -42,7 +42,9 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, buttonIndex]);
   
-  const handleSave = useCallback(() => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!extension.trim()) {
       setError(t('blf.error.extension_required', 'Extension or number is required'));
       return;
@@ -62,115 +64,106 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
     onClose();
   }, [buttonIndex, clearButton, onClose]);
   
-  const handleClose = useCallback(() => {
-    setError(null);
-    onClose();
-  }, [onClose]);
-  
   const typeOptions = [
     { value: 'blf', label: t('blf.type.blf', 'BLF (Busy Lamp Field)') },
     { value: 'speeddial', label: t('blf.type.speeddial', 'Speed Dial') }
   ];
   
+  if (!isOpen) return null;
+  
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={t('blf.config.title', 'Configure Button {{index}}', { index: buttonIndex })}
-      size="sm"
-    >
-      <div className="blf-config-content">
-        {/* Button Type */}
-        <div className="blf-config-field">
-          <label htmlFor="blf-type" className="blf-config-label">
-            {t('blf.config.type', 'Button Type')}
-          </label>
-          <Select
-            id="blf-type"
-            value={type}
-            onChange={(e) => setType(e.target.value as BLFButtonType)}
-            options={typeOptions}
-          />
-          <p className="blf-config-hint">
-            {type === 'blf'
-              ? t('blf.config.blf_hint', 'Shows presence status of an extension')
-              : t('blf.config.speeddial_hint', 'Quick dial to any number')
-            }
-          </p>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content contact-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{t('blf.config.title', 'Configure Button {{index}}', { index: buttonIndex })}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose} className="modal-close">
+            <X className="w-5 h-5" />
+          </Button>
         </div>
         
-        {/* Extension/Number */}
-        <div className="blf-config-field">
-          <label htmlFor="blf-extension" className="blf-config-label">
-            {type === 'blf'
-              ? t('blf.config.extension', 'Extension')
-              : t('blf.config.number', 'Phone Number')
-            }
-          </label>
-          <Input
-            id="blf-extension"
-            type="tel"
-            value={extension}
-            onChange={(e) => setExtension(e.target.value)}
-            placeholder={type === 'blf' 
-              ? t('blf_extension_placeholder', '101') 
-              : t('speeddial_number_placeholder', '+1234567890')
-            }
-            autoFocus
-          />
-        </div>
-        
-        {/* Display Name */}
-        <div className="blf-config-field">
-          <label htmlFor="blf-name" className="blf-config-label">
-            {t('blf.config.display_name', 'Display Name')}
-          </label>
-          <Input
-            id="blf-name"
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder={t('blf.config.name_placeholder', 'e.g. John Smith')}
-          />
-        </div>
-        
-        {/* Error */}
-        {error && (
-          <div className="blf-config-error text-sm text-danger">
-            {error}
-          </div>
-        )}
-        
-        {/* Actions */}
-        <div className="blf-config-actions">
-          {button?.extension && (
-            <Button
-              variant="danger"
-              onClick={handleClear}
-              className="mr-auto"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              {t('blf.config.clear', 'Clear')}
-            </Button>
+        <form onSubmit={handleSubmit} className="modal-body">
+          {error && (
+            <div className="form-error">
+              {error}
+            </div>
           )}
           
-          <Button
-            variant="ghost"
-            onClick={handleClose}
-          >
-            {t('common.cancel', 'Cancel')}
-          </Button>
+          <div className="form-group">
+            <label htmlFor="blf-type">
+              {t('blf.config.type', 'Button Type')}
+            </label>
+            <Select
+              id="blf-type"
+              value={type}
+              onChange={(e) => setType(e.target.value as BLFButtonType)}
+              options={typeOptions}
+            />
+            <p className="form-hint">
+              {type === 'blf'
+                ? t('blf.config.blf_hint', 'Shows presence status of an extension')
+                : t('blf.config.speeddial_hint', 'Quick dial to any number')
+              }
+            </p>
+          </div>
           
-          <Button
-            variant="primary"
-            onClick={handleSave}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {t('blf.config.save', 'Save')}
-          </Button>
-        </div>
+          <div className="form-group">
+            <label htmlFor="blf-extension">
+              {type === 'blf'
+                ? t('blf.config.extension', 'Extension')
+                : t('blf.config.number', 'Phone Number')
+              }
+            </label>
+            <Input
+              id="blf-extension"
+              type="tel"
+              value={extension}
+              onChange={(e) => setExtension(e.target.value)}
+              placeholder={type === 'blf' 
+                ? t('blf_extension_placeholder', '101') 
+                : t('speeddial_number_placeholder', '+1234567890')
+              }
+              autoFocus
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="blf-name">
+              {t('blf.config.display_name', 'Display Name')}
+            </label>
+            <Input
+              id="blf-name"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder={t('blf.config.name_placeholder', 'e.g. John Smith')}
+            />
+          </div>
+          
+          <div className="modal-footer">
+            {button?.extension && (
+              <Button
+                variant="danger"
+                type="button"
+                onClick={handleClear}
+                className="mr-auto"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {t('blf.config.clear', 'Clear')}
+              </Button>
+            )}
+            
+            <Button variant="ghost" type="button" onClick={onClose}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            
+            <Button variant="primary" type="submit">
+              <Save className="w-4 h-4 mr-2" />
+              {t('blf.config.save', 'Save')}
+            </Button>
+          </div>
+        </form>
       </div>
-    </Modal>
+    </div>
   );
 }
 
