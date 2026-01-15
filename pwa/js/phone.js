@@ -834,18 +834,31 @@ function hideCallControls() {
 }
 
 async function sendDTMF(digit) {
-    console.log('Sending DTMF:', digit);
+    // Check verbose logging setting
+    const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+    
+    if (verboseLogging) {
+        console.log('[phone.js] Sending DTMF:', digit);
+    }
     
     if (!App.managers.sip) {
-        console.error('SIP manager not available');
+        console.error('[phone.js] SIP manager not available');
         return;
     }
     
     // Get the current active session
     const currentSession = App.managers.sip.getCurrentSession();
     if (!currentSession) {
-        console.warn('No active session to send DTMF to');
+        console.warn('[phone.js] No active session to send DTMF to');
+        if (verboseLogging) {
+            console.log('[phone.js] Available sessions:', App.managers.sip.sessions.size);
+            console.log('[phone.js] Selected line:', App.managers.sip.selectedLine);
+        }
         return;
+    }
+    
+    if (verboseLogging) {
+        console.log('[phone.js] Current session found:', currentSession.id);
     }
     
     // Validate session state - check for various possible state values
@@ -856,24 +869,32 @@ async function sendDTMF(digit) {
         'confirmed'                    // Another possible state
     ];
     
-    console.log('🔍 Session state debug:', {
-        currentState: currentSession.state,
-        stateType: typeof currentSession.state,
-        sipEstablished: SIP.SessionState.Established,
-        validStates: validStates
-    });
+    if (verboseLogging) {
+        console.log('[phone.js] 🔍 Session state debug:', {
+            currentState: currentSession.state,
+            stateType: typeof currentSession.state,
+            sipEstablished: SIP.SessionState.Established,
+            validStates: validStates
+        });
+    }
     
     if (!validStates.includes(currentSession.state)) {
-        console.warn('Cannot send DTMF - session not in valid state. State:', currentSession.state);
-        console.warn('Valid states:', validStates);
+        console.warn('[phone.js] Cannot send DTMF - session not in valid state. State:', currentSession.state);
+        console.warn('[phone.js] Valid states:', validStates);
         return;
+    }
+    
+    if (verboseLogging) {
+        console.log('[phone.js] ✅ Session state is valid for DTMF');
     }
     
     try {
         await App.managers.sip.sendDTMF(currentSession.id, digit);
-        console.log(`DTMF ${digit} sent to session ${currentSession.id}`);
+        if (verboseLogging) {
+            console.log(`[phone.js] ✅ DTMF ${digit} sent to session ${currentSession.id}`);
+        }
     } catch (error) {
-        console.error('Failed to send DTMF:', error);
+        console.error('[phone.js] Failed to send DTMF:', error);
         // Show user-friendly error notification
         showWarningNotification('DTMF Failed', `Could not send tone ${digit}. ${error.message}`, 3000);
     }
@@ -1025,7 +1046,12 @@ function switchToView(viewName) {
 /* ====================================================================================== */
 
 function handleDialpadInput(digit) {
-    console.log('Dialpad input:', digit);
+    // Check verbose logging setting
+    const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+    
+    if (verboseLogging) {
+        console.log('[phone.js] Dialpad input:', digit);
+    }
     
     const dialInput = document.getElementById('dialInput');
     if (dialInput) {
@@ -1043,9 +1069,13 @@ function handleDialpadInput(digit) {
         if (digit !== 'clear' && digit !== 'backspace' && 
             App.managers.sip && App.managers.sip.hasActiveSessions()) {
             
+            if (verboseLogging) {
+                console.log('[phone.js] Active sessions detected, sending DTMF from dialpad');
+            }
+            
             // Call async function but don't wait for it
             sendDTMF(digit).catch(error => {
-                console.error('DTMF failed from dialpad input:', error);
+                console.error('[phone.js] DTMF failed from dialpad input:', error);
             });
         }
         

@@ -1522,18 +1522,23 @@ class SipSessionManager {
     }
 
     async sendDTMF(sessionId, tone) {
-        //console.log(`📞 Attempting to send DTMF: ${tone} to session ${sessionId}`);
+        // Check verbose logging setting
+        const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+        
+        if (verboseLogging) {
+            console.log(`[SipSessionManager] 📞 Attempting to send DTMF: ${tone} to session ${sessionId}`);
+        }
         
         // Validate inputs
         if (!sessionId) {
             const error = new Error('Session ID is required for DTMF');
-            console.error('❌ DTMF Error:', error.message);
+            console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
             throw error;
         }
         
         if (!tone || typeof tone !== 'string') {
             const error = new Error('Valid DTMF tone is required');
-            console.error('❌ DTMF Error:', error.message);
+            console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
             throw error;
         }
         
@@ -1541,17 +1546,27 @@ class SipSessionManager {
         const validTones = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#'];
         if (!validTones.includes(tone)) {
             const error = new Error(`Invalid DTMF tone: ${tone}. Valid tones are: ${validTones.join(', ')}`);
-            console.error('❌ DTMF Error:', error.message);
+            console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
             throw error;
+        }
+        
+        if (verboseLogging) {
+            console.log(`[SipSessionManager] ✅ DTMF tone validated: ${tone}`);
         }
         
         // Get session data
         const sessionData = this.sessions.get(sessionId);
         if (!sessionData) {
             const error = new Error(`Session not found: ${sessionId}`);
-            console.error('❌ DTMF Error:', error.message);
-            //console.log('📋 Available sessions:', Array.from(this.sessions.keys()));
+            console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
+            if (verboseLogging) {
+                console.log('[SipSessionManager] 📋 Available sessions:', Array.from(this.sessions.keys()));
+            }
             throw error;
+        }
+        
+        if (verboseLogging) {
+            console.log('[SipSessionManager] ✅ Session found:', sessionId);
         }
         
         // Validate session state - check for various possible established state values
@@ -1562,61 +1577,81 @@ class SipSessionManager {
             'confirmed'                    // Another possible state
         ];
         
-        /*console.log('🔍 SIP Session state debug:', {
-            currentState: sessionData.state,
-            stateType: typeof sessionData.state,
-            sipEstablished: SIP.SessionState.Established,
-            validStates: validStates,
-            sessionDirection: sessionData.direction
-        }); */
+        if (verboseLogging) {
+            console.log('[SipSessionManager] 🔍 SIP Session state debug:', {
+                currentState: sessionData.state,
+                stateType: typeof sessionData.state,
+                sipEstablished: SIP.SessionState.Established,
+                validStates: validStates,
+                sessionDirection: sessionData.direction
+            });
+        }
         
         if (!validStates.includes(sessionData.state)) {
             const error = new Error(`Cannot send DTMF - session not in valid state. Current state: ${sessionData.state}`);
-            console.error('❌ DTMF Error:', error.message);
-            /*console.log('📋 Session details:', {
-                id: sessionData.id,
-                state: sessionData.state,
-                direction: sessionData.direction,
-                target: sessionData.target,
-                validStates: validStates
-            }); */
+            console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
+            if (verboseLogging) {
+                console.log('[SipSessionManager] 📋 Session details:', {
+                    id: sessionData.id,
+                    state: sessionData.state,
+                    direction: sessionData.direction,
+                    target: sessionData.target,
+                    validStates: validStates
+                });
+            }
             throw error;
+        }
+        
+        if (verboseLogging) {
+            console.log('[SipSessionManager] ✅ Session state validated:', sessionData.state);
         }
         
         // Validate session has SIP session object
         if (!sessionData.session) {
             const error = new Error('Session object not available');
-            console.error('❌ DTMF Error:', error.message);
+            console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
             throw error;
         }
         
         try {
-            //console.log(`🎵 Sending DTMF tone ${tone} via SIP.js`);
+            if (verboseLogging) {
+                console.log(`[SipSessionManager] 🎵 Sending DTMF tone ${tone} via SIP.js`);
+            }
             
             // Try RFC 4733 (in-band DTMF) first
             if (sessionData.session.sessionDescriptionHandler && 
                 typeof sessionData.session.sessionDescriptionHandler.sendDtmf === 'function') {
-                //console.log('📞 Using RFC 4733 (in-band DTMF) via SessionDescriptionHandler');
+                if (verboseLogging) {
+                    console.log('[SipSessionManager] 📞 Using RFC 4733 (in-band DTMF) via SessionDescriptionHandler');
+                }
                 await sessionData.session.sessionDescriptionHandler.sendDtmf(tone);
-                //console.log(`✅ RFC 4733 DTMF sent successfully: ${tone}`);
+                if (verboseLogging) {
+                    console.log(`[SipSessionManager] ✅ RFC 4733 DTMF sent successfully: ${tone}`);
+                }
             }
             // Fallback to session.dtmf method if available
             else if (typeof sessionData.session.dtmf === 'function') {
-                //console.log('📞 Using session.dtmf() fallback method');
+                if (verboseLogging) {
+                    console.log('[SipSessionManager] 📞 Using session.dtmf() fallback method');
+                }
                 await sessionData.session.dtmf(tone);
-                //console.log(`✅ Session DTMF sent successfully: ${tone}`);
+                if (verboseLogging) {
+                    console.log(`[SipSessionManager] ✅ Session DTMF sent successfully: ${tone}`);
+                }
             }
             else {
                 const error = new Error('No DTMF method available on session');
-                console.error('❌ DTMF Error:', error.message);
+                console.error('[SipSessionManager] ❌ DTMF Error:', error.message);
                 throw error;
             }
             
-            //console.log(`✅ DTMF ${tone} sent successfully to session ${sessionId}`);
+            if (verboseLogging) {
+                console.log(`[SipSessionManager] ✅ DTMF ${tone} sent successfully to session ${sessionId}`);
+            }
             this.emit('dtmfSent', { sessionId, tone });
             
         } catch (error) {
-            console.error('❌ SIP.js DTMF transmission failed:', {
+            console.error('[SipSessionManager] ❌ SIP.js DTMF transmission failed:', {
                 tone: tone,
                 sessionId: sessionId,
                 error: error.message,
@@ -1627,11 +1662,11 @@ class SipSessionManager {
             
             // Check for specific SIP.js DTMF errors
             if (error.message && error.message.includes('RFC4733')) {
-                console.error('💡 RFC4733 DTMF error - server may not support in-band DTMF');
+                console.error('[SipSessionManager] 💡 RFC4733 DTMF error - server may not support in-band DTMF');
             } else if (error.message && error.message.includes('transport')) {
-                console.error('💡 Transport error - check WebSocket connection');
+                console.error('[SipSessionManager] 💡 Transport error - check WebSocket connection');
             } else if (error.message && error.message.includes('session')) {
-                console.error('💡 Session error - call may have been terminated');
+                console.error('[SipSessionManager] 💡 Session error - call may have been terminated');
             }
             
             throw error;
@@ -2733,7 +2768,27 @@ class SipSessionManager {
     
     // Utility functions for call management
     getCurrentSession() {
-        return this.sessions.get(this.selectedLine ? this.activeLines.get(this.selectedLine) : null);
+        // Check verbose logging setting
+        const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+        
+        // Try to get session from selected line first
+        if (this.selectedLine) {
+            const sessionId = this.activeLines.get(this.selectedLine);
+            const session = this.sessions.get(sessionId);
+            if (session) {
+                if (verboseLogging) {
+                    console.log('[SipSessionManager] getCurrentSession: Returning session from selected line', this.selectedLine);
+                }
+                return session;
+            }
+        }
+        
+        // Fall back to first active session if no line selected or line has no session
+        const firstActive = this.getFirstActiveSession();
+        if (verboseLogging) {
+            console.log('[SipSessionManager] getCurrentSession: No selected line or line empty, falling back to first active session', firstActive?.id);
+        }
+        return firstActive;
     }
     
     getFirstActiveSession() {

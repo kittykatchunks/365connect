@@ -6,5 +6,7 @@
 - [ ] In Settings > Connection menu remove the horizontal line above save connection settings
 - [ ] In Dial tab there is 'call icon' displayed at the end of dial input entry box, wish to remove this from UI
 - [ ] When selecting the 'Settings' tab all menu should be collapsed by default
+- [ ] When select the connect button in top banner, if it produce an error then this should be notified in toast notification not the error being displayed below by the connection status
+- [ ] When select the Login agent button at bottom of dial tab it appears to open modal but it is not visible 
 
 
