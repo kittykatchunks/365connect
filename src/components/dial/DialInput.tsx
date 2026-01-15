@@ -3,7 +3,7 @@
 // ============================================
 
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { Phone, X, Delete } from 'lucide-react';
+import { X, Delete } from 'lucide-react';
 import { cn } from '@/utils';
 import { Button } from '@/components/ui';
 
