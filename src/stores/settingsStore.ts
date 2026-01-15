@@ -11,7 +11,7 @@ import { saveServerSettingsToLocalStorage } from '@/utils/serverConfig';
 interface SettingsState {
   settings: AppSettings;
   
-  // Computed getters
+  // Computed SIP config (updated on connection settings change)
   sipConfig: { phantomId: string; username: string; password: string } | null;
   
   // Actions - Connection
@@ -61,63 +61,88 @@ export const useSettingsStore = create<SettingsState>()(
     persist(
       (set, get) => ({
         settings: DEFAULT_SETTINGS,
-        
-        // Computed getter for SIP config
-        get sipConfig() {
-          const { connection } = get().settings;
-          
-          const hasPhantomId = !!(connection.phantomId && connection.phantomId.trim());
-          const hasUsername = !!(connection.username && connection.username.trim());
-          const hasPassword = !!(connection.password && connection.password.trim());
-          
-          console.log('[SettingsStore] SIP config check:', { 
-            hasPhantomId, 
-            hasUsername, 
-            hasPassword,
-            phantomId: connection.phantomId,
-            username: connection.username,
-            passwordSet: hasPassword
-          });
-          
-          if (!hasPhantomId || !hasUsername || !hasPassword) {
-            console.log('[SettingsStore] SIP config incomplete - connect button will be disabled');
-            return null;
-          }
-          
-          console.log('[SettingsStore] SIP config available - connect button should be enabled');
-          return {
-            phantomId: connection.phantomId,
-            username: connection.username,
-            password: connection.password
-          };
-        },
+        sipConfig: null,
         
         // Connection actions
-        setPhantomID: (id) => set((state) => {
-          const newState = {
-            settings: { ...state.settings, connection: { ...state.settings.connection, phantomId: id } }
-          };
-          
-          // Generate and save server settings to localStorage (PWA compatibility)
-          if (id && id.trim()) {
-            const username = state.settings.connection.username;
-            saveServerSettingsToLocalStorage(id.trim(), username || undefined);
-          }
-          
-          return newState;
-        }),
-        setSIPCredentials: (username, password) => set((state) => {
-          const newState = {
-            settings: { ...state.settings, connection: { ...state.settings.connection, username, password } }
-          };
-          
-          // Update display name in localStorage if we have PhantomID
-          if (username && state.settings.connection.phantomId) {
-            saveServerSettingsToLocalStorage(state.settings.connection.phantomId, username);
-          }
-          
-          return newState;
-        }),
+        setPhantomID: (id) => {
+          set((state) => {
+            const newConnection = { ...state.settings.connection, phantomId: id };
+            const newSettings = { ...state.settings, connection: newConnection };
+            
+            // Compute sipConfig
+            const hasPhantomId = !!(newConnection.phantomId && newConnection.phantomId.trim());
+            const hasUsername = !!(newConnection.username && newConnection.username.trim());
+            const hasPassword = !!(newConnection.password && newConnection.password.trim());
+            
+            console.log('[SettingsStore] setPhantomID - checking config:', { 
+              hasPhantomId, 
+              hasUsername, 
+              hasPassword,
+              phantomId: newConnection.phantomId,
+              username: newConnection.username
+            });
+            
+            const sipConfig = (hasPhantomId && hasUsername && hasPassword) ? {
+              phantomId: newConnection.phantomId,
+              username: newConnection.username,
+              password: newConnection.password
+            } : null;
+            
+            if (sipConfig) {
+              console.log('[SettingsStore] ✅ SIP config NOW COMPLETE - connect button should enable');
+            } else {
+              console.log('[SettingsStore] SIP config still incomplete');
+            }
+            
+            // Generate and save server settings to localStorage (PWA compatibility)
+            // Only do this for valid IDs to avoid spam
+            if (id && id.trim() && /^\d{3,4}$/.test(id.trim())) {
+              const username = newConnection.username;
+              saveServerSettingsToLocalStorage(id.trim(), username || undefined);
+            }
+            
+            return { settings: newSettings, sipConfig };
+          });
+        },
+        setSIPCredentials: (username, password) => {
+          set((state) => {
+            const newConnection = { ...state.settings.connection, username, password };
+            const newSettings = { ...state.settings, connection: newConnection };
+            
+            // Compute sipConfig
+            const hasPhantomId = !!(newConnection.phantomId && newConnection.phantomId.trim());
+            const hasUsername = !!(newConnection.username && newConnection.username.trim());
+            const hasPassword = !!(newConnection.password && newConnection.password.trim());
+            
+            console.log('[SettingsStore] setSIPCredentials - checking config:', { 
+              hasPhantomId, 
+              hasUsername, 
+              hasPassword,
+              phantomId: newConnection.phantomId,
+              username: newConnection.username
+            });
+            
+            const sipConfig = (hasPhantomId && hasUsername && hasPassword) ? {
+              phantomId: newConnection.phantomId,
+              username: newConnection.username,
+              password: newConnection.password
+            } : null;
+            
+            if (sipConfig) {
+              console.log('[SettingsStore] ✅ SIP config NOW COMPLETE - connect button should enable');
+            } else {
+              console.log('[SettingsStore] SIP config still incomplete');
+            }
+            
+            // Update display name in localStorage if we have PhantomID
+            const phantomId = newConnection.phantomId;
+            if (username && phantomId && /^\d{3,4}$/.test(phantomId)) {
+              saveServerSettingsToLocalStorage(phantomId, username);
+            }
+            
+            return { settings: newSettings, sipConfig };
+          });
+        },
         setVMAccess: (code) => set((state) => ({
           settings: { ...state.settings, connection: { ...state.settings.connection, vmAccess: code } }
         })),

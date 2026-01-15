@@ -79,16 +79,27 @@ export function SettingsView() {
   const [testingDevice, setTestingDevice] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   
-  // Save connection settings handler - shows confirmation since Zustand auto-persists
+  // Local state for connection settings (not auto-saved)
+  const [localPhantomId, setLocalPhantomId] = useState(settings.connection.phantomId);
+  const [localUsername, setLocalUsername] = useState(settings.connection.username);
+  const [localPassword, setLocalPassword] = useState(settings.connection.password);
+  const [localVmAccess, setLocalVmAccess] = useState(settings.connection.vmAccess);
+  
+  // Save connection settings handler - only saves when button clicked
   const handleSaveConnectionSettings = useCallback(() => {
     setSaveStatus('saving');
-    // Settings are already persisted by Zustand, but show user feedback
+    
+    // Save to Zustand store (which triggers localStorage save)
+    setPhantomID(localPhantomId);
+    setSIPCredentials(localUsername, localPassword);
+    setVMAccess(localVmAccess);
+    
     setTimeout(() => {
       setSaveStatus('saved');
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
     }, 300);
-  }, []);
+  }, [localPhantomId, localUsername, localPassword, localVmAccess, setPhantomID, setSIPCredentials, setVMAccess]);
   
   // Options
   const themeOptions = [
@@ -210,8 +221,8 @@ export function SettingsView() {
                 <div className="setting-item">
                   <label>{t('settings.phantom_id', 'Phantom ID')}</label>
                   <Input
-                    value={settings.connection.phantomId}
-                    onChange={(e) => setPhantomID(e.target.value)}
+                    value={localPhantomId}
+                    onChange={(e) => setLocalPhantomId(e.target.value)}
                     placeholder="e.g., 388"
                   />
                   <span className="form-hint">
@@ -221,8 +232,8 @@ export function SettingsView() {
                 <div className="setting-item">
                   <label>{t('settings.username', 'Username')}</label>
                   <Input
-                    value={settings.connection.username}
-                    onChange={(e) => setSIPCredentials(e.target.value, settings.connection.password)}
+                    value={localUsername}
+                    onChange={(e) => setLocalUsername(e.target.value)}
                     placeholder={t('settings.username_placeholder', 'SIP Username')}
                   />
                 </div>
@@ -230,16 +241,16 @@ export function SettingsView() {
                   <label>{t('settings.password', 'Password')}</label>
                   <Input
                     type="password"
-                    value={settings.connection.password}
-                    onChange={(e) => setSIPCredentials(settings.connection.username, e.target.value)}
+                    value={localPassword}
+                    onChange={(e) => setLocalPassword(e.target.value)}
                     placeholder={t('settings.password_placeholder', 'SIP Password')}
                   />
                 </div>
                 <div className="setting-item">
                   <label>{t('settings.vm_access', 'Voicemail Access')}</label>
                   <Input
-                    value={settings.connection.vmAccess}
-                    onChange={(e) => setVMAccess(e.target.value)}
+                    value={localVmAccess}
+                    onChange={(e) => setLocalVmAccess(e.target.value)}
                     placeholder={t('settings.vm_access_placeholder', '*98')}
                   />
                   <span className="form-hint">
