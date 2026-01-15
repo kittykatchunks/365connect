@@ -231,7 +231,28 @@ export const useSettingsStore = create<SettingsState>()(
         name: 'settings-store',
         partialize: (state) => ({
           settings: state.settings
-        })
+        }),
+        onRehydrateStorage: () => (state) => {
+          // After rehydration, compute sipConfig from loaded settings
+          if (state) {
+            const { connection } = state.settings;
+            const hasPhantomId = !!(connection.phantomId && connection.phantomId.trim());
+            const hasUsername = !!(connection.username && connection.username.trim());
+            const hasPassword = !!(connection.password && connection.password.trim());
+            
+            state.sipConfig = (hasPhantomId && hasUsername && hasPassword) ? {
+              phantomId: connection.phantomId,
+              username: connection.username,
+              password: connection.password
+            } : null;
+            
+            console.log('[SettingsStore] Rehydrated from localStorage:', {
+              hasConfig: !!state.sipConfig,
+              phantomId: connection.phantomId,
+              username: connection.username
+            });
+          }
+        }
       }
     ),
     { name: 'settings-store' }
