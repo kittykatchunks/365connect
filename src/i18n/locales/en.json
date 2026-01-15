@@ -427,6 +427,40 @@
     "speeddial_number_placeholder": "+1234567890",
     "blf": {
         "right_click_to_configure": "Right-click to configure",
-        "click_to_configure": "Click to configure"
+        "click_to_configure": "Click to configure",
+        "available": "Available",
+        "busy": "Busy",
+        "ringing": "Ringing",
+        "hold": "On Hold",
+        "inactive": "Inactive",
+        "transfer": "Transfer",
+        "transfer_to": "Transfer to {{ext}}",
+        "dial": "Dial {{ext}}",
+        "dial_btn": "Dial",
+        "configure": "Configure",
+        "config": {
+            "title": "Configure Button {{index}}",
+            "type": "Button Type",
+            "blf_hint": "Shows presence status of an extension",
+            "speeddial_hint": "Quick dial to any number",
+            "extension": "Extension",
+            "number": "Phone Number",
+            "display_name": "Display Name",
+            "name_placeholder": "e.g. John Smith",
+            "clear": "Clear",
+            "save": "Save",
+            "override_transfer": "Override default transfer method for this button",
+            "transfer_method": "Transfer Method",
+            "blind_transfer": "Blind Transfer",
+            "attended_transfer": "Attended Transfer",
+            "transfer_hint": "Current default: {{method}}"
+        },
+        "type": {
+            "blf": "BLF (Busy Lamp Field)",
+            "speeddial": "Speed Dial"
+        },
+        "error": {
+            "extension_required": "Extension or number is required"
+        }
     }
 }

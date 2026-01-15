@@ -6,8 +6,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Save, X } from 'lucide-react';
 import { Button, Input, Select } from '@/components/ui';
-import { useBLFStore } from '@/stores';
-import type { BLFButtonType } from '@/types';
+import { useBLFStore, useSettingsStore } from '@/stores';
+import type { BLFButtonType, BLFTransferMethod } from '@/types';
 
 interface BLFConfigModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
   const buttons = useBLFStore((state) => state.buttons);
   const setButton = useBLFStore((state) => state.setButton);
   const clearButton = useBLFStore((state) => state.clearButton);
+  const preferBlindTransfer = useSettingsStore((state) => state.settings.call.preferBlindTransfer);
   
   const button = buttons.find((b) => b.index === buttonIndex);
   
@@ -28,6 +29,14 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
   const [type, setType] = useState<BLFButtonType>(() => button?.type || 'blf');
   const [extension, setExtension] = useState(() => button?.extension || '');
   const [displayName, setDisplayName] = useState(() => button?.displayName || '');
+  const [overrideTransfer, setOverrideTransfer] = useState(() => button?.overrideTransfer || false);
+  const [transferMethod, setTransferMethod] = useState<BLFTransferMethod>(() => {
+    if (button?.transferMethod) {
+      return button.transferMethod;
+    }
+    // Default to opposite of current global preference
+    return preferBlindTransfer ? 'attended' : 'blind';
+  });
   const [error, setError] = useState<string | null>(null);
   
   // Reset form when modal opens with different button
@@ -38,6 +47,8 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
     setType(currentButton?.type || 'blf');
     setExtension(currentButton?.extension || '');
     setDisplayName(currentButton?.displayName || '');
+    setOverrideTransfer(currentButton?.overrideTransfer || false);
+    setTransferMethod(currentButton?.transferMethod || (preferBlindTransfer ? 'attended' : 'blind'));
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, buttonIndex]);
@@ -53,11 +64,13 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
     setButton(buttonIndex, {
       type,
       extension: extension.trim(),
-      displayName: displayName.trim() || extension.trim()
+      displayName: displayName.trim() || extension.trim(),
+      overrideTransfer,
+      transferMethod: overrideTransfer ? transferMethod : undefined
     });
     
     onClose();
-  }, [buttonIndex, type, extension, displayName, setButton, onClose, t]);
+  }, [buttonIndex, type, extension, displayName, overrideTransfer, transferMethod, setButton, onClose, t]);
   
   const handleClear = useCallback(() => {
     clearButton(buttonIndex);
@@ -138,6 +151,41 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
               placeholder={t('blf.config.name_placeholder', 'e.g. John Smith')}
             />
           </div>
+          
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={overrideTransfer}
+                onChange={(e) => setOverrideTransfer(e.target.checked)}
+              />
+              <span>{t('blf.config.override_transfer', 'Override default transfer method for this button')}</span>
+            </label>
+          </div>
+          
+          {overrideTransfer && (
+            <div className="form-group" style={{ marginLeft: '20px' }}>
+              <label htmlFor="blf-transfer-method">
+                {t('blf.config.transfer_method', 'Transfer Method')}
+              </label>
+              <Select
+                id="blf-transfer-method"
+                value={transferMethod}
+                onChange={(e) => setTransferMethod(e.target.value as BLFTransferMethod)}
+                options={[
+                  { value: 'blind', label: t('blf.config.blind_transfer', 'Blind Transfer') },
+                  { value: 'attended', label: t('blf.config.attended_transfer', 'Attended Transfer') }
+                ]}
+              />
+              <p className="form-hint">
+                {t('blf.config.transfer_hint', 'Current default: {{method}}', { 
+                  method: preferBlindTransfer 
+                    ? t('blf.config.blind_transfer', 'Blind Transfer')
+                    : t('blf.config.attended_transfer', 'Attended Transfer')
+                })}
+              </p>
+            </div>
+          )}
           
           <div className="modal-footer">
             {button?.extension && (

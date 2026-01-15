@@ -11,7 +11,7 @@ import type { BLFButton as BLFButtonType, BLFPresenceState } from '@/types';
 interface BLFButtonProps {
   button: BLFButtonType;
   onDial: (extension: string) => void;
-  onTransfer: (extension: string) => void;
+  onTransfer: (extension: string, button: BLFButtonType) => void;
   onConfigure: (index: number) => void;
   isInCall?: boolean;
   disabled?: boolean;
@@ -39,13 +39,13 @@ export function BLFButton({
     }
     
     if (isInCall) {
-      // During call, show action menu or transfer directly
-      setShowActions((prev) => !prev);
+      // During call, initiate transfer directly (respecting button's override)
+      onTransfer(button.extension, button);
     } else {
       // Not in call - dial the extension
       onDial(button.extension);
     }
-  }, [isConfigured, isInCall, button.extension, onDial]);
+  }, [isConfigured, isInCall, button, onDial, onTransfer]);
   
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,9 +60,9 @@ export function BLFButton({
   
   const handleTransfer = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onTransfer(button.extension);
+    onTransfer(button.extension, button);
     setShowActions(false);
-  }, [onTransfer, button.extension]);
+  }, [onTransfer, button]);
   
   const handleConfigure = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -119,10 +119,12 @@ export function BLFButton({
       >
         {isConfigured ? (
           <>
-            <span className="blf-btn-indicator" />
             <span className="blf-btn-label">
               {button.displayName || button.extension}
             </span>
+            {button.extension && (
+              <span className="blf-btn-extension">{button.extension}</span>
+            )}
             {button.type === 'speeddial' && (
               <Phone className="blf-btn-type-icon" />
             )}

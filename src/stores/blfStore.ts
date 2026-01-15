@@ -95,12 +95,14 @@ export const useBLFStore = create<BLFState>()(
       {
         name: 'blf-store',
         partialize: (state) => ({
-          buttons: state.buttons.map(({ index, type, extension, displayName }) => ({
+          buttons: state.buttons.map(({ index, type, extension, displayName, overrideTransfer, transferMethod }) => ({
             index,
             type,
             extension,
             displayName,
-            state: 'inactive' as BLFPresenceState
+            state: 'inactive' as BLFPresenceState,
+            ...(overrideTransfer !== undefined && { overrideTransfer }),
+            ...(transferMethod && { transferMethod })
           }))
         })
       }

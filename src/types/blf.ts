@@ -7,6 +7,7 @@ import type { BLFPresenceState } from './sip';
 export type { BLFPresenceState };
 
 export type BLFButtonType = 'blf' | 'speeddial';
+export type BLFTransferMethod = 'blind' | 'attended';
 
 export interface BLFButton {
   index: number; // 1-20
@@ -14,12 +15,16 @@ export interface BLFButton {
   extension: string;
   displayName: string;
   state?: BLFPresenceState;
+  overrideTransfer?: boolean;
+  transferMethod?: BLFTransferMethod;
 }
 
 export interface BLFButtonConfig {
   type: BLFButtonType;
   extension: string;
   displayName: string;
+  overrideTransfer?: boolean;
+  transferMethod?: BLFTransferMethod;
 }
 
 export const BLF_BUTTON_COUNT = 20;

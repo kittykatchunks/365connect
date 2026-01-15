@@ -25,7 +25,8 @@ export * from './companyNumber';
 
 // BLF types (excluding BLFPresenceState - use from sip)
 export type { 
-  BLFButtonType, 
+  BLFButtonType,
+  BLFTransferMethod,
   BLFButton, 
   BLFButtonConfig 
 } from './blf';

@@ -20,12 +20,13 @@ export function BLFButtonGrid({ side, className }: BLFButtonGridProps) {
   
   // Stores
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
+  const preferBlindTransfer = useSettingsStore((state) => state.settings.call.preferBlindTransfer);
   const getLeftButtons = useBLFStore((state) => state.getLeftButtons);
   const getRightButtons = useBLFStore((state) => state.getRightButtons);
   const blfStates = useSIPStore((state) => state.blfStates);
   
   // SIP
-  const { makeCall, blindTransfer, subscribeBLF, currentSession, isRegistered } = useSIP();
+  const { makeCall, blindTransfer, startAttendedTransfer, subscribeBLF, currentSession, isRegistered } = useSIP();
   
   const isInCall = currentSession && currentSession.state !== 'terminated';
   
@@ -61,15 +62,29 @@ export function BLFButtonGrid({ side, className }: BLFButtonGridProps) {
     }
   }, [makeCall, isRegistered]);
   
-  const handleTransfer = useCallback(async (extension: string) => {
+  const handleTransfer = useCallback(async (extension: string, button: BLFButtonType) => {
     if (!extension || !isInCall) return;
+    
+    // Determine which transfer method to use
+    // Priority: 1) Button-specific override, 2) Global preference
+    let useBlindTransfer = preferBlindTransfer;
+    if (button?.overrideTransfer && button.transferMethod) {
+      useBlindTransfer = button.transferMethod === 'blind';
+      console.log(`📞 Using button-specific transfer override: ${button.transferMethod}`);
+    }
+    
     try {
-      // blindTransfer uses current session by default when no sessionId provided
-      await blindTransfer(extension);
+      if (useBlindTransfer) {
+        // Perform blind transfer immediately
+        await blindTransfer(extension);
+      } else {
+        // Start attended transfer (which will show the modal with controls)
+        await startAttendedTransfer(extension);
+      }
     } catch (error) {
       console.error('BLF transfer error:', error);
     }
-  }, [blindTransfer, isInCall]);
+  }, [blindTransfer, startAttendedTransfer, isInCall, preferBlindTransfer]);
   const handleConfigure = useCallback((index: number) => {
     setConfigureIndex(index);
   }, []);
