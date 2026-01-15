@@ -409,5 +409,18 @@
     "networkInternetRestored": "Netwerk/Internet Hersteld",
     "networkRestoredMessage": "Zorg ervoor dat u REGISTREREN selecteert om opnieuw verbinding te maken met Phantom. Als AGENT: Uitgelogd wordt weergegeven, hoeft u alleen maar normaal in te loggen.",
     "checkNetworkConnection": "Controleer Netwerk/Internetverbinding",
-    "networkLostMessage": "U lijkt uw netwerk- of internetverbinding te hebben verloren."
+    "networkLostMessage": "U lijkt uw netwerk- of internetverbinding te hebben verloren.",
+    "aria_label_enter_number": "Nummer invoeren",
+    "aria_label_backspace": "Backspace",
+    "aria_label_clear": "Wissen",
+    "aria_label_end_call": "Gesprek beëindigen",
+    "aria_label_make_call": "Bellen",
+    "aria_label_dial_digit": "Kies {{digit}}",
+    "aria_label_line_state": "Lijn {{number}}: {{state}}",
+    "aria_label_configure_button": "Knop {{index}} configureren",
+    "aria_label_dismiss": "Afwijzen",
+    "aria_label_close": "Sluiten",
+    "phantom_id_placeholder": "bijv., 388",
+    "blf_extension_placeholder": "101",
+    "speeddial_number_placeholder": "+1234567890"
 }

@@ -3,6 +3,7 @@
 // ============================================
 
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils';
 
 interface DialpadProps {
@@ -28,6 +29,7 @@ const dialpadKeys = [
 ];
 
 export function Dialpad({ onDigit, onLongPress, disabled, className }: DialpadProps) {
+  const { t } = useTranslation();
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const handlePointerDown = (digit: string) => {
@@ -74,7 +76,7 @@ export function Dialpad({ onDigit, onLongPress, disabled, className }: DialpadPr
           onPointerDown={() => handlePointerDown(digit)}
           onPointerUp={() => handlePointerUp(digit)}
           onPointerLeave={handlePointerLeave}
-          aria-label={`Dial ${digit}`}
+          aria-label={t('aria_label_dial_digit', 'Dial {{digit}}', { digit })}
         >
           <span className="dialpad-digit">{digit}</span>
           {letters && <span className="dialpad-letters">{letters}</span>}

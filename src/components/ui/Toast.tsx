@@ -3,6 +3,7 @@
 // ============================================
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { cn } from '@/utils';
 import { Button } from './Button';
@@ -35,6 +36,8 @@ export function Toast({
   persistent = false,
   onDismiss
 }: ToastProps) {
+  const { t } = useTranslation();
+  
   useEffect(() => {
     if (persistent) return;
     
@@ -58,7 +61,7 @@ export function Toast({
         variant="ghost"
         size="icon"
         onClick={() => onDismiss(id)}
-        aria-label="Dismiss"
+        aria-label={t('aria_label_dismiss', 'Dismiss')}
         className="toast-close"
       >
         <X />

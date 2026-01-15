@@ -405,5 +405,18 @@
     "networkInternetRestored": "Rede/Internet Restaurada",
     "networkRestoredMessage": "Certifique-se de selecionar REGISTRAR para reconectar ao Phantom. Se AGENTE: Desconectado aparecer, você só precisa fazer login normalmente.",
     "checkNetworkConnection": "Verificar Conexão de Rede/Internet",
-    "networkLostMessage": "Parece que você perdeu a conexão de rede ou internet."
+    "networkLostMessage": "Parece que você perdeu a conexão de rede ou internet.",
+    "aria_label_enter_number": "Inserir número",
+    "aria_label_backspace": "Retroceder",
+    "aria_label_clear": "Limpar",
+    "aria_label_end_call": "Encerrar chamada",
+    "aria_label_make_call": "Fazer chamada",
+    "aria_label_dial_digit": "Discar {{digit}}",
+    "aria_label_line_state": "Linha {{number}}: {{state}}",
+    "aria_label_configure_button": "Configurar botão {{index}}",
+    "aria_label_dismiss": "Dispensar",
+    "aria_label_close": "Fechar",
+    "phantom_id_placeholder": "ex., 388",
+    "blf_extension_placeholder": "101",
+    "speeddial_number_placeholder": "+1234567890"
 }

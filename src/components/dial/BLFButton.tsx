@@ -109,7 +109,7 @@ export function BLFButton({
         }
         aria-label={isConfigured
           ? `${button.type === 'blf' ? 'BLF' : 'Speed Dial'}: ${button.displayName || button.extension}`
-          : `Configure button ${button.index}`
+          : t('aria_label_configure_button', 'Configure button {{index}}', { index: button.index })
         }
       >
         {isConfigured ? (
@@ -184,12 +184,14 @@ interface BLFButtonPlaceholderProps {
 }
 
 export function BLFButtonPlaceholder({ index, onConfigure, className }: BLFButtonPlaceholderProps) {
+  const { t } = useTranslation();
+  
   return (
     <button
       type="button"
       className={cn('blf-btn blf-btn-empty', className)}
       onClick={() => onConfigure(index)}
-      aria-label={`Configure button ${index}`}
+      aria-label={t('aria_label_configure_button', 'Configure button {{index}}', { index })}
     >
       <span className="blf-btn-empty-label">{index}</span>
     </button>

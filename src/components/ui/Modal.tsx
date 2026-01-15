@@ -3,6 +3,7 @@
 // ============================================
 
 import { useEffect, useRef, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { cn } from '@/utils';
 import { Button } from './Button';
@@ -30,6 +31,7 @@ export function Modal({
   closable = true,
   className
 }: ModalProps) {
+  const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   
   useEffect(() => {
@@ -93,7 +95,7 @@ export function Modal({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t('aria_label_close', 'Close')}
                 className="modal-close"
               >
                 <X />

@@ -3,6 +3,7 @@
 // ============================================
 
 import { forwardRef, type InputHTMLAttributes } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Delete } from 'lucide-react';
 import { cn } from '@/utils';
 import { Button } from '@/components/ui';
@@ -16,6 +17,7 @@ export interface DialInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 
 export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
   ({ className, value, onCall, onClear, onBackspace, isCallActive, ...props }, ref) => {
+    const { t } = useTranslation();
     const hasValue = value && String(value).length > 0;
     
     return (
@@ -25,7 +27,7 @@ export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
           type="tel"
           className="dial-input"
           value={value}
-          placeholder="Enter number"
+          placeholder={t('enter_number_placeholder', 'Enter number...')}
           autoComplete="off"
           {...props}
         />
@@ -37,7 +39,7 @@ export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
                 variant="ghost"
                 size="icon"
                 onClick={onBackspace}
-                aria-label="Backspace"
+                aria-label={t('aria_label_backspace', 'Backspace')}
                 className="dial-input-backspace"
               >
                 <Delete />
@@ -47,7 +49,7 @@ export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
                 variant="ghost"
                 size="icon"
                 onClick={onClear}
-                aria-label="Clear"
+                aria-label={t('aria_label_clear', 'Clear')}
                 className="dial-input-clear"
               >
                 <X />
@@ -61,7 +63,7 @@ export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
             size="icon"
             onClick={onCall}
             disabled={!hasValue && !isCallActive}
-            aria-label={isCallActive ? 'End call' : 'Make call'}
+            aria-label={isCallActive ? t('aria_label_end_call', 'End call') : t('aria_label_make_call', 'Make call')}
             className="dial-input-call"
           >
             <Phone className={isCallActive ? 'rotate-[135deg]' : ''} />

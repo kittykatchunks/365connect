@@ -245,7 +245,7 @@ export function SettingsView() {
                   <Input
                     value={localPhantomId}
                     onChange={(e) => setLocalPhantomId(e.target.value)}
-                    placeholder="e.g., 388"
+                    placeholder={t('phantom_id_placeholder', 'e.g., 388')}
                   />
                   <span className="form-hint">
                     {t('settings.phantom_id_hint', '3-4 digit server identifier')}

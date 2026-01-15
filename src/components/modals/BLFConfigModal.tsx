@@ -112,7 +112,10 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
             type="tel"
             value={extension}
             onChange={(e) => setExtension(e.target.value)}
-            placeholder={type === 'blf' ? '101' : '+1234567890'}
+            placeholder={type === 'blf' 
+              ? t('blf_extension_placeholder', '101') 
+              : t('speeddial_number_placeholder', '+1234567890')
+            }
             autoFocus
           />
         </div>

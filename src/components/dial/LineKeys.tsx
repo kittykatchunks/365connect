@@ -92,7 +92,7 @@ function LineKey({ lineNumber }: LineKeyProps) {
       )}
       onClick={handleClick}
       aria-pressed={isSelected}
-      aria-label={`Line ${lineNumber}: ${state}`}
+      aria-label={t('aria_label_line_state', 'Line {{number}}: {{state}}', { number: lineNumber, state })}
     >
       {getIcon()}
       <span className="line-key-label">{getLabel()}</span>

@@ -405,5 +405,18 @@
     "networkInternetRestored": "Red/Internet Restaurada",
     "networkRestoredMessage": "Por favor asegúrese de seleccionar REGISTRAR para reconectar a Phantom. Si aparece AGENTE: Sesión cerrada, solo necesita iniciar sesión normalmente.",
     "checkNetworkConnection": "Verificar Conexión de Red/Internet",
-    "networkLostMessage": "Parece que ha perdido la conexión de red o internet."
+    "networkLostMessage": "Parece que ha perdido la conexión de red o internet.",
+    "aria_label_enter_number": "Ingresar número",
+    "aria_label_backspace": "Retroceso",
+    "aria_label_clear": "Borrar",
+    "aria_label_end_call": "Finalizar llamada",
+    "aria_label_make_call": "Hacer llamada",
+    "aria_label_dial_digit": "Marcar {{digit}}",
+    "aria_label_line_state": "Línea {{number}}: {{state}}",
+    "aria_label_configure_button": "Configurar botón {{index}}",
+    "aria_label_dismiss": "Descartar",
+    "aria_label_close": "Cerrar",
+    "phantom_id_placeholder": "ej., 388",
+    "blf_extension_placeholder": "101",
+    "speeddial_number_placeholder": "+1234567890"
 }

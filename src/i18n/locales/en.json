@@ -411,5 +411,18 @@
     "networkInternetRestored": "Network/Internet Restored",
     "networkRestoredMessage": "Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.",
     "checkNetworkConnection": "Check Network/Internet Connection",
-    "networkLostMessage": "You appear to have lost network or internet connection."
+    "networkLostMessage": "You appear to have lost network or internet connection.",
+    "aria_label_enter_number": "Enter number",
+    "aria_label_backspace": "Backspace",
+    "aria_label_clear": "Clear",
+    "aria_label_end_call": "End call",
+    "aria_label_make_call": "Make call",
+    "aria_label_dial_digit": "Dial {{digit}}",
+    "aria_label_line_state": "Line {{number}}: {{state}}",
+    "aria_label_configure_button": "Configure button {{index}}",
+    "aria_label_dismiss": "Dismiss",
+    "aria_label_close": "Close",
+    "phantom_id_placeholder": "e.g., 388",
+    "blf_extension_placeholder": "101",
+    "speeddial_number_placeholder": "+1234567890"
 }
