@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
 import { cn } from '@/utils';
 import { Button } from '@/components/ui';
+import { AgentLoginModal } from '@/components/modals';
 import { useAppStore } from '@/stores';
 import { useSIP } from '@/hooks';
 
@@ -30,6 +31,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const { isRegistered } = useSIP();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const isLoggedIn = agentState !== 'logged-out';
   const isPaused = agentState === 'paused';
@@ -52,10 +54,32 @@ export function AgentKeys({ className }: AgentKeysProps) {
         setIsLoading(false);
       }
     } else {
-      // Show login modal (TODO: implement login modal)
-      console.log('Show agent login modal');
+      setShowLoginModal(true);
     }
   }, [isLoggedIn, setAgentState, setQueueState]);
+  
+  // Handle agent login from modal
+  const handleAgentLogin = useCallback(async (agentNumber: string, _passcode?: string) => {
+    setIsLoading(true);
+    try {
+      // Send agent login code with number (typically *1{agentNumber})
+      // This would be configurable and use actual SIP/DTMF
+      // await sendDTMF(`*1${agentNumber}`);
+      
+      // Store agent state
+      useAppStore.setState({ 
+        agentNumber,
+        agentState: 'available' 
+      });
+      
+      console.log('Agent logged in:', agentNumber);
+    } catch (error) {
+      console.error('Agent login error:', error);
+      throw error; // Re-throw to show in modal
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
   
   // Toggle queue
   const handleQueue = useCallback(async () => {
@@ -161,6 +185,14 @@ export function AgentKeys({ className }: AgentKeysProps) {
           : t('agent.join_queue', 'Join Queue')
         }
       >
+      
+      {/* Agent Login Modal */}
+      <AgentLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleAgentLogin}
+        isLoading={isLoading}
+      />
         <Users className="w-4 h-4" />
         <span className="agent-key-label">
           {isInQueue ? t('agent.in_queue', 'In Queue') : t('agent.queue', 'Queue')}
