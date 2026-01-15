@@ -53,18 +53,21 @@ export function AgentKeys({ className }: AgentKeysProps) {
     if (pendingLogin && currentSession?.state === 'established') {
       const sendLoginDTMF = async () => {
         try {
+          console.log('[AgentKeys] Session established, sending agent number DTMF:', pendingLogin.agentNumber);
+          
           // Send agent number with # suffix
           await sendDTMFSequence(`${pendingLogin.agentNumber}#`, currentSession.id);
-          console.log(`Sent DTMF sequence: ${pendingLogin.agentNumber}#`);
+          console.log(`[AgentKeys] ✅ Sent DTMF sequence: ${pendingLogin.agentNumber}#`);
           
           // If passcode provided, send it after 500ms
           if (pendingLogin.passcode) {
+            console.log('[AgentKeys] Waiting 500ms before sending passcode...');
             setTimeout(async () => {
               try {
                 await sendDTMFSequence(`${pendingLogin.passcode}#`, currentSession.id);
-                console.log(`Sent passcode DTMF: ${pendingLogin.passcode}#`);
+                console.log(`[AgentKeys] ✅ Sent passcode DTMF: ${pendingLogin.passcode}#`);
               } catch (error) {
-                console.error('Failed to send passcode DTMF:', error);
+                console.error('[AgentKeys] Failed to send passcode DTMF:', error);
               }
             }, 500);
           }
@@ -78,7 +81,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
           // Clear pending login
           setPendingLogin(null);
         } catch (error) {
-          console.error('Failed to send DTMF:', error);
+          console.error('[AgentKeys] Failed to send DTMF:', error);
         }
       };
       

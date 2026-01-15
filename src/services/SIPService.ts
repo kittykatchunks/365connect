@@ -29,6 +29,7 @@ function isSessionEstablished(state: unknown): boolean {
   const validStates = [
     SessionStateEnum.Established,
     'Established',
+    'established',  // React app uses lowercase
     'active',
     'confirmed'
   ];
@@ -835,32 +836,98 @@ export class SIPService {
   // ==================== DTMF ====================
 
   async sendDTMF(sessionId: string, tone: string): Promise<void> {
+    const verboseLogging = true; // TODO: Get from settings
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] 📞 Attempting to send DTMF: ${tone} to session ${sessionId}`);
+    }
+    
+    // Validate tone
     if (!isValidDTMFTone(tone)) {
-      throw new Error(`Invalid DTMF tone: ${tone}`);
+      const error = new Error(`Invalid DTMF tone: ${tone}`);
+      console.error('[SIPService] ❌ DTMF Error:', error.message);
+      throw error;
+    }
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] ✅ DTMF tone validated: ${tone}`);
     }
 
     const sessionData = this.sessions.get(sessionId);
     if (!sessionData) {
-      throw new Error(`Session not found: ${sessionId}`);
+      const error = new Error(`Session not found: ${sessionId}`);
+      console.error('[SIPService] ❌ DTMF Error:', error.message);
+      if (verboseLogging) {
+        console.log('[SIPService] 📋 Available sessions:', Array.from(this.sessions.keys()));
+      }
+      throw error;
+    }
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ Session found:', sessionId);
     }
 
+    // Check session state
+    if (verboseLogging) {
+      console.log('[SIPService] 🔍 Session state debug:', {
+        currentState: sessionData.state,
+        stateType: typeof sessionData.state,
+        sipJsState: sessionData.session.state,
+        direction: sessionData.direction
+      });
+    }
+    
     if (!isSessionEstablished(sessionData.session.state)) {
-      throw new Error(`Cannot send DTMF - session not established. Current state: ${sessionData.state}`);
+      const error = new Error(`Cannot send DTMF - session not established. Current state: ${sessionData.state}`);
+      console.error('[SIPService] ❌ DTMF Error:', error.message);
+      throw error;
+    }
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ Session state validated:', sessionData.state);
     }
 
     try {
+      if (verboseLogging) {
+        console.log(`[SIPService] 🎵 Sending DTMF tone ${tone} via SIP.js`);
+      }
+      
+      // Access sessionDescriptionHandler directly like PWA
       const sdh = sessionData.session.sessionDescriptionHandler;
+      if (!sdh) {
+        throw new Error('No sessionDescriptionHandler available');
+      }
+      
+      // Try RFC 4733 (in-band DTMF) - cast to access sendDtmf method
       const dtmfSender = sdh as unknown as { sendDtmf?: (tone: string) => Promise<void> };
       
-      if (dtmfSender?.sendDtmf) {
+      if (typeof dtmfSender.sendDtmf === 'function') {
+        if (verboseLogging) {
+          console.log('[SIPService] 📞 Using RFC 4733 (in-band DTMF) via SessionDescriptionHandler');
+        }
         await dtmfSender.sendDtmf(tone);
+        if (verboseLogging) {
+          console.log(`[SIPService] ✅ RFC 4733 DTMF sent successfully: ${tone}`);
+        }
       } else {
-        throw new Error('No DTMF method available on session');
+        const error = new Error('No DTMF method available on session');
+        console.error('[SIPService] ❌ DTMF Error:', error.message);
+        console.error('[SIPService] SessionDescriptionHandler:', sdh);
+        throw error;
       }
 
+      if (verboseLogging) {
+        console.log(`[SIPService] ✅ DTMF ${tone} sent successfully to session ${sessionId}`);
+      }
+      
       this.emit('dtmfSent', { sessionId, tone });
     } catch (error) {
-      console.error('DTMF transmission failed:', error);
+      console.error('[SIPService] ❌ SIP.js DTMF transmission failed:', {
+        tone,
+        sessionId,
+        error: error instanceof Error ? error.message : String(error),
+        sessionState: sessionData.state
+      });
       throw error;
     }
   }

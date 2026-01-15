@@ -52,17 +52,21 @@ export function DialView() {
   
   // Handle digit press
   const handleDigit = useCallback(async (digit: string) => {
+    console.log('[DialView] Digit pressed:', digit, 'isInCall:', isInCall);
+    
     if (isInCall) {
       // Send DTMF
       try {
+        console.log('[DialView] Attempting to send DTMF:', digit, 'currentSession:', currentSession?.id);
         await sendDTMF(digit);
+        console.log('[DialView] ✅ DTMF sent successfully:', digit);
       } catch (error) {
-        console.error('DTMF error:', error);
+        console.error('[DialView] DTMF error:', error);
       }
     } else {
       setDialValue((prev) => prev + digit);
     }
-  }, [isInCall, sendDTMF]);
+  }, [isInCall, sendDTMF, currentSession]);
   
   // Handle long press (e.g., 0 for +)
   const handleLongPress = useCallback((digit: string) => {
@@ -169,6 +173,7 @@ export function DialView() {
       
       // Dialpad keys
       if (/^[0-9*#]$/.test(e.key)) {
+        console.log('[DialView] Keyboard DTMF key pressed:', e.key);
         handleDigit(e.key);
       }
       
