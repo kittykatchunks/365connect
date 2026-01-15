@@ -52,3 +52,41 @@ export function getWssUrl(phantomId: string): string {
   const settings = generateServerSettings(phantomId);
   return settings.wssServerUrl;
 }
+
+/**
+ * Save generated server settings to localStorage
+ * This maintains backward compatibility with the PWA implementation
+ * and ensures debugging tools can see the generated values
+ */
+export function saveServerSettingsToLocalStorage(phantomId: string, username?: string): void {
+  if (!isValidPhantomId(phantomId)) {
+    console.warn('[ServerConfig] Invalid PhantomID, not saving server settings');
+    return;
+  }
+
+  try {
+    const settings = generateServerSettings(phantomId);
+    
+    // Store PhantomID and generated server settings
+    localStorage.setItem('PhantomID', phantomId);
+    localStorage.setItem('wssServer', settings.wssServerUrl);
+    localStorage.setItem('SipDomain', settings.sipDomain);
+    localStorage.setItem('SipServer', settings.sipServer);
+    localStorage.setItem('wssPort', settings.wssPort.toString());
+    localStorage.setItem('wssPath', settings.wssPath);
+    
+    // Generate and store display name if username provided
+    if (username) {
+      const displayName = generateDisplayName(username);
+      localStorage.setItem('profileName', displayName);
+    }
+    
+    console.log('✅ Server settings generated and saved to localStorage:', {
+      phantomID: phantomId,
+      wssServer: settings.wssServerUrl,
+      domain: settings.sipDomain
+    });
+  } catch (error) {
+    console.error('[ServerConfig] Failed to save server settings:', error);
+  }
+}

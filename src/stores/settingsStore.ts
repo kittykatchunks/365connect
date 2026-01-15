@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { AppSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
+import { saveServerSettingsToLocalStorage } from '@/utils/serverConfig';
 
 interface SettingsState {
   settings: AppSettings;
@@ -64,9 +65,26 @@ export const useSettingsStore = create<SettingsState>()(
         // Computed getter for SIP config
         get sipConfig() {
           const { connection } = get().settings;
-          if (!connection.phantomId || !connection.username || !connection.password) {
+          
+          const hasPhantomId = !!(connection.phantomId && connection.phantomId.trim());
+          const hasUsername = !!(connection.username && connection.username.trim());
+          const hasPassword = !!(connection.password && connection.password.trim());
+          
+          console.log('[SettingsStore] SIP config check:', { 
+            hasPhantomId, 
+            hasUsername, 
+            hasPassword,
+            phantomId: connection.phantomId,
+            username: connection.username,
+            passwordSet: hasPassword
+          });
+          
+          if (!hasPhantomId || !hasUsername || !hasPassword) {
+            console.log('[SettingsStore] SIP config incomplete - connect button will be disabled');
             return null;
           }
+          
+          console.log('[SettingsStore] SIP config available - connect button should be enabled');
           return {
             phantomId: connection.phantomId,
             username: connection.username,
@@ -75,12 +93,31 @@ export const useSettingsStore = create<SettingsState>()(
         },
         
         // Connection actions
-        setPhantomID: (id) => set((state) => ({
-          settings: { ...state.settings, connection: { ...state.settings.connection, phantomId: id } }
-        })),
-        setSIPCredentials: (username, password) => set((state) => ({
-          settings: { ...state.settings, connection: { ...state.settings.connection, username, password } }
-        })),
+        setPhantomID: (id) => set((state) => {
+          const newState = {
+            settings: { ...state.settings, connection: { ...state.settings.connection, phantomId: id } }
+          };
+          
+          // Generate and save server settings to localStorage (PWA compatibility)
+          if (id && id.trim()) {
+            const username = state.settings.connection.username;
+            saveServerSettingsToLocalStorage(id.trim(), username || undefined);
+          }
+          
+          return newState;
+        }),
+        setSIPCredentials: (username, password) => set((state) => {
+          const newState = {
+            settings: { ...state.settings, connection: { ...state.settings.connection, username, password } }
+          };
+          
+          // Update display name in localStorage if we have PhantomID
+          if (username && state.settings.connection.phantomId) {
+            saveServerSettingsToLocalStorage(state.settings.connection.phantomId, username);
+          }
+          
+          return newState;
+        }),
         setVMAccess: (code) => set((state) => ({
           settings: { ...state.settings, connection: { ...state.settings.connection, vmAccess: code } }
         })),
