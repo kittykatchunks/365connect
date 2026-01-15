@@ -89,7 +89,6 @@ app.use(responseTimeMiddleware);
 
 const HTTP_PORT = process.env.HTTP_PORT || 80;
 const HTTPS_PORT = process.env.HTTPS_PORT || 443;
-const REACT_PORT = process.env.REACT_PORT || 444;
 const PROXY_PORT = process.env.PHANTOM_API_PORT || 443;
 const PHANTOM_API_BASE_URL = process.env.PHANTOM_API_BASE_URL || 'https://server1-000.phantomapi.net';
 
@@ -446,66 +445,6 @@ if (sslOptions) {
     console.log(`  Busylight WebSocket: /api/busylight-ws (Client connections)`);
     console.log(`  Busylight Status: /api/busylight-status`);
   });
-  
-  // ============================================
-  // React App Server on Port 444
-  // ============================================
-  const reactApp = express();
-  const reactDistPath = path.join(__dirname, 'react-app', 'dist');
-  
-  // Check if React build exists
-  if (fs.existsSync(reactDistPath)) {
-    reactApp.use(compression());
-    
-    // Serve React static files
-    reactApp.use(express.static(reactDistPath, {
-      etag: true,
-      lastModified: true,
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith('sw.js') || filePath.endsWith('service-worker.js')) {
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          return;
-        }
-        if (filePath.endsWith('manifest.json') || filePath.endsWith('manifest.webmanifest')) {
-          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-          res.setHeader('Content-Type', 'application/manifest+json');
-          return;
-        }
-        if (filePath.endsWith('.html')) {
-          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-          return;
-        }
-        if (filePath.match(/\.[a-f0-9]{8,}\.(js|css)$/)) {
-          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-          return;
-        }
-        if (filePath.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot|mp3|wav)$/)) {
-          res.setHeader('Cache-Control', 'public, max-age=604800');
-          return;
-        }
-        res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
-      }
-    }));
-    
-    // SPA fallback for React app
-    reactApp.get('*', (req, res) => {
-      const ext = path.extname(req.path);
-      if (ext && ext !== '.html') {
-        return res.status(404).send('File not found');
-      }
-      res.sendFile(path.join(reactDistPath, 'index.html'));
-    });
-    
-    // Start React HTTPS server on port 444
-    const reactServer = https.createServer(sslOptions, reactApp);
-    reactServer.listen(REACT_PORT, () => {
-      console.log(`✓ React App Server running on https://connect365.servehttp.com:${REACT_PORT}`);
-      console.log(`  Serving from: ${reactDistPath}`);
-    });
-  } else {
-    console.warn(`⚠ React app build not found at: ${reactDistPath}`);
-    console.warn(`  Run 'cd react-app && npm run build' to create the production build`);
-  }
   
   // Start HTTP server for busylight-bridge proxy (no redirect for busylight endpoints)
   const httpApp = express();
