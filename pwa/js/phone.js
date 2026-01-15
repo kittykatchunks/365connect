@@ -2542,8 +2542,8 @@ function testNotification() {
         if (Notification.permission === 'granted') {
             const notification = new Notification(t('call_notification_test', 'Autocab365Connect'), {
                 body: t('notifications_now_enabled', 'Notifications are now enabled! You will receive alerts for incoming calls.'),
-                icon: 'icons/icon-192x192.png',
-                badge: 'icons/icon-192x192.png',
+                icon: 'icons/any_192.png',
+                badge: 'icons/any_192.png',
                 tag: 'test-notification',
                 requireInteraction: false
             });

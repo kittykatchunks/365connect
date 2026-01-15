@@ -66,7 +66,7 @@ export function useNotifications() {
     try {
       const notification = new Notification(title, {
         body: options?.body,
-        icon: options?.icon || '/icons/icon-192x192.png',
+        icon: options?.icon || '/icons/pwa-192x192.png',
         tag: options?.tag,
         requireInteraction: options?.requireInteraction,
         silent: options?.silent
@@ -103,7 +103,7 @@ export function useNotifications() {
   ) => {
     return showNotification(`Incoming Call: ${callerName || callerNumber}`, {
       body: callerName ? callerNumber : 'Tap to answer',
-      icon: '/icons/icon-192x192.png',
+      icon: '/icons/IncomingCallIcon.png',
       tag: 'incoming-call',
       requireInteraction: true,
       onClick: onAnswer,

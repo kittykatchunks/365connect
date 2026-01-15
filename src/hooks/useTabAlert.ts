@@ -15,8 +15,8 @@ export function useTabAlert(options: UseTabAlertOptions = {}) {
   const {
     flashMessage = '📞 INCOMING CALL',
     flashInterval = 1000,
-    flashFavicon = '/icons/favicon-alert.ico',
-    normalFavicon = '/favicon.ico'
+    flashFavicon = '/icons/IncomingCallIcon.png',
+    normalFavicon = '/icons/pwa-192x192.png'
   } = options;
   
   const [isFlashing, setIsFlashing] = useState(false);

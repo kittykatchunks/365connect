@@ -15,7 +15,7 @@ export function LoadingScreen({ message = 'Loading...', className }: LoadingScre
       <div className="loading-content">
         <div className="loading-logo">
           <img 
-            src="/icons/icon-192x192.png" 
+            src="/icons/pwa-192x192.png" 
             alt="Autocab365 Connect" 
             className="loading-logo-img"
           />

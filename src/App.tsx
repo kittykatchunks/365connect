@@ -101,7 +101,7 @@ function MainLayout() {
       <LeftPanel>
         <LeftPanelHeader>
           <div className="app-brand">
-            <img src="/icons/icon-48x48.png" alt="" className="brand-logo" />
+            <img src="/icons/pwa-192x192.png" alt="" className="brand-logo" />
             <span className="brand-name">Autocab365 Connect</span>
           </div>
           <SIPStatusDisplay />

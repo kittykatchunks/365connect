@@ -12,7 +12,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['icons/any_192.png', 'icons/512.png', 'icons/maskable_192.png'],
+      includeAssets: ['icons/pwa-192x192.png', 'icons/pwa-512x512.png', 'icons/maskable_192.png'],
       manifest: {
         name: 'Autocab365Connect',
         short_name: '365Connect',
@@ -23,7 +23,7 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'icons/any_192.png',
+            src: 'icons/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any'
@@ -35,7 +35,7 @@ export default defineConfig({
             purpose: 'maskable'
           },
           {
-            src: 'icons/512.png',
+            src: 'icons/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
