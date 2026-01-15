@@ -1314,7 +1314,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2xs);
-  width: 120px;
+  width: 60px;
 }
 
 .blf-btn-container {
@@ -1323,15 +1323,18 @@ a {
 
 .blf-btn {
   width: 100%;
+  height: 96px;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-xs);
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  text-align: left;
+  font-size: 0.7rem;
+  text-align: center;
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
@@ -1351,15 +1354,22 @@ a {
 
 .blf-btn-label {
   flex: 1;
-  white-space: nowrap;
+  word-break: break-word;
+  text-align: center;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
+  hyphens: auto;
 }
 
 .blf-btn-type-icon {
   width: 12px;
   height: 12px;
   opacity: 0.5;
+  flex-shrink: 0;
 }
 
 .blf-btn-empty {
@@ -1373,7 +1383,8 @@ a {
 
 .blf-btn-empty-label {
   color: var(--text-color-muted);
-  font-size: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* BLF State Colors */
