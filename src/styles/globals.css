@@ -629,6 +629,7 @@ a {
 
 .toggle-container {
   position: relative;
+  display: inline-block;
 }
 
 .toggle-input {
@@ -637,6 +638,8 @@ a {
   width: 100%;
   height: 100%;
   cursor: pointer;
+  z-index: 2;
+  margin: 0;
 }
 
 .toggle-track {
@@ -646,6 +649,7 @@ a {
   border-radius: var(--radius-full);
   position: relative;
   transition: background-color var(--transition-fast);
+  pointer-events: none;
 }
 
 .toggle-input:checked + .toggle-track {
