@@ -941,6 +941,9 @@ a {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--spacing-sm);
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .dial-input {
@@ -960,6 +963,8 @@ a {
 .dial-input-actions {
   display: flex;
   gap: var(--spacing-xs);
+  flex-shrink: 0;
+  align-items: center;
 }
 
 .dial-input-call {
