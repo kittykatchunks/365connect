@@ -2,9 +2,9 @@
 // App Component - Main Application Shell
 // ============================================
 
-import { useEffect, Suspense, lazy } from 'react';
+import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAppStore, useUIStore, initializeThemeWatcher } from '@/stores';
+import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
 import { SIPProvider } from '@/contexts';
 import { 
   LoadingScreen, 
@@ -15,7 +15,8 @@ import {
   LeftPanelHeader,
   LeftPanelContent,
   NavigationTabs,
-  SIPStatusDisplay
+  SIPStatusDisplay,
+  WelcomeOverlay
 } from '@/components';
 // ErrorBoundary can be used to wrap views if needed
 // import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -94,6 +95,26 @@ function ViewRouter() {
 function MainLayout() {
   const notifications = useUIStore((state) => state.notifications);
   const removeNotification = useUIStore((state) => state.removeNotification);
+  const sipConfig = useSettingsStore((state) => state.sipConfig);
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
+  
+  // Check if first time setup (no PhantomID or credentials)
+  const [showWelcome, setShowWelcome] = useState(() => {
+    // Check if we've shown welcome before
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    return !hasSeenWelcome && !sipConfig;
+  });
+  
+  // Handle welcome close
+  const handleWelcomeClose = useCallback(() => {
+    localStorage.setItem('hasSeenWelcome', 'true');
+    setShowWelcome(false);
+  }, []);
+  
+  // Handle opening settings from welcome
+  const handleWelcomeOpenSettings = useCallback(() => {
+    setCurrentView('settings');
+  }, [setCurrentView]);
   
   return (
     <MainContainer>
@@ -102,7 +123,7 @@ function MainLayout() {
         <LeftPanelHeader>
           <div className="app-brand">
             <img src="/icons/pwa-192x192.png" alt="" className="brand-logo" />
-            <span className="brand-name">Autocab365 Connect</span>
+            <span className="brand-name">Connect365</span>
           </div>
           <SIPStatusDisplay />
         </LeftPanelHeader>
@@ -127,6 +148,13 @@ function MainLayout() {
         }))}
         onDismiss={removeNotification}
         position="top-right"
+      />
+      
+      {/* Welcome Overlay - First Time Setup */}
+      <WelcomeOverlay
+        isOpen={showWelcome}
+        onClose={handleWelcomeClose}
+        onOpenSettings={handleWelcomeOpenSettings}
       />
     </MainContainer>
   );

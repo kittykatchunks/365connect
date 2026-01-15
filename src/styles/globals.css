@@ -2601,7 +2601,9 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+  background: linear-gradient(135deg, rgba(49, 130, 206, 0.95) 0%, rgba(44, 82, 130, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: var(--spacing-lg);
 }
 
@@ -2743,6 +2745,35 @@ a {
 
 .welcome-footer {
   margin-top: var(--spacing-md);
+}
+
+/* ============================================
+   PWA Install Components
+   ============================================ */
+
+/* PWA Install Button */
+.pwa-install-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* PWA Installed Badge */
+.pwa-installed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--success-color-light);
+  color: var(--success-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .pwa-installed-badge {
+  background-color: rgba(56, 161, 105, 0.2);
+  color: var(--success-color-light);
 }
 
 /* Loading Screen */
