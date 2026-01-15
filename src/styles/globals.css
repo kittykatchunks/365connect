@@ -950,10 +950,12 @@ a {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 500;
   text-align: center;
   color: var(--text-color);
+  min-width: 0;
+  padding: 0 var(--spacing-xs);
 }
 
 .dial-input:focus {
