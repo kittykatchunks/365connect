@@ -33,7 +33,7 @@ import {
   Button
 } from '@/components/ui';
 import { ImportExportModal } from '@/components/modals';
-import { useSettingsStore, useAppStore } from '@/stores';
+import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
 import { useAudioDevices } from '@/hooks';
 
 export function SettingsView() {
@@ -46,7 +46,8 @@ export function SettingsView() {
   const setPhantomID = useSettingsStore((state) => state.setPhantomID);
   const setSIPCredentials = useSettingsStore((state) => state.setSIPCredentials);
   const setVMAccess = useSettingsStore((state) => state.setVMAccess);
-  const setTheme = useSettingsStore((state) => state.setTheme);
+  const setThemeInSettings = useSettingsStore((state) => state.setTheme);
+  const setThemeInUI = useUIStore((state) => state.setTheme);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
   const setBLFEnabled = useSettingsStore((state) => state.setBLFEnabled);
   const setShowContactsTab = useSettingsStore((state) => state.setShowContactsTab);
@@ -318,7 +319,11 @@ export function SettingsView() {
                   <label>{t('settings.theme', 'Theme')}</label>
                   <Select
                     value={settings.interface.theme}
-                    onChange={(e) => setTheme(e.target.value as 'auto' | 'light' | 'dark')}
+                    onChange={(e) => {
+                      const theme = e.target.value as 'auto' | 'light' | 'dark';
+                      setThemeInSettings(theme);
+                      setThemeInUI(theme);
+                    }}
                     options={themeOptions}
                   />
                 </div>
