@@ -55,7 +55,8 @@ export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
             </>
           )}
           
-          <Button
+          {/* Call button removed per UI requirements */}
+          {/* <Button
             variant={isCallActive ? 'danger' : 'success'}
             size="icon"
             onClick={onCall}
@@ -64,7 +65,7 @@ export const DialInput = forwardRef<HTMLInputElement, DialInputProps>(
             className="dial-input-call"
           >
             <Phone className={isCallActive ? 'rotate-[135deg]' : ''} />
-          </Button>
+          </Button> */}
         </div>
       </div>
     );

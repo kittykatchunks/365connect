@@ -947,7 +947,8 @@ async function toggleRegistration() {
         }
     } catch (error) {
         console.error('Registration toggle failed:', error);
-        showError('Registration failed: ' + error.message);
+        // Toast notification is already shown by the registrationFailed event handler
+        // No need to show duplicate error here
     }
 }
 
@@ -2078,6 +2079,10 @@ function setupSipConnectionMonitoring() {
     App.managers.sip.on('registrationFailed', (error) => {
         console.error('SIP registration failed:', error);
         
+        // User requirement: Do NOT display connection errors in UI
+        // Errors are logged to console only, no toast notifications shown
+        
+        /*
         const t = window.languageManager?.t || ((key, def) => def);
         App.managers.ui.addNotification({
             type: 'error',
@@ -2102,6 +2107,7 @@ function setupSipConnectionMonitoring() {
                 }
             ]
         });
+        */
         
         App.managers.ui.setConnectionState('failed');
     });

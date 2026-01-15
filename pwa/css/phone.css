@@ -995,6 +995,7 @@ input[type="radio"]:checked::after {
     display: flex;
     gap: var(--spacing-md);
     justify-content: flex-start;
+    border-top: none; /* Remove horizontal line above save settings button */
 }
 
 .settings-actions button {
@@ -1903,6 +1904,13 @@ input[type="radio"]:checked::after {
 
 .modal-overlay.hidden {
     display: none;
+}
+
+/* Agent modal needs higher z-index to appear above notifications */
+#agentNumberModal,
+#dtmfInputModal,
+#pauseReasonModal {
+    z-index: 10003;
 }
 
 .modal, .modal-content {
@@ -4133,11 +4141,11 @@ body.view-dial .agent-keys-container { display: block; }
 /* Welcome overlay uses .modal-overlay with heavy-blur and high-priority modifiers */
 .welcome-overlay {
     pointer-events: all;
-    background-color: var(--overlay-bg-light);
+    background-color: rgba(50, 50, 50, 0.85); /* Dark grey blur */
 }
 
 [data-theme="dark"] .welcome-overlay {
-    background-color: var(--overlay-bg);
+    background-color: rgba(40, 40, 40, 0.90); /* Slightly darker grey for dark theme */
 }
 
 .welcome-content {

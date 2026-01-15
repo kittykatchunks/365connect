@@ -13,7 +13,8 @@ import { Button } from '@/components/ui';
 export function SIPStatusDisplay() {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Error display removed per UI requirements - connection errors should not be shown
+  // const [error, setError] = useState<string | null>(null);
   
   const registrationState = useSIPStore((state) => state.registrationState);
   const transportState = useSIPStore((state) => state.transportState);
@@ -76,27 +77,25 @@ export function SIPStatusDisplay() {
   
   const handleConnect = useCallback(async () => {
     if (!sipConfig) {
-      setError(t('status.no_config', 'Please configure SIP settings first'));
+      // Error not displayed per UI requirements
+      console.warn('No SIP config available');
       return;
     }
     
     setIsConnecting(true);
-    setError(null);
     
     try {
       await connect();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Connection failed';
-      setError(message);
+      // Connection errors are not displayed per UI requirements
       console.error('SIP connection error:', err);
     } finally {
       setIsConnecting(false);
     }
-  }, [connect, sipConfig, t]);
+  }, [connect, sipConfig]);
   
   const handleDisconnect = useCallback(async () => {
     setIsConnecting(true);
-    setError(null);
     
     try {
       if (isRegistered) {
@@ -128,9 +127,7 @@ export function SIPStatusDisplay() {
         <span className={cn('sip-status-label', status.color)}>{status.label}</span>
       </div>
       
-      {error && (
-        <div className="sip-status-error text-error text-xs mt-1">{error}</div>
-      )}
+      {/* Error display removed per UI requirements - connection errors should not be shown */}
       
       <div className="sip-status-actions mt-2">
         {showConnectButton && (

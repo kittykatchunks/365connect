@@ -44,6 +44,8 @@
         });
         
         // Restore accordion state from localStorage (only if specified)
+        // DISABLED: All accordion menus should be collapsed by default when selecting Settings tab
+        /*
         const activePanel = localStorage.getItem('activeAccordionPanel');
         if (activePanel) {
             const header = document.querySelector(`[data-target="${activePanel}"]`);
@@ -53,6 +55,7 @@
                 content.classList.add('active');
             }
         }
+        */
     }
     
     // Function to close all accordion panels
