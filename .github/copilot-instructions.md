@@ -29,6 +29,58 @@ Uses **secure WebSocket (WSS)** for SIP signaling with these requirements:
 - Path: `/ws`
 - WebRTC media flow: Browser ↔ Asterisk PBX
 
+## Mandatory Development Practices
+
+### Verbose Logging
+**ALWAYS include verbose logging for all new features and changes**. All log statements must be gated by the verbose logging setting:
+
+```javascript
+// Check verbose logging setting from localStorage
+const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+
+// Add logging throughout your code
+if (verboseLogging) {
+    console.log('[ComponentName] Event occurred:', eventData);
+    console.warn('[ComponentName] Potential issue detected:', details);
+    console.error('[ComponentName] Error:', error);
+}
+```
+
+**Logging Guidelines:**
+- Prefix all logs with component/manager name in brackets: `[SipSessionManager]`, `[UIStateManager]`, etc.
+- Log key state changes, API calls, user interactions, and error conditions
+- Include relevant context (session IDs, timestamps, user actions)
+- Use appropriate log levels: `console.log()` for info, `console.warn()` for warnings, `console.error()` for errors
+- Verbose logging is controlled via Settings > Advanced Settings toggle
+
+### Internationalization (i18n)
+**ALL user-facing text MUST be internationalized**. Never use hardcoded English strings in the UI.
+
+```javascript
+// WRONG - Hardcoded English
+button.textContent = 'Call Now';
+
+// CORRECT - Using language manager
+button.textContent = lang.call_now;
+```
+
+**i18n Implementation Pattern:**
+1. Add keys to all language files in `pwa/lang/` (en.json, es.json, fr.json, etc.)
+2. Access via `lang.key_name` after language initialization
+3. Use snake_case for translation keys
+4. Provide context in translation keys: `button_call_start` not just `start`
+5. For dynamic content, use template strings: `lang.calls_count.replace('{count}', count)`
+
+**Language Files to Update:**
+- `pwa/lang/en.json` (English - primary reference)
+- `pwa/lang/es.json` (Spanish - Spain)
+- `pwa/lang/es-419.json` (Spanish - Latin America)
+- `pwa/lang/fr.json` (French - France)
+- `pwa/lang/fr-CA.json` (French - Canada)
+- `pwa/lang/nl.json` (Dutch)
+- `pwa/lang/pt.json` (Portuguese - Portugal)
+- `pwa/lang/pt-BR.json` (Portuguese - Brazil)
+
 ## Key Development Patterns
 
 ### Manager Pattern
