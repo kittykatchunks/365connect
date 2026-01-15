@@ -865,26 +865,25 @@ export class SIPService {
     
     if (verboseLogging) {
       console.log('[SIPService] ✅ Session found:', sessionId);
-    }
-
-    // Check session state
-    if (verboseLogging) {
-      console.log('[SIPService] 🔍 Session state debug:', {
-        currentState: sessionData.state,
-        stateType: typeof sessionData.state,
+      console.log('[SIPService] 🔍 Session details:', {
+        sessionId: sessionData.id,
+        stateInData: sessionData.state,
         sipJsState: sessionData.session.state,
-        direction: sessionData.direction
+        sipJsStateEnum: SIP.SessionState.Established,
+        direction: sessionData.direction,
+        hasSDH: !!sessionData.session.sessionDescriptionHandler
       });
     }
-    
+
+    // Check session state using the SIP.js session state directly
     if (!isSessionEstablished(sessionData.session.state)) {
-      const error = new Error(`Cannot send DTMF - session not established. Current state: ${sessionData.state}`);
+      const error = new Error(`Cannot send DTMF - session not established. SIP.js state: ${sessionData.session.state}, Data state: ${sessionData.state}`);
       console.error('[SIPService] ❌ DTMF Error:', error.message);
       throw error;
     }
     
     if (verboseLogging) {
-      console.log('[SIPService] ✅ Session state validated:', sessionData.state);
+      console.log('[SIPService] ✅ Session state validated:', sessionData.session.state);
     }
 
     try {
@@ -896,6 +895,13 @@ export class SIPService {
       const sdh = sessionData.session.sessionDescriptionHandler;
       if (!sdh) {
         throw new Error('No sessionDescriptionHandler available');
+      }
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📋 SessionDescriptionHandler found:', {
+          hasSendDtmf: typeof (sdh as unknown as { sendDtmf?: unknown }).sendDtmf === 'function',
+          sdhType: sdh.constructor.name
+        });
       }
       
       // Try RFC 4733 (in-band DTMF) - cast to access sendDtmf method
@@ -926,7 +932,9 @@ export class SIPService {
         tone,
         sessionId,
         error: error instanceof Error ? error.message : String(error),
-        sessionState: sessionData.state
+        errorStack: error instanceof Error ? error.stack : undefined,
+        sessionState: sessionData.state,
+        sipJsState: sessionData.session.state
       });
       throw error;
     }

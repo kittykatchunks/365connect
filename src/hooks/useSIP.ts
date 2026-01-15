@@ -162,18 +162,32 @@ export function useSIP(): UseSIPReturn {
   
   // DTMF - use current session if no sessionId provided
   const sendDTMF = useCallback(async (tone: string, sessionId?: string) => {
+    const verboseLogging = true; // TODO: Get from settings
+    
     const targetSessionId = sessionId || currentSession?.id;
     if (!targetSessionId) {
       throw new Error('No active session for DTMF');
     }
+    
+    if (verboseLogging) {
+      console.log('[useSIP] sendDTMF called:', { tone, sessionId: targetSessionId, currentSessionState: currentSession?.state });
+    }
+    
     await sipContext.sendDTMF(targetSessionId, tone);
   }, [sipContext, currentSession]);
   
   const sendDTMFSequence = useCallback(async (sequence: string, sessionId?: string) => {
+    const verboseLogging = true; // TODO: Get from settings
+    
     const targetSessionId = sessionId || currentSession?.id;
     if (!targetSessionId) {
       throw new Error('No active session for DTMF');
     }
+    
+    if (verboseLogging) {
+      console.log('[useSIP] sendDTMFSequence called:', { sequence, sessionId: targetSessionId, currentSessionState: currentSession?.state });
+    }
+    
     await sipContext.sendDTMFSequence(targetSessionId, sequence);
   }, [sipContext, currentSession]);
   

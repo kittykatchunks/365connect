@@ -52,21 +52,31 @@ export function DialView() {
   
   // Handle digit press
   const handleDigit = useCallback(async (digit: string) => {
-    console.log('[DialView] Digit pressed:', digit, 'isInCall:', isInCall);
+    const verboseLogging = true; // TODO: Get from settings
     
-    if (isInCall) {
-      // Send DTMF
+    if (verboseLogging) {
+      console.log('[DialView] Digit pressed:', digit, 'isInCall:', isInCall);
+    }
+    
+    // Check if we have an established session to send DTMF
+    if (currentSession && currentSession.state === 'established') {
+      // Send DTMF to established session
       try {
-        console.log('[DialView] Attempting to send DTMF:', digit, 'currentSession:', currentSession?.id);
-        await sendDTMF(digit);
-        console.log('[DialView] ✅ DTMF sent successfully:', digit);
+        if (verboseLogging) {
+          console.log('[DialView] Attempting to send DTMF:', digit, 'sessionId:', currentSession.id, 'state:', currentSession.state);
+        }
+        await sendDTMF(digit, currentSession.id);
+        if (verboseLogging) {
+          console.log('[DialView] ✅ DTMF sent successfully:', digit);
+        }
       } catch (error) {
         console.error('[DialView] DTMF error:', error);
       }
     } else {
+      // No established session, update dial input
       setDialValue((prev) => prev + digit);
     }
-  }, [isInCall, sendDTMF, currentSession]);
+  }, [currentSession, sendDTMF]);
   
   // Handle long press (e.g., 0 for +)
   const handleLongPress = useCallback((digit: string) => {
@@ -173,7 +183,7 @@ export function DialView() {
       
       // Dialpad keys
       if (/^[0-9*#]$/.test(e.key)) {
-        console.log('[DialView] Keyboard DTMF key pressed:', e.key);
+        e.preventDefault();
         handleDigit(e.key);
       }
       
