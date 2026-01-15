@@ -424,5 +424,9 @@
     "aria_label_close": "Close",
     "phantom_id_placeholder": "e.g., 388",
     "blf_extension_placeholder": "101",
-    "speeddial_number_placeholder": "+1234567890"
+    "speeddial_number_placeholder": "+1234567890",
+    "blf": {
+        "right_click_to_configure": "Right-click to configure",
+        "click_to_configure": "Click to configure"
+    }
 }

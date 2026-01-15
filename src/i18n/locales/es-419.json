@@ -414,6 +414,10 @@
     "aria_label_dial_digit": "Marcar {{digit}}",
     "aria_label_line_state": "Línea {{number}}: {{state}}",
     "aria_label_configure_button": "Configurar botón {{index}}",
+    "blf": {
+        "right_click_to_configure": "Clic derecho para configurar",
+        "click_to_configure": "Clic para configurar"
+    },
     "aria_label_dismiss": "Descartar",
     "aria_label_close": "Cerrar",
     "phantom_id_placeholder": "ej., 388",

@@ -35,8 +35,7 @@ export function BLFButton({
   
   const handleClick = useCallback(() => {
     if (!isConfigured) {
-      onConfigure(button.index);
-      return;
+      return; // Do nothing on left-click if not configured
     }
     
     if (isInCall) {
@@ -46,7 +45,12 @@ export function BLFButton({
       // Not in call - dial the extension
       onDial(button.extension);
     }
-  }, [isConfigured, isInCall, button.index, button.extension, onConfigure, onDial]);
+  }, [isConfigured, isInCall, button.extension, onDial]);
+  
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    onConfigure(button.index);
+  }, [onConfigure, button.index]);
   
   const handleDial = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -102,10 +106,11 @@ export function BLFButton({
           showActions && 'blf-btn-active'
         )}
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
         disabled={disabled}
         title={isConfigured 
           ? `${button.displayName || button.extension} - ${getStateLabel(state)}`
-          : t('blf.click_to_configure', 'Click to configure')
+          : t('blf.right_click_to_configure', 'Right-click to configure')
         }
         aria-label={isConfigured
           ? `${button.type === 'blf' ? 'BLF' : 'Speed Dial'}: ${button.displayName || button.extension}`

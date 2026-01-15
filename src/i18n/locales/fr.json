@@ -420,6 +420,10 @@
     "aria_label_dial_digit": "Composer {{digit}}",
     "aria_label_line_state": "Ligne {{number}}: {{state}}",
     "aria_label_configure_button": "Configurer le bouton {{index}}",
+    "blf": {
+        "right_click_to_configure": "Clic droit pour configurer",
+        "click_to_configure": "Cliquer pour configurer"
+    },
     "aria_label_dismiss": "Rejeter",
     "aria_label_close": "Fermer",
     "phantom_id_placeholder": "ex., 388",

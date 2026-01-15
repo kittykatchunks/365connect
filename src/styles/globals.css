@@ -677,16 +677,19 @@ a {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: auto;
   padding: var(--spacing-md);
+  max-width: max-content;
+  max-height: max-content;
+  border: none;
+  background: transparent;
   z-index: 50;
 }
 
 .modal-backdrop::backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-container {

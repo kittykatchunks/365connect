@@ -414,6 +414,10 @@
     "aria_label_dial_digit": "Discar {{digit}}",
     "aria_label_line_state": "Linha {{number}}: {{state}}",
     "aria_label_configure_button": "Configurar botão {{index}}",
+    "blf": {
+        "right_click_to_configure": "Clique com o botão direito para configurar",
+        "click_to_configure": "Clique para configurar"
+    },
     "aria_label_dismiss": "Dispensar",
     "aria_label_close": "Fechar",
     "phantom_id_placeholder": "ex., 388",

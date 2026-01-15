@@ -418,6 +418,10 @@
     "aria_label_dial_digit": "Kies {{digit}}",
     "aria_label_line_state": "Lijn {{number}}: {{state}}",
     "aria_label_configure_button": "Knop {{index}} configureren",
+    "blf": {
+        "right_click_to_configure": "Rechtermuisklik om te configureren",
+        "click_to_configure": "Klik om te configureren"
+    },
     "aria_label_dismiss": "Afwijzen",
     "aria_label_close": "Sluiten",
     "phantom_id_placeholder": "bijv., 388",
