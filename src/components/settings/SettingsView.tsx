@@ -21,7 +21,7 @@ import {
   Save,
   Check
 } from 'lucide-react';
-import { PanelHeader, PWAInstallButton } from '@/components/layout';
+import { PanelHeader } from '@/components/layout';
 import { 
   Accordion, 
   AccordionItem, 
@@ -347,22 +347,6 @@ export function SettingsView() {
                     description={t('settings.onscreen_notifications_desc', 'Show toast notifications for events')}
                     checked={settings.interface.onscreenNotifications}
                     onChange={(checked) => setOnscreenNotifications(checked)}
-                  />
-                </div>
-                
-                <div className="settings-divider" />
-                
-                {/* PWA Install Button */}
-                <div className="setting-item">
-                  <label>{t('settings.pwa_install', 'Install Application')}</label>
-                  <p className="form-hint">
-                    {t('settings.pwa_install_hint', 'Install this app on your device for quick access and offline support')}
-                  </p>
-                  <PWAInstallButton 
-                    variant="secondary" 
-                    size="md" 
-                    showIcon={true}
-                    className="mt-2"
                   />
                 </div>
                 
