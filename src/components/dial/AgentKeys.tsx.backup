@@ -10,6 +10,7 @@ import { Button } from '@/components/ui';
 import { AgentLoginModal } from '@/components/modals';
 import { useAppStore } from '@/stores';
 import { useSIP } from '@/hooks';
+import type { SessionData } from '@/types';
 
 export type AgentState = 'logged-out' | 'available' | 'paused' | 'on-call';
 export type QueueState = 'none' | 'in-queue' | 'paused';
@@ -28,7 +29,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const setAgentState = useAppStore((state) => state.setAgentState);
   const setQueueState = useAppStore((state) => state.setQueueState);
   
-  const { isRegistered, makeCall, sendDTMFSequence, currentSession } = useSIP();
+  const { makeCall, sendDTMFSequence, currentSession } = useSIP();
   
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -60,69 +61,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
           // If passcode provided, send it after 500ms
           if (pendingLogin.passcode) {
             setTimeout(async () => {
-              try {
-                await sendDTMFSequence(`${pendingLogin.passcode}#`, currentSession.id);
-                console.log(`Sent passcode DTMF: ${pendingLogin.passcode}#`);
-              } catch (error) {
-                console.error('Failed to send passcode DTMF:', error);
-              }
-            }, 500);
-          }
-          
-          // Update agent state
-          useAppStore.setState({
-            agentNumber: pendingLogin.agentNumber,
-            agentState: 'available'
-          });
-          
-          // Clear pending login
-          setPendingLogin(null);
-        } catch (error) {
-          console.error('Failed to send DTMF:', error);
-        }
-      };
-      
-      sendLoginDTMF();
-    }
-  }, [pendingLogin, currentSession, sendDTMFSequence]);
-  
-  // Listen for session termination to complete logout
-  useEffect(() => {
-    if (pendingLogout && currentSession?.state === 'terminated') {
-      // Logout call completed - update state
-      useAppStore.setState({
-        agentNumber: undefined,
-        agentState: 'logged-out',
-        queueState: 'none'
-      });
-      setPendingLogout(false);
-      setIsLoading(false);
-      console.log('Agent logged out successfully');
-    }
-  }, [pendingLogout, currentSession]);
-  
-  // Agent login/logout
-  const handleLogin = useCallback(async () => {
-    if (isLoggedIn) {
-      // Logout - make call to *61
-      setIsLoading(true);
-      try {
-        setPendingLogout(true);
-        await makeCall(AGENT_CODES.logout);
-        console.log('Agent logout call initiated');
-      } catch (error) {
-        console.error('Agent logout error:', error);
-        setPendingLogout(false);
-        setIsLoading(false);
-      }
-    } else {
-      // Show login modal
-      setShowLoginModal(true);
-    }
-  }, [isLoggedIn, makeCall]);
-  
-  // Handle agent login from modal
-  const handleAgentLogin = useCallback(async (agentNumber: string, passcode?: string) => {
+              try {passcode?: string) => {
     setIsLoading(true);
     try {
       // Store login info to send DTMF when call is answered
@@ -139,7 +78,56 @@ export function AgentKeys({ className }: AgentKeysProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [makeCall]);
+  }, [makeCall};
+      
+      sendLoginDTMF();
+    }
+  }, [pendingLogin, currentSession, sendDTMFSequence])
+  const isInQueue = queueState === 'in-queue';
+  
+  // Agent login
+  const handleLogin = useCallback(async () => {
+    if (isLoggedIn) {
+      // Logout
+      setIsLoading(true);
+      try {
+        // Send agent logout code (typically *2)
+        // This would be configurable
+        // await sendDTMF('*2');
+        setAgentState('logged-out');
+        setQueueState('none');
+      } catch (error) {
+        console.error('Agent logout error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setShowLoginModal(true);
+    }
+  }, [isLoggedIn, setAgentState, setQueueState]);
+  
+  // Handle agent login from modal
+  const handleAgentLogin = useCallback(async (agentNumber: string, _passcode?: string) => {
+    setIsLoading(true);
+    try {
+      // Send agent login code with number (typically *1{agentNumber})
+      // This would be configurable and use actual SIP/DTMF
+      // await sendDTMF(`*1${agentNumber}`);
+      
+      // Store agent state
+      useAppStore.setState({ 
+        agentNumber,
+        agentState: 'available' 
+      });
+      
+      console.log('Agent logged in:', agentNumber);
+    } catch (error) {
+      console.error('Agent login error:', error);
+      throw error; // Re-throw to show in modal
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
   
   // Toggle queue
   const handleQueue = useCallback(async () => {
@@ -245,6 +233,14 @@ export function AgentKeys({ className }: AgentKeysProps) {
           : t('agent.join_queue', 'Join Queue')
         }
       >
+      
+      {/* Agent Login Modal */}
+      <AgentLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleAgentLogin}
+        isLoading={isLoading}
+      />
         <Users className="w-4 h-4" />
         <span className="agent-key-label">
           {isInQueue ? t('agent.in_queue', 'In Queue') : t('agent.queue', 'Queue')}
@@ -268,14 +264,6 @@ export function AgentKeys({ className }: AgentKeysProps) {
           {isPaused ? t('agent.paused', 'Paused') : t('agent.pause', 'Pause')}
         </span>
       </Button>
-      
-      {/* Agent Login Modal */}
-      <AgentLoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={handleAgentLogin}
-        isLoading={isLoading}
-      />
     </div>
   );
 }
