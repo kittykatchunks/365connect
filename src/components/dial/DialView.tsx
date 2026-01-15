@@ -248,8 +248,8 @@ export function DialView() {
             </div>
           )}
           
-          {/* Line Keys */}
-          <LineKeys />
+          {/* Agent Keys */}
+          <AgentKeys />
           
           {/* CLI Selector */}
           <CLISelector />
@@ -303,8 +303,8 @@ export function DialView() {
             </div>
           )}
           
-          {/* Agent Keys */}
-          <AgentKeys />
+          {/* Line Keys */}
+          <LineKeys />
         </div>
         
         {/* Right BLF Panel */}
