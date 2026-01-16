@@ -85,16 +85,6 @@ export function BLFButton({
     }
   };
   
-  const getStateLabel = (state: BLFPresenceState) => {
-    switch (state) {
-      case 'available': return t('blf.available', 'Available');
-      case 'busy': return t('blf.busy', 'Busy');
-      case 'ringing': return t('blf.ringing', 'Ringing');
-      case 'hold': return t('blf.hold', 'On Hold');
-      default: return '';
-    }
-  };
-  
   return (
     <div className={cn('blf-btn-container', className)} onBlur={handleBlur}>
       <button
