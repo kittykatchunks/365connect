@@ -146,6 +146,10 @@ app.use(cors({
 
 app.use(compression());
 
+// Body parsing middleware - MUST come before proxy middlewares
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // Determine static folder based on environment
 const staticFolder = process.env.NODE_ENV === 'production' 
   ? path.join(__dirname, 'dist')
