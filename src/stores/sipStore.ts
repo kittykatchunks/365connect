@@ -4,11 +4,13 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { isVerboseLoggingEnabled } from '@/utils';
 import type { 
   RegistrationState, 
   TransportState, 
   SessionData, 
   LineState,
+  LineStateType,
   BLFPresenceState 
 } from '@/types';
 
@@ -78,24 +80,98 @@ export const useSIPStore = create<SIPState>()(
       
       // Session actions
       addSession: (session) => set((state) => {
+        const verboseLogging = isVerboseLoggingEnabled();
+        
+        if (verboseLogging) {
+          console.log('[sipStore] 📝 addSession called:', {
+            sessionId: session.id,
+            lineNumber: session.lineNumber,
+            direction: session.direction,
+            state: session.state,
+            target: session.target
+          });
+        }
+        
         const newSessions = new Map(state.sessions);
         newSessions.set(session.id, session);
-        return { sessions: newSessions };
+        
+        // Update the line state to link this session to its line
+        const newLineStates = state.lineStates.map((lineState) =>
+          lineState.lineNumber === session.lineNumber
+            ? {
+                ...lineState,
+                sessionId: session.id,
+                state: (session.state === 'ringing' ? 'ringing' : 
+                       session.state === 'established' || session.state === 'active' ? 'active' :
+                       session.onHold ? 'hold' : 'dialing') as LineStateType,
+                startTime: session.startTime,
+                callerInfo: {
+                  number: session.remoteNumber || session.target || '',
+                  name: session.displayName || session.remoteIdentity || '',
+                  direction: session.direction
+                }
+              }
+            : lineState
+        );
+        
+        if (verboseLogging) {
+          console.log('[sipStore] ✅ Session added:', {
+            totalSessions: newSessions.size,
+            lineStates: newLineStates.map(ls => ({
+              line: ls.lineNumber,
+              sessionId: ls.sessionId,
+              state: ls.state
+            }))
+          });
+        }
+        
+        return { sessions: newSessions, lineStates: newLineStates };
       }),
       
       updateSession: (sessionId, updates) => set((state) => {
         const session = state.sessions.get(sessionId);
         if (!session) return state;
         
+        const updatedSession = { ...session, ...updates };
         const newSessions = new Map(state.sessions);
-        newSessions.set(sessionId, { ...session, ...updates });
-        return { sessions: newSessions };
+        newSessions.set(sessionId, updatedSession);
+        
+        // Update the line state to reflect session changes
+        const newLineStates = state.lineStates.map((lineState) =>
+          lineState.sessionId === sessionId
+            ? {
+                ...lineState,
+                state: (updatedSession.state === 'ringing' ? 'ringing' : 
+                       updatedSession.state === 'established' || updatedSession.state === 'active' ? 'active' :
+                       updatedSession.onHold ? 'hold' : 
+                       updatedSession.state === 'terminated' ? 'idle' : lineState.state) as LineStateType,
+                callerInfo: {
+                  number: updatedSession.remoteNumber || updatedSession.target || lineState.callerInfo?.number || '',
+                  name: updatedSession.displayName || updatedSession.remoteIdentity || lineState.callerInfo?.name || '',
+                  direction: updatedSession.direction || lineState.callerInfo?.direction || 'outgoing'
+                }
+              }
+            : lineState
+        );
+        
+        return { sessions: newSessions, lineStates: newLineStates };
       }),
       
       removeSession: (sessionId) => set((state) => {
+        const session = state.sessions.get(sessionId);
         const newSessions = new Map(state.sessions);
         newSessions.delete(sessionId);
-        return { sessions: newSessions };
+        
+        // Clear the line state for the line that had this session
+        const newLineStates = session 
+          ? state.lineStates.map((lineState) =>
+              lineState.lineNumber === session.lineNumber
+                ? { lineNumber: lineState.lineNumber, sessionId: null, state: 'idle' as LineStateType, startTime: null, callerInfo: null }
+                : lineState
+            )
+          : state.lineStates;
+        
+        return { sessions: newSessions, lineStates: newLineStates };
       }),
       
       // Line actions
