@@ -526,6 +526,7 @@ export function DialView() {
             disabled={!isRegistered}
             isDialing={isDialing}
             hasDialValue={!!dialValue.trim()}
+            hasRedialNumber={!!lastDialedNumber}
             className="dial-action-buttons"
           />
           

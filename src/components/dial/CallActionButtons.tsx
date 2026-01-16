@@ -32,6 +32,7 @@ interface CallActionButtonsProps {
   disabled?: boolean;
   isDialing?: boolean;
   hasDialValue?: boolean;
+  hasRedialNumber?: boolean;
   
   className?: string;
 }
@@ -53,6 +54,7 @@ export function CallActionButtons({
   disabled = false,
   isDialing = false,
   hasDialValue = false,
+  hasRedialNumber = false,
   className
 }: CallActionButtonsProps) {
   const { t } = useTranslation();
@@ -163,7 +165,7 @@ export function CallActionButtons({
             onCall();
           }
         }}
-        disabled={disabled || (isIdle && !hasDialValue && !isDialing)}
+        disabled={disabled || (isIdle && !hasDialValue && !hasRedialNumber && !isDialing)}
         aria-label={hasIncoming ? t('call.answer', 'Answer') : t('call.call', 'Call')}
         className={cn(
           'call-button uppercase',
