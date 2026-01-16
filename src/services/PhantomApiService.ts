@@ -367,10 +367,13 @@ export class PhantomApiService {
     } catch (error: unknown) {
       console.error(`[PhantomApiService] ❌ ${req.method} Error:`, error);
 
-      // Handle timeout specifically
+      // Handle error message
       const err = error as Error;
+      let errorMessage = err.message || 'Unknown error';
+      
+      // Handle timeout specifically - create new message instead of modifying readonly property
       if (err.name === 'AbortError') {
-        err.message = `Request timeout after ${options?.timeout || this.config?.timeout || 30000}ms`;
+        errorMessage = `Request timeout after ${options?.timeout || this.config?.timeout || 30000}ms`;
       }
 
       // Emit error event
@@ -379,12 +382,12 @@ export class PhantomApiService {
         method: req.method,
         endpoint: req.endpoint,
         error,
-        message: err.message
+        message: errorMessage
       });
 
       return {
         success: false,
-        error: err.message,
+        error: errorMessage,
         data: null
       };
     }
