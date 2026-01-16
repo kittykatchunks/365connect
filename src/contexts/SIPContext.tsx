@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useRef, type ReactNode } from 're
 import { SIPService, sipService } from '../services/SIPService';
 import { useSIPStore } from '../stores/sipStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { isVerboseLoggingEnabled } from '../utils';
 import type { 
   SessionData, 
   RegistrationState, 
@@ -196,15 +197,56 @@ export function SIPProvider({ children }: SIPProviderProps) {
     
     // Calls
     makeCall: async (target: string) => {
-      return await serviceRef.current.makeCall(target);
+      const verboseLogging = isVerboseLoggingEnabled();
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 makeCall called:', { target });
+      }
+      
+      const result = await serviceRef.current.makeCall(target);
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ makeCall returned:', {
+          sessionId: result.id,
+          state: result.state,
+          target: result.target
+        });
+      }
+      
+      return result;
     },
     
     answerCall: async (sessionId?: string) => {
-      return await serviceRef.current.answerCall(sessionId);
+      const verboseLogging = isVerboseLoggingEnabled();
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 answerCall called:', { sessionId });
+      }
+      
+      const result = await serviceRef.current.answerCall(sessionId);
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ answerCall returned:', {
+          sessionId: result.id,
+          state: result.state
+        });
+      }
+      
+      return result;
     },
     
     hangupCall: async (sessionId?: string) => {
+      const verboseLogging = isVerboseLoggingEnabled();
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 📴 hangupCall called:', { sessionId });
+      }
+      
       await serviceRef.current.hangupCall(sessionId);
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ hangupCall completed');
+      }
     },
     
     // Call control

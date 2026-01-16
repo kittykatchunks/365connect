@@ -74,6 +74,32 @@ export function DialView() {
     selectedLineSession.direction === 'incoming' && 
     selectedLineSession.state === 'ringing';
   
+  // Log component state periodically for debugging
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    if (verboseLogging) {
+      console.log('[DialView] 🔍 Render state:', {
+        selectedLine,
+        selectedLineSession: selectedLineSession ? {
+          id: selectedLineSession.id,
+          state: selectedLineSession.state,
+          direction: selectedLineSession.direction,
+          target: selectedLineSession.target,
+          onHold: selectedLineSession.onHold,
+          muted: selectedLineSession.muted,
+          startTime: selectedLineSession.startTime
+        } : null,
+        showCallInfo,
+        isSelectedLineIdle,
+        isSelectedLineInCall,
+        isSelectedLineRinging,
+        hasIncomingOnSelectedLine,
+        isRegistered,
+        dialValue: dialValue || '(empty)'
+      });
+    }
+  });
+  
   // Legacy current session tracking (for compatibility with other components)
   const isInCall = currentSession && currentSession.state !== 'terminated';
   
@@ -296,16 +322,30 @@ export function DialView() {
     try {
       if (verboseLogging) {
         console.log('[DialView] 📴 Ending call on selected line:', selectedLine, 'sessionId:', selectedLineSession?.id);
+        console.log('[DialView] Current session state:', {
+          state: selectedLineSession?.state,
+          direction: selectedLineSession?.direction,
+          target: selectedLineSession?.target,
+          onHold: selectedLineSession?.onHold
+        });
       }
       
       if (selectedLineSession?.id) {
+        if (verboseLogging) {
+          console.log('[DialView] 🔄 Calling hangupCall with sessionId:', selectedLineSession.id);
+        }
         await hangupCall(selectedLineSession.id);
+        
+        if (verboseLogging) {
+          console.log('[DialView] ✅ hangupCall completed successfully');
+        }
+        
         setDialValue('');
       } else {
-        console.error('[DialView] No session to end on selected line:', selectedLine);
+        console.error('[DialView] ❌ No session to end on selected line:', selectedLine);
       }
     } catch (error) {
-      console.error('Hangup error:', error);
+      console.error('[DialView] ❌ Hangup error:', error);
       addNotification({
         type: 'error',
         title: t('call.error', 'Call Error'),

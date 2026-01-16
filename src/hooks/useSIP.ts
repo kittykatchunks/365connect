@@ -120,16 +120,91 @@ export function useSIP(): UseSIPReturn {
   
   // Call actions
   const makeCall = useCallback(async (target: string) => {
-    return await sipContext.makeCall(target);
-  }, [sipContext]);
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[useSIP] 📞 makeCall called:', {
+        target,
+        isRegistered,
+        transportState: store.transportState,
+        selectedLine: store.selectedLine,
+        activeSessions: sessions.length
+      });
+    }
+    
+    const result = await sipContext.makeCall(target);
+    
+    if (verboseLogging) {
+      console.log('[useSIP] ✅ makeCall successful, session created:', {
+        sessionId: result.id,
+        target: result.target,
+        direction: result.direction,
+        state: result.state,
+        lineNumber: result.lineNumber
+      });
+    }
+    
+    return result;
+  }, [sipContext, isRegistered, store.transportState, store.selectedLine, sessions.length]);
   
   const answerCall = useCallback(async (sessionId?: string) => {
-    return await sipContext.answerCall(sessionId);
-  }, [sipContext]);
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    const targetSessionId = sessionId || incomingSession?.id || currentSession?.id;
+    
+    if (verboseLogging) {
+      console.log('[useSIP] 📞 answerCall called:', {
+        requestedSessionId: sessionId,
+        incomingSessionId: incomingSession?.id,
+        currentSessionId: currentSession?.id,
+        targetSessionId,
+        selectedLine: store.selectedLine
+      });
+    }
+    
+    if (!targetSessionId) {
+      console.error('[useSIP] ❌ answerCall failed: No session to answer');
+      throw new Error('No session to answer');
+    }
+    
+    const result = await sipContext.answerCall(targetSessionId);
+    
+    if (verboseLogging) {
+      console.log('[useSIP] ✅ answerCall successful:', {
+        sessionId: result.id,
+        state: result.state
+      });
+    }
+    
+    return result;
+  }, [sipContext, incomingSession, currentSession, store.selectedLine]);
   
   const hangupCall = useCallback(async (sessionId?: string) => {
-    await sipContext.hangupCall(sessionId);
-  }, [sipContext]);
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    const targetSessionId = sessionId || currentSession?.id;
+    
+    if (verboseLogging) {
+      console.log('[useSIP] 📴 hangupCall called:', {
+        requestedSessionId: sessionId,
+        currentSessionId: currentSession?.id,
+        targetSessionId,
+        selectedLine: store.selectedLine,
+        activeSessions: sessions.length
+      });
+    }
+    
+    if (!targetSessionId) {
+      console.error('[useSIP] ❌ hangupCall failed: No session to hangup');
+      throw new Error('No session to hang up');
+    }
+    
+    await sipContext.hangupCall(targetSessionId);
+    
+    if (verboseLogging) {
+      console.log('[useSIP] ✅ hangupCall successful, sessionId:', targetSessionId);
+    }
+  }, [sipContext, currentSession, store.selectedLine, sessions.length]);
   
   const rejectCall = useCallback(async (sessionId?: string) => {
     // Reject is the same as hangup for unanswered incoming calls

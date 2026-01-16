@@ -5,7 +5,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { Phone, PhoneOff, Mic, MicOff, Pause, Play, PhoneForwarded } from 'lucide-react';
-import { cn } from '@/utils';
+import { cn, isVerboseLoggingEnabled } from '@/utils';
 import { Button } from '@/components/ui';
 
 interface CallActionButtonsProps {
@@ -56,6 +56,21 @@ export function CallActionButtons({
   className
 }: CallActionButtonsProps) {
   const { t } = useTranslation();
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  if (verboseLogging) {
+    console.log('[CallActionButtons] Render:', {
+      isIdle,
+      isRinging: _isRinging,
+      isInCall,
+      hasIncoming,
+      isMuted,
+      isOnHold,
+      disabled,
+      isDialing,
+      hasDialValue
+    });
+  }
   
   // PWA Pattern: Show CALL/END buttons when idle or ringing
   // Show MUTE/HOLD/TRANSFER/END when call is active
@@ -109,7 +124,12 @@ export function CallActionButtons({
         <Button
           variant="danger"
           size="lg"
-          onClick={onEndCall}
+          onClick={() => {
+            if (verboseLogging) {
+              console.log('[CallActionButtons] 📴 End call button clicked (active call)');
+            }
+            onEndCall();
+          }}
           disabled={disabled}
           aria-label={t('call.end', 'End Call')}
           className="call-control-btn end-call-btn"
@@ -128,7 +148,17 @@ export function CallActionButtons({
       <Button
         variant="success"
         size="lg"
-        onClick={hasIncoming ? onAnswer : onCall}
+        onClick={() => {
+          if (verboseLogging) {
+            console.log('[CallActionButtons] 📞 Call/Answer button clicked:', {
+              hasIncoming,
+              action: hasIncoming ? 'answer' : 'call',
+              hasDialValue,
+              isDialing
+            });
+          }
+          hasIncoming ? onAnswer() : onCall();
+        }}
         disabled={disabled || (isIdle && !hasDialValue && !isDialing)}
         aria-label={hasIncoming ? t('call.answer', 'Answer') : t('call.call', 'Call')}
         className={cn(
@@ -151,7 +181,15 @@ export function CallActionButtons({
       <Button
         variant="danger"
         size="lg"
-        onClick={hasIncoming ? onReject : onEndCall}
+        onClick={() => {
+          if (verboseLogging) {
+            console.log('[CallActionButtons] 📴 End/Reject button clicked:', {
+              hasIncoming,
+              action: hasIncoming ? 'reject' : 'end'
+            });
+          }
+          hasIncoming ? onReject() : onEndCall();
+        }}
         disabled={disabled && !hasIncoming}
         aria-label={hasIncoming ? t('call.reject', 'Reject') : t('call.end', 'End')}
         className="hangup-button uppercase"
