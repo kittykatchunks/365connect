@@ -56,14 +56,12 @@ export function SettingsView() {
   const setShowQueueMonitorTab = useSettingsStore((state) => state.setShowQueueMonitorTab);
   const setOnscreenNotifications = useSettingsStore((state) => state.setOnscreenNotifications);
   const setAutoAnswer = useSettingsStore((state) => state.setAutoAnswer);
-  const setCallWaiting = useSettingsStore((state) => state.setCallWaiting);
   const setIncomingCallNotifications = useSettingsStore((state) => state.setIncomingCallNotifications);
   const setPreferBlindTransfer = useSettingsStore((state) => state.setPreferBlindTransfer);
   const setSpeakerDevice = useSettingsStore((state) => state.setSpeakerDevice);
   const setMicrophoneDevice = useSettingsStore((state) => state.setMicrophoneDevice);
   const setRingerDevice = useSettingsStore((state) => state.setRingerDevice);
   const setRingtoneFile = useSettingsStore((state) => state.setRingtoneFile);
-  const setBusylightEnabled = useSettingsStore((state) => state.setBusylightEnabled);
   const setVerboseLogging = useSettingsStore((state) => state.setVerboseLogging);
   const resetSettings = useSettingsStore((state) => state.resetSettings);
   
@@ -394,7 +392,7 @@ export function SettingsView() {
           <AccordionItem value="call">
             <AccordionTrigger value="call">
               <Phone className="accordion-icon" />
-              {t('settings.call', 'Call Settings')}
+              {t('settings.call', 'Call')}
             </AccordionTrigger>
             <AccordionContent value="call">
               <div className="settings-group">
@@ -404,14 +402,6 @@ export function SettingsView() {
                     description={t('settings.auto_answer_desc', 'Automatically answer incoming calls')}
                     checked={settings.call.autoAnswer}
                     onChange={(checked) => setAutoAnswer(checked)}
-                  />
-                </div>
-                <div className="setting-item">
-                  <Toggle
-                    label={t('settings.call_waiting', 'Call Waiting')}
-                    description={t('settings.call_waiting_desc', 'Allow multiple simultaneous calls')}
-                    checked={settings.call.callWaiting}
-                    onChange={(checked) => setCallWaiting(checked)}
                   />
                 </div>
                 <div className="setting-item">
@@ -560,19 +550,10 @@ export function SettingsView() {
             <AccordionContent value="busylight">
               <div className="settings-group">
                 <div className="setting-item">
-                  <Toggle
-                    label={t('settings.busylight_enabled', 'Enable Busylight')}
-                    description={t('settings.busylight_desc', 'Control hardware status light via USB HID')}
-                    checked={settings.busylight.enabled}
-                    onChange={(checked) => setBusylightEnabled(checked)}
-                  />
-                </div>
-                
-                {settings.busylight.enabled && (
                   <p className="text-muted">
-                    {t('settings.busylight_info', 'Connect a compatible Busylight device to show call status.')}
+                    {t('settings.busylight_future', 'This feature will be available in a future release.')}
                   </p>
-                )}
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
