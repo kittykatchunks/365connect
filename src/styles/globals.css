@@ -351,6 +351,32 @@ a {
 .panel-header-subtitle {
   font-size: 0.875rem;
   color: var(--text-color-muted);
+  transition: color 0.2s ease;
+}
+
+/* Agent Status Colors */
+.panel-header-subtitle .agent-prefix {
+  color: var(--text-color);
+  font-weight: normal;
+}
+
+.panel-header-subtitle .status-not-logged-in {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.panel-header-subtitle .status-connected {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.panel-header-subtitle .status-paused {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.panel-header-subtitle.status-disconnected {
+  color: var(--text-color-muted);
 }
 
 /* SIP Status */
@@ -741,6 +767,65 @@ a {
   padding: var(--spacing-md);
   border-top: 1px solid var(--border-color);
 }
+
+/* Pause Reason Modal */
+.pause-reason-modal {
+  max-width: 500px;
+}
+
+.pause-reason-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+}
+
+.pause-reason-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.pause-reason-button:hover {
+  background-color: var(--surface-color-hover);
+  border-color: var(--primary-color);
+}
+
+.pause-reason-button:active {
+  transform: scale(0.98);
+}
+
+.pause-reason-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pause-reason-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pause-reason-label {
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
 
 /* Toast */
 .toast-container {

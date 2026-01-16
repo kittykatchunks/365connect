@@ -5,11 +5,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
-import { cn, isVerboseLoggingEnabled } from '@/utils';
+import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus } from '@/utils';
 import { Button } from '@/components/ui';
-import { AgentLoginModal } from '@/components/modals';
-import { useAppStore } from '@/stores';
+import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
+import { useAppStore, useSettingsStore } from '@/stores';
 import { useSIP } from '@/hooks';
+import type { PauseReason } from '@/types/agent';
 
 export type AgentState = 'logged-out' | 'available' | 'paused' | 'on-call';
 export type QueueState = 'none' | 'in-queue' | 'paused';
@@ -28,10 +29,18 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const setAgentState = useAppStore((state) => state.setAgentState);
   const setQueueState = useAppStore((state) => state.setQueueState);
   
+  // Get SIP username for API calls
+  const sipUsername = useSettingsStore((state) => state.settings.connection.username);
+  
   const { isRegistered, makeCall, sendDTMFSequence, currentSession } = useSIP();
+  
+  // Track if we've checked status on this registration session
+  const [hasCheckedStatus, setHasCheckedStatus] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showPauseReasonModal, setShowPauseReasonModal] = useState(false);
+  const [pauseReasons, setPauseReasons] = useState<PauseReason[]>([]);
   const [pendingLogin, setPendingLogin] = useState<{ agentNumber: string; passcode?: string } | null>(null);
   const [pendingLogout, setPendingLogout] = useState(false);
   
@@ -40,13 +49,60 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const isInQueue = queueState === 'in-queue';
   
   // Agent codes configuration
+  // NOTE: Must match PWA implementation and PBX configuration
   const AGENT_CODES = {
     login: '*61',
     logout: '*61',
-    queue: '*63',
-    pause: '*65',
-    unpause: '*66'
+    queue: '*62',   // Queue operations
+    pause: '*63',   // Pause with reason
+    unpause: '*63'  // Unpause (same code, toggles)
   };
+  
+  // Check agent status when SIP registers (similar to PWA checkAgentStatusAfterRegistration)
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (isRegistered && !hasCheckedStatus && sipUsername) {
+      if (verboseLogging) {
+        console.log('[AgentKeys] 🔌 SIP registered, checking agent status from API');
+      }
+      
+      const checkStatus = async () => {
+        const agentData = await queryAgentStatus(sipUsername);
+        
+        if (agentData && agentData.num) {
+          // Agent is logged in on PBX
+          const isPaused = parseAgentPauseStatus(agentData.pause);
+          
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Agent already logged in on PBX', {
+              num: agentData.num,
+              name: agentData.name,
+              paused: isPaused
+            });
+          }
+          
+          // Restore agent state
+          useAppStore.setState({
+            agentNumber: agentData.num,
+            agentName: agentData.name,
+            agentState: isPaused ? 'paused' : 'available'
+          });
+        } else {
+          if (verboseLogging) {
+            console.log('[AgentKeys] ℹ️ Agent not logged in on PBX');
+          }
+        }
+        
+        setHasCheckedStatus(true);
+      };
+      
+      checkStatus();
+    } else if (!isRegistered && hasCheckedStatus) {
+      // Reset check flag when unregistered
+      setHasCheckedStatus(false);
+    }
+  }, [isRegistered, hasCheckedStatus, sipUsername]);
   
   // Listen for session answered event to send DTMF
   useEffect(() => {
@@ -98,7 +154,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
             }, 500);
           }
           
-          // Update agent state
+          // Update agent state locally first
           if (verboseLogging) {
             console.log('[AgentKeys] 🔄 Updating agent state to available', {
               agentNumber: pendingLogin.agentNumber,
@@ -110,6 +166,25 @@ export function AgentKeys({ className }: AgentKeysProps) {
             agentNumber: pendingLogin.agentNumber,
             agentState: 'available'
           });
+          
+          // Query API to get full agent info (name, clip, etc.)
+          if (sipUsername) {
+            setTimeout(async () => {
+              const agentData = await queryAgentStatus(sipUsername);
+              if (agentData && agentData.num) {
+                if (verboseLogging) {
+                  console.log('[AgentKeys] 📥 Retrieved agent details from API after login', {
+                    num: agentData.num,
+                    name: agentData.name
+                  });
+                }
+                
+                useAppStore.setState({
+                  agentName: agentData.name
+                });
+              }
+            }, 1000); // Wait 1s for PBX to process login
+          }
           
           if (verboseLogging) {
             console.log('[AgentKeys] ✅ Agent login process completed successfully');
@@ -131,7 +206,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
       
       sendLoginDTMF();
     }
-  }, [pendingLogin, currentSession, sendDTMFSequence, agentState]);
+  }, [pendingLogin, currentSession, sendDTMFSequence, agentState, sipUsername]);
   
   // Listen for session termination to complete logout
   useEffect(() => {
@@ -281,28 +356,24 @@ export function AgentKeys({ className }: AgentKeysProps) {
     
     setIsLoading(true);
     try {
+      // Make call to *62 queue code
+      await makeCall(AGENT_CODES.queue);
+      
+      // Toggle queue state
       if (isInQueue) {
         if (verboseLogging) {
-          console.log('[AgentKeys] 🚪 Leaving queue');
+          console.log('[AgentKeys] 🚪 Queue operation: leave');
         }
-        // Leave queue (typically *4)
-        // await sendDTMF('*4');
         setQueueState('none');
-        
-        if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Left queue successfully');
-        }
       } else {
         if (verboseLogging) {
-          console.log('[AgentKeys] 🚶 Joining queue');
+          console.log('[AgentKeys] 🚶 Queue operation: join');
         }
-        // Join queue (typically *3)
-        // await sendDTMF('*3');
         setQueueState('in-queue');
-        
-        if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Joined queue successfully');
-        }
+      }
+      
+      if (verboseLogging) {
+        console.log('[AgentKeys] ✅ Queue operation completed');
       }
     } catch (error) {
       console.error('[AgentKeys] ❌ Queue toggle error:', error);
@@ -316,7 +387,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn, isInQueue, setQueueState, queueState, agentNumber]);
+  }, [isLoggedIn, isInQueue, setQueueState, queueState, agentNumber, makeCall]);
   
   // Toggle pause
   const handlePause = useCallback(async () => {
@@ -333,48 +404,154 @@ export function AgentKeys({ className }: AgentKeysProps) {
       console.log('[AgentKeys] ⏸️ Pause toggle clicked', {
         currentAgentState: agentState,
         isPaused,
-        agentNumber
+        agentNumber,
+        sipUsername
       });
+    }
+    
+    // If already paused, unpause via API
+    if (isPaused) {
+      if (!sipUsername) {
+        console.error('[AgentKeys] ❌ No SIP username available for unpause');
+        return;
+      }
+      
+      setIsLoading(true);
+      try {
+        if (verboseLogging) {
+          console.log('[AgentKeys] 📡 Unpausing via API');
+        }
+        
+        const success = await unpauseAgentViaAPI(sipUsername);
+        
+        if (success) {
+          setAgentState('available');
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Agent unpaused successfully');
+          }
+        } else {
+          throw new Error('Unpause API call failed');
+        }
+      } catch (error) {
+        console.error('[AgentKeys] ❌ Unpause error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+    
+    // Agent is unpaused - check if on active call
+    const hasActiveCall = currentSession && currentSession.state !== 'terminated';
+    if (hasActiveCall) {
+      // On active call - pause directly via API without showing reasons
+      if (!sipUsername) {
+        console.error('[AgentKeys] ❌ No SIP username available for pause');
+        return;
+      }
+      
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📞 Agent on active call - pausing directly via API');
+      }
+      
+      setIsLoading(true);
+      try {
+        const success = await pauseAgentViaAPI(sipUsername);
+        
+        if (success) {
+          setAgentState('paused');
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Agent paused successfully');
+          }
+        } else {
+          throw new Error('Pause API call failed');
+        }
+      } catch (error) {
+        console.error('[AgentKeys] ❌ Pause error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+    
+    // Phone is idle - fetch pause reasons
+    if (!sipUsername) {
+      console.error('[AgentKeys] ❌ No SIP username available for pause reasons');
+      return;
     }
     
     setIsLoading(true);
     try {
-      if (isPaused) {
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📡 Fetching pause reasons');
+      }
+      
+      const reasons = await fetchPauseReasons(sipUsername);
+      
+      if (reasons.length === 0) {
+        // No pause reasons configured - pause directly via API
         if (verboseLogging) {
-          console.log('[AgentKeys] ▶️ Unpausing agent');
+          console.log('[AgentKeys] ℹ️ No pause reasons - pausing directly via API');
         }
-        // Unpause (typically *6)
-        // await sendDTMF('*6');
-        setAgentState('available');
         
-        if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Agent unpaused successfully');
+        const success = await pauseAgentViaAPI(sipUsername);
+        
+        if (success) {
+          setAgentState('paused');
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Agent paused successfully');
+          }
+        } else {
+          throw new Error('Pause API call failed');
         }
       } else {
+        // Show pause reason modal
         if (verboseLogging) {
-          console.log('[AgentKeys] ⏸️ Pausing agent');
+          console.log(`[AgentKeys] 📋 Showing pause reason modal with ${reasons.length} reasons`);
         }
-        // Pause (typically *5)
-        // await sendDTMF('*5');
-        setAgentState('paused');
         
-        if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Agent paused successfully');
-        }
+        setPauseReasons(reasons);
+        setShowPauseReasonModal(true);
       }
     } catch (error) {
-      console.error('[AgentKeys] ❌ Pause toggle error:', error);
-      if (verboseLogging) {
-        console.error('[AgentKeys] Pause toggle context:', {
-          currentAgentState: agentState,
-          attemptedAction: isPaused ? 'unpause' : 'pause',
-          error
-        });
-      }
+      console.error('[AgentKeys] ❌ Pause error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn, isPaused, setAgentState, agentState, agentNumber]);
+  }, [isLoggedIn, isPaused, setAgentState, agentState, agentNumber, sipUsername, currentSession]);
+  
+  // Handle pause reason selection
+  const handlePauseReasonSelect = useCallback(async (code: number, label: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log(`[AgentKeys] 📋 Pause reason selected: ${code} - ${label}`);
+    }
+    
+    setShowPauseReasonModal(false);
+    setIsLoading(true);
+    
+    try {
+      // Dial *63*{code} to pause with reason
+      const dialCode = `${AGENT_CODES.pause}*${code}`;
+      
+      if (verboseLogging) {
+        console.log(`[AgentKeys] 📞 Dialing pause code: ${dialCode}`);
+      }
+      
+      await makeCall(dialCode);
+      
+      // Update state immediately (call will disconnect automatically)
+      setAgentState('paused');
+      
+      if (verboseLogging) {
+        console.log('[AgentKeys] ✅ Paused with reason:', label);
+      }
+    } catch (error) {
+      console.error('[AgentKeys] ❌ Failed to pause with reason:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [makeCall, setAgentState]);
   
   // Get button states
   const getLoginButtonVariant = () => {
@@ -465,6 +642,15 @@ export function AgentKeys({ className }: AgentKeysProps) {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLogin={handleAgentLogin}
+        isLoading={isLoading}
+      />
+      
+      {/* Pause Reason Modal */}
+      <PauseReasonModal
+        isOpen={showPauseReasonModal}
+        onClose={() => setShowPauseReasonModal(false)}
+        onSelect={handlePauseReasonSelect}
+        reasons={pauseReasons}
         isLoading={isLoading}
       />
     </div>

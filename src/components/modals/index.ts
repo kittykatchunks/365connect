@@ -10,3 +10,4 @@ export { ConfirmModal } from './ConfirmModal';
 export { ImportExportModal } from './ImportExportModal';
 export { AgentLoginModal } from './AgentLoginModal';
 export { ApiSyncConfirmModal } from './ApiSyncConfirmModal';
+export { PauseReasonModal } from './PauseReasonModal';

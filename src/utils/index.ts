@@ -7,6 +7,7 @@ export * from './storage';
 export * from './phoneNumber';
 export * from './constants';
 export * from './webrtc';
+export * from './agentApi';
 
 // Common utility functions
 import { clsx, type ClassValue } from 'clsx';

@@ -15,7 +15,7 @@ import { AgentKeys } from './AgentKeys';
 import { CallInfoDisplay } from './CallInfoDisplay';
 import { TransferModal } from '@/components/modals';
 import { useSIP } from '@/hooks';
-import { useUIStore, useSettingsStore, useSIPStore } from '@/stores';
+import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
 import { formatDuration, isVerboseLoggingEnabled } from '@/utils';
 
 export function DialView() {
@@ -24,6 +24,11 @@ export function DialView() {
   const [showInCallDialpad, setShowInCallDialpad] = useState(false);
   const [isDialing, setIsDialing] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  
+  // Agent state for status display
+  const agentState = useAppStore((state) => state.agentState);
+  const agentNumber = useAppStore((state) => state.agentNumber);
+  const agentName = useAppStore((state) => state.agentName);
   
   const addNotification = useUIStore((state) => state.addNotification);
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
@@ -272,11 +277,45 @@ export function DialView() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleDigit, handleBackspace, handleCall, isInCall, dialValue]);
   
+  // Get subtitle based on registration and agent state
+  const getStatusSubtitle = (): string | React.ReactNode => {
+    if (!isRegistered) {
+      return t('dial.not_connected', 'Not connected to Phantom - Not registered');
+    }
+    
+    if (agentState === 'logged-out') {
+      return (
+        <>
+          <span className="agent-prefix">Agent: </span>
+          <span className="status-not-logged-in">Not Logged In</span>
+        </>
+      );
+    }
+    
+    const agentDisplay = agentName ? `${agentNumber} - ${agentName}` : agentNumber;
+    
+    if (agentState === 'paused') {
+      return (
+        <>
+          <span className="agent-prefix">Agent: </span>
+          <span className="status-paused">[PAUSED] {agentDisplay}</span>
+        </>
+      );
+    }
+    
+    return (
+      <>
+        <span className="agent-prefix">Agent: </span>
+        <span className="status-connected">{agentDisplay}</span>
+      </>
+    );
+  };
+  
   return (
     <div className="dial-view">
       <PanelHeader 
         title={t('dial.title', 'Phone')}
-        subtitle={isRegistered ? t('dial.ready', 'Ready to make calls') : t('dial.not_registered', 'Not registered')}
+        subtitle={getStatusSubtitle()}
       />
       
       <div className="dial-view-layout">

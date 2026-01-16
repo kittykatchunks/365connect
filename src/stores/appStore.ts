@@ -32,6 +32,7 @@ interface AppState {
   agentState: AgentState;
   queueState: QueueState;
   agentNumber: string;
+  agentName: string | null;
   
   // Company numbers / CLI
   companyNumbers: CompanyNumber[];
@@ -47,7 +48,8 @@ interface AppState {
   setAgentState: (state: AgentState) => void;
   setQueueState: (state: QueueState) => void;
   setAgentNumber: (number: string) => void;
-  agentLogin: (agentNumber: string) => void;
+  setAgentName: (name: string | null) => void;
+  agentLogin: (agentNumber: string, agentName?: string | null) => void;
   agentLogout: () => void;
   
   // Company number actions
@@ -71,6 +73,7 @@ export const useAppStore = create<AppState>()(
         agentState: 'logged-out',
         queueState: 'none',
         agentNumber: '',
+        agentName: null,
         
         // Company numbers initial state
         companyNumbers: [],
@@ -92,16 +95,19 @@ export const useAppStore = create<AppState>()(
         setAgentState: (agentState) => set({ agentState }),
         setQueueState: (queueState) => set({ queueState }),
         setAgentNumber: (agentNumber) => set({ agentNumber }),
+        setAgentName: (agentName) => set({ agentName }),
         
-        agentLogin: (agentNumber) => set({ 
+        agentLogin: (agentNumber, agentName = null) => set({ 
           agentState: 'available', 
-          agentNumber 
+          agentNumber,
+          agentName
         }),
         
         agentLogout: () => set({ 
           agentState: 'logged-out', 
           queueState: 'none', 
-          agentNumber: '' 
+          agentNumber: '',
+          agentName: null
         }),
         
         // Company number actions

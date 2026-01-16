@@ -72,3 +72,32 @@ export function getAgentStatusColor(state: AgentState): string {
   
   return 'var(--agent-logged-in-color)';
 }
+
+// ============================================
+// API Response Types
+// ============================================
+
+export interface AgentStatusResponse {
+  agent: AgentData;
+}
+
+export interface AgentData {
+  num: string | null;
+  name: string | null;
+  pause: boolean | string | number;
+  clip?: string;
+}
+
+export interface PauseReason {
+  code: number;
+  label: string;
+}
+
+export interface PauseReasonsResponse {
+  pausereasons: Record<string, string>;
+}
+
+export interface AgentPauseResponse {
+  success: boolean;
+  error?: string;
+}
