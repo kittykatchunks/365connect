@@ -5,6 +5,7 @@
 
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
 import { SIPService, sipService } from '../services/SIPService';
+import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { isVerboseLoggingEnabled } from '../utils';
@@ -118,7 +119,25 @@ export function SIPProvider({ children }: SIPProviderProps) {
           target: session.target
         });
       }
+      
+      // Add session to store
       addSession(session);
+      
+      // Start ringtone for incoming calls
+      if (session.direction === 'incoming' && session.state === 'ringing') {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔔 Starting ringtone for incoming call');
+        }
+        
+        // Check if there are other active sessions to determine alert tone
+        const activeSessions = service.getActiveSessions();
+        const useAlertTone = activeSessions.length > 1;
+        
+        audioService.startRinging(useAlertTone).catch(error => {
+          console.error('[SIPContext] ❌ Failed to start ringtone:', error);
+        });
+      }
+      
       if (verboseLogging) {
         console.log('[SIPContext] ✅ Session added to store');
       }
@@ -128,6 +147,15 @@ export function SIPProvider({ children }: SIPProviderProps) {
       if (verboseLogging) {
         console.log('[SIPContext] 📞 sessionAnswered event received:', session.id);
       }
+      
+      // Stop ringtone when call is answered
+      if (audioService.getIsRinging()) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔕 Stopping ringtone - call answered');
+        }
+        audioService.stopRinging();
+      }
+      
       updateSession(session.id, { state: 'established', answerTime: new Date() });
     });
     
@@ -135,6 +163,15 @@ export function SIPProvider({ children }: SIPProviderProps) {
       if (verboseLogging) {
         console.log('[SIPContext] 📴 sessionTerminated event received:', session.id);
       }
+      
+      // Stop ringtone if it's still playing
+      if (audioService.getIsRinging()) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔕 Stopping ringtone - call terminated');
+        }
+        audioService.stopRinging();
+      }
+      
       removeSession(session.id);
     });
     

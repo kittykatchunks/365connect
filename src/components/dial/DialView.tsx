@@ -378,6 +378,24 @@ export function DialView() {
     }
   }, [selectedLineSession?.id, selectedLineSession?.onHold, toggleHold]);
   
+  const handleTransferModalClose = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // When closing transfer modal, automatically take call off hold
+    if (selectedLineSession?.id && selectedLineSession.onHold) {
+      if (verboseLogging) {
+        console.log('[DialView] ▶️ Taking call off hold after transfer modal close');
+      }
+      try {
+        await toggleHold(selectedLineSession.id);
+      } catch (error) {
+        console.error('[DialView] Error resuming call after transfer cancel:', error);
+      }
+    }
+    
+    setShowTransferModal(false);
+  }, [selectedLineSession?.id, selectedLineSession?.onHold, toggleHold]);
+  
   // Keyboard support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -524,7 +542,7 @@ export function DialView() {
       {/* Transfer Modal */}
       <TransferModal
         isOpen={showTransferModal}
-        onClose={() => setShowTransferModal(false)}
+        onClose={handleTransferModalClose}
         sessionId={selectedLineSession?.id}
       />
     </div>
