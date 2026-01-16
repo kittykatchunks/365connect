@@ -16,7 +16,7 @@ import { CallInfoDisplay } from './CallInfoDisplay';
 import { TransferModal } from '@/components/modals';
 import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
-import { formatDuration, isVerboseLoggingEnabled } from '@/utils';
+import { isVerboseLoggingEnabled } from '@/utils';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export function DialView() {
@@ -48,7 +48,6 @@ export function DialView() {
   const {
     isRegistered,
     currentSession,
-    incomingSession,
     makeCall,
     answerCall,
     hangupCall,
@@ -75,16 +74,8 @@ export function DialView() {
     selectedLineSession.direction === 'incoming' && 
     selectedLineSession.state === 'ringing';
   
-  // Legacy current session tracking (for compatibility)
+  // Legacy current session tracking (for compatibility with other components)
   const isInCall = currentSession && currentSession.state !== 'terminated';
-  const hasIncoming = incomingSession && incomingSession.state === 'ringing';
-  
-  // Get call display info
-  const callDisplayNumber = currentSession?.remoteNumber || currentSession?.target || '';
-  const callDisplayName = currentSession?.displayName || currentSession?.remoteIdentity || '';
-  const callDuration = currentSession?.duration || 0;
-  // const isMuted = currentSession?.muted || false;
-  // const isOnHold = currentSession?.onHold || false;
   
   // Automatic line switching for incoming calls - ONLY when app is idle
   useEffect(() => {
@@ -409,43 +400,6 @@ export function DialView() {
         )}
         
         <div className="dial-view-content">
-          {/* Incoming Call Banner */}
-          {hasIncoming && (
-            <div className="incoming-call-banner">
-              <div className="incoming-call-info">
-                <span className="incoming-call-label">{t('call.incoming', 'Incoming Call')}</span>
-                <span className="incoming-call-number">{incomingSession?.remoteNumber}</span>
-                {incomingSession?.displayName && (
-                  <span className="incoming-call-name">{incomingSession.displayName}</span>
-                )}
-              </div>
-              <div className="incoming-call-actions">
-                <button className="btn-answer" onClick={handleAnswer}>
-                  {t('call.answer', 'Answer')}
-                </button>
-                <button className="btn-reject" onClick={handleReject}>
-                  {t('call.reject', 'Reject')}
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* Active Call Display */}
-          {isInCall && (
-            <div className="active-call-display">
-              <div className="call-info">
-                <span className="call-status">
-                  {currentSession?.state === 'established' ? t('call.in_call', 'In Call') : t('call.connecting', 'Connecting...')}
-                </span>
-                <span className="call-number">{callDisplayNumber}</span>
-                {callDisplayName && callDisplayName !== callDisplayNumber && (
-                  <span className="call-name">{callDisplayName}</span>
-                )}
-              </div>
-              <div className="call-timer">{formatDuration(callDuration)}</div>
-            </div>
-          )}
-          
           {/* Agent Keys */}
           <AgentKeys />
           
@@ -511,7 +465,7 @@ export function DialView() {
       <TransferModal
         isOpen={showTransferModal}
         onClose={() => setShowTransferModal(false)}
-        sessionId={currentSession?.id}
+        sessionId={selectedLineSession?.id}
       />
     </div>
   );
