@@ -89,10 +89,10 @@ export function CallActionButtons({
           disabled={disabled}
           aria-pressed={isMuted}
           aria-label={isMuted ? t('call.unmute', 'Unmute') : t('call.mute', 'Mute')}
+          title={isMuted ? t('call.unmute', 'Unmute') : t('call.mute', 'Mute')}
           className="call-control-btn mute-btn"
         >
           {isMuted ? <MicOff className="icon" /> : <Mic className="icon" />}
-          <span className="btn-label">{isMuted ? t('call.unmute', 'UNMUTE') : t('call.mute', 'MUTE')}</span>
         </Button>
         
         {/* Hold Button */}
@@ -103,10 +103,10 @@ export function CallActionButtons({
           disabled={disabled}
           aria-pressed={isOnHold}
           aria-label={isOnHold ? t('call.resume', 'Resume') : t('call.hold', 'Hold')}
+          title={isOnHold ? t('call.resume', 'Resume') : t('call.hold', 'Hold')}
           className="call-control-btn hold-btn"
         >
           {isOnHold ? <Play className="icon" /> : <Pause className="icon" />}
-          <span className="btn-label">{isOnHold ? t('call.resume', 'RESUME') : t('call.hold', 'HOLD')}</span>
         </Button>
         
         {/* Transfer Button */}
@@ -116,10 +116,10 @@ export function CallActionButtons({
           onClick={onTransfer}
           disabled={disabled}
           aria-label={t('call.transfer', 'Transfer')}
+          title={t('call.transfer', 'Transfer')}
           className="call-control-btn transfer-btn"
         >
           <PhoneForwarded className="icon" />
-          <span className="btn-label">{t('call.transfer', 'TRANSFER')}</span>
         </Button>
         
         {/* End Call Button */}
@@ -134,10 +134,10 @@ export function CallActionButtons({
           }}
           disabled={disabled}
           aria-label={t('call.end', 'End Call')}
+          title={t('call.end', 'End Call')}
           className="call-control-btn end-call-btn"
         >
           <PhoneOff className="icon" />
-          <span className="btn-label">{t('call.end', 'END')}</span>
         </Button>
       </div>
     );
@@ -167,20 +167,18 @@ export function CallActionButtons({
         }}
         disabled={disabled || (isIdle && !hasDialValue && !hasRedialNumber && !isDialing)}
         aria-label={hasIncoming ? t('call.answer', 'Answer') : t('call.call', 'Call')}
+        title={hasIncoming 
+          ? t('call.answer', 'Answer')
+          : isDialing 
+            ? t('call.calling', 'Calling')
+            : t('call.call', 'Call')
+        }
         className={cn(
           'call-button uppercase',
           hasIncoming && 'answer-btn'
         )}
       >
         <Phone className="icon" />
-        <span className="btn-label">
-          {hasIncoming 
-            ? t('call.answer', 'ANSWER')
-            : isDialing 
-              ? t('call.calling', 'CALLING')
-              : t('call.call', 'CALL')
-          }
-        </span>
       </Button>
       
       {/* END/REJECT Button */}
@@ -202,10 +200,10 @@ export function CallActionButtons({
         }}
         disabled={disabled && !hasIncoming}
         aria-label={hasIncoming ? t('call.reject', 'Reject') : t('call.end', 'End')}
+        title={hasIncoming ? t('call.reject', 'Reject') : t('call.end', 'End')}
         className="hangup-button uppercase"
       >
         <PhoneOff className="icon" />
-        <span className="btn-label">{t('call.end', 'END')}</span>
       </Button>
     </div>
   );
