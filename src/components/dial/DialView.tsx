@@ -467,8 +467,9 @@ export function DialView() {
   return (
     <div className="dial-view">
       <PanelHeader 
-        title={t('dial.title', 'Phone')}
+        title=""
         subtitle={getStatusSubtitle()}
+        subtitleClassName="panel-header-title"
       />
       
       <div className="dial-view-layout">
