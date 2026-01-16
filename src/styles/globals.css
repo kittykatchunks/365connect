@@ -1407,6 +1407,113 @@ a {
   cursor: not-allowed;
 }
 
+/* Call Action Buttons - Matches PWA layout */
+.call-action-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  width: 100%;
+}
+
+/* Dial Actions (idle state) - 2 buttons side by side */
+.dial-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Call Controls (active state) - 4 buttons in a row */
+.call-controls-active {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Individual call control buttons */
+.call-control-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) var(--spacing-sm);
+  min-height: 80px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.call-control-btn .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.call-control-btn .btn-label {
+  font-size: 0.75rem;
+}
+
+/* Call/Hangup buttons (idle state) */
+.call-button,
+.hangup-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  min-height: 70px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.call-button .icon,
+.hangup-button .icon {
+  width: 28px;
+  height: 28px;
+}
+
+.call-button .btn-label,
+.hangup-button .btn-label {
+  font-size: 0.875rem;
+}
+
+/* Answer button styling (when incoming call) */
+.answer-btn {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Mute button active state */
+.mute-btn[aria-pressed="true"] {
+  background-color: var(--danger-color);
+}
+
+/* Hold button active state - Yellow when on hold */
+.hold-btn[aria-pressed="true"] {
+  background-color: #f59e0b; /* Yellow/amber for hold state */
+  color: white;
+}
+
+.hold-btn[aria-pressed="true"]:hover:not(:disabled) {
+  background-color: #d97706; /* Darker yellow on hover */
+}
+
+/* End call button */
+.end-call-btn {
+  background-color: var(--danger-color);
+}
+
+.end-call-btn:hover:not(:disabled) {
+  background-color: var(--danger-color-dark);
+}
+
 /* Transfer Modal */
 .transfer-modal-content {
   display: flex;

@@ -8,7 +8,7 @@ import { PanelHeader } from '@/components/layout';
 import { DialInput } from './DialInput';
 import { Dialpad } from './Dialpad';
 import { LineKeys } from './LineKeys';
-import { CallControls } from './CallControls';
+import { CallActionButtons } from './CallActionButtons';
 import { BLFButtonGrid } from './BLFButtonGrid';
 import { CLISelector } from './CLISelector';
 import { AgentKeys } from './AgentKeys';
@@ -17,13 +17,17 @@ import { TransferModal } from '@/components/modals';
 import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
 import { formatDuration, isVerboseLoggingEnabled } from '@/utils';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 export function DialView() {
   const { t } = useTranslation();
   const [dialValue, setDialValue] = useState('');
-  const [showInCallDialpad, setShowInCallDialpad] = useState(false);
+  // const [showInCallDialpad, setShowInCallDialpad] = useState(false);
   const [isDialing, setIsDialing] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  
+  // Last dialed number for redial functionality (persisted)
+  const [lastDialedNumber, setLastDialedNumber] = useLocalStorage('LastDialedNumber', '');
   
   // Agent state for status display
   const agentState = useAppStore((state) => state.agentState);
@@ -58,9 +62,20 @@ export function DialView() {
   // Get session for selected line
   const selectedLineSession = getSessionByLine(selectedLine);
   
+  // Determine state based on SELECTED LINE (not current session)
+  const isSelectedLineIdle = !selectedLineSession || selectedLineSession.state === 'terminated';
+  const isSelectedLineRinging = selectedLineSession && selectedLineSession.state === 'ringing';
+  const isSelectedLineInCall = selectedLineSession && (selectedLineSession.state === 'active');
+  
   // Determine if we should show call info display or dial input
   const showCallInfo = selectedLineSession && selectedLineSession.state !== 'terminated';
   
+  // Check if selected line has incoming call
+  const hasIncomingOnSelectedLine = selectedLineSession && 
+    selectedLineSession.direction === 'incoming' && 
+    selectedLineSession.state === 'ringing';
+  
+  // Legacy current session tracking (for compatibility)
   const isInCall = currentSession && currentSession.state !== 'terminated';
   const hasIncoming = incomingSession && incomingSession.state === 'ringing';
   
@@ -68,8 +83,8 @@ export function DialView() {
   const callDisplayNumber = currentSession?.remoteNumber || currentSession?.target || '';
   const callDisplayName = currentSession?.displayName || currentSession?.remoteIdentity || '';
   const callDuration = currentSession?.duration || 0;
-  const isMuted = currentSession?.muted || false;
-  const isOnHold = currentSession?.onHold || false;
+  // const isMuted = currentSession?.muted || false;
+  // const isOnHold = currentSession?.onHold || false;
   
   // Automatic line switching for incoming calls - ONLY when app is idle
   useEffect(() => {
@@ -155,35 +170,31 @@ export function DialView() {
     }
   }, [isInCall]);
   
-  // Clear dial value
-  const handleClear = useCallback(() => {
-    setDialValue('');
-  }, []);
-  
-  // Backspace
+  // Handle backspace
   const handleBackspace = useCallback(() => {
     setDialValue((prev) => prev.slice(0, -1));
   }, []);
   
-  // Make or end call
+  // Handle clear
+  const handleClear = useCallback(() => {
+    setDialValue('');
+  }, []);
+  
+  // Handle call with redial functionality (PWA pattern)
   const handleCall = useCallback(async () => {
-    if (isInCall) {
-      // End call
-      try {
-        await hangupCall();
-        setDialValue('');
-      } catch (error) {
-        console.error('Hangup error:', error);
-        addNotification({
-          type: 'error',
-          title: t('call.error', 'Call Error'),
-          message: error instanceof Error ? error.message : 'Failed to end call'
-        });
-      }
-    } else if (dialValue.trim()) {
-      // Make call
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // If there's a value in the input, dial it
+    if (dialValue.trim()) {
       setIsDialing(true);
       try {
+        if (verboseLogging) {
+          console.log('[DialView] 📞 Making call to:', dialValue);
+        }
+        
+        // Save as last dialed number before making call
+        setLastDialedNumber(dialValue.trim());
+        
         await makeCall(dialValue.trim());
         setDialValue('');
       } catch (error) {
@@ -196,13 +207,35 @@ export function DialView() {
       } finally {
         setIsDialing(false);
       }
+    } else if (lastDialedNumber) {
+      // Redial functionality: First press populates input, second press dials
+      if (verboseLogging) {
+        console.log('[DialView] 🔄 Redial: Populating input with last dialed number:', lastDialedNumber);
+      }
+      setDialValue(lastDialedNumber);
+      
+      addNotification({
+        type: 'info',
+        title: t('call.redial', 'Redial'),
+        message: t('call.redial_message', 'Press Call again to dial')
+      });
     }
-  }, [isInCall, dialValue, hangupCall, makeCall, addNotification, t]);
+  }, [dialValue, lastDialedNumber, isDialing, makeCall, addNotification, t, setLastDialedNumber]);
   
-  // Answer incoming call
+  // Answer incoming call on selected line
   const handleAnswer = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
-      await answerCall();
+      if (verboseLogging) {
+        console.log('[DialView] 📞 Answering call on selected line:', selectedLine, 'sessionId:', selectedLineSession?.id);
+      }
+      
+      if (selectedLineSession?.id) {
+        await answerCall(selectedLineSession.id);
+      } else {
+        console.error('[DialView] No session to answer on selected line:', selectedLine);
+      }
     } catch (error) {
       console.error('Answer error:', error);
       addNotification({
@@ -211,33 +244,84 @@ export function DialView() {
         message: error instanceof Error ? error.message : 'Failed to answer call'
       });
     }
-  }, [answerCall, addNotification, t]);
+  }, [selectedLine, selectedLineSession?.id, answerCall, addNotification, t]);
   
-  // Reject incoming call
+  // Reject incoming call on selected line
   const handleReject = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
-      await hangupCall(incomingSession?.id);
+      if (verboseLogging) {
+        console.log('[DialView] ❌ Rejecting call on selected line:', selectedLine, 'sessionId:', selectedLineSession?.id);
+      }
+      
+      if (selectedLineSession?.id) {
+        await hangupCall(selectedLineSession.id);
+      } else {
+        console.error('[DialView] No session to reject on selected line:', selectedLine);
+      }
     } catch (error) {
       console.error('Reject error:', error);
     }
-  }, [hangupCall, incomingSession?.id]);
+  }, [selectedLine, selectedLineSession?.id, hangupCall]);
   
-  // In-call controls
+  // Toggle mute on selected line
   const handleMuteToggle = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
-      await toggleMute();
+      if (verboseLogging) {
+        console.log('[DialView] 🔇 Toggling mute on selected line:', selectedLine, 'sessionId:', selectedLineSession?.id);
+      }
+      
+      if (selectedLineSession?.id) {
+        await toggleMute(selectedLineSession.id);
+      }
     } catch (error) {
       console.error('Mute toggle error:', error);
     }
-  }, [toggleMute]);
+  }, [selectedLine, selectedLineSession?.id, toggleMute]);
   
   const handleHoldToggle = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
-      await toggleHold();
+      if (verboseLogging) {
+        console.log('[DialView] ⏸️ Toggling hold on selected line:', selectedLine, 'sessionId:', selectedLineSession?.id);
+      }
+      
+      if (selectedLineSession?.id) {
+        await toggleHold(selectedLineSession.id);
+      }
     } catch (error) {
       console.error('Hold toggle error:', error);
     }
-  }, [toggleHold]);
+  }, [selectedLine, selectedLineSession?.id, toggleHold]);
+  
+  // End call on selected line
+  const handleEndCall = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    try {
+      if (verboseLogging) {
+        console.log('[DialView] 📴 Ending call on selected line:', selectedLine, 'sessionId:', selectedLineSession?.id);
+      }
+      
+      if (selectedLineSession?.id) {
+        await hangupCall(selectedLineSession.id);
+        setDialValue('');
+      } else {
+        console.error('[DialView] No session to end on selected line:', selectedLine);
+      }
+    } catch (error) {
+      console.error('Hangup error:', error);
+      addNotification({
+        type: 'error',
+        title: t('call.error', 'Call Error'),
+        message: error instanceof Error ? error.message : 'Failed to end call'
+      });
+    }
+  }, [selectedLine, selectedLineSession?.id, hangupCall, addNotification, t]);
   
   const handleTransfer = useCallback(() => {
     setShowTransferModal(true);
@@ -383,41 +467,35 @@ export function DialView() {
             />
           )}
           
-          {/* Call Controls (shown during call) */}
-          {isInCall && (
-            <CallControls
-              isMuted={isMuted}
-              isOnHold={isOnHold}
-              showDialpad={showInCallDialpad}
-              onMuteToggle={handleMuteToggle}
-              onHoldToggle={handleHoldToggle}
-              onTransfer={handleTransfer}
-              onDialpadToggle={() => setShowInCallDialpad((prev) => !prev)}
-              onEndCall={handleCall}
-            />
-          )}
-          
-          {/* Dialpad */}
-          {(!isInCall || showInCallDialpad) && (
+          {/* Dialpad - always shown, sends DTMF during active call */}
+          {(!isSelectedLineInCall || true) && (
             <Dialpad
               onDigit={handleDigit}
               onLongPress={handleLongPress}
-              disabled={!isRegistered && !isInCall}
+              disabled={!isRegistered && !isSelectedLineInCall}
             />
           )}
           
-          {/* Call Button (pre-call) */}
-          {!isInCall && (
-            <div className="dial-call-button-container">
-              <button
-                className="dial-call-button"
-                onClick={handleCall}
-                disabled={!isRegistered || !dialValue.trim() || isDialing}
-              >
-                {isDialing ? t('call.dialing', 'Dialing...') : t('call.call', 'Call')}
-              </button>
-            </div>
-          )}
+          {/* Call Action Buttons - switches between CALL/END and MUTE/HOLD/TRANSFER/END */}
+          <CallActionButtons
+            isIdle={isSelectedLineIdle}
+            isRinging={!!isSelectedLineRinging}
+            isInCall={!!isSelectedLineInCall}
+            hasIncoming={!!hasIncomingOnSelectedLine}
+            isMuted={selectedLineSession?.muted || false}
+            isOnHold={selectedLineSession?.onHold || false}
+            onCall={handleCall}
+            onAnswer={handleAnswer}
+            onEndCall={handleEndCall}
+            onReject={handleReject}
+            onMuteToggle={handleMuteToggle}
+            onHoldToggle={handleHoldToggle}
+            onTransfer={handleTransfer}
+            disabled={!isRegistered}
+            isDialing={isDialing}
+            hasDialValue={!!dialValue.trim()}
+            className="dial-action-buttons"
+          />
           
           {/* Line Keys */}
           <LineKeys />
