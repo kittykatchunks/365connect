@@ -101,14 +101,38 @@ export class SIPService {
   }
 
   private emit<E extends SIPEventType>(event: E, data?: SIPEventMap[E]): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] 📢 emit('${event}'):`, {
+        hasListeners: this.listeners.has(event),
+        listenerCount: this.listeners.get(event)?.size || 0,
+        dataPreview: data ? (typeof data === 'object' ? Object.keys(data) : data) : 'none'
+      });
+    }
+    
     if (this.listeners.has(event)) {
-      this.listeners.get(event)!.forEach(callback => {
+      const listeners = this.listeners.get(event)!;
+      
+      if (verboseLogging) {
+        console.log(`[SIPService] 🔄 Executing ${listeners.size} listener(s) for '${event}'`);
+      }
+      
+      let index = 0;
+      listeners.forEach((callback) => {
         try {
           callback(data);
+          if (verboseLogging) {
+            console.log(`[SIPService] ✅ Listener ${index + 1}/${listeners.size} executed successfully for '${event}'`);
+          }
+          index++;
         } catch (error) {
-          console.error(`Error in SIP listener for ${event}:`, error);
+          console.error(`[SIPService] ❌ Error in listener for ${event}:`, error);
+          index++;
         }
       });
+    } else if (verboseLogging) {
+      console.warn(`[SIPService] ⚠️ No listeners registered for event '${event}'`);
     }
   }
 
@@ -331,26 +355,57 @@ export class SIPService {
   // ==================== Session Management ====================
 
   async makeCall(target: string, options: SessionCreateOptions = {}): Promise<SessionData> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📞 makeCall called:', {
+        target,
+        options,
+        isRegistered: this.registrationState === 'registered',
+        userAgentExists: !!this.userAgent
+      });
+    }
+    
     if (!this.userAgent || this.registrationState !== 'registered') {
+      console.error('[SIPService] ❌ Cannot make call - not registered');
       throw new Error('Not registered');
     }
 
     // Validate target
     if (!target) {
+      console.error('[SIPService] ❌ Cannot make call - no target specified');
       throw new Error('No target specified');
     }
 
     const sessionId = this.generateSessionId();
     const lineNumber = this.getAvailableLine();
     
+    if (verboseLogging) {
+      console.log('[SIPService] Generated session:', {
+        sessionId,
+        lineNumber,
+        activeSessions: this.sessions.size
+      });
+    }
+    
     if (lineNumber === null) {
+      console.error('[SIPService] ❌ All lines busy');
       throw new Error('All lines busy. Please end or hold a call before making a new one.');
     }
 
     // Create target URI
     const domain = this.config?.domain || this.config?.server?.replace(/^wss?:\/\//, '').split(':')[0];
     const targetURI = SIP.UserAgent.makeURI(`sip:${target}@${domain}`);
+    
+    if (verboseLogging) {
+      console.log('[SIPService] Target URI:', {
+        domain,
+        targetURI: targetURI?.toString()
+      });
+    }
+    
     if (!targetURI) {
+      console.error('[SIPService] ❌ Invalid target number');
       throw new Error('Invalid target number');
     }
 
@@ -391,9 +446,27 @@ export class SIPService {
     this.sessions.set(sessionId, sessionData);
     this.activeLines.set(lineNumber, sessionId);
     this.selectedLine = lineNumber;
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ Session stored:', {
+        sessionId,
+        lineNumber,
+        state: sessionData.state,
+        target: sessionData.target,
+        totalSessions: this.sessions.size
+      });
+    }
 
     // Start the session
+    if (verboseLogging) {
+      console.log('[SIPService] 🔄 Sending INVITE...');
+    }
+    
     await inviter.invite();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ INVITE sent successfully');
+    }
 
     // Update statistics
     this.stats.totalCalls++;
@@ -401,20 +474,52 @@ export class SIPService {
 
     // Emit without session object
     const { session: _session, ...publicSessionData } = sessionData;
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📢 Emitting sessionCreated event:', {
+        sessionId: publicSessionData.id,
+        lineNumber: publicSessionData.lineNumber,
+        state: publicSessionData.state,
+        direction: publicSessionData.direction,
+        target: publicSessionData.target
+      });
+    }
+    
     this.emit('sessionCreated', publicSessionData);
     this.emit('sessionStateChanged', { sessionId, state: 'initiating' });
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ makeCall completed, returning session data');
+    }
 
     return publicSessionData;
   }
 
   private handleIncomingInvitation(invitation: SIP.Invitation): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📞 handleIncomingInvitation called:', {
+        from: invitation.remoteIdentity?.uri?.user,
+        displayName: invitation.remoteIdentity?.displayName
+      });
+    }
+    
     try {
       const sessionId = this.generateSessionId();
       const lineNumber = this.getAvailableLine();
       
+      if (verboseLogging) {
+        console.log('[SIPService] Session details:', {
+          sessionId,
+          lineNumber,
+          totalSessions: this.sessions.size
+        });
+      }
+      
       if (lineNumber === null) {
         // All lines busy - reject with 486 Busy Here
-        console.warn('All lines busy - rejecting incoming call');
+        console.warn('[SIPService] ❌ All lines busy - rejecting incoming call');
         invitation.reject({ statusCode: 486 });
         return;
       }
@@ -422,6 +527,13 @@ export class SIPService {
       // Extract caller information
       const remoteNumber = invitation.remoteIdentity.uri.user || '';
       const remoteIdentity = invitation.remoteIdentity.displayName || remoteNumber;
+      
+      if (verboseLogging) {
+        console.log('[SIPService] Caller info extracted:', {
+          remoteNumber,
+          remoteIdentity
+        });
+      }
 
       // Create session data
       const sessionData: SessionData & { session: SIP.Session } = {
@@ -449,12 +561,26 @@ export class SIPService {
       // Store session
       this.sessions.set(sessionId, sessionData);
       this.activeLines.set(lineNumber, sessionId);
+      
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ Session stored:', {
+          sessionId,
+          lineNumber,
+          state: sessionData.state,
+          target: sessionData.target,
+          totalSessions: this.sessions.size,
+          activeLines: Array.from(this.activeLines.entries())
+        });
+      }
 
       // Auto-answer if configured and no other active calls
       const activeSessions = this.getActiveSessions();
       const hasOtherActiveCalls = activeSessions.some(s => s.id !== sessionId);
       
       if (this.config?.autoAnswer && !hasOtherActiveCalls) {
+        if (verboseLogging) {
+          console.log('[SIPService] 🤖 Auto-answer enabled, answering in 1.5s');
+        }
         setTimeout(() => {
           this.answerCall(sessionId);
         }, 1500);
@@ -466,11 +592,25 @@ export class SIPService {
 
       // Emit without session object
       const { session: _session, ...publicSessionData } = sessionData;
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📢 Emitting sessionCreated and incomingCall events:', {
+          sessionId: publicSessionData.id,
+          lineNumber: publicSessionData.lineNumber,
+          state: publicSessionData.state,
+          direction: publicSessionData.direction
+        });
+      }
+      
       this.emit('sessionCreated', publicSessionData);
       this.emit('incomingCall', publicSessionData);
+      
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ Events emitted successfully');
+      }
 
     } catch (error) {
-      console.error('Error handling incoming invitation:', error);
+      console.error('[SIPService] ❌ Error handling incoming invitation:', error);
     }
   }
 

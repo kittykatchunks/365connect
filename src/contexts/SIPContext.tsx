@@ -85,31 +85,63 @@ export function SIPProvider({ children }: SIPProviderProps) {
   // Wire up SIP events to Zustand store
   useEffect(() => {
     const service = serviceRef.current;
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPContext] 🔧 Setting up SIP event listeners');
+    }
     
     // Transport events
     const unsubTransportState = service.on('transportStateChanged', (state: TransportState) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📡 transportStateChanged event received:', state);
+      }
       setTransportState(state);
     });
     
     // Registration events
     const unsubRegState = service.on('registrationStateChanged', (state: RegistrationState) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📝 registrationStateChanged event received:', state);
+      }
       setRegistrationState(state);
     });
     
     // Session events
     const unsubSessionCreated = service.on('sessionCreated', (session: SessionData) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ sessionCreated event received:', {
+          sessionId: session.id,
+          lineNumber: session.lineNumber,
+          direction: session.direction,
+          state: session.state,
+          target: session.target
+        });
+      }
       addSession(session);
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ Session added to store');
+      }
     });
     
     const unsubSessionAnswered = service.on('sessionAnswered', (session: SessionData) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 sessionAnswered event received:', session.id);
+      }
       updateSession(session.id, { state: 'established', answerTime: new Date() });
     });
     
     const unsubSessionTerminated = service.on('sessionTerminated', (session: SessionData) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📴 sessionTerminated event received:', session.id);
+      }
       removeSession(session.id);
     });
     
     const unsubSessionStateChanged = service.on('sessionStateChanged', ({ sessionId, state }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔄 sessionStateChanged event received:', { sessionId, state });
+      }
       updateSession(sessionId, { state: state as SessionData['state'] });
     });
     
