@@ -4,16 +4,11 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Check, Phone, Building2, RefreshCw } from 'lucide-react';
+import { ChevronDown, Check, Phone, Building2 } from 'lucide-react';
 import { cn } from '@/utils';
-import { useAppStore, useSettingsStore } from '@/stores';
-
-export interface CompanyNumber {
-  id: string;
-  number: string;
-  name: string;
-  isDefault?: boolean;
-}
+import { useCompanyNumbersStore, useSettingsStore } from '@/stores';
+import { useSIP } from '@/hooks';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 interface CLISelectorProps {
   className?: string;
@@ -22,42 +17,58 @@ interface CLISelectorProps {
 export function CLISelector({ className }: CLISelectorProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   
-  // Get company numbers from app store (will be populated from API)
-  const companyNumbers = useAppStore((state) => state.companyNumbers);
-  const selectedCLI = useAppStore((state) => state.selectedCLI);
-  const setSelectedCLI = useAppStore((state) => state.setSelectedCLI);
-  const fetchCompanyNumbers = useAppStore((state) => state.fetchCompanyNumbers);
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Get company numbers and state from store
+  const numbers = useCompanyNumbersStore((state) => state.numbers);
+  const currentCompany = useCompanyNumbersStore((state) => state.currentCompany);
+  const pendingCompany = useCompanyNumbersStore((state) => state.pendingCompany);
+  const setPendingCompany = useCompanyNumbersStore((state) => state.setPendingCompany);
+  const confirmCliChange = useCompanyNumbersStore((state) => state.confirmCliChange);
+  const isSyncing = useCompanyNumbersStore((state) => state.isSyncing);
   
   const showCLISelector = useSettingsStore((state) => state.settings.interface.showCompanyNumbersTab);
   
-  // Find the currently selected number
-  const selectedNumber = companyNumbers.find((n) => n.id === selectedCLI);
+  // SIP hook for making calls
+  const { makeCall } = useSIP();
   
   // Toggle dropdown
   const handleToggle = useCallback(() => {
     setIsOpen((prev) => !prev);
   }, []);
   
-  // Select a number
-  const handleSelect = useCallback((number: CompanyNumber) => {
-    setSelectedCLI(number.id);
-    setIsOpen(false);
-  }, [setSelectedCLI]);
-  
-  // Refresh company numbers
-  const handleRefresh = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsLoading(true);
-    try {
-      await fetchCompanyNumbers();
-    } catch (error) {
-      console.error('Failed to refresh company numbers:', error);
-    } finally {
-      setIsLoading(false);
+  // Select a number (set as pending)
+  const handleSelect = useCallback((company: typeof numbers[0]) => {
+    if (verboseLogging) {
+      console.log('[CLISelector] Setting pending company:', company);
     }
-  }, [fetchCompanyNumbers]);
+    setPendingCompany(company);
+    setIsOpen(false);
+  }, [setPendingCompany, verboseLogging]);
+  
+  // Confirm CLI change (dial *82*{id})
+  const handleConfirm = useCallback(async () => {
+    if (!pendingCompany) return;
+    
+    if (verboseLogging) {
+      console.log('[CLISelector] Confirming CLI change to:', pendingCompany);
+    }
+    
+    const success = await confirmCliChange(makeCall);
+    
+    if (!success) {
+      console.error('[CLISelector] Failed to confirm CLI change');
+    }
+  }, [pendingCompany, confirmCliChange, makeCall, verboseLogging]);
+  
+  // Cancel pending selection
+  const handleCancelPending = useCallback(() => {
+    if (verboseLogging) {
+      console.log('[CLISelector] Cancelling pending CLI change');
+    }
+    setPendingCompany(null);
+  }, [setPendingCompany, verboseLogging]);
   
   // Close on outside click
   useEffect(() => {
@@ -75,72 +86,90 @@ export function CLISelector({ className }: CLISelectorProps) {
   }, [isOpen]);
   
   // Don't render if no company numbers or feature disabled
-  if (!showCLISelector || companyNumbers.length === 0) {
+  if (!showCLISelector || numbers.length === 0) {
     return null;
   }
   
   return (
     <div className={cn('cli-selector', className)}>
+      {/* Dropdown selector */}
       <button
         type="button"
         className="cli-selector-trigger"
         onClick={handleToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        disabled={!!pendingCompany}
       >
         <div className="cli-selector-value">
           <Building2 className="cli-selector-icon" />
           <div className="cli-selector-text">
-            <span className="cli-selector-label">{t('cli.outbound_number', 'Outbound Number')}</span>
+            <span className="cli-selector-label">{t('cli.select_company', 'Select Company CLI')}</span>
             <span className="cli-selector-number">
-              {selectedNumber ? selectedNumber.name || selectedNumber.number : t('cli.select', 'Select...')}
+              {currentCompany 
+                ? `${currentCompany.name} - ${currentCompany.cid}`
+                : t('cli.no_cli_selected', 'No CLI Selected')
+              }
             </span>
           </div>
         </div>
-        <div className="cli-selector-actions">
-          <button
-            type="button"
-            className="cli-refresh-btn"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            title={t('cli.refresh', 'Refresh')}
-          >
-            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
-          </button>
-          <ChevronDown className={cn('cli-selector-chevron', isOpen && 'rotate-180')} />
-        </div>
+        <ChevronDown className={cn('cli-selector-chevron', isOpen && 'rotate-180')} />
       </button>
       
       {/* Dropdown */}
       {isOpen && (
         <div className="cli-selector-dropdown" role="listbox">
-          {companyNumbers.map((number) => (
+          {numbers.map((number) => (
             <button
-              key={number.id}
+              key={number.company_id}
               type="button"
               className={cn(
                 'cli-selector-option',
-                selectedCLI === number.id && 'cli-selector-option-selected'
+                currentCompany?.company_id === number.company_id && 'cli-selector-option-selected'
               )}
               onClick={() => handleSelect(number)}
               role="option"
-              aria-selected={selectedCLI === number.id}
+              aria-selected={currentCompany?.company_id === number.company_id}
             >
               <Phone className="cli-option-icon" />
               <div className="cli-option-content">
-                <span className="cli-option-name">{number.name || number.number}</span>
-                {number.name && (
-                  <span className="cli-option-number">{number.number}</span>
-                )}
+                <span className="cli-option-name">{number.name}</span>
+                <span className="cli-option-number">{number.cid}</span>
+                <span className="cli-option-id">ID: {number.company_id}</span>
               </div>
-              {selectedCLI === number.id && (
+              {currentCompany?.company_id === number.company_id && (
                 <Check className="cli-option-check" />
-              )}
-              {number.isDefault && (
-                <span className="cli-option-badge">{t('cli.default', 'Default')}</span>
               )}
             </button>
           ))}
+        </div>
+      )}
+      
+      {/* Orange Confirm Button - Shows when pending selection */}
+      {pendingCompany && (
+        <div className="cli-confirm-container">
+          <button
+            type="button"
+            className="cli-confirm-btn"
+            onClick={handleConfirm}
+            disabled={isSyncing}
+          >
+            <Phone className="w-4 h-4" />
+            <div className="cli-confirm-text">
+              <span className="cli-confirm-label">{t('cli.confirm_change', 'Confirm CLI Change')}</span>
+              <span className="cli-confirm-number">
+                {pendingCompany.name} - {pendingCompany.cid}
+              </span>
+            </div>
+          </button>
+          <button
+            type="button"
+            className="cli-cancel-btn"
+            onClick={handleCancelPending}
+            title={t('common.cancel', 'Cancel')}
+          >
+            ×
+          </button>
         </div>
       )}
     </div>

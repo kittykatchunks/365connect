@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
 import { SIPProvider } from '@/contexts';
+import { phantomApiService } from '@/services';
 import { 
   LoadingScreen, 
   LoadingSpinner,
@@ -201,13 +202,36 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Simulate initialization (will be replaced with actual init logic)
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+        
+        if (verboseLogging) {
+          console.log('[App] 🚀 Initializing application...');
+        }
+        
+        // Initialize PhantomApiService if PhantomID is available
+        const phantomId = useSettingsStore.getState().settings.connection.phantomId;
+        if (phantomId) {
+          if (verboseLogging) {
+            console.log('[App] 📡 Initializing PhantomApiService with PhantomID:', phantomId);
+          }
+          await phantomApiService.initialize(phantomId);
+        } else {
+          if (verboseLogging) {
+            console.log('[App] ⚠️ No PhantomID found, PhantomApiService not initialized');
+          }
+        }
+        
+        // Simulate additional initialization if needed
+        await new Promise((resolve) => setTimeout(resolve, 500));
         
         setInitialized(true);
         setLoading(false);
+        
+        if (verboseLogging) {
+          console.log('[App] ✅ Application initialized successfully');
+        }
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+        console.error('[App] ❌ Failed to initialize app:', error);
         setLoading(false);
       }
     };

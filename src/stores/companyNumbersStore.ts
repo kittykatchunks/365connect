@@ -5,16 +5,23 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { CompanyNumber, CompanyNumberFormData } from '@/types/companyNumber';
-import { sortCompanyNumbers, validateCompanyNumber } from '@/types/companyNumber';
+import { sortCompanyNumbers, validateCompanyNumber, findCompanyByNumber } from '@/types/companyNumber';
+import { phantomApiService } from '@/services';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 interface CompanyNumbersState {
   // Data
   numbers: CompanyNumber[];
   
+  // CLI State
+  currentCompany: CompanyNumber | null; // Active CLI on PBX
+  pendingCompany: CompanyNumber | null; // Selected but not confirmed
+  
   // UI state
   searchQuery: string;
   selectedNumberId: number | null;
   isLoading: boolean;
+  isSyncing: boolean;
   error: string | null;
   
   // Computed
@@ -24,6 +31,12 @@ interface CompanyNumbersState {
   setSearchQuery: (query: string) => void;
   setSelectedNumber: (id: number | null) => void;
   
+  // CLI Actions
+  setPendingCompany: (company: CompanyNumber | null) => void;
+  setCurrentCompany: (company: CompanyNumber | null) => void;
+  confirmCliChange: (makeCallFn: (target: string) => Promise<any>) => Promise<boolean>;
+  syncCurrentCliFromAgentData: (agentData: { cid?: string }) => void;
+  
   // CRUD
   addNumber: (data: CompanyNumberFormData) => string | null;
   updateNumber: (company_id: number, data: Partial<CompanyNumberFormData>) => string | null;
@@ -31,12 +44,16 @@ interface CompanyNumbersState {
   deleteAllNumbers: () => void;
   
   // API Integration
-  fetchFromAPI: (phantomId: string) => Promise<void>;
+  fetchFromAPI: () => Promise<void>;
+  syncWithConfirmation: (phantomId: string, onConfirm?: (apiData: CompanyNumber[], localData: CompanyNumber[]) => Promise<boolean>) => Promise<{ needsConfirmation: boolean; identical: boolean; apiData?: CompanyNumber[] }>;
+  compareWithApi: (apiData: CompanyNumber[], localData: CompanyNumber[]) => boolean;
+  replaceWithApiData: (apiData: CompanyNumber[]) => void;
   setNumbers: (numbers: CompanyNumber[]) => void;
   
   // Helpers
   getNextAvailableId: () => number;
   isIdAvailable: (id: number) => boolean;
+  getCompanyById: (id: number) => CompanyNumber | undefined;
 }
 
 function filterNumbers(numbers: CompanyNumber[], query: string): CompanyNumber[] {
@@ -56,9 +73,12 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
       (set, get) => ({
         // Initial state
         numbers: [],
+        currentCompany: null,
+        pendingCompany: null,
         searchQuery: '',
         selectedNumberId: null,
         isLoading: false,
+        isSyncing: false,
         error: null,
         filteredNumbers: [],
         
@@ -72,7 +92,97 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
         
         setSelectedNumber: (selectedNumberId) => set({ selectedNumberId }),
         
-        // Add company number
+        // ==================== CLI Actions ====================
+        
+        setPendingCompany: (pendingCompany) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          if (verboseLogging) {
+            console.log('[CompanyNumbersStore] Setting pending company:', pendingCompany);
+          }
+          set({ pendingCompany });
+        },
+        
+        setCurrentCompany: (currentCompany) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          if (verboseLogging) {
+            console.log('[CompanyNumbersStore] Setting current company:', currentCompany);
+          }
+          set({ currentCompany, pendingCompany: null });
+        },
+        
+        confirmCliChange: async (makeCallFn: (target: string) => Promise<any>) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const { pendingCompany } = get();
+          
+          if (!pendingCompany) {
+            if (verboseLogging) {
+              console.warn('[CompanyNumbersStore] No pending company to confirm');
+            }
+            return false;
+          }
+          
+          try {
+            // Dial the CLI change code: *82*{company_id}
+            const cliCode = `*82*${pendingCompany.company_id}`;
+            
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] 📞 Changing CLI to company:', pendingCompany);
+              console.log('[CompanyNumbersStore] 📞 Dialing CLI code:', cliCode);
+            }
+            
+            await makeCallFn(cliCode);
+            
+            // Set as current company
+            set({ currentCompany: pendingCompany, pendingCompany: null });
+            
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] ✅ CLI changed successfully to:', pendingCompany.name);
+            }
+            
+            return true;
+          } catch (error) {
+            if (verboseLogging) {
+              console.error('[CompanyNumbersStore] ❌ CLI change failed:', error);
+            }
+            set({ error: error instanceof Error ? error.message : 'Failed to change CLI' });
+            return false;
+          }
+        },
+        
+        syncCurrentCliFromAgentData: (agentData: { cid?: string }) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const { numbers } = get();
+          
+          if (!agentData.cid) {
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] No cid in agent data');
+            }
+            return;
+          }
+          
+          if (verboseLogging) {
+            console.log('[CompanyNumbersStore] Syncing current CLI from agent data, cid:', agentData.cid);
+          }
+          
+          // Try to find matching company by telephone number
+          const matchingCompany = findCompanyByNumber(numbers, agentData.cid);
+          
+          if (matchingCompany) {
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] ✅ Found matching company for cid:', matchingCompany);
+            }
+            set({ currentCompany: matchingCompany, pendingCompany: null });
+          } else {
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] No matching company found for cid:', agentData.cid);
+            }
+            // Clear current selection if cid doesn't match any stored company
+            set({ currentCompany: null });
+          }
+        },
+        
+        // ==================== CRUD Operations ====================
+
         addNumber: (data) => {
           const validationError = validateCompanyNumber(data);
           if (validationError) return validationError;
@@ -158,29 +268,170 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
           set({ numbers, filteredNumbers, error: null });
         },
         
-        // Fetch from Phantom API
-        fetchFromAPI: async (phantomId) => {
+        // ==================== API Sync Methods ====================
+        
+        // Compare API data with local data
+        compareWithApi: (apiData: CompanyNumber[], localData: CompanyNumber[]) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          
+          // Quick check: compare counts first
+          if (apiData.length !== localData.length) {
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] Different counts - API:', apiData.length, 'Local:', localData.length);
+            }
+            return false;
+          }
+          
+          // If both empty, they're identical
+          if (apiData.length === 0) {
+            return true;
+          }
+          
+          // Deep comparison: check each entry exists in both arrays
+          for (const apiEntry of apiData) {
+            const match = localData.find(localEntry =>
+              localEntry.company_id === apiEntry.company_id &&
+              localEntry.cid === apiEntry.cid &&
+              localEntry.name === apiEntry.name
+            );
+            
+            if (!match) {
+              if (verboseLogging) {
+                console.log('[CompanyNumbersStore] Entry not found in local storage:', apiEntry);
+              }
+              return false;
+            }
+          }
+          
+          if (verboseLogging) {
+            console.log('[CompanyNumbersStore] ✅ All entries match between API and local storage');
+          }
+          return true;
+        },
+        
+        // Replace local data with API data
+        replaceWithApiData: (apiData: CompanyNumber[]) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          
+          if (verboseLogging) {
+            console.log('[CompanyNumbersStore] 📥 Replacing company numbers with API data:', apiData.length, 'entries');
+          }
+          
+          const sorted = sortCompanyNumbers(apiData);
+          const filteredNumbers = filterNumbers(sorted, get().searchQuery);
+          
+          set({ 
+            numbers: apiData, 
+            filteredNumbers, 
+            error: null 
+          });
+          
+          if (verboseLogging) {
+            console.log('[CompanyNumbersStore] ✅ Successfully replaced company numbers with API data');
+          }
+        },
+        
+        // Sync with confirmation - returns status for UI to show confirmation modal
+        syncWithConfirmation: async (
+          phantomId: string,
+          onConfirm?: (apiData: CompanyNumber[], localData: CompanyNumber[]) => Promise<boolean>
+        ) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          
+          set({ isSyncing: true, error: null });
+          
+          try {
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] 📡 Starting API sync for PhantomID:', phantomId);
+            }
+            
+            // Fetch from authenticated API endpoint (Basic Auth)
+            const result = await phantomApiService.get<{ company_numbers?: CompanyNumber[] }>('companyNumbers');
+            
+            if (!result.success || !result.data?.company_numbers) {
+              if (verboseLogging) {
+                console.warn('[CompanyNumbersStore] No company numbers returned from API');
+              }
+              set({ isSyncing: false });
+              return { needsConfirmation: false, identical: true };
+            }
+            
+            const apiData = result.data.company_numbers;
+            const localData = get().numbers;
+            
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] 📦 Received', apiData.length, 'company numbers from API');
+            }
+            
+            // Compare with local storage
+            const isIdentical = get().compareWithApi(apiData, localData);
+            
+            if (isIdentical) {
+              if (verboseLogging) {
+                console.log('[CompanyNumbersStore] ✅ Company numbers are up to date');
+              }
+              set({ isSyncing: false });
+              return { needsConfirmation: false, identical: true };
+            }
+            
+            // Data is different
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] ⚠️ Company numbers differ from API');
+            }
+            
+            // If onConfirm provided, call it
+            if (onConfirm) {
+              const confirmed = await onConfirm(apiData, localData);
+              
+              if (confirmed) {
+                get().replaceWithApiData(apiData);
+                set({ isSyncing: false });
+                return { needsConfirmation: false, identical: false, apiData };
+              } else {
+                if (verboseLogging) {
+                  console.log('[CompanyNumbersStore] User cancelled sync');
+                }
+                set({ isSyncing: false });
+                return { needsConfirmation: false, identical: false };
+              }
+            }
+            
+            // No onConfirm provided, return status for UI to handle
+            set({ isSyncing: false });
+            return { needsConfirmation: true, identical: false, apiData };
+            
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to sync with API';
+            if (verboseLogging) {
+              console.error('[CompanyNumbersStore] ❌ API sync failed:', error);
+            }
+            set({ isSyncing: false, error: message });
+            return { needsConfirmation: false, identical: false };
+          }
+        },
+        
+        // Fetch from API (simple version without comparison)
+        fetchFromAPI: async () => {
+          const verboseLogging = isVerboseLoggingEnabled();
           set({ isLoading: true, error: null });
           
           try {
-            // Build API URL
-            const apiUrl = `https://api-${phantomId}.phantomapi.net/company`;
-            
-            const response = await fetch(apiUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json'
-              }
-            });
-            
-            if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] 📡 Fetching company numbers from API...');
             }
             
-            const data = await response.json();
+            // Use authenticated endpoint (Basic Auth, port 443)
+            const result = await phantomApiService.get<{ company_numbers?: CompanyNumber[] }>('companyNumbers');
             
-            // API returns array of { company_id, name, cid }
-            const numbers: CompanyNumber[] = Array.isArray(data) ? data : [];
+            if (!result.success) {
+              throw new Error(result.error || 'Failed to fetch company numbers');
+            }
+            
+            const numbers: CompanyNumber[] = result.data?.company_numbers || [];
+            
+            if (verboseLogging) {
+              console.log('[CompanyNumbersStore] 📦 Received', numbers.length, 'company numbers from API');
+            }
             
             const sorted = sortCompanyNumbers(numbers);
             const filteredNumbers = filterNumbers(sorted, get().searchQuery);
@@ -193,8 +444,17 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
             });
           } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to fetch company numbers';
+            if (verboseLogging) {
+              console.error('[CompanyNumbersStore] ❌ Fetch failed:', error);
+            }
             set({ isLoading: false, error: message });
           }
+        },
+        
+        // ==================== Helper Methods ====================
+        
+        getCompanyById: (id: number) => {
+          return get().numbers.find((n) => n.company_id === id);
         },
         
         // Get next available ID
@@ -214,7 +474,8 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
       {
         name: 'company-numbers-store',
         partialize: (state) => ({
-          numbers: state.numbers
+          numbers: state.numbers,
+          currentCompany: state.currentCompany
         }),
         onRehydrateStorage: () => (state) => {
           if (state) {

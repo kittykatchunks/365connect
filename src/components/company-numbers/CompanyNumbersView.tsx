@@ -7,12 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Building2, Phone, Search, RefreshCw, Pencil, Trash2, MoreVertical, Hash } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { Button, Input } from '@/components/ui';
-import { CompanyNumberModal, ConfirmModal } from '@/components/modals';
-import { useCompanyNumbersStore, useSettingsStore } from '@/stores';
+import { CompanyNumberModal, ConfirmModal, ApiSyncConfirmModal } from '@/components/modals';
+import { useCompanyNumbersStore, useSettingsStore, useUIStore } from '@/stores';
 import type { CompanyNumber } from '@/types/companyNumber';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 export function CompanyNumbersView() {
   const { t } = useTranslation();
+  
+  const verboseLogging = isVerboseLoggingEnabled();
   
   // Store state
   const numbers = useCompanyNumbersStore((state) => state.filteredNumbers);
@@ -20,12 +23,17 @@ export function CompanyNumbersView() {
   const setSearchQuery = useCompanyNumbersStore((state) => state.setSearchQuery);
   const deleteNumber = useCompanyNumbersStore((state) => state.deleteNumber);
   const deleteAllNumbers = useCompanyNumbersStore((state) => state.deleteAllNumbers);
-  const fetchFromAPI = useCompanyNumbersStore((state) => state.fetchFromAPI);
   const isLoading = useCompanyNumbersStore((state) => state.isLoading);
+  const isSyncing = useCompanyNumbersStore((state) => state.isSyncing);
   const error = useCompanyNumbersStore((state) => state.error);
+  const syncWithConfirmation = useCompanyNumbersStore((state) => state.syncWithConfirmation);
+  const replaceWithApiData = useCompanyNumbersStore((state) => state.replaceWithApiData);
   
   // Get PhantomID from settings
   const phantomId = useSettingsStore((state) => state.settings.connection.phantomId);
+  
+  // UI notifications
+  const addNotification = useUIStore((state) => state.addNotification);
   
   // Local UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +42,10 @@ export function CompanyNumbersView() {
   const [isDeleteAllConfirmOpen, setIsDeleteAllConfirmOpen] = useState(false);
   const [numberToDelete, setNumberToDelete] = useState<CompanyNumber | null>(null);
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  
+  // API Sync state
+  const [isSyncConfirmOpen, setIsSyncConfirmOpen] = useState(false);
+  const [apiSyncData, setApiSyncData] = useState<CompanyNumber[]>([]);
   
   const handleAddNumber = () => {
     setEditingNumber(null);
@@ -56,13 +68,79 @@ export function CompanyNumbersView() {
     if (numberToDelete) {
       deleteNumber(numberToDelete.company_id);
       setNumberToDelete(null);
+      addNotification({
+        type: 'success',
+        title: t('common.success', 'Success'),
+        message: t('company_numbers.deleted_success', 'Company number deleted successfully')
+      });
     }
   };
   
-  const handleRefresh = () => {
-    if (phantomId) {
-      fetchFromAPI(phantomId);
+  const handleRefresh = async () => {
+    if (!phantomId) {
+      addNotification({
+        type: 'warning',
+        title: t('common.warning', 'Warning'),
+        message: t('company_numbers.no_phantom_id', 'No PhantomID configured')
+      });
+      return;
     }
+    
+    if (verboseLogging) {
+      console.log('[CompanyNumbersView] Starting API sync...');
+    }
+    
+    const result = await syncWithConfirmation(phantomId);
+    
+    if (result.identical) {
+      // Data is up to date
+      addNotification({
+        type: 'success',
+        title: t('common.success', 'Success'),
+        message: t('company_numbers.up_to_date', 'Your company numbers is the latest version')
+      });
+    } else if (result.needsConfirmation && result.apiData) {
+      // Data differs - show confirmation modal
+      if (verboseLogging) {
+        console.log('[CompanyNumbersView] Data differs, showing confirmation modal');
+      }
+      setApiSyncData(result.apiData);
+      setIsSyncConfirmOpen(true);
+    } else if (!result.identical && !result.needsConfirmation) {
+      // Sync was attempted but failed or was cancelled
+      if (error) {
+        addNotification({
+          type: 'error',
+          title: t('common.error', 'Error'),
+          message: t('company_numbers.sync_failed', 'Failed to sync: {{error}}', { error })
+        });
+      }
+    }
+  };
+  
+  const confirmApiSync = () => {
+    if (verboseLogging) {
+      console.log('[CompanyNumbersView] User confirmed API sync');
+    }
+    
+    replaceWithApiData(apiSyncData);
+    setIsSyncConfirmOpen(false);
+    setApiSyncData([]);
+    
+    addNotification({
+      type: 'success',
+      title: t('common.success', 'Success'),
+      message: t('company_numbers.sync_success', 'Company numbers updated successfully from server')
+    });
+  };
+  
+  const cancelApiSync = () => {
+    if (verboseLogging) {
+      console.log('[CompanyNumbersView] User cancelled API sync');
+    }
+    
+    setIsSyncConfirmOpen(false);
+    setApiSyncData([]);
   };
   
   const toggleMenu = (companyId: number) => {
@@ -90,10 +168,10 @@ export function CompanyNumbersView() {
                 variant="ghost" 
                 size="sm"
                 onClick={handleRefresh}
-                disabled={isLoading}
+                disabled={isLoading || isSyncing}
                 title={t('company_numbers.refresh', 'Refresh from API')}
               >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${(isLoading || isSyncing) ? 'animate-spin' : ''}`} />
               </Button>
             )}
             {numbers.length > 0 && (
@@ -136,8 +214,8 @@ export function CompanyNumbersView() {
             <h3>{t('company_numbers.empty_title', 'No company numbers')}</h3>
             <p>{t('company_numbers.empty_description', 'Add numbers to use as outbound caller IDs')}</p>
             {phantomId && (
-              <Button variant="ghost" onClick={handleRefresh} disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <Button variant="ghost" onClick={handleRefresh} disabled={isLoading || isSyncing}>
+                <RefreshCw className={`w-4 h-4 ${(isLoading || isSyncing) ? 'animate-spin' : ''}`} />
                 {t('company_numbers.fetch_from_api', 'Fetch from API')}
               </Button>
             )}
@@ -222,13 +300,30 @@ export function CompanyNumbersView() {
       <ConfirmModal
         isOpen={isDeleteAllConfirmOpen}
         onClose={() => setIsDeleteAllConfirmOpen(false)}
-        onConfirm={deleteAllNumbers}
+        onConfirm={() => {
+          deleteAllNumbers();
+          setIsDeleteAllConfirmOpen(false);
+          addNotification({
+            type: 'success',
+            title: t('common.success', 'Success'),
+            message: t('company_numbers.all_deleted', 'All company numbers deleted')
+          });
+        }}
         title={t('company_numbers.delete_all_title', 'Delete All Company Numbers')}
         message={t('company_numbers.delete_all_message', 'Are you sure you want to delete all {{count}} company numbers? This cannot be undone.', {
           count: numbers.length
         })}
         confirmText={t('company_numbers.delete_all', 'Delete All')}
         variant="danger"
+      />
+      
+      {/* API Sync Confirm */}
+      <ApiSyncConfirmModal
+        isOpen={isSyncConfirmOpen}
+        onClose={cancelApiSync}
+        onConfirm={confirmApiSync}
+        apiData={apiSyncData}
+        localData={numbers}
       />
     </div>
   );
