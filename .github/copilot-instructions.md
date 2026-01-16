@@ -55,8 +55,24 @@ Uses **secure WebSocket (WSS)** for SIP signaling with these requirements:
 ## Mandatory Development Practices
 
 ### Verbose Logging
-**ALWAYS include verbose logging for all new features and changes**. All log statements must be gated by the verbose logging setting:
+**ALWAYS include verbose logging for all functionality you review, create, or amend**. All log statements must be gated by the verbose logging setting.
 
+**React/TypeScript Implementation:**
+```typescript
+import { isVerboseLoggingEnabled } from '@/utils';
+
+// Check verbose logging at the start of functions
+const verboseLogging = isVerboseLoggingEnabled();
+
+// Add logging throughout your code
+if (verboseLogging) {
+    console.log('[ComponentName] Event occurred:', eventData);
+    console.warn('[ComponentName] Potential issue detected:', details);
+    console.error('[ComponentName] Error:', error);
+}
+```
+
+**PWA/Legacy JavaScript Implementation:**
 ```javascript
 // Check verbose logging setting from localStorage
 const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
@@ -72,9 +88,42 @@ if (verboseLogging) {
 **Logging Guidelines:**
 - Prefix all logs with component/manager name in brackets: `[SipSessionManager]`, `[UIStateManager]`, etc.
 - Log key state changes, API calls, user interactions, and error conditions
-- Include relevant context (session IDs, timestamps, user actions)
+- **ALWAYS log API/HTTP requests with their payloads and response data**
+- **ALWAYS log function entry points with parameters**
+- **ALWAYS log function returns/results, especially for data transformations**
+- Include relevant context (session IDs, timestamps, user actions, request/response data)
 - Use appropriate log levels: `console.log()` for info, `console.warn()` for warnings, `console.error()` for errors
 - Verbose logging is controlled via Settings > Advanced Settings toggle
+
+**Required Logging Points:**
+- **API Requests:** Log URL, method, headers, and request body before sending
+- **API Responses:** Log status code, response headers, and response data
+- **Function Entry:** Log function name and input parameters (sanitize sensitive data)
+- **Function Exit:** Log return values and execution results
+- **State Changes:** Log before/after values when modifying state
+- **Error Handling:** Always log errors with full context and stack traces
+
+**Example - API Request Logging:**
+```typescript
+const verboseLogging = isVerboseLoggingEnabled();
+
+if (verboseLogging) {
+    console.log('[ServiceName] 📤 API Request:', {
+        url: endpoint,
+        method: 'POST',
+        body: requestData
+    });
+}
+
+const response = await fetch(endpoint, options);
+
+if (verboseLogging) {
+    console.log('[ServiceName] 📥 API Response:', {
+        status: response.status,
+        data: await response.json()
+    });
+}
+```
 
 ### Internationalization (i18n)
 **ALL user-facing text MUST be internationalized**. Never use hardcoded English strings in the UI.
