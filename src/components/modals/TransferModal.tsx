@@ -8,7 +8,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PhoneForwarded, Phone, X } from 'lucide-react';
-import { Modal, Button, Input } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { useSIP } from '@/hooks';
 import { useUIStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
@@ -381,21 +381,32 @@ export function TransferModal({ isOpen, onClose, sessionId }: TransferModalProps
     }
   }, [transferTarget, isInAttendedMode, handleBlindTransfer]);
   
+  if (!isOpen) return null;
+  
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={t('transfer.title', 'Transfer Call')}
-      size="sm"
-      closable={!isInAttendedMode} // Prevent closing during attended transfer
-    >
-      <div className="space-y-4">
+    <div className="modal-overlay" onClick={!isInAttendedMode ? handleClose : undefined}>
+      <div className="modal-content transfer-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{t('transfer.title', 'Transfer Call')}</h2>
+          {!isInAttendedMode && (
+            <Button variant="ghost" size="sm" onClick={handleClose} className="modal-close">
+              <X className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
+        
         {!isInAttendedMode ? (
           <>
             {/* Initial Transfer State */}
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="transfer-target" className="block text-sm font-medium mb-2">
+            <div className="modal-body">
+              {error && (
+                <div className="form-error">
+                  {error}
+                </div>
+              )}
+              
+              <div className="form-group">
+                <label htmlFor="transfer-target">
                   {t('transfer.target_label', 'Transfer to number:')}
                 </label>
                 <Input
@@ -405,86 +416,75 @@ export function TransferModal({ isOpen, onClose, sessionId }: TransferModalProps
                   onChange={(e) => setTransferTarget(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={t('transfer.target_placeholder', 'Enter number to transfer to')}
+                  icon={<Phone className="w-4 h-4" />}
                   autoFocus
                 />
               </div>
+            </div>
+            
+            <div className="modal-footer">
+              <Button
+                variant="ghost"
+                onClick={handleClose}
+              >
+                {t('common.cancel', 'Cancel')}
+              </Button>
               
-              {/* Error Display */}
-              {error && (
-                <div className="text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </div>
-              )}
+              <Button
+                variant="secondary"
+                onClick={handleAttendedTransfer}
+                disabled={!transferTarget.trim()}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                {t('transfer.attended', 'Attended')}
+              </Button>
               
-              {/* Transfer Action Buttons */}
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="ghost"
-                  onClick={handleClose}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  {t('common.cancel', 'CANCEL')}
-                </Button>
-                
-                <Button
-                  variant="secondary"
-                  onClick={handleAttendedTransfer}
-                  disabled={!transferTarget.trim()}
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  {t('transfer.attended', 'ATTENDED')}
-                </Button>
-                
-                <Button
-                  variant="primary"
-                  onClick={handleBlindTransfer}
-                  disabled={!transferTarget.trim()}
-                >
-                  <PhoneForwarded className="w-4 h-4 mr-2" />
-                  {t('transfer.blind', 'BLIND')}
-                </Button>
-              </div>
+              <Button
+                variant="primary"
+                onClick={handleBlindTransfer}
+                disabled={!transferTarget.trim()}
+              >
+                <PhoneForwarded className="w-4 h-4 mr-2" />
+                {t('transfer.blind', 'Blind')}
+              </Button>
             </div>
           </>
         ) : (
           <>
             {/* Attended Transfer Progress State */}
-            <div className="space-y-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                {attendedStatus}
-              </p>
-              
-              {/* Error Display */}
+            <div className="modal-body">
               {error && (
-                <div className="text-sm text-red-600 dark:text-red-400">
+                <div className="form-error">
                   {error}
                 </div>
               )}
               
-              {/* Attended Transfer Action Buttons */}
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="ghost"
-                  onClick={handleCancelTransfer}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  {t('common.cancel', 'CANCEL')}
-                </Button>
-                
-                <Button
-                  variant="primary"
-                  onClick={handleCompleteTransfer}
-                  disabled={!canCompleteTransfer}
-                >
-                  <PhoneForwarded className="w-4 h-4 mr-2" />
-                  {t('transfer.complete', 'TRANSFER')}
-                </Button>
+              <div className="transfer-status">
+                <p>{attendedStatus}</p>
               </div>
+            </div>
+            
+            <div className="modal-footer">
+              <Button
+                variant="ghost"
+                onClick={handleCancelTransfer}
+              >
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              
+              <Button
+                variant="primary"
+                onClick={handleCompleteTransfer}
+                disabled={!canCompleteTransfer}
+              >
+                <PhoneForwarded className="w-4 h-4 mr-2" />
+                {t('transfer.complete', 'Complete Transfer')}
+              </Button>
             </div>
           </>
         )}
       </div>
-    </Modal>
+    </div>
   );
 }
 
