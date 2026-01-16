@@ -981,6 +981,76 @@ a {
   border-radius: var(--radius-full);
 }
 
+/* Call Info Display */
+.call-info-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: background-color 0.3s ease;
+}
+
+.call-info-display.call-ringing {
+  background: var(--surface-color);
+}
+
+.call-info-display.call-dialing {
+  background: var(--surface-color);
+}
+
+.call-info-display.call-connected {
+  background: var(--surface-color);
+}
+
+.call-info-display.call-on-hold {
+  background: var(--surface-color);
+}
+
+.call-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.caller-number {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.caller-name {
+  font-size: var(--font-size-md, 1rem);
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.call-secondary-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-color-muted);
+}
+
+.call-direction {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.call-duration {
+  font-weight: 600;
+  color: var(--text-color);
+  background: var(--background-color);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
 /* Dialpad */
 .dialpad {
   display: grid;

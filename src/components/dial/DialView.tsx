@@ -12,9 +12,10 @@ import { CallControls } from './CallControls';
 import { BLFButtonGrid } from './BLFButtonGrid';
 import { CLISelector } from './CLISelector';
 import { AgentKeys } from './AgentKeys';
+import { CallInfoDisplay } from './CallInfoDisplay';
 import { TransferModal } from '@/components/modals';
 import { useSIP } from '@/hooks';
-import { useUIStore, useSettingsStore } from '@/stores';
+import { useUIStore, useSettingsStore, useSIPStore } from '@/stores';
 import { formatDuration, isVerboseLoggingEnabled } from '@/utils';
 
 export function DialView() {
@@ -26,6 +27,13 @@ export function DialView() {
   
   const addNotification = useUIStore((state) => state.addNotification);
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
+  
+  // Get selected line and line states from store
+  const selectedLine = useSIPStore((state) => state.selectedLine);
+  const lineStates = useSIPStore((state) => state.lineStates);
+  const selectLine = useSIPStore((state) => state.selectLine);
+  const getSessionByLine = useSIPStore((state) => state.getSessionByLine);
+  const getIncomingSession = useSIPStore((state) => state.getIncomingSession);
   
   // SIP hook
   const {
@@ -40,6 +48,14 @@ export function DialView() {
     sendDTMF
   } = useSIP();
   
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Get session for selected line
+  const selectedLineSession = getSessionByLine(selectedLine);
+  
+  // Determine if we should show call info display or dial input
+  const showCallInfo = selectedLineSession && selectedLineSession.state !== 'terminated';
+  
   const isInCall = currentSession && currentSession.state !== 'terminated';
   const hasIncoming = incomingSession && incomingSession.state === 'ringing';
   
@@ -49,6 +65,55 @@ export function DialView() {
   const callDuration = currentSession?.duration || 0;
   const isMuted = currentSession?.muted || false;
   const isOnHold = currentSession?.onHold || false;
+  
+  // Automatic line switching for incoming calls - ONLY when app is idle
+  useEffect(() => {
+    const incomingSessionData = getIncomingSession();
+    
+    if (!incomingSessionData) {
+      return;
+    }
+    
+    // Check if app is idle (no other active calls)
+    const hasOtherActiveCalls = lineStates.some(
+      (line) => line.state !== 'idle' && line.sessionId !== incomingSessionData.id
+    );
+    
+    // Only auto-switch if app is completely idle (no other calls)
+    if (hasOtherActiveCalls) {
+      if (verboseLogging) {
+        console.log('[DialView] 📞 Incoming call but other calls active - NOT auto-switching. User must manually select line.');
+      }
+      return;
+    }
+    
+    // Find which line has the incoming call
+    const incomingLine = lineStates.find(
+      (line) => line.sessionId === incomingSessionData.id
+    );
+    
+    if (!incomingLine) {
+      if (verboseLogging) {
+        console.log('[DialView] ⚠️ Incoming call but no line assigned:', incomingSessionData.id);
+      }
+      return;
+    }
+    
+    // App is idle and we have an incoming call - auto-switch to it
+    if (selectedLine !== incomingLine.lineNumber) {
+      if (verboseLogging) {
+        console.log('[DialView] 📞 App idle - Auto-switching to first ringing line:', incomingLine.lineNumber, 'from:', selectedLine);
+      }
+      selectLine(incomingLine.lineNumber as 1 | 2 | 3);
+    }
+  }, [lineStates, selectedLine, selectLine, getIncomingSession, verboseLogging]);
+  
+  // Log line state changes
+  useEffect(() => {
+    if (verboseLogging) {
+      console.log('[DialView] 📊 Selected line changed:', selectedLine, 'sessionOnLine:', selectedLineSession?.id || 'none');
+    }
+  }, [selectedLine, selectedLineSession?.id, verboseLogging]);
   
   // Handle digit press
   const handleDigit = useCallback(async (digit: string) => {
@@ -264,8 +329,10 @@ export function DialView() {
           {/* CLI Selector */}
           <CLISelector />
           
-          {/* Dial Input (hidden during call) */}
-          {!isInCall && (
+          {/* Call Info Display OR Dial Input - based on selected line state */}
+          {showCallInfo ? (
+            <CallInfoDisplay session={selectedLineSession} />
+          ) : (
             <DialInput
               value={dialValue}
               onChange={(e) => setDialValue(e.target.value)}
