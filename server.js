@@ -300,6 +300,11 @@ app.use('/api/phantom', createProxyMiddleware({
   }
 }));
 
+// Handle OPTIONS preflight for proxy routes explicitly
+app.options('/api/phantom-noauth/*', cors());
+app.options('/api/phantom/*', cors());
+app.options('/api/busylight/*', cors());
+
 // NoAuth Phantom API Proxy (Port 19773 - No Authentication)
 app.use('/api/phantom-noauth', createProxyMiddleware({
   target: 'https://server1-000.phantomapi.net:19773',  // Default fallback

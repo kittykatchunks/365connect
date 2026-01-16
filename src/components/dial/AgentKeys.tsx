@@ -234,9 +234,11 @@ export function AgentKeys({ className }: AgentKeysProps) {
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
-    if (pendingLogout && currentSession?.state === 'terminated') {
+    // Detect logout completion either by terminated state or session becoming undefined
+    if (pendingLogout && (currentSession?.state === 'terminated' || !currentSession)) {
       if (verboseLogging) {
-        console.log('[AgentKeys] 🔚 Logout call terminated, updating agent state', {
+        console.log('[AgentKeys] 🔚 Logout call ended, updating agent state', {
+          sessionState: currentSession?.state || 'no session',
           previousAgentState: agentState,
           previousQueueState: queueState,
           agentNumber: agentNumber
@@ -617,9 +619,6 @@ export function AgentKeys({ className }: AgentKeysProps) {
             <LogIn className="w-4 h-4" />
             <span className="agent-key-label">{t('agent.login', 'Login')}</span>
           </>
-        )}
-        {isLoggedIn && agentNumber && (
-          <span className="agent-key-info">#{agentNumber}</span>
         )}
       </Button>
       
