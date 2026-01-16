@@ -64,7 +64,7 @@ export function DialView() {
   // Determine state based on SELECTED LINE (not current session)
   const isSelectedLineIdle = !selectedLineSession || selectedLineSession.state === 'terminated';
   const isSelectedLineRinging = selectedLineSession && selectedLineSession.state === 'ringing';
-  const isSelectedLineInCall = selectedLineSession && (selectedLineSession.state === 'active');
+  const isSelectedLineInCall = selectedLineSession && (selectedLineSession.state === 'active' || selectedLineSession.state === 'established');
   
   // Determine if we should show call info display or dial input
   const showCallInfo = selectedLineSession && selectedLineSession.state !== 'terminated';
