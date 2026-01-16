@@ -5,7 +5,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Phone, PhoneForwarded, Settings } from 'lucide-react';
-import { cn } from '@/utils';
+import { cn, normalizePhoneNumber } from '@/utils';
 import type { BLFButton as BLFButtonType, BLFPresenceState } from '@/types';
 
 interface BLFButtonProps {
@@ -109,7 +109,7 @@ export function BLFButton({
         onContextMenu={handleContextMenu}
         disabled={disabled}
         title={isConfigured 
-          ? `${button.displayName || button.extension} - ${getStateLabel(state)}`
+          ? normalizePhoneNumber(button.extension)
           : t('blf.right_click_to_configure', 'Right-click to configure')
         }
         aria-label={isConfigured
@@ -118,17 +118,9 @@ export function BLFButton({
         }
       >
         {isConfigured ? (
-          <>
-            <span className="blf-btn-label">
-              {button.displayName || button.extension}
-            </span>
-            {button.extension && (
-              <span className="blf-btn-extension">{button.extension}</span>
-            )}
-            {button.type === 'speeddial' && (
-              <Phone className="blf-btn-type-icon" />
-            )}
-          </>
+          <span className="blf-btn-label">
+            {button.displayName || button.extension}
+          </span>
         ) : (
           <span className="blf-btn-empty-label">{button.index}</span>
         )}
