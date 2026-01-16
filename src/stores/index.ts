@@ -10,3 +10,4 @@ export { useBLFStore } from './blfStore';
 export { useContactsStore } from './contactsStore';
 export { useCallHistoryStore } from './callHistoryStore';
 export { useCompanyNumbersStore } from './companyNumbersStore';
+export { useTabNotificationStore, type TabAlertState } from './tabNotificationStore';

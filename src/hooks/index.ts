@@ -15,5 +15,6 @@ export { useNotifications, type NotificationPermission } from './useNotification
 export { useAudioDevices, type AudioDevice } from './useAudioDevices';
 export { useSIP, type UseSIPReturn } from './useSIP';
 export { useTabAlert } from './useTabAlert';
+export { useTabNotification } from './useTabNotification';
 export { useBusylight, type BusylightState } from './useBusylight';
 export { usePWA } from './usePWA';

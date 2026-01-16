@@ -14,6 +14,7 @@ import {
 import { cn } from '@/utils';
 import { useAppStore } from '@/stores';
 import { useSettingsStore } from '@/stores';
+import { useTabNotification } from '@/hooks';
 import type { ViewType } from '@/types';
 
 interface TabItem {
@@ -46,6 +47,7 @@ export function NavigationTabs() {
   const currentView = useAppStore((state) => state.currentView);
   const setCurrentView = useAppStore((state) => state.setCurrentView);
   const settings = useSettingsStore((state) => state.settings);
+  const { getTabAlertClass } = useTabNotification();
   
   const visibleTabs = tabs.filter((tab) => {
     // Dial and Settings are always visible
@@ -59,6 +61,7 @@ export function NavigationTabs() {
       {visibleTabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = currentView === tab.id;
+        const alertClass = getTabAlertClass(tab.id);
         
         return (
           <button
@@ -68,7 +71,8 @@ export function NavigationTabs() {
             aria-controls={`panel-${tab.id}`}
             className={cn(
               'nav-tab',
-              isActive && 'nav-tab-active'
+              isActive && 'nav-tab-active',
+              alertClass
             )}
             onClick={() => setCurrentView(tab.id)}
           >

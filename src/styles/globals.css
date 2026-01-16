@@ -3347,6 +3347,41 @@ a {
   animation: tab-flash 1s ease-in-out infinite;
 }
 
+/* Tab Alert States - Warning (slow yellow) and Error (fast red) */
+@keyframes tab-warning-flash {
+  0%, 100% { 
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+  }
+  50% { 
+    background-color: var(--warning-color-light);
+    border-color: var(--warning-color);
+    color: var(--text-color);
+  }
+}
+
+@keyframes tab-error-flash {
+  0%, 100% { 
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+  }
+  50% { 
+    background-color: var(--danger-color-light);
+    border-color: var(--danger-color);
+    color: var(--text-color);
+  }
+}
+
+.tab-alert-warning {
+  animation: tab-warning-flash 2s ease-in-out infinite;
+}
+
+.tab-alert-error {
+  animation: tab-error-flash 0.5s ease-in-out infinite;
+}
+
 /* View Loading Fallback */
 .view-loading {
   display: flex;
