@@ -157,7 +157,11 @@ export function CallActionButtons({
               isDialing
             });
           }
-          hasIncoming ? onAnswer() : onCall();
+          if (hasIncoming) {
+            onAnswer();
+          } else {
+            onCall();
+          }
         }}
         disabled={disabled || (isIdle && !hasDialValue && !isDialing)}
         aria-label={hasIncoming ? t('call.answer', 'Answer') : t('call.call', 'Call')}
@@ -188,7 +192,11 @@ export function CallActionButtons({
               action: hasIncoming ? 'reject' : 'end'
             });
           }
-          hasIncoming ? onReject() : onEndCall();
+          if (hasIncoming) {
+            onReject();
+          } else {
+            onEndCall();
+          }
         }}
         disabled={disabled && !hasIncoming}
         aria-label={hasIncoming ? t('call.reject', 'Reject') : t('call.end', 'End')}
