@@ -923,6 +923,16 @@ a {
   margin-right: calc(var(--spacing-md) * -1);
 }
 
+/* When BLF panels are present, layout uses space-between */
+.dial-view-layout:has(.dial-blf-left, .dial-blf-right) {
+  justify-content: space-between;
+}
+
+/* When BLF panels are NOT present, center the content */
+.dial-view-layout:not(:has(.dial-blf-left)):not(:has(.dial-blf-right)) {
+  justify-content: center;
+}
+
 .dial-view-content {
   display: flex;
   flex-direction: column;
@@ -932,6 +942,12 @@ a {
   /* Add back horizontal padding for content */
   padding-left: 0;
   padding-right: 0;
+}
+
+/* When BLF is disabled, restrict content width */
+.dial-view-layout:not(:has(.dial-blf-left)):not(:has(.dial-blf-right)) .dial-view-content {
+  max-width: 480px;
+  flex: 0 1 480px;
 }
 
 .dial-blf-left,
