@@ -108,6 +108,17 @@ export function AgentKeys({ className }: AgentKeysProps) {
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
+    // Add detailed logging to diagnose session state
+    if (verboseLogging) {
+      console.log('[AgentKeys] 🔍 useEffect triggered for login DTMF', {
+        hasPendingLogin: !!pendingLogin,
+        pendingLoginData: pendingLogin,
+        currentSessionState: currentSession?.state,
+        currentSessionId: currentSession?.id,
+        willSendDTMF: !!(pendingLogin && currentSession?.state === 'established')
+      });
+    }
+    
     if (pendingLogin && currentSession?.state === 'established') {
       if (verboseLogging) {
         console.log('[AgentKeys] 📞 Session established, preparing to send login DTMF', {
