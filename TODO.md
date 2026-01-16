@@ -40,3 +40,23 @@ Thirdly, clarification of SIP call state and call-timer
 	- Default State, this would be revert to tab back to normal default css used
 - The tab state would not revert when tab selected if would continue until new state was recieved from the feature
 - As multiple states maybe being monitored at the same time then a rule based logic needs to be implemented, however I will have to implement this in the feature when i develop it
+
+### PHANTOM API MANAGER
+
+- [ ] To improve the API functionality I need to clarify the following points
+- Should have .env variables as follows
+	- PHANTOM_ID, this will be 3-4 numeric characters (e.g. 375)
+	- PHANTOM_API_BASE_URL, full URL of the destination of API (e.g. https://server1-375.phantomapi.net)
+	- PHANTOM_API_USERNAME (e.g. ghost2)
+	- PHANTOM_API_KEY (e.g. tah4Aesh9zaeka4Eigheez3aoshail)
+	- PHANTOM_API_PORT (e.g. 443)
+	- PHANTOM_NOAUTH_PORT (e.g. 19773)
+- The following are really only needed in development
+	- DEV_CORS_PROXY_URL=https://connect365.servehttp.com
+	- NODE_ENV=development
+- If NODE_ENV is production or missing then the follow should be used
+	- If NoAuth API call is initiated then the URL is {PHANTOM_API_BASE_URL}:{PHANTOM_NOAUTH_PORT}/api/
+	- If normal API call is initiated then the URL is {PHANTOM_API_BASE_URL}:{PHANTOM_API_PORT}/api/ and uses basic auth with {PHANTOM_API_USERNAME}:{PHANTOM_API_KEY}
+- If NODE_ENV is development then the API URL used should be the {DEV_CORS_PROXY_URL}/
+- POST and GET requests are needed
+- Normal protocols should be adhered to with all returns from API being JSON encoded (if any return)
