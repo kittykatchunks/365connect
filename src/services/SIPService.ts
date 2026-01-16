@@ -907,11 +907,22 @@ export class SIPService {
   }
 
   async muteCall(sessionId?: string): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     const session = sessionId 
       ? this.sessions.get(sessionId) 
       : this.getCurrentSession();
     
+    if (verboseLogging) {
+      console.log('[SIPService] 🔇 muteCall called:', {
+        sessionId,
+        foundSession: !!session,
+        currentMuteState: session?.muted
+      });
+    }
+    
     if (!session) {
+      console.error('[SIPService] ❌ No session to mute');
       throw new Error('No session to mute');
     }
 
@@ -919,25 +930,51 @@ export class SIPService {
       const sdh = session.session.sessionDescriptionHandler;
       const localStream = (sdh as unknown as { localMediaStream?: MediaStream })?.localMediaStream;
       
+      if (verboseLogging) {
+        console.log('[SIPService] Media stream info:', {
+          hasSDH: !!sdh,
+          hasLocalStream: !!localStream,
+          audioTracks: localStream?.getAudioTracks().length
+        });
+      }
+      
       if (localStream) {
         localStream.getAudioTracks().forEach(track => {
           track.enabled = false;
         });
         session.muted = true;
+        
+        if (verboseLogging) {
+          console.log('[SIPService] ✅ Session muted, emitting event');
+        }
+        
         this.emit('sessionMuted', { sessionId: session.id, muted: true });
+      } else {
+        console.warn('[SIPService] ⚠️ No local stream found for muting');
       }
     } catch (error) {
-      console.error('Failed to mute session:', error);
+      console.error('[SIPService] ❌ Failed to mute session:', error);
       throw error;
     }
   }
 
   async unmuteCall(sessionId?: string): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     const session = sessionId 
       ? this.sessions.get(sessionId) 
       : this.getCurrentSession();
     
+    if (verboseLogging) {
+      console.log('[SIPService] 🔊 unmuteCall called:', {
+        sessionId,
+        foundSession: !!session,
+        currentMuteState: session?.muted
+      });
+    }
+    
     if (!session) {
+      console.error('[SIPService] ❌ No session to unmute');
       throw new Error('No session to unmute');
     }
 
@@ -945,15 +982,30 @@ export class SIPService {
       const sdh = session.session.sessionDescriptionHandler;
       const localStream = (sdh as unknown as { localMediaStream?: MediaStream })?.localMediaStream;
       
+      if (verboseLogging) {
+        console.log('[SIPService] Media stream info:', {
+          hasSDH: !!sdh,
+          hasLocalStream: !!localStream,
+          audioTracks: localStream?.getAudioTracks().length
+        });
+      }
+      
       if (localStream) {
         localStream.getAudioTracks().forEach(track => {
           track.enabled = true;
         });
         session.muted = false;
+        
+        if (verboseLogging) {
+          console.log('[SIPService] ✅ Session unmuted, emitting event');
+        }
+        
         this.emit('sessionMuted', { sessionId: session.id, muted: false });
+      } else {
+        console.warn('[SIPService] ⚠️ No local stream found for unmuting');
       }
     } catch (error) {
-      console.error('Failed to unmute session:', error);
+      console.error('[SIPService] ❌ Failed to unmute session:', error);
       throw error;
     }
   }

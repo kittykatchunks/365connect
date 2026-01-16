@@ -64,7 +64,13 @@ export function DialView() {
   // Determine state based on SELECTED LINE (not current session)
   const isSelectedLineIdle = !selectedLineSession || selectedLineSession.state === 'terminated';
   const isSelectedLineRinging = selectedLineSession && selectedLineSession.state === 'ringing';
-  const isSelectedLineInCall = selectedLineSession && (selectedLineSession.state === 'active' || selectedLineSession.state === 'established');
+  // Include 'hold' state so call control buttons stay visible when call is on hold
+  const isSelectedLineInCall = selectedLineSession && (
+    selectedLineSession.state === 'active' || 
+    selectedLineSession.state === 'established' || 
+    selectedLineSession.state === 'hold' ||
+    selectedLineSession.onHold
+  );
   
   // Determine if we should show call info display or dial input
   const showCallInfo = selectedLineSession && selectedLineSession.state !== 'terminated';
@@ -354,9 +360,23 @@ export function DialView() {
     }
   }, [selectedLine, selectedLineSession?.id, hangupCall, addNotification, t]);
   
-  const handleTransfer = useCallback(() => {
-    setShowTransferModal(true);
-  }, []);
+  const handleTransfer = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    try {
+      // Automatically put call on hold before transfer
+      if (selectedLineSession?.id && !selectedLineSession.onHold) {
+        if (verboseLogging) {
+          console.log('[DialView] ⏸️ Putting call on hold before transfer');
+        }
+        await toggleHold(selectedLineSession.id);
+      }
+      
+      setShowTransferModal(true);
+    } catch (error) {
+      console.error('[DialView] Error preparing transfer:', error);
+    }
+  }, [selectedLineSession?.id, selectedLineSession?.onHold, toggleHold]);
   
   // Keyboard support
   useEffect(() => {
