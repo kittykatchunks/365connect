@@ -10,6 +10,7 @@ import { Button } from '@/components/ui';
 import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
 import { useAppStore, useSettingsStore } from '@/stores';
 import { useSIP } from '@/hooks';
+import { useSIPContext } from '@/contexts';
 import type { PauseReason } from '@/types/agent';
 
 export type AgentState = 'logged-out' | 'available' | 'paused' | 'on-call';
@@ -33,6 +34,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const sipUsername = useSettingsStore((state) => state.settings.connection.username);
   
   const { isRegistered, makeCall, sendDTMFSequence, currentSession } = useSIP();
+  const { sipService } = useSIPContext();
   
   // Track if we've checked status on this registration session
   const [hasCheckedStatus, setHasCheckedStatus] = useState(false);
@@ -104,120 +106,129 @@ export function AgentKeys({ className }: AgentKeysProps) {
     }
   }, [isRegistered, hasCheckedStatus, sipUsername]);
   
-  // Listen for session answered event to send DTMF
+  // Listen for session answered event to send DTMF (listen directly to SIP service events)
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
-    // Add detailed logging to diagnose session state
+    if (!pendingLogin) {
+      return; // No pending login, nothing to do
+    }
+    
     if (verboseLogging) {
-      console.log('[AgentKeys] 🔍 useEffect triggered for login DTMF', {
-        hasPendingLogin: !!pendingLogin,
-        pendingLoginData: pendingLogin,
-        currentSessionState: currentSession?.state,
-        currentSessionId: currentSession?.id,
-        willSendDTMF: !!(pendingLogin && currentSession?.state === 'established')
+      console.log('[AgentKeys] 🎧 Setting up sessionAnswered listener for login DTMF', {
+        agentNumber: pendingLogin.agentNumber,
+        hasPasscode: !!pendingLogin.passcode
       });
     }
     
-    if (pendingLogin && currentSession?.state === 'established') {
+    // Listen to sessionAnswered event from SIP service
+    const unsubscribe = sipService.on('sessionAnswered', async (session) => {
+      if (!pendingLogin) {
+        return; // Login already processed
+      }
+      
       if (verboseLogging) {
-        console.log('[AgentKeys] 📞 Session established, preparing to send login DTMF', {
+        console.log('[AgentKeys] 📞 Session answered event received, sending login DTMF', {
           agentNumber: pendingLogin.agentNumber,
           hasPasscode: !!pendingLogin.passcode,
-          sessionId: currentSession.id,
-          sessionState: currentSession.state
+          sessionId: session.id,
+          sessionState: session.state
         });
       }
       
-      const sendLoginDTMF = async () => {
-        try {
+      try {
+        if (verboseLogging) {
+          console.log('[AgentKeys] 📤 Sending agent number DTMF:', pendingLogin.agentNumber);
+        }
+        
+        // Send agent number with # suffix
+        await sendDTMFSequence(`${pendingLogin.agentNumber}#`, session.id);
+        
+        if (verboseLogging) {
+          console.log(`[AgentKeys] ✅ Agent number DTMF sent successfully: ${pendingLogin.agentNumber}#`);
+        }
+        
+        // If passcode provided, send it after 500ms
+        if (pendingLogin.passcode) {
           if (verboseLogging) {
-            console.log('[AgentKeys] 📤 Sending agent number DTMF:', pendingLogin.agentNumber);
+            console.log('[AgentKeys] ⏱️ Waiting 500ms before sending passcode...');
           }
           
-          // Send agent number with # suffix
-          await sendDTMFSequence(`${pendingLogin.agentNumber}#`, currentSession.id);
-          
-          if (verboseLogging) {
-            console.log(`[AgentKeys] ✅ Agent number DTMF sent successfully: ${pendingLogin.agentNumber}#`);
-          }
-          
-          // If passcode provided, send it after 500ms
-          if (pendingLogin.passcode) {
-            if (verboseLogging) {
-              console.log('[AgentKeys] ⏱️ Waiting 500ms before sending passcode...');
-            }
-            
-            setTimeout(async () => {
-              try {
-                if (verboseLogging) {
-                  console.log('[AgentKeys] 📤 Sending passcode DTMF');
-                }
-                
-                await sendDTMFSequence(`${pendingLogin.passcode}#`, currentSession.id);
-                
-                if (verboseLogging) {
-                  console.log(`[AgentKeys] ✅ Passcode DTMF sent successfully`);
-                }
-              } catch (error) {
-                console.error('[AgentKeys] ❌ Failed to send passcode DTMF:', error);
+          setTimeout(async () => {
+            try {
+              if (verboseLogging) {
+                console.log('[AgentKeys] 📤 Sending passcode DTMF');
               }
-            }, 500);
-          }
-          
-          // Update agent state locally first
-          if (verboseLogging) {
-            console.log('[AgentKeys] 🔄 Updating agent state to available', {
-              agentNumber: pendingLogin.agentNumber,
-              previousState: agentState
-            });
-          }
-          
-          useAppStore.setState({
+              
+              await sendDTMFSequence(`${pendingLogin.passcode}#`, session.id);
+              
+              if (verboseLogging) {
+                console.log(`[AgentKeys] ✅ Passcode DTMF sent successfully`);
+              }
+            } catch (error) {
+              console.error('[AgentKeys] ❌ Failed to send passcode DTMF:', error);
+            }
+          }, 500);
+        }
+        
+        // Update agent state locally first
+        if (verboseLogging) {
+          console.log('[AgentKeys] 🔄 Updating agent state to available', {
             agentNumber: pendingLogin.agentNumber,
-            agentState: 'available'
+            previousState: agentState
           });
-          
-          // Query API to get full agent info (name, clip, etc.)
-          if (sipUsername) {
-            setTimeout(async () => {
-              const agentData = await queryAgentStatus(sipUsername);
-              if (agentData && agentData.num) {
-                if (verboseLogging) {
-                  console.log('[AgentKeys] 📥 Retrieved agent details from API after login', {
-                    num: agentData.num,
-                    name: agentData.name
-                  });
-                }
-                
-                useAppStore.setState({
-                  agentName: agentData.name
+        }
+        
+        useAppStore.setState({
+          agentNumber: pendingLogin.agentNumber,
+          agentState: 'available'
+        });
+        
+        // Query API to get full agent info (name, clip, etc.)
+        if (sipUsername) {
+          setTimeout(async () => {
+            const agentData = await queryAgentStatus(sipUsername);
+            if (agentData && agentData.num) {
+              if (verboseLogging) {
+                console.log('[AgentKeys] 📥 Retrieved agent details from API after login', {
+                  num: agentData.num,
+                  name: agentData.name
                 });
               }
-            }, 1000); // Wait 1s for PBX to process login
-          }
-          
-          if (verboseLogging) {
-            console.log('[AgentKeys] ✅ Agent login process completed successfully');
-          }
-          
-          // Clear pending login
-          setPendingLogin(null);
-        } catch (error) {
-          console.error('[AgentKeys] ❌ Failed to send DTMF during login:', error);
-          if (verboseLogging) {
-            console.error('[AgentKeys] Login context:', {
-              agentNumber: pendingLogin.agentNumber,
-              sessionId: currentSession.id,
-              sessionState: currentSession.state
-            });
-          }
+              
+              useAppStore.setState({
+                agentName: agentData.name
+              });
+            }
+          }, 1000); // Wait 1s for PBX to process login
         }
-      };
-      
-      sendLoginDTMF();
-    }
-  }, [pendingLogin, currentSession, sendDTMFSequence, agentState, sipUsername]);
+        
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Agent login process completed successfully');
+        }
+        
+        // Clear pending login
+        setPendingLogin(null);
+      } catch (error) {
+        console.error('[AgentKeys] ❌ Failed to send DTMF during login:', error);
+        if (verboseLogging) {
+          console.error('[AgentKeys] Login context:', {
+            agentNumber: pendingLogin.agentNumber,
+            sessionId: session.id,
+            sessionState: session.state
+          });
+        }
+      }
+    });
+    
+    // Cleanup subscription on unmount or when pendingLogin changes
+    return () => {
+      if (verboseLogging) {
+        console.log('[AgentKeys] 🔇 Cleaning up sessionAnswered listener');
+      }
+      unsubscribe();
+    };
+  }, [pendingLogin, sendDTMFSequence, agentState, sipUsername, sipService]);
   
   // Listen for session termination to complete logout
   useEffect(() => {
