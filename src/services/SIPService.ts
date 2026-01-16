@@ -817,75 +817,131 @@ export class SIPService {
   // ==================== Call Control ====================
 
   async holdCall(sessionId?: string): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     const session = sessionId 
       ? this.sessions.get(sessionId) 
       : this.getCurrentSession();
     
+    if (verboseLogging) {
+      console.log('[SIPService] ⏸️ holdCall called:', {
+        sessionId,
+        foundSession: !!session,
+        currentHoldState: session?.onHold
+      });
+    }
+    
     if (!session) {
+      console.error('[SIPService] ❌ No session to hold');
       throw new Error('No session to hold');
     }
 
+    if (session.onHold) {
+      if (verboseLogging) {
+        console.log('[SIPService] ⚠️ Session already on hold');
+      }
+      return;
+    }
+
     if (!isSessionEstablished(session.session.state)) {
+      console.error('[SIPService] ❌ Cannot hold: session not established, state:', session.session.state);
       throw new Error('Cannot hold: session not established');
     }
 
     try {
-      // Use Session.hold() method from SIP.js
-      const holdableSession = session.session as SIP.Session & { 
-        sessionDescriptionHandler?: { 
-          hold?: () => Promise<void>;
-          localMediaStream?: MediaStream;
-        } 
+      // Use SIP.js invite() with hold:true to send re-INVITE with inactive media
+      const options = {
+        sessionDescriptionHandlerOptions: {
+          hold: true,
+          constraints: {
+            audio: false,
+            video: false
+          }
+        }
       };
       
-      // SIP.js doesn't have a direct hold method, so we use reinvite with inactive media
-      const sdh = holdableSession.sessionDescriptionHandler;
-      if (sdh?.localMediaStream) {
-        sdh.localMediaStream.getAudioTracks().forEach(track => {
-          track.enabled = false;
-        });
+      if (verboseLogging) {
+        console.log('[SIPService] 🔄 Sending re-INVITE with hold options');
       }
+      
+      // Send re-INVITE to put call on hold
+      await (session.session as any).invite(options);
       
       session.onHold = true;
       session.state = 'hold';
       
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ Session put on hold, emitting event');
+      }
+      
       this.emit('sessionModified', { sessionId: session.id, action: 'hold' });
     } catch (error) {
-      console.error('Failed to hold session:', error);
+      console.error('[SIPService] ❌ Failed to hold session:', error);
       throw error;
     }
   }
 
   async unholdCall(sessionId?: string): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     const session = sessionId 
       ? this.sessions.get(sessionId) 
       : this.getCurrentSession();
     
+    if (verboseLogging) {
+      console.log('[SIPService] ▶️ unholdCall called:', {
+        sessionId,
+        foundSession: !!session,
+        currentHoldState: session?.onHold
+      });
+    }
+    
     if (!session) {
+      console.error('[SIPService] ❌ No session to unhold');
       throw new Error('No session to unhold');
     }
 
+    if (!session.onHold) {
+      if (verboseLogging) {
+        console.log('[SIPService] ⚠️ Session not on hold');
+      }
+      return;
+    }
+
+    if (!isSessionEstablished(session.session.state)) {
+      console.error('[SIPService] ❌ Cannot unhold: session not established, state:', session.session.state);
+      throw new Error('Cannot unhold: session not established');
+    }
+
     try {
-      const holdableSession = session.session as SIP.Session & { 
-        sessionDescriptionHandler?: { 
-          unhold?: () => Promise<void>;
-          localMediaStream?: MediaStream;
-        } 
+      // Use SIP.js invite() with hold:false to send re-INVITE with active media
+      const options = {
+        sessionDescriptionHandlerOptions: {
+          hold: false,
+          constraints: {
+            audio: true,
+            video: false
+          }
+        }
       };
       
-      const sdh = holdableSession.sessionDescriptionHandler;
-      if (sdh?.localMediaStream) {
-        sdh.localMediaStream.getAudioTracks().forEach(track => {
-          track.enabled = true;
-        });
+      if (verboseLogging) {
+        console.log('[SIPService] 🔄 Sending re-INVITE with unhold options');
       }
+      
+      // Send re-INVITE to resume call
+      await (session.session as any).invite(options);
       
       session.onHold = false;
       session.state = 'established';
       
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ Session resumed, emitting event');
+      }
+      
       this.emit('sessionModified', { sessionId: session.id, action: 'unhold' });
     } catch (error) {
-      console.error('Failed to unhold session:', error);
+      console.error('[SIPService] ❌ Failed to unhold session:', error);
       throw error;
     }
   }
