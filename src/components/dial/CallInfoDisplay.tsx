@@ -2,7 +2,7 @@
 // Call Info Display - Shows active call information
 // ============================================
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn, isVerboseLoggingEnabled } from '@/utils';
 import type { SessionData } from '@/types';
@@ -27,22 +27,13 @@ function formatCallTimer(seconds: number): string {
  */
 export function CallInfoDisplay({ session, className }: CallInfoDisplayProps) {
   const { t } = useTranslation();
-  const [currentTime, setCurrentTime] = useState(0);
+  const [callDuration, setCallDuration] = useState(0);
   
   const verboseLogging = isVerboseLoggingEnabled();
   
   // Extract call information from session
   const callerNumber = session.remoteNumber || session.target || t('call.unknown_number', 'Unknown');
   const callerName = session.displayName || session.remoteIdentity || '';
-  
-  // Calculate call duration based on current time
-  const callDuration = useMemo(() => {
-    if ((session.state !== 'established' && session.state !== 'active') || !session.startTime) {
-      return 0;
-    }
-    const startTimeMs = session.startTime instanceof Date ? session.startTime.getTime() : new Date(session.startTime).getTime();
-    return Math.floor((currentTime - startTimeMs) / 1000);
-  }, [session.state, session.startTime, currentTime]);
   
   // Determine call state for display
   let callState = '';
@@ -64,44 +55,54 @@ export function CallInfoDisplay({ session, className }: CallInfoDisplayProps) {
     callStateClass = 'call-dialing';
   }
   
-  // Timer effect - update current time every second when call is active
+  // Timer effect - update duration every second when call is active
+  // Timer continues regardless of hold state
   useEffect(() => {
-    if (verboseLogging) {
-      console.log('[CallInfoDisplay] Session state:', session.state, 'onHold:', session.onHold);
-    }
-    
     // Only run timer when call is established (connected)
     if ((session.state !== 'established' && session.state !== 'active') || !session.startTime) {
-      if (verboseLogging) {
-        console.log('[CallInfoDisplay] Timer not active - state:', session.state, 'startTime:', session.startTime);
-      }
+      setCallDuration(0);
+      return;
+    }
+    
+    const startTimeMs = session.startTime instanceof Date 
+      ? session.startTime.getTime() 
+      : new Date(session.startTime).getTime();
+    
+    // Validate start time
+    if (isNaN(startTimeMs) || startTimeMs <= 0) {
+      console.error('[CallInfoDisplay] Invalid start time:', session.startTime);
+      setCallDuration(0);
       return;
     }
     
     if (verboseLogging) {
-      console.log('[CallInfoDisplay] ⏱️ Starting call timer - sessionId:', session.id, 'startTime:', session.startTime);
+      console.log('[CallInfoDisplay] ⏱️ Starting call timer - sessionId:', session.id, 'startTime:', new Date(startTimeMs).toISOString());
     }
     
-    // Update current time every second
-    const intervalId = setInterval(() => {
-      setCurrentTime(Date.now());
-      
-      if (verboseLogging && callDuration % 10 === 0) {
-        // Log every 10 seconds to avoid console spam
-        console.log('[CallInfoDisplay] ⏱️ Call timer update:', formatCallTimer(callDuration), 'session:', session.id);
+    // Update duration immediately
+    const updateDuration = () => {
+      const elapsed = Math.floor((Date.now() - startTimeMs) / 1000);
+      // Ensure elapsed time is valid and positive
+      if (elapsed >= 0 && elapsed < 86400) { // Sanity check: less than 24 hours
+        setCallDuration(elapsed);
       }
-    }, 1000);
+    };
     
-    // Cleanup interval on unmount or when session changes
+    updateDuration(); // Initial update
+    
+    // Update every second
+    const intervalId = setInterval(updateDuration, 1000);
+    
+    // Cleanup interval on unmount or when session state changes
     return () => {
       if (verboseLogging) {
         console.log('[CallInfoDisplay] ⏱️ Stopping call timer - sessionId:', session.id);
       }
       clearInterval(intervalId);
     };
-  }, [session.id, session.state, session.startTime, session.onHold, verboseLogging, callDuration]);
+  }, [session.id, session.state, session.startTime, verboseLogging]);
   
-  // Log when component mounts/updates
+  // Log when component mounts/updates (excluding duration changes to avoid spam)
   useEffect(() => {
     if (verboseLogging) {
       console.log('[CallInfoDisplay] 📊 Rendering call info:', {
@@ -110,11 +111,10 @@ export function CallInfoDisplay({ session, className }: CallInfoDisplayProps) {
         onHold: session.onHold,
         callerNumber,
         callerName,
-        callState,
-        duration: callDuration
+        callState
       });
     }
-  }, [session.id, session.state, session.onHold, callerNumber, callerName, callState, callDuration, verboseLogging]);
+  }, [session.id, session.state, session.onHold, callerNumber, callerName, callState, verboseLogging]);
   
   return (
     <div className={cn('call-info-display', callStateClass, className)}>
