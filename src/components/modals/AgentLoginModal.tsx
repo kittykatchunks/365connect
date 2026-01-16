@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserCheck, Lock, X, Loader2 } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 interface AgentLoginModalProps {
   isOpen: boolean;
@@ -30,31 +31,76 @@ export function AgentLoginModal({
   
   // Reset form when modal opens
   useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     if (isOpen) {
+      if (verboseLogging) {
+        console.log('[AgentLoginModal] 📋 Modal opened, resetting form');
+      }
+      
       setAgentNumber('');
       setPasscode('');
       setError(null);
       // Focus agent number input after modal opens
-      setTimeout(() => agentInputRef.current?.focus(), 100);
+      setTimeout(() => {
+        agentInputRef.current?.focus();
+        if (verboseLogging) {
+          console.log('[AgentLoginModal] ✅ Focused agent number input');
+        }
+      }, 100);
+    } else if (verboseLogging) {
+      console.log('[AgentLoginModal] 🚪 Modal closed');
     }
   }, [isOpen]);
   
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[AgentLoginModal] 📤 Form submitted', {
+        hasAgentNumber: !!agentNumber.trim(),
+        hasPasscode: !!passcode.trim(),
+        agentNumber: agentNumber.trim()
+      });
+    }
     
     if (!agentNumber.trim()) {
-      setError(t('agent.error_number_required', 'Agent number is required'));
+      const errorMsg = t('agent.error_number_required', 'Agent number is required');
+      setError(errorMsg);
       agentInputRef.current?.focus();
+      
+      if (verboseLogging) {
+        console.warn('[AgentLoginModal] ⚠️ Validation failed: Agent number required');
+      }
       return;
     }
     
     setError(null);
     
+    if (verboseLogging) {
+      console.log('[AgentLoginModal] ✅ Validation passed, calling onLogin handler');
+    }
+    
     try {
       await onLogin(agentNumber.trim(), passcode.trim() || undefined);
+      
+      if (verboseLogging) {
+        console.log('[AgentLoginModal] ✅ Login handler completed successfully, closing modal');
+      }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('agent.error_login_failed', 'Login failed'));
+      const errorMsg = err instanceof Error ? err.message : t('agent.error_login_failed', 'Login failed');
+      setError(errorMsg);
+      console.error('[AgentLoginModal] ❌ Login failed:', err);
+      
+      if (verboseLogging) {
+        console.error('[AgentLoginModal] Login error details:', {
+          agentNumber: agentNumber.trim(),
+          hasPasscode: !!passcode.trim(),
+          error: err
+        });
+      }
     }
   }, [agentNumber, passcode, onLogin, onClose, t]);
   
