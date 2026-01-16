@@ -282,6 +282,8 @@ export type SIPEventType =
   | 'attendedTransferAnswered'
   | 'attendedTransferRejected'
   | 'attendedTransferTerminated'
+  | 'attendedTransferCompleted'
+  | 'attendedTransferCancelled'
   // BLF events
   | 'blfStateChanged'
   | 'blfSubscribed'
@@ -333,6 +335,8 @@ export interface SIPEventMap {
   attendedTransferAnswered: AttendedTransferProgressEvent & { transferSession: unknown };
   attendedTransferRejected: AttendedTransferProgressEvent & { reason: string };
   attendedTransferTerminated: AttendedTransferProgressEvent & { reason: string };
+  attendedTransferCompleted: { originalSessionId: string; transferSessionId: string; success: boolean; reason?: string };
+  attendedTransferCancelled: { originalSessionId: string };
   blfStateChanged: BLFStateChangeData;
   blfSubscribed: { extension: string; buddy?: string };
   blfUnsubscribed: { extension: string; buddy?: string };

@@ -50,6 +50,8 @@ interface SIPContextValue {
   // Transfer
   blindTransfer: (sessionId: string, target: string) => Promise<void>;
   attendedTransfer: (sessionId: string, target: string) => Promise<unknown>;
+  completeAttendedTransfer: (sessionId: string, transferSessionId: string) => Promise<void>;
+  cancelAttendedTransfer: (sessionId: string) => Promise<void>;
   
   // BLF
   subscribeBLF: (extension: string, buddy?: string) => void;
@@ -208,6 +210,71 @@ export function SIPProvider({ children }: SIPProviderProps) {
       updateBLFState(data.extension, data.state);
     });
     
+    // Transfer events
+    const unsubTransferInitiated = service.on('transferInitiated', (data: { sessionId: string; target: string; type: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 transferInitiated event received:', data);
+      }
+    });
+
+    const unsubTransferCompleted = service.on('transferCompleted', (data: { sessionId: string; target: string; type: string; success: boolean; reason?: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ transferCompleted event received:', data);
+      }
+      // Emit a custom event that the TransferModal can listen to
+      window.dispatchEvent(new CustomEvent('transferCompleted', { detail: data }));
+    });
+
+    const unsubAttendedTransferInitiated = service.on('attendedTransferInitiated', (data: unknown) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 attendedTransferInitiated event received:', data);
+      }
+    });
+
+    const unsubAttendedTransferProgress = service.on('attendedTransferProgress', (data: { originalSessionId: string; transferSessionId: string; status: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 attendedTransferProgress event received:', data);
+      }
+    });
+
+    const unsubAttendedTransferAnswered = service.on('attendedTransferAnswered', (data: { originalSessionId: string; transferSessionId: string; status: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 attendedTransferAnswered event received:', data);
+      }
+      // Emit a custom event that the TransferModal can listen to
+      window.dispatchEvent(new CustomEvent('attendedTransferAnswered', { detail: data }));
+    });
+
+    const unsubAttendedTransferRejected = service.on('attendedTransferRejected', (data: { originalSessionId: string; transferSessionId: string; status: string; reason: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] ❌ attendedTransferRejected event received:', data);
+      }
+      // Emit a custom event that the TransferModal can listen to
+      window.dispatchEvent(new CustomEvent('attendedTransferRejected', { detail: data }));
+    });
+
+    const unsubAttendedTransferTerminated = service.on('attendedTransferTerminated', (data: { originalSessionId: string; transferSessionId: string; status: string; reason: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📴 attendedTransferTerminated event received:', data);
+      }
+      // Emit a custom event that the TransferModal can listen to
+      window.dispatchEvent(new CustomEvent('attendedTransferTerminated', { detail: data }));
+    });
+
+    const unsubAttendedTransferCompleted = service.on('attendedTransferCompleted', (data: { originalSessionId: string; transferSessionId: string; success: boolean; reason?: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ attendedTransferCompleted event received:', data);
+      }
+      // Emit a custom event that the TransferModal can listen to
+      window.dispatchEvent(new CustomEvent('attendedTransferCompleted', { detail: data }));
+    });
+
+    const unsubAttendedTransferCancelled = service.on('attendedTransferCancelled', (data: { originalSessionId: string }) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🚫 attendedTransferCancelled event received:', data);
+      }
+    });
+    
     // Cleanup
     return () => {
       unsubTransportState();
@@ -221,6 +288,15 @@ export function SIPProvider({ children }: SIPProviderProps) {
       unsubSessionModified();
       unsubLineSelected();
       unsubBLFState();
+      unsubTransferInitiated();
+      unsubTransferCompleted();
+      unsubAttendedTransferInitiated();
+      unsubAttendedTransferProgress();
+      unsubAttendedTransferAnswered();
+      unsubAttendedTransferRejected();
+      unsubAttendedTransferTerminated();
+      unsubAttendedTransferCompleted();
+      unsubAttendedTransferCancelled();
     };
   }, [
     setRegistrationState,
@@ -359,6 +435,14 @@ export function SIPProvider({ children }: SIPProviderProps) {
     
     attendedTransfer: async (sessionId: string, target: string) => {
       return await serviceRef.current.attendedTransfer(sessionId, target);
+    },
+    
+    completeAttendedTransfer: async (sessionId: string, transferSessionId: string) => {
+      await serviceRef.current.completeAttendedTransfer(sessionId, transferSessionId);
+    },
+    
+    cancelAttendedTransfer: async (sessionId: string) => {
+      await serviceRef.current.cancelAttendedTransfer(sessionId);
     },
     
     // BLF

@@ -61,6 +61,8 @@ export interface UseSIPReturn {
   // Transfer
   blindTransfer: (target: string, sessionId?: string) => Promise<void>;
   startAttendedTransfer: (target: string, sessionId?: string) => Promise<unknown>;
+  completeAttendedTransfer: (sessionId?: string) => Promise<void>;
+  cancelAttendedTransfer: (sessionId?: string) => Promise<void>;
   
   // BLF
   subscribeBLF: (extension: string, buddy?: string) => void;
@@ -284,6 +286,42 @@ export function useSIP(): UseSIPReturn {
     return await sipContext.attendedTransfer(targetSessionId, target);
   }, [sipContext, currentSession]);
   
+  const completeAttendedTransfer = useCallback(async (sessionId?: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    const targetSessionId = sessionId || currentSession?.id;
+    if (!targetSessionId) {
+      if (verboseLogging) {
+        console.error('[useSIP] ❌ completeAttendedTransfer: No session ID provided');
+      }
+      throw new Error('No active session for transfer completion');
+    }
+    
+    if (verboseLogging) {
+      console.log('[useSIP] 📞 completeAttendedTransfer called for session:', targetSessionId);
+    }
+    
+    await sipContext.completeAttendedTransfer(targetSessionId, targetSessionId);
+  }, [sipContext, currentSession]);
+  
+  const cancelAttendedTransfer = useCallback(async (sessionId?: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    const targetSessionId = sessionId || currentSession?.id;
+    if (!targetSessionId) {
+      if (verboseLogging) {
+        console.error('[useSIP] ❌ cancelAttendedTransfer: No session ID provided');
+      }
+      throw new Error('No active session for transfer cancellation');
+    }
+    
+    if (verboseLogging) {
+      console.log('[useSIP] 🚫 cancelAttendedTransfer called for session:', targetSessionId);
+    }
+    
+    await sipContext.cancelAttendedTransfer(targetSessionId);
+  }, [sipContext, currentSession]);
+  
   // BLF
   const subscribeBLF = useCallback((extension: string, buddy?: string) => {
     sipContext.subscribeBLF(extension, buddy);
@@ -355,6 +393,8 @@ export function useSIP(): UseSIPReturn {
     sendDTMFSequence,
     blindTransfer,
     startAttendedTransfer,
+    completeAttendedTransfer,
+    cancelAttendedTransfer,
     subscribeBLF,
     unsubscribeBLF,
     selectLine,

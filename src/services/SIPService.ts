@@ -1283,8 +1283,16 @@ export class SIPService {
   // ==================== Transfer ====================
 
   async blindTransfer(sessionId: string, target: string): Promise<void> {
+    // Check verbose logging setting
+    const verboseLogging = window.localStorage?.getItem('VerboseLogging') === 'true';
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 🔄 blindTransfer called:', { sessionId, target });
+    }
+
     const sessionData = this.sessions.get(sessionId);
     if (!sessionData || !isSessionEstablished(sessionData.session.state)) {
+      console.error('[SIPService] ❌ Cannot transfer: session not established');
       throw new Error('Cannot transfer: session not established');
     }
 
@@ -1293,13 +1301,21 @@ export class SIPService {
       const referTarget = SIP.UserAgent.makeURI(`sip:${target}@${domain}`);
       
       if (!referTarget) {
+        console.error('[SIPService] ❌ Invalid transfer target');
         throw new Error('Invalid transfer target');
+      }
+
+      if (verboseLogging) {
+        console.log('[SIPService] 📞 Sending REFER for blind transfer to:', referTarget.toString());
       }
 
       await sessionData.session.refer(referTarget, {
         requestDelegate: {
           onAccept: () => {
-            console.log('Blind transfer accepted');
+            if (verboseLogging) {
+              console.log('[SIPService] ✅ Blind transfer accepted');
+            }
+
             this.emit('transferCompleted', { 
               sessionId, 
               target, 
@@ -1313,32 +1329,49 @@ export class SIPService {
             }, 100);
           },
           onReject: (response) => {
-            console.warn('Blind transfer rejected:', response);
+            const reason = response.message?.reasonPhrase || 'Transfer rejected';
+            if (verboseLogging) {
+              console.warn('[SIPService] ❌ Blind transfer rejected:', reason);
+            }
+
             this.emit('transferCompleted', { 
               sessionId, 
               target, 
               type: 'blind', 
               success: false,
-              reason: 'Transfer rejected'
+              reason: reason
             });
           }
         }
       });
 
+      if (verboseLogging) {
+        console.log('[SIPService] 📞 Blind transfer REFER sent to', target);
+      }
+
       this.emit('transferInitiated', { sessionId, target, type: 'blind' });
     } catch (error) {
-      console.error('Blind transfer failed:', error);
+      console.error('[SIPService] ❌ Blind transfer failed:', error);
       throw error;
     }
   }
 
   async attendedTransfer(originalSessionId: string, target: string): Promise<SIP.Session> {
+    // Check verbose logging setting
+    const verboseLogging = window.localStorage?.getItem('VerboseLogging') === 'true';
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 🔄 attendedTransfer called:', { originalSessionId, target });
+    }
+
     const originalSession = this.sessions.get(originalSessionId);
     if (!originalSession || !isSessionEstablished(originalSession.session.state)) {
+      console.error('[SIPService] ❌ Cannot transfer: session not established');
       throw new Error('Cannot transfer: session not established');
     }
 
     if (!this.userAgent) {
+      console.error('[SIPService] ❌ UserAgent not available');
       throw new Error('UserAgent not available');
     }
 
@@ -1347,7 +1380,12 @@ export class SIPService {
     const targetURI = SIP.UserAgent.makeURI(`sip:${target}@${domain}`);
     
     if (!targetURI) {
+      console.error('[SIPService] ❌ Invalid transfer target');
       throw new Error('Invalid transfer target');
+    }
+
+    if (verboseLogging) {
+      console.log('[SIPService] 📞 Creating transfer session to:', targetURI.toString());
     }
 
     // Create new session to transfer target
@@ -1357,10 +1395,16 @@ export class SIPService {
       }
     });
 
+    // Store reference to transfer session in original session data
+    originalSession.transferSession = transferSession;
+
     // Set up delegate for transfer session events
     transferSession.delegate = {
       onBye: () => {
-        console.log('Transfer session ended');
+        if (verboseLogging) {
+          console.log('[SIPService] 📞 Transfer session ended with BYE');
+        }
+
         this.emit('attendedTransferTerminated', {
           originalSessionId,
           transferSessionId: transferSession.id,
@@ -1373,14 +1417,35 @@ export class SIPService {
     // Send INVITE
     await transferSession.invite({
       requestDelegate: {
+        onTrying: () => {
+          if (verboseLogging) {
+            console.log('[SIPService] 📞 Transfer call trying...');
+          }
+
+          this.emit('attendedTransferProgress', {
+            originalSessionId,
+            transferSessionId: transferSession.id,
+            status: 'trying'
+          });
+        },
+
         onProgress: () => {
+          if (verboseLogging) {
+            console.log('[SIPService] 📞 Transfer call ringing...');
+          }
+
           this.emit('attendedTransferProgress', {
             originalSessionId,
             transferSessionId: transferSession.id,
             status: 'ringing'
           });
         },
+
         onAccept: () => {
+          if (verboseLogging) {
+            console.log('[SIPService] 📞 Transfer call answered!');
+          }
+
           this.emit('attendedTransferAnswered', {
             originalSessionId,
             transferSessionId: transferSession.id,
@@ -1388,16 +1453,26 @@ export class SIPService {
             transferSession
           });
         },
-        onReject: () => {
+
+        onReject: (sip) => {
+          const reason = sip.message?.reasonPhrase || 'Call rejected';
+          if (verboseLogging) {
+            console.log('[SIPService] 📞 Transfer call rejected:', reason);
+          }
+
           this.emit('attendedTransferRejected', {
             originalSessionId,
             transferSessionId: transferSession.id,
             status: 'rejected',
-            reason: 'Call rejected'
+            reason: reason
           });
         }
       }
     });
+
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ Attended transfer session created successfully');
+    }
 
     this.emit('attendedTransferInitiated', {
       originalSessionId,
@@ -1410,46 +1485,143 @@ export class SIPService {
     return transferSession;
   }
 
-  async completeAttendedTransfer(originalSessionId: string, transferSession: SIP.Session): Promise<void> {
-    const originalSession = this.sessions.get(originalSessionId);
+  async completeAttendedTransfer(originalSessionId: string, transferSessionId: string): Promise<void> {
+    // Check verbose logging setting
+    const verboseLogging = window.localStorage?.getItem('VerboseLogging') === 'true';
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 🔄 completeAttendedTransfer called:', {
+        originalSessionId,
+        transferSessionId
+      });
+    }
+    
+    const originalSessionData = this.sessions.get(originalSessionId);
+    if (!originalSessionData) {
+      console.error('[SIPService] ❌ Original session not found for transfer completion');
+      throw new Error('Original session not found for transfer completion');
+    }
+
+    const originalSession = originalSessionData.session;
     if (!originalSession) {
+      console.error('[SIPService] ❌ Original SIP session not found');
+      throw new Error('Original SIP session not found');
+    }
+
+    // Get transfer session from session data
+    const transferSession = originalSessionData.transferSession;
+    if (!transferSession) {
+      console.error('[SIPService] ❌ Transfer session not found');
+      throw new Error('Transfer session not found');
+    }
+
+    try {
+      if (verboseLogging) {
+        console.log('[SIPService] 📞 Sending REFER to complete attended transfer');
+      }
+
+      // Send REFER to complete the transfer
+      await originalSession.refer(transferSession as SIP.Session, {
+        requestDelegate: {
+          onAccept: () => {
+            if (verboseLogging) {
+              console.log('[SIPService] ✅ Attended transfer completed successfully');
+            }
+
+            this.emit('attendedTransferCompleted', {
+              originalSessionId: originalSessionId,
+              transferSessionId: transferSessionId,
+              success: true
+            });
+
+            // End the original session as the transfer is complete
+            originalSession.bye().catch((error) => {
+              console.warn('[SIPService] Could not BYE original session after attended transfer:', error);
+            });
+
+            // Clean up our session tracking
+            this.terminateSession(originalSessionId).catch((error) => {
+              console.warn('[SIPService] Error cleaning up original session:', error);
+            });
+          },
+
+          onReject: (sip) => {
+            const reason = sip.message?.reasonPhrase || 'Unknown';
+            console.warn('[SIPService] ❌ Attended transfer rejected:', reason);
+
+            this.emit('attendedTransferCompleted', {
+              originalSessionId: originalSessionId,
+              transferSessionId: transferSessionId,
+              success: false,
+              reason: reason
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('[SIPService] ❌ Failed to complete attended transfer:', error);
+      this.emit('sessionError', { sessionId: originalSessionId, error: error as Error });
+      throw error;
+    }
+  }
+
+  async cancelAttendedTransfer(originalSessionId: string): Promise<void> {
+    // Check verbose logging setting
+    const verboseLogging = window.localStorage?.getItem('VerboseLogging') === 'true';
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 🚫 cancelAttendedTransfer called:', { originalSessionId });
+    }
+
+    const originalSessionData = this.sessions.get(originalSessionId);
+    if (!originalSessionData) {
+      console.error('[SIPService] ❌ Original session not found');
       throw new Error('Original session not found');
     }
 
-    // Get the dialog from the transfer session
-    const referTarget = SIP.UserAgent.makeURI(
-      (transferSession as unknown as { remoteIdentity?: { uri?: { toString(): string } } })
-        ?.remoteIdentity?.uri?.toString() || ''
-    );
-    
-    if (!referTarget) {
-      throw new Error('Cannot get transfer target');
-    }
+    try {
+      // Terminate transfer session if it exists
+      if (originalSessionData.transferSession) {
+        if (verboseLogging) {
+          console.log('[SIPService] 📞 Terminating transfer session');
+        }
 
-    // Send REFER with Replaces header
-    await originalSession.session.refer(referTarget, {
-      requestDelegate: {
-        onAccept: () => {
-          console.log('Attended transfer completed');
-          this.emit('transferCompleted', {
-            sessionId: originalSessionId,
-            target: referTarget.toString(),
-            type: 'attended',
-            success: true
-          });
-        },
-        onReject: (response) => {
-          console.warn('Attended transfer failed:', response);
-          this.emit('transferCompleted', {
-            sessionId: originalSessionId,
-            target: referTarget.toString(),
-            type: 'attended',
-            success: false,
-            reason: 'Transfer failed'
-          });
+        try {
+          // Try to cancel first (for sessions not yet established)
+          await (originalSessionData.transferSession as SIP.Inviter).cancel();
+        } catch (error) {
+          if (verboseLogging) {
+            console.log('[SIPService] Cancel failed, trying BYE:', error);
+          }
+          // If cancel fails, try BYE (for established sessions)
+          await (originalSessionData.transferSession as SIP.Session).bye();
         }
       }
-    });
+
+      // Clean up references
+      delete originalSessionData.transferSession;
+
+      // Resume the original call if it was on hold
+      if (originalSessionData.onHold) {
+        if (verboseLogging) {
+          console.log('[SIPService] 📞 Resuming original call from hold');
+        }
+        await this.unholdCall(originalSessionId);
+      }
+
+      this.emit('attendedTransferCancelled', {
+        originalSessionId: originalSessionId
+      });
+
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ Attended transfer cancelled successfully');
+      }
+
+    } catch (error) {
+      console.error('[SIPService] ❌ Failed to cancel attended transfer:', error);
+      this.emit('sessionError', { sessionId: originalSessionId, error: error as Error });
+      throw error;
+    }
   }
 
   // ==================== BLF Subscriptions ====================
