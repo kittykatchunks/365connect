@@ -1409,7 +1409,7 @@ a {
 
 /* Call Action Buttons - Matches PWA layout */
 .call-action-buttons {
-  display: flex;
+  display: grid;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
   width: 100%;
@@ -1417,13 +1417,11 @@ a {
 
 /* Dial Actions (idle state) - 2 buttons side by side */
 .dial-actions {
-  display: grid;
   grid-template-columns: 1fr 1fr;
 }
 
 /* Call Controls (active state) - 4 buttons in a row */
 .call-controls-active {
-  display: grid;
   grid-template-columns: repeat(4, 1fr);
 }
 

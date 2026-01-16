@@ -80,7 +80,7 @@ export function CallActionButtons({
   if (isInCall) {
     // Active call - show call control buttons
     return (
-      <div className={cn('call-action-buttons call-controls-active', className)} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+      <div className={cn('call-action-buttons call-controls-active', className)}>
         {/* Mute Button */}
         <Button
           variant={isMuted ? 'danger' : 'secondary'}
