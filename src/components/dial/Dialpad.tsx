@@ -14,7 +14,7 @@ interface DialpadProps {
 }
 
 const dialpadKeys = [
-  { digit: '1', letters: ' ' },
+  { digit: '1', letters: '\u00A0' },
   { digit: '2', letters: 'ABC' },
   { digit: '3', letters: 'DEF' },
   { digit: '4', letters: 'GHI' },
@@ -23,9 +23,9 @@ const dialpadKeys = [
   { digit: '7', letters: 'PQRS' },
   { digit: '8', letters: 'TUV' },
   { digit: '9', letters: 'WXYZ' },
-  { digit: '*', letters: ' ' },
+  { digit: '*', letters: '\u00A0' },
   { digit: '0', letters: '+' },
-  { digit: '#', letters: ' ' },
+  { digit: '#', letters: '\u00A0' },
 ];
 
 export function Dialpad({ onDigit, onLongPress, disabled, className }: DialpadProps) {
