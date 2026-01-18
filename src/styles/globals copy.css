@@ -1266,8 +1266,6 @@ a {
 .line-key-hold .line-key-icon { color: var(--warning-color); }
 
 /* Call Controls */
-/* COMMENTED OUT - call-control and dial-action buttons */
-/*
 .call-controls {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1294,7 +1292,6 @@ a {
 .end-call-btn {
   grid-column: span 4;
 }
-*/
 
 /* Incoming Call Banner */
 .incoming-call-banner {
@@ -1414,8 +1411,6 @@ a {
 }
 
 /* Dial Call Button */
-/* COMMENTED OUT - dial-call-button styles */
-/*
 .dial-call-button-container {
   display: flex;
   justify-content: center;
@@ -1442,87 +1437,8 @@ a {
   opacity: 0.5;
   cursor: not-allowed;
 }
-*/
-
-/* ============================================
-   Call Controls Container
-   Parent container for dial-actions and call-actions
-   ============================================ */
-
-/* Parent container - full width */
-.call-controls-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: var(--spacing-sm) 0;
-}
-
-/* Dial Actions (idle state) - 2 buttons side by side (Call + Hangup) */
-.dial-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(0.25rem, 0.8vw, 0.5rem);
-  width: 50%;
-  max-width: 100%;
-}
-
-/* Call Actions (active call state) - 4 buttons in a row (Mute + Hold + Transfer + End) */
-.call-actions {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: clamp(0.25rem, 0.8vw, 0.5rem);
-  width: 50%;
-  max-width: 100%;
-}
-
-/* Individual button styling for both states */
-.call-control-btn,
-.call-button,
-.hangup-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.125rem, 0.5vw, 0.25rem);
-  padding: clamp(0.5rem, 1.2vw, 0.875rem) clamp(0.375rem, 1vw, 0.75rem);
-  min-height: clamp(48px, 6vh, 60px);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: clamp(0.625rem, 1vw, 0.875rem);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  border: none;
-  outline: none;
-}
-
-/* Icon sizing */
-.call-control-btn .icon,
-.call-button .icon,
-.hangup-button .icon {
-  width: clamp(18px, 2.2vw, 28px);
-  height: clamp(18px, 2.2vw, 28px);
-  flex-shrink: 0;
-}
-
-/* Button label sizing */
-.call-control-btn .btn-label,
-.call-button .btn-label,
-.hangup-button .btn-label {
-  font-size: clamp(0.5rem, 0.85vw, 0.75rem);
-  line-height: 1.2;
-}
-
-/* Answer button animation (when incoming call) */
-.answer-btn {
-  animation: pulse 1.5s ease-in-out infinite;
-}
 
 /* Call Action Buttons - Responsive sizing */
-/* COMMENTED OUT - OLD call-action-buttons, dial-actions, call-controls-active styles */
-/*
 .call-action-buttons {
   display: grid;
   gap: clamp(0.25rem, 0.8vw, 0.5rem);
@@ -1531,15 +1447,18 @@ a {
   margin-right: auto;
 }
 
+/* Dial Actions (idle state) - 2 buttons side by side */
 .dial-actions {
   grid-template-columns: 1fr 1fr;
   width: 50%;
 }
 
+/* Call Controls (active state) - 4 buttons in a row */
 .call-controls-active {
   grid-template-columns: repeat(4, 1fr);
 }
 
+/* Individual call control buttons */
 .call-control-btn {
   display: flex;
   flex-direction: column;
@@ -1563,6 +1482,7 @@ a {
   font-size: var(--font-size-btn-label);
 }
 
+/* Call/Hangup buttons (idle state) */
 .call-button,
 .hangup-button {
   display: flex;
@@ -1589,10 +1509,10 @@ a {
   font-size: clamp(0.5rem, 0.85vw, 0.75rem);
 }
 
+/* Answer button styling (when incoming call) */
 .answer-btn {
   animation: pulse 1.5s ease-in-out infinite;
 }
-*/
 
 @keyframes pulse {
   0%, 100% {
@@ -1619,8 +1539,6 @@ a {
 }
 
 /* End call button */
-/* COMMENTED OUT - end-call-btn styles */
-/*
 .end-call-btn {
   background-color: var(--danger-color);
 }
@@ -1628,7 +1546,6 @@ a {
 .end-call-btn:hover:not(:disabled) {
   background-color: var(--danger-color-dark);
 }
-*/
 
 /* Transfer Modal */
 .transfer-modal-content {
@@ -2352,19 +2269,9 @@ a {
     min-height: 6em;
   }
   
-  /* Tablet: Slightly smaller gaps */
-  .dial-actions,
-  .call-actions {
-    gap: clamp(0.2rem, 0.6vw, 0.4rem);
-    width: 60%; /* Slightly wider on tablets */
-  }
-  
-  /* COMMENTED OUT - call-action-buttons in tablet media query */
-  /*
   .call-action-buttons {
     gap: clamp(0.2rem, 0.6vw, 0.4rem);
   }
-  */
   
   .blf-grid {
     width: clamp(18%, 20vw, 25%);
@@ -2431,27 +2338,6 @@ a {
   }
   
   /* Stack call controls in 2x2 grid on mobile */
-  .call-actions {
-    grid-template-columns: repeat(2, 1fr);
-    gap: clamp(0.15rem, 0.4vw, 0.25rem);
-    width: 80%; /* Wider on mobile */
-  }
-  
-  .dial-actions {
-    gap: clamp(0.15rem, 0.4vw, 0.25rem);
-    width: 80%; /* Wider on mobile */
-  }
-  
-  /* Slightly larger buttons on mobile for better tap targets */
-  .call-control-btn,
-  .call-button,
-  .hangup-button {
-    min-height: clamp(52px, 7vh, 64px);
-    padding: clamp(0.625rem, 1.5vw, 1rem) clamp(0.5rem, 1.2vw, 0.875rem);
-  }
-  
-  /* COMMENTED OUT - call-controls-active and buttons in mobile media query */
-  /*
   .call-controls-active {
     grid-template-columns: repeat(2, 1fr);
     gap: clamp(0.15rem, 0.4vw, 0.25rem);
@@ -2461,7 +2347,7 @@ a {
     gap: clamp(0.15rem, 0.4vw, 0.25rem);
   }
   
-  Slightly larger buttons on mobile for better tap targets
+  /* Slightly larger buttons on mobile for better tap targets */
   .call-control-btn {
     min-height: clamp(42px, 6vh, 52px);
     padding: clamp(0.5rem, 1.2vw, 0.9rem);
@@ -2471,7 +2357,6 @@ a {
   .hangup-button {
     min-height: clamp(40px, 5.5vh, 50px);
   }
-  */
 }
 
 /* Container Queries for Component-Level Responsiveness */
@@ -2480,21 +2365,9 @@ a {
     max-width: 100%;
   }
   
-  .call-actions {
-    grid-template-columns: repeat(2, 1fr);
-    width: 70%;
-  }
-  
-  .dial-actions {
-    width: 70%;
-  }
-  
-  /* COMMENTED OUT - call-action-buttons in container query */
-  /*
   .call-action-buttons {
     grid-template-columns: repeat(2, 1fr);
   }
-  */
   
   .line-keys {
     flex-wrap: wrap;

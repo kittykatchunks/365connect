@@ -70,7 +70,8 @@ export function CallActionButtons({
       isOnHold,
       disabled,
       isDialing,
-      hasDialValue
+      hasDialValue,
+      displayState: isInCall ? 'call-actions (4 buttons)' : 'dial-actions (2 buttons)'
     });
   }
   
@@ -78,75 +79,84 @@ export function CallActionButtons({
   // Show MUTE/HOLD/TRANSFER/END when call is active
   
   if (isInCall) {
-    // Active call - show call control buttons
+    // Active call - show call control buttons in call-actions container
+    if (verboseLogging) {
+      console.log('[CallActionButtons] 📱 Rendering call-actions container (active call state)');
+    }
     return (
-      <div className={cn('call-action-buttons call-controls-active', className)}>
-        {/* Mute Button */}
-        <Button
-          variant={isMuted ? 'danger' : 'secondary'}
-          size="lg"
-          onClick={onMuteToggle}
-          disabled={disabled}
-          aria-pressed={isMuted}
-          aria-label={isMuted ? t('call.unmute', 'Unmute') : t('call.mute', 'Mute')}
-          title={isMuted ? t('call.unmute', 'Unmute') : t('call.mute', 'Mute')}
-          className="call-control-btn mute-btn"
-        >
-          {isMuted ? <MicOff className="icon" /> : <Mic className="icon" />}
-        </Button>
-        
-        {/* Hold Button */}
-        <Button
-          variant={isOnHold ? 'warning' : 'secondary'}
-          size="lg"
-          onClick={onHoldToggle}
-          disabled={disabled}
-          aria-pressed={isOnHold}
-          aria-label={isOnHold ? t('call.resume', 'Resume') : t('call.hold', 'Hold')}
-          title={isOnHold ? t('call.resume', 'Resume') : t('call.hold', 'Hold')}
-          className="call-control-btn hold-btn"
-        >
-          {isOnHold ? <Play className="icon" /> : <Pause className="icon" />}
-        </Button>
-        
-        {/* Transfer Button */}
-        <Button
-          variant="secondary"
-          size="lg"
-          onClick={onTransfer}
-          disabled={disabled}
-          aria-label={t('call.transfer', 'Transfer')}
-          title={t('call.transfer', 'Transfer')}
-          className="call-control-btn transfer-btn"
-        >
-          <PhoneForwarded className="icon" />
-        </Button>
-        
-        {/* End Call Button */}
-        <Button
-          variant="danger"
-          size="lg"
-          onClick={() => {
-            if (verboseLogging) {
-              console.log('[CallActionButtons] 📴 End call button clicked (active call)');
-            }
-            onEndCall();
-          }}
-          disabled={disabled}
-          aria-label={t('call.end', 'End Call')}
-          title={t('call.end', 'End Call')}
-          className="call-control-btn end-call-btn"
-        >
-          <PhoneOff className="icon" />
-        </Button>
+      <div className={cn('call-controls-container', className)}>
+        <div className="call-actions">
+          {/* Mute Button */}
+          <Button
+            variant={isMuted ? 'danger' : 'secondary'}
+            size="lg"
+            onClick={onMuteToggle}
+            disabled={disabled}
+            aria-pressed={isMuted}
+            aria-label={isMuted ? t('call.unmute', 'Unmute') : t('call.mute', 'Mute')}
+            title={isMuted ? t('call.unmute', 'Unmute') : t('call.mute', 'Mute')}
+            className="call-control-btn mute-btn"
+          >
+            {isMuted ? <MicOff className="icon" /> : <Mic className="icon" />}
+          </Button>
+          
+          {/* Hold Button */}
+          <Button
+            variant={isOnHold ? 'warning' : 'secondary'}
+            size="lg"
+            onClick={onHoldToggle}
+            disabled={disabled}
+            aria-pressed={isOnHold}
+            aria-label={isOnHold ? t('call.resume', 'Resume') : t('call.hold', 'Hold')}
+            title={isOnHold ? t('call.resume', 'Resume') : t('call.hold', 'Hold')}
+            className="call-control-btn hold-btn"
+          >
+            {isOnHold ? <Play className="icon" /> : <Pause className="icon" />}
+          </Button>
+          
+          {/* Transfer Button */}
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={onTransfer}
+            disabled={disabled}
+            aria-label={t('call.transfer', 'Transfer')}
+            title={t('call.transfer', 'Transfer')}
+            className="call-control-btn transfer-btn"
+          >
+            <PhoneForwarded className="icon" />
+          </Button>
+          
+          {/* End Call Button */}
+          <Button
+            variant="danger"
+            size="lg"
+            onClick={() => {
+              if (verboseLogging) {
+                console.log('[CallActionButtons] 📴 End call button clicked (active call)');
+              }
+              onEndCall();
+            }}
+            disabled={disabled}
+            aria-label={t('call.end', 'End Call')}
+            title={t('call.end', 'End Call')}
+            className="call-control-btn end-call-btn"
+          >
+            <PhoneOff className="icon" />
+          </Button>
+        </div>
       </div>
     );
   }
   
-  // Idle or ringing - show CALL/END buttons
+  // Idle or ringing - show CALL/END buttons in dial-actions container
+  if (verboseLogging) {
+    console.log('[CallActionButtons] 📱 Rendering dial-actions container (idle/ringing state)');
+  }
   return (
-    <div className={cn('call-action-buttons dial-actions', className)}>
-      {/* CALL/ANSWER Button */}
+    <div className={cn('call-controls-container', className)}>
+      <div className="dial-actions">{
+        /* CALL/ANSWER Button */}
       <Button
         variant="success"
         size="lg"
@@ -205,6 +215,7 @@ export function CallActionButtons({
       >
         <PhoneOff className="icon" />
       </Button>
+      </div>
     </div>
   );
 }
