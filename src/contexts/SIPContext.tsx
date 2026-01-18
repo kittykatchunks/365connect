@@ -8,6 +8,7 @@ import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useTabNotification } from '../hooks';
 import { isVerboseLoggingEnabled } from '../utils';
 import type { 
   SessionData, 
@@ -84,6 +85,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
   } = useSIPStore();
   
   const { sipConfig } = useSettingsStore();
+  const { setTabAlert, clearTabAlert } = useTabNotification();
 
   // Wire up SIP events to Zustand store
   useEffect(() => {
@@ -138,6 +140,12 @@ export function SIPProvider({ children }: SIPProviderProps) {
         audioService.startRinging(useAlertTone).catch(error => {
           console.error('[SIPContext] ❌ Failed to start ringtone:', error);
         });
+        
+        // Start flashing dial tab for incoming call
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔔 Starting dial tab flash for incoming call');
+        }
+        setTabAlert('dial', 'error');
       }
       
       if (verboseLogging) {
@@ -158,6 +166,12 @@ export function SIPProvider({ children }: SIPProviderProps) {
         audioService.stopRinging();
       }
       
+      // Clear dial tab flash when call is answered
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔕 Clearing dial tab flash - call answered');
+      }
+      clearTabAlert('dial');
+      
       updateSession(session.id, { state: 'established', answerTime: new Date() });
     });
     
@@ -173,6 +187,12 @@ export function SIPProvider({ children }: SIPProviderProps) {
         }
         audioService.stopRinging();
       }
+      
+      // Clear dial tab flash when call is terminated
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔕 Clearing dial tab flash - call terminated');
+      }
+      clearTabAlert('dial');
       
       removeSession(session.id);
     });
