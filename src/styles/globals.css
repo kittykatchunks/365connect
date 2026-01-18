@@ -2367,7 +2367,7 @@ a {
   */
   
   .blf-grid {
-    width: clamp(18%, 20vw, 25%);
+    width: clamp(12%, 15vw, 20%);
   }
 }
 
