@@ -1186,12 +1186,12 @@ a {
 }
 
 .dialpad-digit {
-  font-size: 0.75rem;
+  font-size: 1.5rem;
   font-weight: 500;
 }
 
 .dialpad-letters {
-  font-size: 0.3125rem;
+  font-size: 0.625rem;
   color: var(--text-color-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
