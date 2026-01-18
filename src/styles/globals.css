@@ -1089,27 +1089,28 @@ a {
   flex-direction: column;
   gap: var(--spacing-xs);
   width: 100%;
+  min-height: 8em;
   padding: var(--spacing-md);
-  background: var(--surface-color);
+  background: var(--background-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   transition: background-color 0.3s ease;
 }
 
 .call-info-display.call-ringing {
-  background: var(--surface-color);
+  background: var(--background-color);
 }
 
 .call-info-display.call-dialing {
-  background: var(--surface-color);
+  background: var(--background-color);
 }
 
 .call-info-display.call-connected {
-  background: var(--surface-color);
+  background: var(--background-color);
 }
 
 .call-info-display.call-on-hold {
-  background: var(--surface-color);
+  background: var(--background-color);
 }
 
 .call-main-info {
