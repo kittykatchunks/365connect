@@ -8,15 +8,17 @@ import { History, PhoneIncoming, PhoneOutgoing, PhoneMissed, Trash2, Phone } fro
 import { PanelHeader } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { ConfirmModal } from '@/components/modals';
-import { useCallHistoryStore } from '@/stores';
+import { useCallHistoryStore, useAppStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { formatCallDuration, type CallRecord } from '@/types/callHistory';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 type FilterType = 'all' | 'incoming' | 'outgoing' | 'missed';
 
 export function ActivityView() {
   const { t } = useTranslation();
-  const { makeCall, isRegistered } = useSIP();
+  const { isRegistered } = useSIP();
+  const switchToDialWithNumber = useAppStore((state) => state.switchToDialWithNumber);
   
   // Store state
   const filter = useCallHistoryStore((state) => state.filter);
@@ -36,8 +38,27 @@ export function ActivityView() {
   ];
   
   const handleCallback = (record: CallRecord) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[ActivityView] 📞 Callback button clicked:', {
+        number: record.number,
+        name: record.name,
+        isRegistered
+      });
+    }
+    
     if (isRegistered) {
-      makeCall(record.number);
+      // Switch to dial tab and populate the number
+      switchToDialWithNumber(record.number);
+      
+      if (verboseLogging) {
+        console.log('[ActivityView] ✅ Switched to dial tab with number:', record.number);
+      }
+    } else {
+      if (verboseLogging) {
+        console.warn('[ActivityView] ⚠️ Cannot callback - not registered');
+      }
     }
   };
   

@@ -33,6 +33,8 @@ export function DialView() {
   const agentState = useAppStore((state) => state.agentState);
   const agentNumber = useAppStore((state) => state.agentNumber);
   const agentName = useAppStore((state) => state.agentName);
+  const pendingDialNumber = useAppStore((state) => state.pendingDialNumber);
+  const setPendingDialNumber = useAppStore((state) => state.setPendingDialNumber);
   
   const addNotification = useUIStore((state) => state.addNotification);
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
@@ -158,6 +160,43 @@ export function DialView() {
     }
   }, [selectedLine, selectedLineSession?.id, verboseLogging]);
   
+  // Handle pending dial number from callback/contact actions
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (pendingDialNumber) {
+      if (verboseLogging) {
+        console.log('[DialView] 📞 Pending dial number detected:', pendingDialNumber);
+      }
+      
+      // Only populate if not currently in a call on selected line
+      if (isSelectedLineIdle) {
+        setDialValue(pendingDialNumber);
+        
+        if (verboseLogging) {
+          console.log('[DialView] ✅ Populated dial input with:', pendingDialNumber);
+        }
+        
+        // Clear the pending number immediately after consuming it
+        setPendingDialNumber(null);
+        
+        // Optional: Focus the dial input after a short delay
+        setTimeout(() => {
+          const dialInput = document.querySelector<HTMLInputElement>('.dial-input');
+          if (dialInput) {
+            dialInput.focus();
+          }
+        }, 100);
+      } else {
+        if (verboseLogging) {
+          console.log('[DialView] ⚠️ Cannot populate dial input - call is active on selected line');
+        }
+        // Clear pending number anyway
+        setPendingDialNumber(null);
+      }
+    }
+  }, [pendingDialNumber, isSelectedLineIdle, setPendingDialNumber, verboseLogging]);
+  
   // Handle digit press
   const handleDigit = useCallback(async (digit: string) => {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -244,6 +283,27 @@ export function DialView() {
       });
     }
   }, [dialValue, lastDialedNumber, isDialing, makeCall, addNotification, t, setLastDialedNumber]);
+  
+  // Handle Enter key in dial input to initiate call
+  const handleDialInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      if (verboseLogging) {
+        console.log('[DialView] ⌨️ Enter key pressed in dial input, dialValue:', dialValue);
+      }
+      
+      // Only make call if not in call and have a value
+      if (!isInCall && dialValue) {
+        if (verboseLogging) {
+          console.log('[DialView] 📞 Initiating call from Enter key');
+        }
+        handleCall();
+      }
+    }
+  }, [dialValue, isInCall, handleCall]);
   
   // Answer incoming call on selected line
   const handleAnswer = useCallback(async () => {
@@ -492,6 +552,7 @@ export function DialView() {
             <DialInput
               value={dialValue}
               onChange={(e) => setDialValue(e.target.value)}
+              onKeyDown={handleDialInputKeyDown}
               onCall={handleCall}
               onClear={handleClear}
               onBackspace={handleBackspace}

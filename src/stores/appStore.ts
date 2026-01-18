@@ -27,6 +27,7 @@ interface AppState {
   // Navigation
   currentView: ViewType;
   openSettingsWithConnection: boolean; // Flag to open connection settings when navigating to settings
+  pendingDialNumber: string | null; // Number to pre-populate in dial input when switching to dial tab
   
   // Agent state
   agentState: AgentState;
@@ -43,6 +44,8 @@ interface AppState {
   setLoading: (loading: boolean, message?: string) => void;
   setCurrentView: (view: ViewType) => void;
   setOpenSettingsWithConnection: (value: boolean) => void;
+  setPendingDialNumber: (number: string | null) => void;
+  switchToDialWithNumber: (number: string) => void;
   
   // Agent actions
   setAgentState: (state: AgentState) => void;
@@ -68,6 +71,7 @@ export const useAppStore = create<AppState>()(
         loadingMessage: 'Loading Autocab365 Connect',
         currentView: 'dial',
         openSettingsWithConnection: false,
+        pendingDialNumber: null,
         
         // Agent initial state
         agentState: 'logged-out',
@@ -90,6 +94,15 @@ export const useAppStore = create<AppState>()(
         setCurrentView: (view) => set({ currentView: view }),
         
         setOpenSettingsWithConnection: (value) => set({ openSettingsWithConnection: value }),
+        
+        setPendingDialNumber: (number) => set({ pendingDialNumber: number }),
+        
+        switchToDialWithNumber: (number) => {
+          set({ 
+            currentView: 'dial', 
+            pendingDialNumber: number 
+          });
+        },
         
         // Agent actions
         setAgentState: (agentState) => set({ agentState }),

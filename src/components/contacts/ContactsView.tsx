@@ -8,13 +8,15 @@ import { Plus, Search, User, Phone, Pencil, Trash2, MoreVertical, Building2 } fr
 import { PanelHeader } from '@/components/layout';
 import { Button, Input } from '@/components/ui';
 import { ContactModal, ConfirmModal } from '@/components/modals';
-import { useContactsStore } from '@/stores';
+import { useContactsStore, useAppStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { getContactDisplayName, getContactSecondaryName, type Contact } from '@/types/contact';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 export function ContactsView() {
   const { t } = useTranslation();
-  const { makeCall, isRegistered } = useSIP();
+  const { isRegistered } = useSIP();
+  const switchToDialWithNumber = useAppStore((state) => state.switchToDialWithNumber);
   
   // Store state
   const contacts = useContactsStore((state) => state.filteredContacts);
@@ -56,8 +58,27 @@ export function ContactsView() {
   };
   
   const handleCall = (contact: Contact) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[ContactsView] 📞 Call button clicked:', {
+        phoneNumber: contact.phoneNumber,
+        name: getContactDisplayName(contact),
+        isRegistered
+      });
+    }
+    
     if (isRegistered) {
-      makeCall(contact.phoneNumber);
+      // Switch to dial tab and populate the number
+      switchToDialWithNumber(contact.phoneNumber);
+      
+      if (verboseLogging) {
+        console.log('[ContactsView] ✅ Switched to dial tab with number:', contact.phoneNumber);
+      }
+    } else {
+      if (verboseLogging) {
+        console.warn('[ContactsView] ⚠️ Cannot call - not registered');
+      }
     }
     setActiveMenu(null);
   };
