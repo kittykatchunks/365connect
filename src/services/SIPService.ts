@@ -736,6 +736,7 @@ export class SIPService {
   }
 
   async terminateSession(sessionId: string, reason = 'User requested'): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
     const sessionData = this.sessions.get(sessionId);
     if (!sessionData) {
       throw new Error('Session not found');
@@ -743,6 +744,15 @@ export class SIPService {
 
     try {
       const { session } = sessionData;
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📴 terminateSession called:', {
+          sessionId,
+          state: session.state,
+          direction: sessionData.direction,
+          reason
+        });
+      }
       
       switch (session.state) {
         case SIP.SessionState.Initial:
@@ -758,7 +768,9 @@ export class SIPService {
           break;
       }
 
-      this.handleSessionTerminated(sessionData, reason);
+      // NOTE: Don't call handleSessionTerminated here - the session.stateChange listener
+      // in setupSessionHandlers will automatically call it when state becomes Terminated.
+      // Calling it twice causes duplicate call history entries.
 
     } catch (error) {
       console.error('Failed to terminate session:', error);
