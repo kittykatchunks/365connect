@@ -3420,8 +3420,6 @@ a {
   justify-content: center;
   width: 80px;
   height: 80px;
-  background-color: var(--primary-color);
-  color: white;
   border-radius: var(--radius-xl);
 }
 
