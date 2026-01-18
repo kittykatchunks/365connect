@@ -128,6 +128,7 @@ export const useAppStore = create<AppState>()(
         name: 'app-store',
         partialize: (state) => ({
           agentNumber: state.agentNumber,
+          queueState: state.queueState,
           selectedCLI: state.selectedCLI
         })
       }

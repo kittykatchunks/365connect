@@ -75,20 +75,23 @@ export function AgentKeys({ className }: AgentKeysProps) {
         if (agentData && agentData.num) {
           // Agent is logged in on PBX
           const isPaused = parseAgentPauseStatus(agentData.pause);
+          const currentQueueState = useAppStore.getState().queueState;
           
           if (verboseLogging) {
             console.log('[AgentKeys] ✅ Agent already logged in on PBX', {
               num: agentData.num,
               name: agentData.name,
-              paused: isPaused
+              paused: isPaused,
+              queueStateFromStorage: currentQueueState
             });
           }
           
-          // Restore agent state
+          // Restore agent state (keep existing queueState from storage)
           useAppStore.setState({
             agentNumber: agentData.num,
             agentName: agentData.name,
             agentState: isPaused ? 'paused' : 'available'
+            // queueState is NOT updated here - preserved from storage
           });
         } else {
           if (verboseLogging) {
@@ -173,15 +176,17 @@ export function AgentKeys({ className }: AgentKeysProps) {
         
         // Update agent state locally first
         if (verboseLogging) {
-          console.log('[AgentKeys] 🔄 Updating agent state to available', {
+          console.log('[AgentKeys] 🔄 Updating agent state to available and joining queue', {
             agentNumber: pendingLogin.agentNumber,
-            previousState: agentState
+            previousState: agentState,
+            previousQueueState: queueState
           });
         }
         
         useAppStore.setState({
           agentNumber: pendingLogin.agentNumber,
-          agentState: 'available'
+          agentState: 'available',
+          queueState: 'in-queue' // Automatically join queue on login
         });
         
         // Query API to get full agent info (name, clip, etc.)
