@@ -139,6 +139,8 @@ html {
   font-size: clamp(0.75rem, 0.5rem + 0.833vw, 1rem);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-width: 0 !important; /* Allow shrinking below any browser defaults */
+  width: 100%;
 }
 
 body {
@@ -147,7 +149,15 @@ body {
   color: var(--text-color);
   line-height: 1.5;
   min-height: 100vh;
+  min-width: 0 !important; /* Allow shrinking below any browser defaults */
+  width: 100%;
   transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+#root {
+  min-width: 0 !important; /* Allow shrinking below any defaults */
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Focus Styles */
@@ -265,6 +275,9 @@ a {
 .main-container {
   display: flex;
   min-height: 100vh;
+  min-width: 0 !important; /* Allow shrinking below any defaults */
+  width: 100%;
+  max-width: 100%;
   background-color: var(--background-color);
 }
 
@@ -272,6 +285,8 @@ a {
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0 !important; /* Allow shrinking below any defaults */
+  max-width: 100%;
   /* max-width: 420px; */
   background-color: var(--surface-color);
   border-right: 1px solid var(--border-color);
