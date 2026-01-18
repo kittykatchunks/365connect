@@ -35,6 +35,7 @@ import {
 import { ImportExportModal } from '@/components/modals';
 import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
 import { useAudioDevices } from '@/hooks';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export function SettingsView() {
   const { t } = useTranslation();
@@ -65,6 +66,9 @@ export function SettingsView() {
   const setRingtoneFile = useSettingsStore((state) => state.setRingtoneFile);
   const setVerboseLogging = useSettingsStore((state) => state.setVerboseLogging);
   const resetSettings = useSettingsStore((state) => state.resetSettings);
+  
+  // Notifications hook for test
+  const { showIncomingCallNotification, permission: notificationPermission } = useNotifications();
   
   // Audio devices hook
   const { 
@@ -121,6 +125,36 @@ export function SettingsView() {
       setTimeout(() => setSaveStatus('idle'), 2000);
     }, 300);
   }, [localPhantomId, localUsername, localPassword, localVmAccess, setPhantomID, setSIPCredentials, setVMAccess]);
+  
+  // Test notification handler
+  const handleTestNotification = useCallback(() => {
+    console.log('🧪 Testing notification...');
+    console.log('📊 Notification permission:', notificationPermission);
+    console.log('🌐 Notification API supported:', 'Notification' in window);
+    console.log('✅ Current permission:', 'Notification' in window ? Notification.permission : 'N/A');
+    
+    const notification = showIncomingCallNotification(
+      'Test Caller',
+      '1234567890',
+      () => {
+        console.log('✅ Test notification clicked!');
+      },
+      () => {
+        console.log('🔕 Test notification closed');
+      }
+    );
+    
+    if (notification) {
+      console.log('✅ Test notification created successfully');
+    } else {
+      console.error('❌ Test notification failed to create');
+      console.log('🔍 Debug info:', {
+        permission: notificationPermission,
+        supported: 'Notification' in window,
+        actualPermission: 'Notification' in window ? Notification.permission : 'N/A'
+      });
+    }
+  }, [showIncomingCallNotification, notificationPermission]);
   
   // Options
   const themeOptions = [
@@ -412,6 +446,21 @@ export function SettingsView() {
                     checked={settings.call.incomingCallNotifications}
                     onChange={(checked) => setIncomingCallNotifications(checked)}
                   />
+                  {settings.call.incomingCallNotifications && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleTestNotification}
+                      >
+                        <Bell size={14} style={{ marginRight: '0.25rem' }} />
+                        Test Notification
+                      </Button>
+                      <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                        Permission: {notificationPermission}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {settings.call.incomingCallNotifications && (
                   <div className="setting-item" style={{ paddingLeft: '2rem' }}>
