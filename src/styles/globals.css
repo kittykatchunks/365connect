@@ -2360,7 +2360,7 @@ a {
   }
   
   .dial-input-container {
-    min-height: 6em;
+    min-height: 8em;
   }
   
   /* Tablet: Slightly smaller gaps */
@@ -2424,7 +2424,7 @@ a {
   }
   
   .dial-input-container {
-    min-height: 5em;
+    min-height: 8em;
     padding: var(--spacing-xs);
   }
   
