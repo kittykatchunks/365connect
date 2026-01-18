@@ -545,6 +545,9 @@ export function DialView() {
           {/* CLI Selector */}
           <CLISelector />
           
+          {/* Line Keys */}
+          <LineKeys />
+          
           {/* Call Info Display OR Dial Input - based on selected line state */}
           {showCallInfo ? (
             <CallInfoDisplay session={selectedLineSession} />
@@ -591,9 +594,6 @@ export function DialView() {
             hasRedialNumber={!!lastDialedNumber}
             className="dial-action-buttons"
           />
-          
-          {/* Line Keys */}
-          <LineKeys />
         </div>
         
         {/* Right BLF Panel */}
