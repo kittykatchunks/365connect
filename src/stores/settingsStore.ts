@@ -7,7 +7,6 @@ import { devtools, persist } from 'zustand/middleware';
 import type { AppSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { saveServerSettingsToLocalStorage } from '@/utils/serverConfig';
-import { changeLanguage } from '@/i18n';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 interface SettingsState {
@@ -157,9 +156,11 @@ export const useSettingsStore = create<SettingsState>()(
             console.log('[SettingsStore] Setting language:', language);
           }
           
-          // Update i18next
-          changeLanguage(language).catch((err) => {
-            console.error('[SettingsStore] Failed to change language:', err);
+          // Update i18next (dynamic import to avoid circular dependency)
+          import('@/i18n').then(({ changeLanguage }) => {
+            changeLanguage(language).catch((err) => {
+              console.error('[SettingsStore] Failed to change language:', err);
+            });
           });
           
           // Update store (this will persist via Zustand)
