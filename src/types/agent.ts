@@ -85,7 +85,8 @@ export interface AgentData {
   num: string | null;
   name: string | null;
   pause: boolean | string | number;
-  clip?: string;
+  clip?: string; // CLIP (Calling Line Identity Presentation) - display name
+  cid?: string;  // CID (Caller ID) - actual phone number used for outgoing calls
 }
 
 export interface PauseReason {

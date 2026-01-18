@@ -8,7 +8,7 @@ import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus } from '@/utils';
 import { Button } from '@/components/ui';
 import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
-import { useAppStore, useSettingsStore } from '@/stores';
+import { useAppStore, useSettingsStore, useCompanyNumbersStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { useSIPContext } from '@/contexts';
 import type { PauseReason } from '@/types/agent';
@@ -82,6 +82,8 @@ export function AgentKeys({ className }: AgentKeysProps) {
               num: agentData.num,
               name: agentData.name,
               paused: isPaused,
+              cid: agentData.cid,
+              clip: agentData.clip,
               queueStateFromStorage: currentQueueState
             });
           }
@@ -93,6 +95,32 @@ export function AgentKeys({ className }: AgentKeysProps) {
             agentState: isPaused ? 'paused' : 'available'
             // queueState is NOT updated here - preserved from storage
           });
+          
+          // Sync current CLI from agent data if Company Numbers tab is enabled
+          const showCompanyNumbersTab = useSettingsStore.getState().settings.interface.showCompanyNumbersTab;
+          
+          if (showCompanyNumbersTab && agentData.cid) {
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📞 Company Numbers tab active, syncing CLI from agent data');
+              console.log('[AgentKeys] 📞 Current CID from API:', agentData.cid);
+            }
+            
+            // Sync the CLI selector with the current CID from PBX
+            const syncCurrentCliFromAgentData = useCompanyNumbersStore.getState().syncCurrentCliFromAgentData;
+            syncCurrentCliFromAgentData(agentData);
+            
+            if (verboseLogging) {
+              console.log('[AgentKeys] ✅ CLI sync completed');
+            }
+          } else {
+            if (verboseLogging) {
+              if (!showCompanyNumbersTab) {
+                console.log('[AgentKeys] ℹ️ Company Numbers tab not enabled, skipping CLI sync');
+              } else if (!agentData.cid) {
+                console.log('[AgentKeys] ℹ️ No CID in agent data, skipping CLI sync');
+              }
+            }
+          }
         } else {
           if (verboseLogging) {
             console.log('[AgentKeys] ℹ️ Agent not logged in on PBX');
@@ -189,7 +217,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
           queueState: 'in-queue' // Automatically join queue on login
         });
         
-        // Query API to get full agent info (name, clip, etc.)
+        // Query API to get full agent info (name, cid, clip, etc.)
         if (sipUsername) {
           setTimeout(async () => {
             const agentData = await queryAgentStatus(sipUsername);
@@ -197,13 +225,27 @@ export function AgentKeys({ className }: AgentKeysProps) {
               if (verboseLogging) {
                 console.log('[AgentKeys] 📥 Retrieved agent details from API after login', {
                   num: agentData.num,
-                  name: agentData.name
+                  name: agentData.name,
+                  cid: agentData.cid,
+                  clip: agentData.clip
                 });
               }
               
               useAppStore.setState({
                 agentName: agentData.name
               });
+              
+              // Sync current CLI from agent data if Company Numbers tab is enabled
+              const showCompanyNumbersTab = useSettingsStore.getState().settings.interface.showCompanyNumbersTab;
+              
+              if (showCompanyNumbersTab && agentData.cid) {
+                if (verboseLogging) {
+                  console.log('[AgentKeys] 📞 Syncing CLI after login, CID:', agentData.cid);
+                }
+                
+                const syncCurrentCliFromAgentData = useCompanyNumbersStore.getState().syncCurrentCliFromAgentData;
+                syncCurrentCliFromAgentData(agentData);
+              }
             }
           }, 1000); // Wait 1s for PBX to process login
         }

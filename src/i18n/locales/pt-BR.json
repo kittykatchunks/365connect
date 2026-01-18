@@ -93,6 +93,7 @@
     "cli": {
         "select_company": "Selecionar CLI Empresa",
         "no_cli_selected": "Nenhum CLI selecionado",
+        "select_cli": "Selecionar CLI",
         "confirm_change": "Alterar CLI?"
     },
     "agent": {
