@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Tailwind v4 Configuration - Define custom breakpoints */
+@theme {
+  /* Allow UI to shrink below default breakpoints */
+  --breakpoint-xs: 20rem;    /* 320px - Extra small devices */
+  --breakpoint-sm: 30rem;    /* 480px - Small devices */
+  --breakpoint-md: 48rem;    /* 768px - Medium devices */
+  --breakpoint-lg: 64rem;    /* 1024px - Large devices */
+  --breakpoint-xl: 80rem;    /* 1280px - Extra large devices */
+  --breakpoint-2xl: 96rem;   /* 1536px - 2X Extra large devices */
+}
+
 /* ============================================
    Autocab365Connect - Theme System
    ============================================ */
@@ -2359,13 +2370,6 @@ a {
     width: 60%; /* Slightly wider on tablets */
   }
   
-  /* COMMENTED OUT - call-action-buttons in tablet media query */
-  /*
-  .call-action-buttons {
-    gap: clamp(0.2rem, 0.6vw, 0.4rem);
-  }
-  */
-  
   .blf-grid {
     width: clamp(12%, 15vw, 20%);
   }
@@ -2382,13 +2386,7 @@ a {
     min-height: clamp(32px, 4.5vh, 42px);
     padding: clamp(0.3rem, 0.8vw, 0.5rem);
   }
-  
-  /*
-  .blf-grid {
-    width: 25%;
-  }
-  */
-  
+
   .blf-btn {
     /*font-size: clamp(0.5625rem, 0.85vw, 0.75rem); */
     min-height: clamp(35px, 4.5vh, 45px);
