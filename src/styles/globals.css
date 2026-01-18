@@ -3387,7 +3387,6 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(49, 130, 206, 0.95) 0%, rgba(44, 82, 130, 0.95) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: var(--spacing-lg);
@@ -3423,6 +3422,13 @@ a {
   background-color: var(--primary-color);
   color: white;
   border-radius: var(--radius-xl);
+}
+
+.welcome-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--spacing-sm);
 }
 
 .welcome-title {

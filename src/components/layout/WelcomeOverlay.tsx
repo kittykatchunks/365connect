@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Phone, Settings, Wifi, Shield, ArrowRight } from 'lucide-react';
+import { Settings, Wifi, Shield, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 interface WelcomeOverlayProps {
@@ -29,7 +29,7 @@ export function WelcomeOverlay({ isOpen, onClose, onOpenSettings }: WelcomeOverl
         {/* Logo and Title */}
         <div className="welcome-header">
           <div className="welcome-logo">
-            <Phone className="w-12 h-12" />
+            <img src="/icons/pwa-192x192.png" alt="Autocab365" className="welcome-logo-img" />
           </div>
           <h1 className="welcome-title">
             {t('welcome.title', 'Welcome to Autocab365 Connect')}
