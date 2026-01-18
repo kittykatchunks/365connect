@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useRef, type ReactNode } from 're
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
+import { useCallHistoryStore } from '../stores/callHistoryStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTabNotification } from '../hooks';
 import { isVerboseLoggingEnabled } from '../utils';
@@ -16,6 +17,7 @@ import type {
   TransportState,
   BLFStateChangeData 
 } from '../types/sip';
+import type { CallStatus } from '../types/callHistory';
 import { buildSIPConfig } from '../types/sip';
 
 // ==================== Context ====================
@@ -86,6 +88,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
   
   const { sipConfig } = useSettingsStore();
   const { setTabAlert, clearTabAlert } = useTabNotification();
+  const { addCallFromSession } = useCallHistoryStore();
 
   // Wire up SIP events to Zustand store
   useEffect(() => {
@@ -193,6 +196,66 @@ export function SIPProvider({ children }: SIPProviderProps) {
         console.log('[SIPContext] 🔕 Clearing dial tab flash - call terminated');
       }
       clearTabAlert('dial');
+      
+      // ==================== ADD CALL TO HISTORY ====================
+      // Extract call information
+      let number: string;
+      let name: string | null = null;
+      
+      if (session.direction === 'incoming') {
+        // For incoming calls, use remoteNumber and displayName/remoteIdentity
+        number = session.remoteNumber || 'Unknown';
+        // Use displayName if available, otherwise use remoteIdentity (which might be a name or number)
+        name = session.displayName || session.remoteIdentity || null;
+        // If name is the same as number, set it to null
+        if (name === number) {
+          name = null;
+        }
+      } else {
+        // For outgoing calls, use target
+        number = session.target || 'Unknown';
+        
+        // Clean up the number if it has sip: prefix
+        if (typeof number === 'string' && number.startsWith('sip:')) {
+          number = number.replace('sip:', '').split('@')[0];
+        }
+      }
+      
+      // Determine call status
+      let status: CallStatus;
+      if (session.duration > 0) {
+        // Call was answered
+        status = 'completed';
+      } else if (session.direction === 'incoming') {
+        // Incoming call with no duration = missed
+        status = 'missed';
+      } else {
+        // Outgoing call with no duration = cancelled
+        status = 'cancelled';
+      }
+      
+      const duration = session.duration || 0;
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 📞 Adding call to history:', {
+          number,
+          name,
+          direction: session.direction,
+          duration,
+          status
+        });
+      }
+      
+      // Add to call history store
+      addCallFromSession(
+        number,
+        name,
+        session.direction,
+        duration,
+        status
+      );
+      // ==================== END CALL HISTORY ====================
+      
       
       removeSession(session.id);
     });
