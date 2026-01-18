@@ -3,6 +3,7 @@
 // ============================================
 
 import { useState, useCallback, useEffect } from 'react';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 export type NotificationPermission = 'default' | 'granted' | 'denied';
 
@@ -59,11 +60,48 @@ export function useNotifications() {
     title: string,
     options?: NotificationOptions
   ): Notification | null => {
-    if (!isSupported || permission !== 'granted') {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Always check live permission status, not just the state
+    const currentPermission = typeof window !== 'undefined' && 'Notification' in window 
+      ? Notification.permission 
+      : 'denied';
+    
+    if (verboseLogging) {
+      console.log('[useNotifications] 📱 showNotification called:', {
+        title,
+        isSupported,
+        statePermission: permission,
+        currentPermission,
+        options
+      });
+    }
+    
+    if (!isSupported) {
+      if (verboseLogging) {
+        console.log('[useNotifications] ❌ Notifications not supported');
+      }
+      return null;
+    }
+    
+    if (currentPermission !== 'granted') {
+      if (verboseLogging) {
+        console.log('[useNotifications] ❌ Notification permission not granted:', currentPermission);
+      }
       return null;
     }
     
     try {
+      if (verboseLogging) {
+        console.log('[useNotifications] 📱 Creating notification with options:', {
+          body: options?.body,
+          icon: options?.icon || '/icons/pwa-192x192.png',
+          tag: options?.tag,
+          requireInteraction: options?.requireInteraction,
+          silent: options?.silent
+        });
+      }
+      
       const notification = new Notification(title, {
         body: options?.body,
         icon: options?.icon || '/icons/pwa-192x192.png',
@@ -72,8 +110,15 @@ export function useNotifications() {
         silent: options?.silent
       });
       
+      if (verboseLogging) {
+        console.log('[useNotifications] ✅ Notification created successfully');
+      }
+      
       if (options?.onClick) {
         notification.onclick = () => {
+          if (verboseLogging) {
+            console.log('[useNotifications] 🖱️ Notification clicked');
+          }
           window.focus();
           options.onClick?.();
           notification.close();
@@ -81,16 +126,32 @@ export function useNotifications() {
       }
       
       if (options?.onClose) {
-        notification.onclose = options.onClose;
+        notification.onclose = () => {
+          if (verboseLogging) {
+            console.log('[useNotifications] 🔕 Notification closed');
+          }
+          options.onClose?.();
+        };
       }
       
       if (options?.onError) {
-        notification.onerror = options.onError;
+        notification.onerror = (error) => {
+          if (verboseLogging) {
+            console.error('[useNotifications] ❌ Notification error:', error);
+          }
+          options.onError?.();
+        };
       }
+      
+      notification.onshow = () => {
+        if (verboseLogging) {
+          console.log('[useNotifications] ✅ Notification shown successfully');
+        }
+      };
       
       return notification;
     } catch (error) {
-      console.error('Failed to show notification:', error);
+      console.error('[useNotifications] ❌ Failed to show notification:', error);
       return null;
     }
   }, [isSupported, permission]);
@@ -101,8 +162,22 @@ export function useNotifications() {
     onAnswer?: () => void,
     onDismiss?: () => void
   ) => {
-    return showNotification(`Incoming Call: ${callerName || callerNumber}`, {
-      body: callerName ? callerNumber : 'Tap to answer',
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[useNotifications] 📞 showIncomingCallNotification called:', {
+        callerName,
+        callerNumber,
+        hasAnswerCallback: !!onAnswer,
+        hasDismissCallback: !!onDismiss
+      });
+    }
+    
+    const displayTitle = callerName ? `Incoming Call: ${callerName}` : `Incoming Call: ${callerNumber}`;
+    const displayBody = callerName ? callerNumber : 'Tap to answer';
+    
+    return showNotification(displayTitle, {
+      body: displayBody,
       icon: '/icons/IncomingCallIcon.png',
       tag: 'incoming-call',
       requireInteraction: true,

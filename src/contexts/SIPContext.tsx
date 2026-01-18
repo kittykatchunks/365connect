@@ -244,7 +244,19 @@ export function SIPProvider({ children }: SIPProviderProps) {
           
           // Store notification reference
           if (notification) {
+            if (verboseLogging) {
+              console.log('[SIPContext] ✅ Notification object created and stored');
+            }
             activeNotificationRef.current = notification;
+          } else {
+            if (verboseLogging) {
+              console.warn('[SIPContext] ⚠️ Notification was NOT created (returned null)');
+              console.log('[SIPContext] 📊 Debug info:', {
+                notificationApiSupported: 'Notification' in window,
+                currentPermission: typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'N/A',
+                settingsEnabled: settings.call.incomingCallNotifications
+              });
+            }
           }
         } else if (verboseLogging) {
           console.log('[SIPContext] 📱 Incoming call notifications disabled in settings');
