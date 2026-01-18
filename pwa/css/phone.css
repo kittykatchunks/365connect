@@ -251,18 +251,10 @@ html, body {
 
 .main-container {
     display: flex;
+    flex-direction: column;
     height: 100vh;
     width: 100vw;
-    justify-content: flex-end;
-}
-
-.left-panel {
-    width: 600px;
-    min-width: 550px;
     background-color: var(--surface-color);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
     transition: var(--theme-transition);
 }
 
@@ -2131,17 +2123,7 @@ body.view-dial .agent-keys-container { display: block; }
 
 @media (max-width: 768px) {
     .main-container {
-        flex-direction: column;
-        height: 100vh;
         overflow: hidden; /* Prevent double scrollbars */
-    }
-    
-    .left-panel {
-        width: 100%;
-        min-width: auto;
-        height: auto;
-        flex: 1;
-        min-height: 0;
     }
     
     .center-panel {
