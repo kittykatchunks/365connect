@@ -1040,6 +1040,11 @@ a {
   flex-shrink: 0;
 }
 
+.dial-blf-right {
+  border-left: 1px solid var(--border-color);
+  padding-left: var(--spacing-md);
+}
+
 /* Dial Input */
 .dial-input-container {
   display: flex;
@@ -1157,6 +1162,10 @@ a {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-sm);
+  width: 50%;
+  height: 50%;
+  transform: scale(0.5);
+  transform-origin: top left;
 }
 
 .dialpad-key {
@@ -1413,6 +1422,9 @@ a {
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
   width: 100%;
+  height: 50%;
+  transform: scaleY(0.5);
+  transform-origin: top;
 }
 
 /* Dial Actions (idle state) - 2 buttons side by side */
