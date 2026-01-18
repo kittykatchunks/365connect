@@ -316,5 +316,20 @@
         "error": {
             "extension_required": "Ramal ou número obrigatório"
         }
+    },
+    "welcome": {
+        "title": "Bem-vindo ao Connect365 da Autocab",
+        "subtitle": "Seu telefone SIP WebRTC para despacho de táxis",
+        "feature_webrtc": "Chamadas Baseadas em Navegador",
+        "feature_webrtc_desc": "Faça e receba chamadas diretamente no seu navegador com WebRTC",
+        "feature_secure": "Conexão Segura",
+        "feature_secure_desc": "Sinalização SIP e mídia criptografados para comunicações seguras",
+        "feature_easy": "Configuração Fácil",
+        "feature_easy_desc": "Basta inserir seu PhantomID e credenciais para começar",
+        "get_started": "Começar",
+        "get_started_desc": "Para começar a fazer chamadas, você precisará configurar suas configurações de conexão. Clique no botão abaixo para abrir as configurações e inserir seu PhantomID e credenciais SIP.",
+        "open_settings": "Abrir Configurações",
+        "skip": "Pular por enquanto",
+        "footer": "Desenvolvido pela sua plataforma Autocab Phantom"
     }
 }

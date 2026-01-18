@@ -316,5 +316,20 @@
         "error": {
             "extension_required": "Extension or number is required"
         }
+    },
+    "welcome": {
+        "title": "Welcome to Connect365 by Autocab",
+        "subtitle": "Your WebRTC SIP phone for taxi dispatch",
+        "feature_webrtc": "Browser-Based Calling",
+        "feature_webrtc_desc": "Make and receive calls directly in your browser with WebRTC",
+        "feature_secure": "Secure Connection",
+        "feature_secure_desc": "Encrypted SIP signaling and media for secure communications",
+        "feature_easy": "Easy Setup",
+        "feature_easy_desc": "Just enter your PhantomID and credentials to get started",
+        "get_started": "Get Started",
+        "get_started_desc": "To begin making calls, you'll need to configure your connection settings. Click the button below to open settings and enter your PhantomID and SIP credentials.",
+        "open_settings": "Open Settings",
+        "skip": "Skip for now",
+        "footer": "Powered by your Autocab Phantom platform"
     }
 }
