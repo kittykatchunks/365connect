@@ -35,6 +35,7 @@ interface SettingsState {
   setAutoAnswer: (enabled: boolean) => void;
   setCallWaiting: (enabled: boolean) => void;
   setIncomingCallNotifications: (enabled: boolean) => void;
+  setAutoFocusOnNotificationAnswer: (enabled: boolean) => void;
   setPreferBlindTransfer: (enabled: boolean) => void;
   
   // Actions - Audio
@@ -197,6 +198,9 @@ export const useSettingsStore = create<SettingsState>()(
         })),
         setIncomingCallNotifications: (enabled) => set((state) => ({
           settings: { ...state.settings, call: { ...state.settings.call, incomingCallNotifications: enabled } }
+        })),
+        setAutoFocusOnNotificationAnswer: (enabled) => set((state) => ({
+          settings: { ...state.settings, call: { ...state.settings.call, autoFocusOnNotificationAnswer: enabled } }
         })),
         setPreferBlindTransfer: (preferBlindTransfer) => set((state) => ({
           settings: { ...state.settings, call: { ...state.settings.call, preferBlindTransfer } }

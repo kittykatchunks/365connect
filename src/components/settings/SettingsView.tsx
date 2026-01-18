@@ -57,6 +57,7 @@ export function SettingsView() {
   const setOnscreenNotifications = useSettingsStore((state) => state.setOnscreenNotifications);
   const setAutoAnswer = useSettingsStore((state) => state.setAutoAnswer);
   const setIncomingCallNotifications = useSettingsStore((state) => state.setIncomingCallNotifications);
+  const setAutoFocusOnNotificationAnswer = useSettingsStore((state) => state.setAutoFocusOnNotificationAnswer);
   const setPreferBlindTransfer = useSettingsStore((state) => state.setPreferBlindTransfer);
   const setSpeakerDevice = useSettingsStore((state) => state.setSpeakerDevice);
   const setMicrophoneDevice = useSettingsStore((state) => state.setMicrophoneDevice);
@@ -412,6 +413,16 @@ export function SettingsView() {
                     onChange={(checked) => setIncomingCallNotifications(checked)}
                   />
                 </div>
+                {settings.call.incomingCallNotifications && (
+                  <div className="setting-item" style={{ paddingLeft: '2rem' }}>
+                    <Toggle
+                      label={t('settings.auto_focus_notification', 'Auto-focus on Notification Answer')}
+                      description={t('settings.auto_focus_notification_desc', 'Automatically bring window to front when answering from notification')}
+                      checked={settings.call.autoFocusOnNotificationAnswer}
+                      onChange={(checked) => setAutoFocusOnNotificationAnswer(checked)}
+                    />
+                  </div>
+                )}
                 <div className="setting-item">
                   <Toggle
                     label={t('settings.prefer_blind_transfer', 'Prefer Blind Transfer')}

@@ -10,6 +10,7 @@ import { useSIPStore } from '../stores/sipStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTabNotification } from '../hooks';
+import { useNotifications } from '../hooks/useNotifications';
 import { isVerboseLoggingEnabled } from '../utils';
 import type { 
   SessionData, 
@@ -86,9 +87,41 @@ export function SIPProvider({ children }: SIPProviderProps) {
     updateBLFState
   } = useSIPStore();
   
-  const { sipConfig } = useSettingsStore();
+  const { sipConfig, settings } = useSettingsStore();
   const { setTabAlert, clearTabAlert } = useTabNotification();
   const { addCallFromSession } = useCallHistoryStore();
+  const { showIncomingCallNotification, requestPermission } = useNotifications();
+  
+  // Store active notification reference for cleanup
+  const activeNotificationRef = useRef<Notification | null>(null);
+  
+  // Request notification permissions on mount if enabled
+  useEffect(() => {
+    const requestNotificationPerms = async () => {
+      if (settings.call.incomingCallNotifications) {
+        const verboseLogging = isVerboseLoggingEnabled();
+        
+        if (verboseLogging) {
+          console.log('[SIPContext] 📱 Checking notification permissions...');
+        }
+        
+        // Only request if not already decided
+        if ('Notification' in window && Notification.permission === 'default') {
+          if (verboseLogging) {
+            console.log('[SIPContext] 📱 Requesting notification permission...');
+          }
+          
+          const permission = await requestPermission();
+          
+          if (verboseLogging) {
+            console.log('[SIPContext] 📱 Notification permission:', permission);
+          }
+        }
+      }
+    };
+    
+    requestNotificationPerms();
+  }, [settings.call.incomingCallNotifications, requestPermission]);
 
   // Wire up SIP events to Zustand store
   useEffect(() => {
@@ -149,6 +182,73 @@ export function SIPProvider({ children }: SIPProviderProps) {
           console.log('[SIPContext] 🔔 Starting dial tab flash for incoming call');
         }
         setTabAlert('dial', 'error');
+        
+        // Show Windows notification if enabled
+        if (settings.call.incomingCallNotifications) {
+          if (verboseLogging) {
+            console.log('[SIPContext] 📱 Incoming call notifications enabled - showing notification');
+          }
+          
+          // Extract caller information
+          const callerNumber = session.remoteNumber || 'Unknown';
+          const callerName = session.displayName || session.remoteIdentity || '';
+          
+          if (verboseLogging) {
+            console.log('[SIPContext] 📞 Showing notification for incoming call:', {
+              callerNumber,
+              callerName,
+              sessionId: session.id
+            });
+          }
+          
+          // Close any existing notification
+          if (activeNotificationRef.current) {
+            activeNotificationRef.current.close();
+            activeNotificationRef.current = null;
+          }
+          
+          // Show notification with answer handler
+          const notification = showIncomingCallNotification(
+            callerName,
+            callerNumber,
+            // onAnswer callback
+            () => {
+              if (verboseLogging) {
+                console.log('[SIPContext] 📞 Notification clicked - answering call');
+              }
+              
+              // Stop tab flashing
+              clearTabAlert('dial');
+              
+              // Focus window if auto-focus is enabled
+              if (settings.call.autoFocusOnNotificationAnswer) {
+                if (verboseLogging) {
+                  console.log('[SIPContext] 📱 Auto-focus enabled - bringing window to front');
+                }
+                window.focus();
+              }
+              
+              // Answer the call
+              service.answerCall(session.id).catch(error => {
+                console.error('[SIPContext] ❌ Failed to answer call from notification:', error);
+              });
+            },
+            // onDismiss callback
+            () => {
+              if (verboseLogging) {
+                console.log('[SIPContext] 🔕 Notification closed');
+              }
+              activeNotificationRef.current = null;
+            }
+          );
+          
+          // Store notification reference
+          if (notification) {
+            activeNotificationRef.current = notification;
+          }
+        } else if (verboseLogging) {
+          console.log('[SIPContext] 📱 Incoming call notifications disabled in settings');
+        }
       }
       
       if (verboseLogging) {
@@ -175,6 +275,15 @@ export function SIPProvider({ children }: SIPProviderProps) {
       }
       clearTabAlert('dial');
       
+      // Close incoming call notification if active
+      if (activeNotificationRef.current) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔕 Closing incoming call notification - call answered');
+        }
+        activeNotificationRef.current.close();
+        activeNotificationRef.current = null;
+      }
+      
       updateSession(session.id, { state: 'established', answerTime: new Date() });
     });
     
@@ -196,6 +305,15 @@ export function SIPProvider({ children }: SIPProviderProps) {
         console.log('[SIPContext] 🔕 Clearing dial tab flash - call terminated');
       }
       clearTabAlert('dial');
+      
+      // Close incoming call notification if active
+      if (activeNotificationRef.current) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔕 Closing incoming call notification - call terminated');
+        }
+        activeNotificationRef.current.close();
+        activeNotificationRef.current = null;
+      }
       
       // ==================== ADD CALL TO HISTORY ====================
       // Extract call information

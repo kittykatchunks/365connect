@@ -240,6 +240,8 @@
         "auto_answer_desc": "Automatically answer incoming calls",
         "incoming_notifications": "Incoming Call Notifications",
         "incoming_notifications_desc": "Show browser notifications for incoming calls",
+        "auto_focus_notification": "Auto-focus on Notification Answer",
+        "auto_focus_notification_desc": "Automatically bring window to front when answering from notification",
         "prefer_blind_transfer": "Prefer Blind Transfer",
         "prefer_blind_transfer_desc": "Use blind transfer by default instead of attended",
         "speaker": "Speaker",
