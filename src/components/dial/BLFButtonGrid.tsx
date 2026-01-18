@@ -50,7 +50,9 @@ export function BLFButtonGrid({ side, className }: BLFButtonGridProps) {
     configuredExtensions.forEach((ext) => {
       subscribeBLF(ext);
     });
-  }, [isRegistered, blfEnabled, buttons, subscribeBLF]);
+    // Only re-subscribe when registration state or BLF enabled changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRegistered, blfEnabled]);
   
   // Handlers
   const handleDial = useCallback(async (extension: string) => {

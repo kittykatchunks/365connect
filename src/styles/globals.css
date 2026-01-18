@@ -1706,11 +1706,6 @@ a {
   font-weight: 500;
 }
 
-/* Left Grid BLF Buttons - border-right: none, colored border on left (outside edge) 
-.blf-grid-left .blf-btn {
-  border-right: none;
-} */
-
 .blf-grid-left .blf-btn-available { 
   border-left: 5px solid var(--success-color);
 }
@@ -1740,11 +1735,6 @@ a {
 .blf-grid-left .blf-btn:not(.blf-btn-empty):not(.blf-btn-available):not(.blf-btn-busy):not(.blf-btn-ringing):not(.blf-btn-hold):not(.blf-btn-inactive) {
   border-left: 5px solid var(--primary-color);
 }
-
-/* Right Grid BLF Buttons - border-left: none, colored border on right (outside edge) 
-.blf-grid-right .blf-btn {
-  border-left: none;
-} */
 
 .blf-grid-right .blf-btn-available { 
   border-right: 5px solid var(--success-color);
