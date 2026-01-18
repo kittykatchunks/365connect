@@ -1450,6 +1450,7 @@ a {
 /* Dial Actions (idle state) - 2 buttons side by side */
 .dial-actions {
   grid-template-columns: 1fr 1fr;
+  width: 50%;
 }
 
 /* Call Controls (active state) - 4 buttons in a row */
