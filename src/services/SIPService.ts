@@ -967,34 +967,36 @@ export class SIPService {
           sessionType: session.session.constructor.name,
           hasHoldMethod: typeof (session.session as any).hold === 'function',
           hasInviteMethod: typeof (session.session as any).invite === 'function',
-          availableMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(session.session))
+          hasSessionDescriptionHandler: !!session.session.sessionDescriptionHandler
         });
       }
       
-      // Use the proper SIP.js hold() method if available
-      const holdMethod = (session.session as any).hold;
-      if (typeof holdMethod === 'function') {
+      // Disable sender tracks before sending re-INVITE
+      const sdh = session.session.sessionDescriptionHandler;
+      if (sdh && typeof (sdh as any).enableSenderTracks === 'function') {
         if (verboseLogging) {
-          console.log('[SIPService] ✅ Using native hold() method');
+          console.log('[SIPService] 🔇 Disabling sender tracks before hold');
         }
-        await holdMethod.call(session.session);
-      } else {
-        // Fallback to manual re-INVITE (PWA approach)
-        if (verboseLogging) {
-          console.log('[SIPService] ⚠️ hold() method not found, using manual re-INVITE with hold:true');
-        }
-        const options = {
-          sessionDescriptionHandlerOptions: {
-            hold: true,
-            constraints: {
-              audio: false,
-              video: false
-            },
-            iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
-          }
-        };
-        await (session.session as any).invite(options);
+        (sdh as any).enableSenderTracks(false);
       }
+      
+      // Send re-INVITE with hold options
+      const options = {
+        sessionDescriptionHandlerOptions: {
+          hold: true,
+          constraints: {
+            audio: false,
+            video: false
+          },
+          iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
+        }
+      };
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📤 Sending re-INVITE with hold options');
+      }
+      
+      await (session.session as any).invite(options);
       
       session.onHold = true;
       session.state = 'hold';
@@ -1061,33 +1063,36 @@ export class SIPService {
         console.log('[SIPService] 🔍 Session object details:', {
           sessionType: session.session.constructor.name,
           hasUnholdMethod: typeof (session.session as any).unhold === 'function',
-          hasInviteMethod: typeof (session.session as any).invite === 'function'
+          hasInviteMethod: typeof (session.session as any).invite === 'function',
+          hasSessionDescriptionHandler: !!session.session.sessionDescriptionHandler
         });
       }
       
-      // Use the proper SIP.js unhold() method if available
-      const unholdMethod = (session.session as any).unhold;
-      if (typeof unholdMethod === 'function') {
-        if (verboseLogging) {
-          console.log('[SIPService] ✅ Using native unhold() method');
+      // Send re-INVITE with unhold options first
+      const options = {
+        sessionDescriptionHandlerOptions: {
+          hold: false,
+          constraints: {
+            audio: true,
+            video: false
+          },
+          iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
         }
-        await unholdMethod.call(session.session);
-      } else {
-        // Fallback to manual re-INVITE (PWA approach)
+      };
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📤 Sending re-INVITE with unhold options');
+      }
+      
+      await (session.session as any).invite(options);
+      
+      // Enable sender tracks after sending re-INVITE
+      const sdh = session.session.sessionDescriptionHandler;
+      if (sdh && typeof (sdh as any).enableSenderTracks === 'function') {
         if (verboseLogging) {
-          console.log('[SIPService] ⚠️ unhold() method not found, using manual re-INVITE with hold:false');
+          console.log('[SIPService] 🔊 Enabling sender tracks after unhold');
         }
-        const options = {
-          sessionDescriptionHandlerOptions: {
-            hold: false,
-            constraints: {
-              audio: true,
-              video: false
-            },
-            iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
-          }
-        };
-        await (session.session as any).invite(options);
+        (sdh as any).enableSenderTracks(true);
       }
       
       session.onHold = false;
