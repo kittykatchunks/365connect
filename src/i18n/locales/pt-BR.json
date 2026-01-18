@@ -319,7 +319,7 @@
     },
     "welcome": {
         "title": "Bem-vindo ao Connect365 da Autocab",
-        "subtitle": "Seu telefone SIP WebRTC para despacho de táxis",
+        "subtitle": "Telefone WebRTC integrado para sua plataforma Autocab365",
         "feature_webrtc": "Chamadas Baseadas em Navegador",
         "feature_webrtc_desc": "Faça e receba chamadas diretamente no seu navegador com WebRTC",
         "feature_secure": "Conexão Segura",

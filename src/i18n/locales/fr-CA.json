@@ -319,7 +319,7 @@
     },
     "welcome": {
         "title": "Bienvenue sur Connect365 par Autocab",
-        "subtitle": "Votre téléphone SIP WebRTC pour la répartition de taxis",
+        "subtitle": "Téléphone WebRTC intégré pour votre plateforme Autocab365",
         "feature_webrtc": "Appels par Navigateur",
         "feature_webrtc_desc": "Effectuez et recevez des appels directement dans votre navigateur avec WebRTC",
         "feature_secure": "Connexion Sécurisée",

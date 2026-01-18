@@ -319,7 +319,7 @@
     },
     "welcome": {
         "title": "Welcome to Connect365 by Autocab",
-        "subtitle": "Your WebRTC SIP phone for taxi dispatch",
+        "subtitle": "Integrated WebRTC phone for your Autocab365 platform",
         "feature_webrtc": "Browser-Based Calling",
         "feature_webrtc_desc": "Make and receive calls directly in your browser with WebRTC",
         "feature_secure": "Secure Connection",
