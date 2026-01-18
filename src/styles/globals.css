@@ -2306,7 +2306,7 @@ a {
   */
   
   .blf-btn {
-    font-size: clamp(0.5625rem, 0.85vw, 0.75rem);
+    /*font-size: clamp(0.5625rem, 0.85vw, 0.75rem); */
     min-height: clamp(35px, 4.5vh, 45px);
   }
   
