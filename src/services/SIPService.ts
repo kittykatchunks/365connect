@@ -157,11 +157,29 @@ export class SIPService {
 
   async createUserAgent(config: Partial<SIPConfig> = {}): Promise<void> {
     try {
+      const verboseLogging = isVerboseLoggingEnabled();
+      
       // Update configuration
       this.configure(config);
       
       if (!this.config?.server || !this.config?.username || !this.config?.password) {
         throw new Error('Missing required SIP configuration: server, username, and password are required.');
+      }
+
+      // Check SIP message logging setting from localStorage
+      const sipMessagesEnabled = localStorage.getItem('settings-store');
+      let enableSipLogging = false;
+      if (sipMessagesEnabled) {
+        try {
+          const parsed = JSON.parse(sipMessagesEnabled);
+          enableSipLogging = parsed?.state?.settings?.advanced?.sipMessagesEnabled === true;
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 🔧 createUserAgent - SIP message logging:', enableSipLogging);
       }
 
       // Handle different server URL formats
@@ -183,6 +201,8 @@ export class SIPService {
 
       const options: SIP.UserAgentOptions = {
         logConfiguration: false,
+        logBuiltinEnabled: enableSipLogging,
+        logLevel: enableSipLogging ? 'debug' : 'error',
         uri,
         transportOptions: {
           server: serverUrl,

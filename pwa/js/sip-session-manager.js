@@ -207,9 +207,19 @@ class SipSessionManager {
                 ]
             }); */
 
+            // Check SIP message logging setting from localStorage
+            const sipMessagesEnabled = window.localDB?.getItem('SipMessagesEnabled', 'false') === 'true';
+            const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+            
+            if (verboseLogging) {
+                console.log('[SipSessionManager] 🔧 createUserAgent - SIP message logging:', sipMessagesEnabled);
+            }
+
             // Create SIP UserAgent options with all advanced features from phone.js
             const options = {
                 logConfiguration: false,
+                logBuiltinEnabled: sipMessagesEnabled,
+                logLevel: sipMessagesEnabled ? 'debug' : 'error',
                 uri: SIP.UserAgent.makeURI(`sip:${this.config.username}@${sipDomain}`),
                 transportOptions: {
                     server: serverUrl,

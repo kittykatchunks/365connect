@@ -222,9 +222,23 @@ export const useSettingsStore = create<SettingsState>()(
         })),
         
         // Advanced actions
-        setSipMessagesEnabled: (sipMessagesEnabled) => set((state) => ({
-          settings: { ...state.settings, advanced: { ...state.settings.advanced, sipMessagesEnabled } }
-        })),
+        setSipMessagesEnabled: (sipMessagesEnabled) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting SIP messages enabled:', sipMessagesEnabled);
+          }
+          
+          // Sync to PWA-compatible localStorage key
+          try {
+            localStorage.setItem('SipMessagesEnabled', sipMessagesEnabled ? 'true' : 'false');
+          } catch (e) {
+            console.error('[SettingsStore] Failed to sync SipMessagesEnabled to localStorage:', e);
+          }
+          
+          set((state) => ({
+            settings: { ...state.settings, advanced: { ...state.settings.advanced, sipMessagesEnabled } }
+          }));
+        },
         setVerboseLogging: (verboseLogging) => set((state) => ({
           settings: { ...state.settings, advanced: { ...state.settings.advanced, verboseLogging } }
         })),
@@ -272,6 +286,14 @@ export const useSettingsStore = create<SettingsState>()(
               username: connection.username,
               language: state.settings.interface.language
             });
+            
+            // Sync SipMessagesEnabled to PWA-compatible localStorage key
+            try {
+              const sipMessagesEnabled = state.settings.advanced.sipMessagesEnabled;
+              localStorage.setItem('SipMessagesEnabled', sipMessagesEnabled ? 'true' : 'false');
+            } catch (e) {
+              console.error('[SettingsStore] Failed to sync SipMessagesEnabled on rehydration:', e);
+            }
             
             // Sync language with i18next on rehydration
             const language = state.settings.interface.language;
