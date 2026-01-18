@@ -2432,7 +2432,7 @@ a {
   
   /* Stack call controls in 2x2 grid on mobile */
   .call-actions {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: clamp(0.15rem, 0.4vw, 0.25rem);
     width: 80%; /* Wider on mobile */
   }
@@ -2481,12 +2481,12 @@ a {
   }
   
   .call-actions {
-    grid-template-columns: repeat(2, 1fr);
-    width: 70%;
+    grid-template-columns: repeat(4, 1fr);
+    width: 60%;
   }
   
   .dial-actions {
-    width: 70%;
+    width: 60%;
   }
   
   /* COMMENTED OUT - call-action-buttons in container query */
