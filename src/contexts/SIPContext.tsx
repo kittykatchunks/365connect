@@ -9,6 +9,7 @@ import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useContactsStore } from '../stores/contactsStore';
 import { useTabNotification } from '../hooks';
 import { useNotifications } from '../hooks/useNotifications';
 import { isVerboseLoggingEnabled } from '../utils';
@@ -91,9 +92,23 @@ export function SIPProvider({ children }: SIPProviderProps) {
   const { setTabAlert, clearTabAlert } = useTabNotification();
   const { addCallFromSession } = useCallHistoryStore();
   const { showIncomingCallNotification, requestPermission } = useNotifications();
+  const { contacts } = useContactsStore();
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
+  
+  // Sync contacts with SIP service for caller ID lookup
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPContext] 📇 Syncing contacts with SIP service:', {
+        contactCount: contacts.length
+      });
+    }
+    
+    serviceRef.current.setContacts(contacts);
+  }, [contacts]);
   
   // Request notification permissions on mount if enabled
   useEffect(() => {

@@ -266,6 +266,11 @@ class ContactsManager {
                 this.contacts = JSON.parse(contactsData);
                 this.filteredContacts = [...this.contacts];
                 console.log('📞 ContactsManager: Loaded', this.contacts.length, 'contacts from storage');
+                
+                // Sync contacts with SIP session manager for caller ID lookup
+                if (window.App?.managers?.sip) {
+                    window.App.managers.sip.setContacts(this.contacts);
+                }
             }
         } catch (error) {
             console.error('📞 ContactsManager: Failed to load contacts:', error);
@@ -279,6 +284,11 @@ class ContactsManager {
             if (window.localDB) {
                 window.localDB.setItem('contacts', JSON.stringify(this.contacts));
                 console.log('📞 ContactsManager: Saved', this.contacts.length, 'contacts to storage');
+            }
+            
+            // Sync contacts with SIP session manager for caller ID lookup
+            if (window.App?.managers?.sip) {
+                window.App.managers.sip.setContacts(this.contacts);
             }
         } catch (error) {
             console.error('📞 ContactsManager: Failed to save contacts:', error);

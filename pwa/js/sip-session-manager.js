@@ -41,6 +41,9 @@ class SipSessionManager {
             totalDuration: 0
         };
         
+        // Contacts for caller ID lookup
+        this.contacts = [];
+        
         // Bind methods
         this.on = this.on.bind(this);
         this.off = this.off.bind(this);
@@ -1135,7 +1138,40 @@ class SipSessionManager {
 
             // Extract caller information
             const remoteNumber = invitation.remoteIdentity.uri.user;
-            const remoteIdentity = invitation.remoteIdentity.displayName || remoteNumber;
+            const sipCallerIdName = invitation.remoteIdentity.displayName || '';
+            
+            const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+            
+            if (verboseLogging) {
+                console.log('[SipSessionManager] 📞 Extracting caller info from SIP:', {
+                    remoteNumber,
+                    sipCallerIdName
+                });
+            }
+            
+            // Look up contact by phone number
+            const contactLookup = this.lookupContactByNumber(remoteNumber, sipCallerIdName);
+            
+            if (verboseLogging) {
+                console.log('[SipSessionManager] 🔍 Contact lookup result:', {
+                    found: contactLookup.found,
+                    isContactMatch: contactLookup.isContactMatch,
+                    displayName: contactLookup.displayName
+                });
+            }
+            
+            // Use contact name if found, otherwise use SIP caller ID or number
+            const displayName = contactLookup.displayName;
+            const remoteIdentity = contactLookup.displayName;
+            
+            if (verboseLogging) {
+                console.log('[SipSessionManager] 📇 Final caller identification:', {
+                    remoteNumber,
+                    displayName,
+                    remoteIdentity,
+                    source: contactLookup.isContactMatch ? 'CONTACT' : (sipCallerIdName ? 'SIP_CALLER_ID' : 'PHONE_NUMBER')
+                });
+            }
             
             // Create session data
             const sessionData = {
@@ -2156,6 +2192,140 @@ class SipSessionManager {
             window.localDB.setItem('profileName', profileName);
         }
         this.emit('configChanged', this.config);
+    }
+
+    /**
+     * Set contacts list for caller ID lookup
+     * @param {Array} contacts - Array of contact objects with phoneNumber, firstName, lastName, companyName
+     */
+    setContacts(contacts) {
+        const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+        
+        if (verboseLogging) {
+            console.log('[SipSessionManager] 📇 Contacts list updated:', {
+                previousCount: this.contacts.length,
+                newCount: contacts ? contacts.length : 0
+            });
+        }
+        
+        this.contacts = contacts || [];
+    }
+
+    /**
+     * Look up a contact by phone number
+     * @param {string} incomingNumber - Phone number to look up
+     * @param {string} fallbackCallerIdName - Fallback name from SIP headers
+     * @returns {Object} Lookup result with displayName and match status
+     */
+    lookupContactByNumber(incomingNumber, fallbackCallerIdName) {
+        const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+        
+        if (verboseLogging) {
+            console.log('[SipSessionManager] 🔍 Starting contact lookup:', {
+                incomingNumber,
+                totalContacts: this.contacts.length,
+                fallbackCallerIdName
+            });
+        }
+        
+        // Normalize phone number for comparison
+        const normalizePhone = (phoneNumber) => {
+            return phoneNumber.replace(/[^0-9+]/g, '');
+        };
+        
+        const normalizedIncoming = normalizePhone(incomingNumber);
+        
+        // Check if two phone numbers match
+        const phoneNumbersMatch = (number1, number2) => {
+            const normalized1 = normalizePhone(number1);
+            const normalized2 = normalizePhone(number2);
+            
+            // Exact match
+            if (normalized1 === normalized2) {
+                return true;
+            }
+            
+            // One number ends with the other (handles country codes)
+            // Match at least the last 7 digits (local number)
+            const minMatchLength = 7;
+            
+            if (normalized1.length >= minMatchLength && normalized2.length >= minMatchLength) {
+                const longer = normalized1.length > normalized2.length ? normalized1 : normalized2;
+                const shorter = normalized1.length > normalized2.length ? normalized2 : normalized1;
+                
+                // Check if the longer number ends with the shorter one
+                if (longer.endsWith(shorter) || shorter.endsWith(longer)) {
+                    return true;
+                }
+                
+                // Compare last N digits
+                const suffix1 = normalized1.slice(-minMatchLength);
+                const suffix2 = normalized2.slice(-minMatchLength);
+                
+                if (suffix1 === suffix2) {
+                    return true;
+                }
+            }
+            
+            return false;
+        };
+        
+        // Search for matching contact
+        const matchedContact = this.contacts.find(contact => 
+            phoneNumbersMatch(incomingNumber, contact.phoneNumber)
+        );
+        
+        if (matchedContact) {
+            // Combine first and last name
+            const firstName = matchedContact.firstName?.trim() || '';
+            const lastName = matchedContact.lastName?.trim() || '';
+            const fullName = `${firstName} ${lastName}`.trim();
+            
+            // Priority: name > company > phone
+            let displayName;
+            if (fullName) {
+                displayName = fullName;
+            } else if (matchedContact.companyName?.trim()) {
+                displayName = matchedContact.companyName.trim();
+            } else {
+                displayName = matchedContact.phoneNumber;
+            }
+            
+            if (verboseLogging) {
+                console.log('[SipSessionManager] ✅ Contact match found:', {
+                    contactId: matchedContact.id,
+                    matchedNumber: matchedContact.phoneNumber,
+                    displayName,
+                    hasFirstName: !!matchedContact.firstName,
+                    hasLastName: !!matchedContact.lastName,
+                    hasCompany: !!matchedContact.companyName
+                });
+            }
+            
+            return {
+                found: true,
+                contact: matchedContact,
+                displayName: displayName,
+                isContactMatch: true
+            };
+        }
+        
+        // No contact match - use fallback or incoming number
+        const displayName = fallbackCallerIdName || incomingNumber;
+        
+        if (verboseLogging) {
+            console.log('[SipSessionManager] ❌ No contact match found, using fallback:', {
+                incomingNumber,
+                displayName,
+                usingFallback: !!fallbackCallerIdName
+            });
+        }
+        
+        return {
+            found: false,
+            displayName: displayName,
+            isContactMatch: false
+        };
     }
 
     // High-Level Call Management Functions (phone.js compatibility)

@@ -21,6 +21,8 @@ import type {
 } from '../types/sip';
 import { isValidDTMFTone, mapDialogStateToBLF } from '../types/sip';
 import { isVerboseLoggingEnabled } from '../utils';
+import { lookupContactByNumber } from '../utils/contactLookup';
+import type { Contact } from '../types/contact';
 
 // ==================== Type Guards ====================
 
@@ -56,6 +58,9 @@ export class SIPService {
   private config: SIPConfig | null = null;
   private registrationState: RegistrationState = 'unregistered';
   private transportState: TransportState = 'disconnected';
+  
+  // Contacts for caller ID lookup
+  private contacts: Contact[] = [];
   
   // Counters
   private sessionCounter = 0;
@@ -151,6 +156,23 @@ export class SIPService {
 
   getConfig(): SIPConfig | null {
     return this.config ? { ...this.config } : null;
+  }
+
+  /**
+   * Set contacts list for caller ID lookup
+   * Should be called when contacts are loaded or updated
+   */
+  setContacts(contacts: Contact[]): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📇 Contacts list updated:', {
+        previousCount: this.contacts.length,
+        newCount: contacts.length
+      });
+    }
+    
+    this.contacts = contacts;
   }
 
   // ==================== UserAgent Management ====================
@@ -546,12 +568,37 @@ export class SIPService {
 
       // Extract caller information
       const remoteNumber = invitation.remoteIdentity.uri.user || '';
-      const remoteIdentity = invitation.remoteIdentity.displayName || remoteNumber;
+      const sipCallerIdName = invitation.remoteIdentity.displayName || '';
       
       if (verboseLogging) {
-        console.log('[SIPService] Caller info extracted:', {
+        console.log('[SIPService] 📞 Extracting caller info from SIP:', {
           remoteNumber,
-          remoteIdentity
+          sipCallerIdName
+        });
+      }
+      
+      // Look up contact by phone number
+      const contactLookup = lookupContactByNumber(remoteNumber, this.contacts, sipCallerIdName);
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 🔍 Contact lookup result:', {
+          found: contactLookup.found,
+          isContactMatch: contactLookup.isContactMatch,
+          displayName: contactLookup.displayName,
+          contactId: contactLookup.contact?.id
+        });
+      }
+      
+      // Use contact name if found, otherwise use SIP caller ID or number
+      const displayName = contactLookup.displayName;
+      const remoteIdentity = contactLookup.displayName;
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📇 Final caller identification:', {
+          remoteNumber,
+          displayName,
+          remoteIdentity,
+          source: contactLookup.isContactMatch ? 'CONTACT' : (sipCallerIdName ? 'SIP_CALLER_ID' : 'PHONE_NUMBER')
         });
       }
 
