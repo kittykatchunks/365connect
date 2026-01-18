@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { UserCheck, Lock, X, Loader2 } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { isVerboseLoggingEnabled } from '@/utils';
+import { useLocalStorage } from '@/hooks';
 
 interface AgentLoginModalProps {
   isOpen: boolean;
@@ -22,6 +23,10 @@ export function AgentLoginModal({
   isLoading = false 
 }: AgentLoginModalProps) {
   const { t } = useTranslation();
+  
+  // Remember last agent number in localStorage (but never the password)
+  const [lastAgentNumber, setLastAgentNumber] = useLocalStorage<string>('lastAgentNumber', '');
+  
   const [agentNumber, setAgentNumber] = useState('');
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,12 +40,16 @@ export function AgentLoginModal({
     
     if (isOpen) {
       if (verboseLogging) {
-        console.log('[AgentLoginModal] 📋 Modal opened, resetting form');
+        console.log('[AgentLoginModal] 📋 Modal opened, loading last agent number from localStorage', {
+          lastAgentNumber: lastAgentNumber || '(none saved)'
+        });
       }
       
-      setAgentNumber('');
-      setPasscode('');
+      // Load last agent number if available, but always clear password for security
+      setAgentNumber(lastAgentNumber || '');
+      setPasscode(''); // Always require password re-entry for security
       setError(null);
+      
       // Focus agent number input after modal opens
       setTimeout(() => {
         agentInputRef.current?.focus();
@@ -51,7 +60,7 @@ export function AgentLoginModal({
     } else if (verboseLogging) {
       console.log('[AgentLoginModal] 🚪 Modal closed');
     }
-  }, [isOpen]);
+  }, [isOpen, lastAgentNumber]);
   
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -85,8 +94,14 @@ export function AgentLoginModal({
     try {
       await onLogin(agentNumber.trim(), passcode.trim() || undefined);
       
+      // Save agent number to localStorage after successful login
+      setLastAgentNumber(agentNumber.trim());
+      
       if (verboseLogging) {
-        console.log('[AgentLoginModal] ✅ Login handler completed successfully, closing modal');
+        console.log('[AgentLoginModal] ✅ Login handler completed successfully, saved agent number to localStorage:', {
+          agentNumber: agentNumber.trim()
+        });
+        console.log('[AgentLoginModal] 🚪 Closing modal');
       }
       onClose();
     } catch (err) {
