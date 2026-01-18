@@ -961,23 +961,32 @@ export class SIPService {
     }
 
     try {
-      // Use SIP.js invite() with hold:true to send re-INVITE with inactive media
-      const options = {
-        sessionDescriptionHandlerOptions: {
-          hold: true,
-          constraints: {
-            audio: false,
-            video: false
-          }
-        }
-      };
-      
       if (verboseLogging) {
-        console.log('[SIPService] 🔄 Sending re-INVITE with hold options');
+        console.log('[SIPService] 🔄 Calling session.hold() method');
       }
       
-      // Send re-INVITE to put call on hold
-      await (session.session as any).invite(options);
+      // Use the proper SIP.js hold() method
+      // SIP.js 0.21.2 has built-in hold() and unhold() methods
+      const holdMethod = (session.session as any).hold;
+      if (typeof holdMethod === 'function') {
+        await holdMethod.call(session.session);
+      } else {
+        // Fallback to manual re-INVITE if hold() method doesn't exist
+        if (verboseLogging) {
+          console.warn('[SIPService] ⚠️ hold() method not found, using manual re-INVITE');
+        }
+        const options = {
+          sessionDescriptionHandlerOptions: {
+            hold: true,
+            constraints: {
+              audio: false,
+              video: false
+            },
+            iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
+          }
+        };
+        await (session.session as any).invite(options);
+      }
       
       session.onHold = true;
       session.state = 'hold';
@@ -1039,23 +1048,32 @@ export class SIPService {
     }
 
     try {
-      // Use SIP.js invite() with hold:false to send re-INVITE with active media
-      const options = {
-        sessionDescriptionHandlerOptions: {
-          hold: false,
-          constraints: {
-            audio: true,
-            video: false
-          }
-        }
-      };
-      
       if (verboseLogging) {
-        console.log('[SIPService] 🔄 Sending re-INVITE with unhold options');
+        console.log('[SIPService] 🔄 Calling session.unhold() method');
       }
       
-      // Send re-INVITE to resume call
-      await (session.session as any).invite(options);
+      // Use the proper SIP.js unhold() method
+      // SIP.js 0.21.2 has built-in hold() and unhold() methods
+      const unholdMethod = (session.session as any).unhold;
+      if (typeof unholdMethod === 'function') {
+        await unholdMethod.call(session.session);
+      } else {
+        // Fallback to manual re-INVITE if unhold() method doesn't exist
+        if (verboseLogging) {
+          console.warn('[SIPService] ⚠️ unhold() method not found, using manual re-INVITE');
+        }
+        const options = {
+          sessionDescriptionHandlerOptions: {
+            hold: false,
+            constraints: {
+              audio: true,
+              video: false
+            },
+            iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
+          }
+        };
+        await (session.session as any).invite(options);
+      }
       
       session.onHold = false;
       session.state = 'established';
