@@ -1513,8 +1513,8 @@ a {
 .call-control-btn .icon,
 .call-button .icon,
 .hangup-button .icon {
-  width: clamp(9px, 1.1vw, 14px);
-  height: clamp(9px, 1.1vw, 14px);
+  width: clamp(18px, 2.5vh, 24px);
+  height: clamp(18px, 2.5vh, 24px);
   flex-shrink: 0;
 }
 
