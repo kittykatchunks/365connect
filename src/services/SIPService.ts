@@ -29,14 +29,34 @@ import type { Contact } from '../types/contact';
 const SessionStateEnum = SIP.SessionState;
 
 function isSessionEstablished(state: unknown): boolean {
-  const validStates = [
-    SessionStateEnum.Established,
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Check against SIP.js enum directly (enum value, not string)
+  if (state === SessionStateEnum.Established) {
+    return true;
+  }
+  
+  // Also check string representations for compatibility
+  const validStateStrings = [
     'Established',
     'established',  // React app uses lowercase
     'active',
     'confirmed'
   ];
-  return validStates.includes(state as string);
+  
+  const isValid = typeof state === 'string' && validStateStrings.includes(state);
+  
+  if (verboseLogging && !isValid) {
+    console.log('[SIPService] isSessionEstablished check:', {
+      state,
+      stateType: typeof state,
+      expectedEnum: SessionStateEnum.Established,
+      isEnumMatch: state === SessionStateEnum.Established,
+      isStringMatch: typeof state === 'string' && validStateStrings.includes(state)
+    });
+  }
+  
+  return isValid;
 }
 
 // ==================== SIP Service Class ====================
@@ -906,7 +926,10 @@ export class SIPService {
       console.log('[SIPService] ⏸️ holdCall called:', {
         sessionId,
         foundSession: !!session,
-        currentHoldState: session?.onHold
+        currentHoldState: session?.onHold,
+        sessionState: session?.state,
+        sipSessionState: session?.session.state,
+        direction: session?.direction
       });
     }
     
@@ -922,7 +945,17 @@ export class SIPService {
       return;
     }
 
-    if (!isSessionEstablished(session.session.state)) {
+    const isEstablished = isSessionEstablished(session.session.state);
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 🔍 Session state check:', {
+        sipSessionState: session.session.state,
+        isEstablished,
+        canProceedWithHold: isEstablished
+      });
+    }
+
+    if (!isEstablished) {
       console.error('[SIPService] ❌ Cannot hold: session not established, state:', session.session.state);
       throw new Error('Cannot hold: session not established');
     }
@@ -971,7 +1004,10 @@ export class SIPService {
       console.log('[SIPService] ▶️ unholdCall called:', {
         sessionId,
         foundSession: !!session,
-        currentHoldState: session?.onHold
+        currentHoldState: session?.onHold,
+        sessionState: session?.state,
+        sipSessionState: session?.session.state,
+        direction: session?.direction
       });
     }
     
@@ -987,7 +1023,17 @@ export class SIPService {
       return;
     }
 
-    if (!isSessionEstablished(session.session.state)) {
+    const isEstablished = isSessionEstablished(session.session.state);
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 🔍 Session state check:', {
+        sipSessionState: session.session.state,
+        isEstablished,
+        canProceedWithUnhold: isEstablished
+      });
+    }
+
+    if (!isEstablished) {
       console.error('[SIPService] ❌ Cannot unhold: session not established, state:', session.session.state);
       throw new Error('Cannot unhold: session not established');
     }
