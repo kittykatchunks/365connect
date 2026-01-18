@@ -76,6 +76,12 @@ export function BLFButton({
   }, []);
   
   const getStateClass = (state: BLFPresenceState) => {
+    // Speed dial buttons don't have presence states, so don't add any state class
+    if (button.type === 'speeddial') {
+      return '';
+    }
+    
+    // BLF buttons have presence states
     switch (state) {
       case 'available': return 'blf-btn-available';
       case 'busy': return 'blf-btn-busy';
