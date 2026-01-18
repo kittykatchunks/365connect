@@ -14,9 +14,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['icons/pwa-192x192.png', 'icons/pwa-512x512.png', 'icons/maskable_192.png'],
       manifest: {
-        name: 'Autocab365Connect',
-        short_name: '365Connect',
-        description: 'WebRTC SIP Phone PWA for Autocab365',
+        name: 'Autocab Connect365',
+        short_name: 'Connect365',
+        description: 'Autocab Connect365 is a fully featured browser based WebRTC SIP phone for your Autocab365 platform. Powered by your Autocab Phantom PBX.',
         theme_color: '#3182ce',
         background_color: '#ffffff',
         display: 'standalone',

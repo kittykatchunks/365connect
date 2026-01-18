@@ -1,15 +1,14 @@
 {
-    "name": "Autocab365Connect Powered by Phantom",
-    "short_name": "Autocab365Connect",
+    "name": "Autocab Connect365 Powered by Phantom",
+    "short_name": "Autocab Connect365",
     "id": "com.autocab.connect365",
     "start_url": "./",
     "display": "standalone",
     "orientation": "any",
     "background_color": "#fff",
     "theme_color": "#f6f6f6",
-    "description": "Autocab365Connect is a fully featured browser based WebRTC SIP phone for your Autocab365 system. It was designed for, and powered by your Phantom PBX.",
+    "description": "Autocab Connect365 is a fully featured browser based WebRTC SIP phone for your Autocab365 platform. Powered by your Autocab Phantom PBX.",
     "categories": ["business", "utilities", "productivity"],
-    "preferred_width": 400,
     "scope": "./",
     "screenshots": [
     ],

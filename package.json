@@ -1,8 +1,8 @@
 {
-  "name": "autocab365-connect",
+  "name": "autocab-connect365",
   "private": true,
   "version": "2.0.0-alpha.1",
-  "description": "Autocab365 Connect - Professional WebRTC SIP Phone for Taxi Dispatch",
+  "description": "Autocab Connect365 is a fully featured browser based WebRTC SIP phone for your Autocab365 platform. Powered by your Autocab Phantom PBX.",
   "type": "module",
   "scripts": {
     "dev": "vite",
