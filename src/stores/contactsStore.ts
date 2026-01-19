@@ -113,16 +113,14 @@ export const useContactsStore = create<ContactsState>()(
           });
         },
         
-        // Import contacts
+        // Import contacts - OVERWRITES all existing contacts
         importContacts: (importedContacts) => {
           set((state) => {
-            // Merge with existing, avoiding duplicates by phone number
-            const existingNumbers = new Set(state.contacts.map((c) => c.phoneNumber));
-            const newContacts = importedContacts.filter((c) => !existingNumbers.has(c.phoneNumber));
-            const contacts = [...state.contacts, ...newContacts];
+            // OVERWRITE existing contacts (no merging)
+            const contacts = importedContacts;
             const sorted = sortContacts(contacts);
             const filteredContacts = searchContacts(sorted, state.searchQuery);
-            return { contacts, filteredContacts };
+            return { contacts: sorted, filteredContacts };
           });
         },
         

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Upload, Download, FileJson, Check, AlertTriangle } from 'lucide-react';
 import { Button, Toggle } from '@/components/ui';
 import { useContactsStore, useCompanyNumbersStore, useBLFStore, useSettingsStore } from '@/stores';
+import { ConfirmModal } from '@/components/modals';
 
 interface ImportExportModalProps {
   isOpen: boolean;
@@ -19,7 +20,8 @@ interface ExportData {
   contacts?: ReturnType<typeof useContactsStore.getState>['contacts'];
   companyNumbers?: ReturnType<typeof useCompanyNumbersStore.getState>['numbers'];
   blfButtons?: ReturnType<typeof useBLFStore.getState>['buttons'];
-  settings?: ReturnType<typeof useSettingsStore.getState>['settings'];
+  queueMonitoring?: any; // Future development
+  queueGroups?: any; // Future development
 }
 
 type ImportMode = 'select' | 'importing' | 'success' | 'error';
@@ -38,26 +40,29 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
   const blfButtons = useBLFStore((state) => state.buttons);
   const importBLFButtons = useBLFStore((state) => state.importButtons);
   
-  const settings = useSettingsStore((state) => state.settings);
-  const updateSettings = useSettingsStore((state) => state.updateSettings);
+  const setBLFEnabled = useSettingsStore((state) => state.setBLFEnabled);
+  const setShowCompanyNumbersTab = useSettingsStore((state) => state.setShowCompanyNumbersTab);
   
   // Local state
   const [mode, setMode] = useState<'export' | 'import'>('export');
   const [importMode, setImportMode] = useState<ImportMode>('select');
   const [importData, setImportData] = useState<ExportData | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [showImportWarning, setShowImportWarning] = useState(false);
   
-  // Export options
+  // Export options - default ON for Contacts, Company Numbers, BLF; Queue options OFF and disabled
   const [exportContacts, setExportContacts] = useState(true);
   const [exportCompanyNumbers, setExportCompanyNumbers] = useState(true);
   const [exportBLF, setExportBLF] = useState(true);
-  const [exportSettings, setExportSettings] = useState(false);
+  const [exportQueueMonitoring, setExportQueueMonitoring] = useState(false);
+  const [exportQueueGroups, setExportQueueGroups] = useState(false);
   
-  // Import options (what to include from imported file)
+  // Import options - default ON for available data; Queue options OFF and disabled
   const [includeContacts, setIncludeContacts] = useState(true);
   const [includeCompanyNumbers, setIncludeCompanyNumbers] = useState(true);
   const [includeBLF, setIncludeBLF] = useState(true);
-  const [includeSettings, setIncludeSettings] = useState(false);
+  const [includeQueueMonitoring, setIncludeQueueMonitoring] = useState(false);
+  const [includeQueueGroups, setIncludeQueueGroups] = useState(false);
   
   const handleExport = () => {
     const data: ExportData = {
@@ -77,8 +82,12 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
         data.blfButtons = blfButtons;
       }
     }
-    if (exportSettings) {
-      data.settings = settings;
+    // Queue options for future development
+    if (exportQueueMonitoring) {
+      data.queueMonitoring = {}; // Placeholder
+    }
+    if (exportQueueGroups) {
+      data.queueGroups = {}; // Placeholder
     }
     
     // Create and download file
@@ -113,11 +122,13 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
         setImportMode('select');
         setImportError(null);
         
-        // Auto-select what's available
+        // Auto-select what's available (default ON for main 3 options)
         setIncludeContacts(!!data.contacts?.length);
         setIncludeCompanyNumbers(!!data.companyNumbers?.length);
         setIncludeBLF(!!data.blfButtons?.length);
-        setIncludeSettings(!!data.settings);
+        // Queue options remain OFF and disabled
+        setIncludeQueueMonitoring(false);
+        setIncludeQueueGroups(false);
       } catch (err) {
         setImportError(err instanceof Error ? err.message : 'Failed to parse file');
         setImportMode('error');
@@ -126,23 +137,42 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
     reader.readAsText(file);
   };
   
-  const handleImport = () => {
+  const handleImportRequest = () => {
+    // Show warning dialog before importing
+    setShowImportWarning(true);
+  };
+
+  const handleImportConfirmed = () => {
+    setShowImportWarning(false);
+    performImport();
+  };
+
+  const performImport = () => {
     if (!importData) return;
     
     setImportMode('importing');
     
     try {
+      // OVERWRITE all data (no merging) for each selected category
       if (includeContacts && importData.contacts) {
         importContacts(importData.contacts);
       }
       if (includeCompanyNumbers && importData.companyNumbers) {
         setCompanyNumbers(importData.companyNumbers);
+        // Automatically enable Company Numbers tab
+        setShowCompanyNumbersTab(true);
       }
       if (includeBLF && importData.blfButtons) {
         importBLFButtons(importData.blfButtons);
+        // Automatically enable BLF buttons
+        setBLFEnabled(true);
       }
-      if (includeSettings && importData.settings) {
-        updateSettings(importData.settings);
+      // Queue options for future development
+      if (includeQueueMonitoring && importData.queueMonitoring) {
+        // Future implementation
+      }
+      if (includeQueueGroups && importData.queueGroups) {
+        // Future implementation
       }
       
       setImportMode('success');
@@ -161,6 +191,7 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
     setImportMode('select');
     setImportData(null);
     setImportError(null);
+    setShowImportWarning(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -188,14 +219,24 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
           <div className="import-export-tabs">
             <button 
               className={`tab ${mode === 'export' ? 'tab--active' : ''}`}
-              onClick={() => { setMode('export'); resetState(); }}
+              onClick={() => { 
+                setMode('export');
+                setImportMode('select');
+                setImportData(null);
+                setImportError(null);
+              }}
             >
               <Download className="w-4 h-4" />
               {t('settings.export', 'Export')}
             </button>
             <button 
               className={`tab ${mode === 'import' ? 'tab--active' : ''}`}
-              onClick={() => { setMode('import'); resetState(); }}
+              onClick={() => { 
+                setMode('import');
+                setImportMode('select');
+                setImportData(null);
+                setImportError(null);
+              }}
             >
               <Upload className="w-4 h-4" />
               {t('settings.import', 'Import')}
@@ -232,10 +273,18 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
                   disabled={blfButtons.filter((b) => b.extension).length === 0}
                 />
                 <Toggle
-                  label={t('settings.export_settings', 'Settings')}
-                  description={t('settings.export_settings_desc', 'Include app settings')}
-                  checked={exportSettings}
-                  onChange={setExportSettings}
+                  label={t('settings.export_queue_monitoring', 'Queue Monitoring')}
+                  description={t('common.future_development', 'Future development')}
+                  checked={exportQueueMonitoring}
+                  onChange={setExportQueueMonitoring}
+                  disabled={true}
+                />
+                <Toggle
+                  label={t('settings.export_queue_groups', 'Queue Groups')}
+                  description={t('common.future_development', 'Future development')}
+                  checked={exportQueueGroups}
+                  onChange={setExportQueueGroups}
+                  disabled={true}
                 />
               </div>
             </div>
@@ -305,14 +354,20 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
                         onChange={setIncludeBLF}
                       />
                     )}
-                    {importData.settings && (
-                      <Toggle
-                        label={t('settings.import_settings', 'Settings')}
-                        description={t('settings.import_settings_desc', 'Replace current settings')}
-                        checked={includeSettings}
-                        onChange={setIncludeSettings}
-                      />
-                    )}
+                    <Toggle
+                      label={t('settings.import_queue_monitoring', 'Queue Monitoring')}
+                      description={t('common.future_development', 'Future development')}
+                      checked={includeQueueMonitoring}
+                      onChange={setIncludeQueueMonitoring}
+                      disabled={true}
+                    />
+                    <Toggle
+                      label={t('settings.import_queue_groups', 'Queue Groups')}
+                      description={t('common.future_development', 'Future development')}
+                      checked={includeQueueGroups}
+                      onChange={setIncludeQueueGroups}
+                      disabled={true}
+                    />
                   </div>
                 </>
               )}
@@ -343,7 +398,7 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
             <Button 
               variant="primary" 
               onClick={handleExport}
-              disabled={!exportContacts && !exportCompanyNumbers && !exportBLF && !exportSettings}
+              disabled={!exportContacts && !exportCompanyNumbers && !exportBLF && !exportQueueMonitoring && !exportQueueGroups}
             >
               <Download className="w-4 h-4" />
               {t('settings.export', 'Export')}
@@ -353,8 +408,8 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
           {mode === 'import' && importData && importMode === 'select' && (
             <Button 
               variant="primary" 
-              onClick={handleImport}
-              disabled={!includeContacts && !includeCompanyNumbers && !includeBLF && !includeSettings}
+              onClick={handleImportRequest}
+              disabled={!includeContacts && !includeCompanyNumbers && !includeBLF && !includeQueueMonitoring && !includeQueueGroups}
             >
               <Upload className="w-4 h-4" />
               {t('settings.import', 'Import')}
@@ -362,6 +417,18 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
           )}
         </div>
       </div>
+
+      {/* Import Warning Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showImportWarning}
+        title={t('settings.import_warning_title', 'Import Warning')}
+        message={t('settings.import_warning_message', 'This will OVERWRITE all existing data in the selected categories. This action cannot be undone. Are you sure you want to continue?')}
+        confirmText={t('common.continue', 'Continue')}
+        cancelText={t('common.cancel', 'Cancel')}
+        onConfirm={handleImportConfirmed}
+        onClose={() => setShowImportWarning(false)}
+        variant="warning"
+      />
     </div>
   );
 }
