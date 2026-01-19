@@ -84,6 +84,13 @@ export function DialView() {
     selectedLineSession.state === 'hold'
   );
   
+  // Check if outbound call is in progress (dialing/connecting) - for call button styling
+  const isOutboundDialing = selectedLineSession && 
+    selectedLineSession.direction === 'outgoing' &&
+    (selectedLineSession.state === 'initiating' || 
+     selectedLineSession.state === 'connecting' ||
+     selectedLineSession.state === 'dialing');
+  
   // Determine if we should show call info display or dial input
   const showCallInfo = selectedLineSession && selectedLineSession.state !== 'terminated';
   
@@ -112,6 +119,9 @@ export function DialView() {
         isSelectedLineInCall,
         isSelectedLineRinging,
         hasIncomingOnSelectedLine,
+        isCallEstablished,
+        isOutboundDialing,
+        isDialing,
         isRegistered,
         dialValue: dialValue || '(empty)'
       });
@@ -286,6 +296,9 @@ export function DialView() {
         
         await makeCall(dialValue.trim());
         setDialValue('');
+        
+        // Don't reset isDialing here - let the session state effect handle it
+        // isDialing will be reset when session becomes established/active/terminated
       } catch (error) {
         console.error('Call error:', error);
         addNotification({
@@ -293,7 +306,7 @@ export function DialView() {
           title: t('call.error', 'Call Error'),
           message: error instanceof Error ? error.message : 'Failed to make call'
         });
-      } finally {
+        // Only reset on error since call failed
         setIsDialing(false);
       }
     } else if (lastDialedNumber) {
@@ -656,7 +669,7 @@ export function DialView() {
             onHoldToggle={handleHoldToggle}
             onTransfer={handleTransfer}
             disabled={!isRegistered}
-            isDialing={isDialing}
+            isDialing={isDialing || !!isOutboundDialing}
             hasDialValue={!!dialValue.trim()}
             hasRedialNumber={!!lastDialedNumber}
             className="dial-action-buttons"

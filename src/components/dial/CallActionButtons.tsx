@@ -158,15 +158,28 @@ export function CallActionButtons({
   }
   
   // Determine button state for styling
-  // - 'dialing' when isDialing is true (call initiated but not yet answered)
-  // - 'answered' when isEstablished is true (call is connected/answered) but not yet in call state
+  // - 'dialing' when isDialing is true OR isRinging is true for outbound (call initiated but not yet answered)
+  // - 'answered' when isEstablished is true (call is connected/answered) but not yet switched to call controls
   // - normal when idle
-  const callButtonState = isDialing && !isEstablished ? 'dialing' : isEstablished ? 'answered' : '';
+  const isOutboundDialing = (isDialing || _isRinging) && !hasIncoming && !isEstablished;
+  const callButtonState = isOutboundDialing ? 'dialing' : isEstablished ? 'answered' : '';
+  
+  if (verboseLogging) {
+    console.log('[CallActionButtons] 🎨 Button state calculation:', {
+      isDialing,
+      isRinging: _isRinging,
+      hasIncoming,
+      isEstablished,
+      isOutboundDialing,
+      callButtonState,
+      resultingClass: `call-button ${callButtonState}`
+    });
+  }
   
   // Icon logic:
-  // - PhoneOutgoing when dialing
+  // - PhoneOutgoing when dialing outbound
   // - Phone when answered or normal
-  const CallIcon = isDialing && !isEstablished ? PhoneOutgoing : Phone;
+  const CallIcon = isOutboundDialing ? PhoneOutgoing : Phone;
   
   return (
     <div className={cn('call-controls-container', className)}>
