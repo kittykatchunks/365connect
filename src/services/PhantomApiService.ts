@@ -280,10 +280,12 @@ export class PhantomApiService {
         console.log(`[PhantomApiService] 📤 ${req.method} Request:`, {
           url,
           endpoint: req.endpoint,
+          method: req.method,
           useNoAuth: req.useNoAuth,
           phantomId: config.phantomId,
-          hasData: !!req.data,
-          data: req.data
+          headers: fetchOptions.headers,
+          requestBody: req.data,
+          timeout: `${timeout}ms`
         });
       }
 
@@ -343,8 +345,10 @@ export class PhantomApiService {
         console.log(`[PhantomApiService] 📥 ${req.method} Response:`, {
           status: response.status,
           statusText: response.statusText,
+          ok: response.ok,
           contentType,
-          data: responseData
+          responseHeaders: Object.fromEntries(response.headers.entries()),
+          responseData: responseData
         });
       }
 
@@ -365,10 +369,23 @@ export class PhantomApiService {
       };
 
     } catch (error: unknown) {
-      console.error(`[PhantomApiService] ❌ ${req.method} Error:`, error);
+      const err = error as Error;
+      
+      if (this.verboseLogging) {
+        console.error(`[PhantomApiService] ❌ ${req.method} Error:`, {
+          endpoint: req.endpoint,
+          url: this.buildRequestUrl(req.endpoint, req.useNoAuth || false),
+          method: req.method,
+          requestData: req.data,
+          errorName: err.name,
+          errorMessage: err.message,
+          errorStack: err.stack
+        });
+      } else {
+        console.error(`[PhantomApiService] ❌ ${req.method} Error:`, error);
+      }
 
       // Handle error message
-      const err = error as Error;
       let errorMessage = err.message || 'Unknown error';
       
       // Handle timeout specifically - create new message instead of modifying readonly property

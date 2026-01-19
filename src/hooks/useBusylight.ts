@@ -4,6 +4,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSettingsStore } from '@/stores';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 export type BusylightState = 
   | 'DISCONNECTED'
@@ -70,33 +71,80 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     endpoint: string, 
     data?: Record<string, unknown>
   ): Promise<boolean> => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
       const url = buildApiUrl(endpoint);
+      const method = data ? 'POST' : 'GET';
+      
+      if (verboseLogging) {
+        console.log('[Busylight] 📤 API Request:', {
+          url,
+          endpoint,
+          method,
+          requestBody: data
+        });
+      }
+      
       const response = await fetch(url, {
-        method: data ? 'POST' : 'GET',
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
         body: data ? JSON.stringify(data) : undefined,
         signal: AbortSignal.timeout(3000)
       });
+      
+      if (verboseLogging) {
+        console.log('[Busylight] 📥 API Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+      }
+      
       return response.ok;
     } catch (error) {
-      console.error('[Busylight] API request failed:', error);
+      if (verboseLogging) {
+        console.error('[Busylight] ❌ API request failed:', {
+          endpoint,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      } else {
+        console.error('[Busylight] API request failed:', error);
+      }
       return false;
     }
   }, [buildApiUrl]);
   
   // Check connection to bridge
   const checkConnection = useCallback(async (): Promise<boolean> => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
       const url = buildApiUrl('currentpresence');
+      
+      if (verboseLogging) {
+        console.log('[Busylight] 🔍 Checking connection:', { url });
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
         signal: AbortSignal.timeout(3000)
       });
+      
+      if (verboseLogging) {
+        console.log('[Busylight] 📥 Connection check result:', {
+          status: response.status,
+          ok: response.ok
+        });
+      }
+      
       return response.ok;
-    } catch {
+    } catch (error) {
+      if (verboseLogging) {
+        console.error('[Busylight] ❌ Connection check failed:', error);
+      }
       return false;
     }
   }, [buildApiUrl]);

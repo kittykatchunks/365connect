@@ -77,8 +77,8 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] AgentpausefromPhone api should be requested with NoAuth
 - [x] If no pause reasons retrieved from succesfull API call to WallBoardStats then API call AgentpausefromPhone should be used to pause agent
 - [x] if WallBoardStats api failure then fallback should be to dial *63 ready for dtmf input to select pause reason code (if any available) It should NOT try and use AgentpausefromPhone
-- [ ] Add to verbose logging to display contents sent and recieved for all API calls
-- [ ] When unregistered all BLF subscriptions should be terminated
+- [x] Add to verbose logging to display contents sent and recieved for all API calls
+- [ ] When SIP connection is lost or unregistered all BLF subscriptions should be unsubscribed
 - [ ] Need to identify what settings should be removed with reset all settings option in advanced under settings
 - [ ] Import/export feature has to be overhauled
 - [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages)
@@ -92,3 +92,4 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Voicemail spool icon dislpay and location needs to be resolved - Spool Icon (theme coloured) - right justified in agent status div
 - [X] Voicemail label upon notify needs to be (Count) New Messages - Spool Icon (Flashing Red)
 - [X] Voicemail toast notification when dialing voicemail by selecting spool icon shows 'Calling Voicemail: {{code}}' as content
+- [ ] Timer on calls overhaul 

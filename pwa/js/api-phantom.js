@@ -104,11 +104,16 @@ class PhantomApiManager extends EventTarget {
                 console.warn('Error fetching API credentials:', error);
             }
             
-            console.log('PhantomApiManager configured:', {
-                phantomId: this.config.phantomId,
-                baseUrl: this.config.baseUrl,
-                hasCredentials: !!(this.config.apiUsername && this.config.apiKey)
-            });
+            // Verbose logging check
+            const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+            
+            if (verboseLogging) {
+                console.log('[PhantomApiManager] 🔧 Configured:', {
+                    phantomId: this.config.phantomId,
+                    baseUrl: this.config.baseUrl,
+                    hasCredentials: !!(this.config.apiUsername && this.config.apiKey)
+                });
+            }
             
             this.emit('initialized', this.config);
             return true;
@@ -209,12 +214,20 @@ class PhantomApiManager extends EventTarget {
                 requestOptions.body = JSON.stringify(data);
             }
 
-            console.log(`PhantomAPI ${method.toUpperCase()} request ${this.config.useProxy ? '(via proxy)' : '(direct)'}:`, {
-                url: url.replace(/phantomId=[^&]+/, 'phantomId=***'), // Mask in logs
-                method: method.toUpperCase(),
-                hasAuth: !!(this.config.apiUsername && this.config.apiKey),
-                bodyData: data
-            });
+            // Verbose logging check
+            const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+            
+            if (verboseLogging) {
+                console.log(`[PhantomApiManager] 📤 ${method.toUpperCase()} Request ${this.config.useProxy ? '(via proxy)' : '(direct)'}:`, {
+                    url: url.replace(/phantomId=[^&]+/, 'phantomId=***'), // Mask in logs
+                    method: method.toUpperCase(),
+                    endpoint: apiName,
+                    headers: requestOptions.headers,
+                    requestBody: data,
+                    hasAuth: !!(this.config.apiUsername && this.config.apiKey),
+                    timeout: `${options.timeout || this.config.timeout}ms`
+                });
+            }
 
             // Emit request event
             this.emit('request', {
@@ -267,7 +280,16 @@ class PhantomApiManager extends EventTarget {
                 }
             }
 
-            console.log(`PhantomAPI ${method.toUpperCase()} response:`, responseData);
+            if (verboseLogging) {
+                console.log(`[PhantomApiManager] 📥 ${method.toUpperCase()} Response:`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok,
+                    contentType,
+                    responseHeaders: Object.fromEntries(response.headers.entries()),
+                    responseData: responseData
+                });
+            }
 
             // Emit success event
             this.emit('response', {
@@ -286,7 +308,22 @@ class PhantomApiManager extends EventTarget {
             };
 
         } catch (error) {
-            console.error(`PhantomAPI ${method.toUpperCase()} error:`, error);
+            // Verbose logging check
+            const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+            
+            if (verboseLogging) {
+                console.error(`[PhantomApiManager] ❌ ${method.toUpperCase()} Error:`, {
+                    endpoint: apiName,
+                    url: this.buildUrl(apiName),
+                    method: method.toUpperCase(),
+                    requestData: data,
+                    errorName: error.name,
+                    errorMessage: error.message,
+                    errorStack: error.stack
+                });
+            } else {
+                console.error(`[PhantomApiManager] ❌ ${method.toUpperCase()} Error:`, error);
+            }
             
             // Handle timeout error specifically
             if (error.name === 'AbortError') {
