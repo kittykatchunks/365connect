@@ -356,7 +356,7 @@
         "network_lost": "Controleer Netwerk-/Internetverbinding",
         "network_lost_message": "Het lijkt erop dat u de netwerk- of internetverbinding hebt verloren.",
         "network_restored": "Netwerk/Internet Hersteld",
-        "network_restored_message": "Zorg ervoor dat u REGISTREREN selecteert om opnieuw verbinding te maken met Phantom. Als AGENT: Uitgelogd verschijnt, hoeft u alleen maar normaal in te loggen.",
+        "network_restored_message": "Zorg ervoor dat u VERBINDEN selecteert om opnieuw verbinding te maken met Phantom. Als Agent: Niet ingelogd verschijnt, hoeft u alleen maar op de knop Inloggen te drukken zoals normaal.",
         "sip_connection_lost": "SIP-verbinding Verbroken",
         "sip_reconnecting": "Poging tot herverbinding met Phantom-server...",
         "sip_reconnected": "SIP Opnieuw Verbonden",

@@ -44,6 +44,14 @@ export function useNetworkStatus() {
   const handleNetworkLoss = useCallback(async () => {
     const verboseLogging = isVerboseLoggingEnabled();
     
+    // Only show notification if we were previously online
+    if (!wasOnlineRef.current) {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] Already offline, skipping loss notification');
+      }
+      return;
+    }
+    
     if (verboseLogging) {
       console.log('[useNetworkStatus] 📵 Application is offline');
       console.log('[useNetworkStatus] Network/Internet connection lost');
@@ -76,6 +84,14 @@ export function useNetworkStatus() {
   const handleNetworkRestoration = useCallback(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
+    // Only show notification if we were previously offline
+    if (wasOnlineRef.current) {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] Already online, skipping restoration notification');
+      }
+      return;
+    }
+    
     if (verboseLogging) {
       console.log('[useNetworkStatus] 📶 Application is back online');
       console.log('[useNetworkStatus] Network/Internet connection restored');
@@ -85,7 +101,7 @@ export function useNetworkStatus() {
     addNotification({
       type: 'error', // PWA uses 'error' type for visibility even though it's a restoration message
       title: t('notifications.network_restored', 'Network/Internet Restored'),
-      message: t('notifications.network_restored_message', 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.'),
+      message: t('notifications.network_restored_message', 'Please ensure you select CONNECT to reconnect to Phantom. If Agent: Not Logged In shows, you just need to Login button as normal.'),
       persistent: true
     });
     
@@ -128,6 +144,8 @@ export function useNetworkStatus() {
     // Periodic connectivity check (every 30 seconds) when online
     // This catches cases where navigator.onLine is true but we have no actual internet
     checkIntervalRef.current = setInterval(async () => {
+      const verboseLogging = isVerboseLoggingEnabled();
+      
       if (navigator.onLine && wasOnlineRef.current) {
         const hasInternet = await checkInternetConnectivity();
         
@@ -139,6 +157,8 @@ export function useNetworkStatus() {
         }
       } else if (navigator.onLine && !wasOnlineRef.current) {
         // We thought we were offline but browser says we're online, verify
+        // Only check if we've been offline for at least 5 seconds to avoid duplicate notifications
+        // from the online event handler
         const hasInternet = await checkInternetConnectivity();
         
         if (hasInternet) {
