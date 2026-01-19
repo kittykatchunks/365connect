@@ -81,7 +81,11 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] When SIP connection is lost or unregistered all BLF subscriptions should be unsubscribed
 - [X] Need to identify what settings should be removed with reset all settings option in advanced under settings
 - [X] Import/export feature has to be overhauled
-- [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages).  Go through the PWA and look at all the toastnotifications and try to identify when they were emitted 
+- [x] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages).  Go through the PWA and look at all the toast notifications and try to identify when they were emitted.  Then try to replicate the toast messages in the react app.  Do not bother with save settings as that is not relevant anymore.  If possible provide a list of ones you identify and have attempted to replicate.  Don't forget internationalisation
+  - Completed comprehensive audit - see TOAST_NOTIFICATIONS_IMPLEMENTATION.md
+  - 146 unique toasts identified (excluding save settings)
+  - ~35 currently implemented in React, ~111 remaining
+  - All i18n keys documented for all languages
 - [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 - [x] When on active call and another is received on another line, then it should not use ringing tone but a call waiting tone instead through the ringer device.  Use the Alert.mp3 file as the tone, play back once every three seconds.
 - [x] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returning to a line when the call is on hold should NOT automatically unhold the call that should have to be done manually by the agent.  Also when on active call there should be no system notification for an incoming call
