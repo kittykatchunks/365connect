@@ -679,9 +679,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
     },
     
     unsubscribeBLF: (extension: string) => {
-      serviceRef.current.unsubscribeBLF(extension).catch(error => {
-        console.error('[SIPContext] ❌ Failed to unsubscribe BLF:', error);
-      });
+      serviceRef.current.unsubscribeBLF(extension);
     },
     
     // Line management

@@ -59,33 +59,6 @@ function isSessionEstablished(state: unknown): boolean {
   return isValid;
 }
 
-/**
- * Map SIP.js SessionState enum to custom SessionState type
- * @param sipState - SIP.js SessionState enum value
- * @returns Custom SessionState string
- */
-function mapSIPSessionState(sipState: SIP.SessionState): SessionState {
-  const verboseLogging = isVerboseLoggingEnabled();
-  
-  switch (sipState) {
-    case SIP.SessionState.Initial:
-      return 'initiating';
-    case SIP.SessionState.Establishing:
-      return 'connecting';
-    case SIP.SessionState.Established:
-      return 'established';
-    case SIP.SessionState.Terminating:
-      return 'terminated';
-    case SIP.SessionState.Terminated:
-      return 'terminated';
-    default:
-      if (verboseLogging) {
-        console.warn('[SIPService] Unknown SIP.js SessionState:', sipState);
-      }
-      return 'failed';
-  }
-}
-
 // ==================== SIP Service Class ====================
 
 export class SIPService {
@@ -733,9 +706,8 @@ export class SIPService {
 
     // Session state changes
     session.stateChange.addListener((state: SIP.SessionState) => {
-      // Map SIP.js SessionState enum to our custom SessionState type
-      sessionData.state = mapSIPSessionState(state);
-      this.emit('sessionStateChanged', { sessionId, state: sessionData.state });
+      sessionData.state = state as unknown as SessionState;
+      this.emit('sessionStateChanged', { sessionId, state: state as unknown as string });
 
       switch (state) {
         case SIP.SessionState.Established: {
@@ -869,9 +841,6 @@ export class SIPService {
         });
       }
       
-      // Stop duration tracking immediately
-      this.stopDurationTracking(sessionId);
-      
       switch (session.state) {
         case SIP.SessionState.Initial:
         case SIP.SessionState.Establishing:
@@ -884,19 +853,6 @@ export class SIPService {
         case SIP.SessionState.Established:
           await session.bye();
           break;
-        case SIP.SessionState.Terminated:
-          // Already terminated, just dispose
-          if (verboseLogging) {
-            console.log('[SIPService] ⚠️ Session already terminated, disposing');
-          }
-          break;
-      }
-
-      // Dispose the session to clean up resources (per SIP.js best practices)
-      await session.dispose();
-      
-      if (verboseLogging) {
-        console.log('[SIPService] ✅ Session disposed:', sessionId);
       }
 
       // NOTE: Don't call handleSessionTerminated here - the session.stateChange listener
@@ -905,7 +861,6 @@ export class SIPService {
 
     } catch (error) {
       console.error('Failed to terminate session:', error);
-      throw error;
     }
   }
 
@@ -1007,35 +962,41 @@ export class SIPService {
 
     try {
       if (verboseLogging) {
-        console.log('[SIPService] 🔄 Sending re-INVITE with hold=true');
-        console.log('[SIPService] 📋 Session details:', {
-          sessionId: session.id,
+        console.log('[SIPService] 🔄 Attempting to hold call');
+        console.log('[SIPService] 🔍 Session object details:', {
           sessionType: session.session.constructor.name,
-          direction: session.direction,
+          hasHoldMethod: typeof (session.session as any).hold === 'function',
+          hasInviteMethod: typeof (session.session as any).invite === 'function',
           hasSessionDescriptionHandler: !!session.session.sessionDescriptionHandler
         });
       }
       
-      // Send re-INVITE with hold option
-      // SIP.js SessionDescriptionHandler will automatically:
-      // 1. Set media direction to 'sendonly' (we send, remote doesn't)
-      // 2. Update SDP with proper hold attributes
-      // 3. Handle media stream state changes
+      // Disable sender tracks before sending re-INVITE
+      const sdh = session.session.sessionDescriptionHandler;
+      if (sdh && typeof (sdh as any).enableSenderTracks === 'function') {
+        if (verboseLogging) {
+          console.log('[SIPService] 🔇 Disabling sender tracks before hold');
+        }
+        (sdh as any).enableSenderTracks(false);
+      }
+      
+      // Send re-INVITE with hold options
       const options = {
         sessionDescriptionHandlerOptions: {
           hold: true,
+          constraints: {
+            audio: false,
+            video: false
+          },
           iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
-        } as any  // Type assertion needed - hold is valid in SIP.js 0.21.2 but not in base interface
+        }
       };
       
       if (verboseLogging) {
-        console.log('[SIPService] 📤 Sending re-INVITE with hold options:', {
-          hold: true,
-          note: 'SIP.js will automatically set media direction to sendonly/inactive'
-        });
+        console.log('[SIPService] 📤 Sending re-INVITE with hold options');
       }
       
-      await session.session.invite(options);
+      await (session.session as any).invite(options);
       
       session.onHold = true;
       session.state = 'hold';
@@ -1098,35 +1059,41 @@ export class SIPService {
 
     try {
       if (verboseLogging) {
-        console.log('[SIPService] 🔄 Sending re-INVITE with hold=false');
-        console.log('[SIPService] 📋 Session details:', {
-          sessionId: session.id,
+        console.log('[SIPService] 🔄 Attempting to unhold call');
+        console.log('[SIPService] 🔍 Session object details:', {
           sessionType: session.session.constructor.name,
-          direction: session.direction,
+          hasUnholdMethod: typeof (session.session as any).unhold === 'function',
+          hasInviteMethod: typeof (session.session as any).invite === 'function',
           hasSessionDescriptionHandler: !!session.session.sessionDescriptionHandler
         });
       }
       
-      // Send re-INVITE with hold=false option
-      // SIP.js SessionDescriptionHandler will automatically:
-      // 1. Set media direction to 'sendrecv' (bidirectional audio)
-      // 2. Update SDP with proper active attributes
-      // 3. Handle media stream state changes
+      // Send re-INVITE with unhold options first
       const options = {
         sessionDescriptionHandlerOptions: {
           hold: false,
+          constraints: {
+            audio: true,
+            video: false
+          },
           iceGatheringTimeout: this.config?.iceGatheringTimeout ?? 500
-        } as any  // Type assertion needed - hold is valid in SIP.js 0.21.2 but not in base interface
+        }
       };
       
       if (verboseLogging) {
-        console.log('[SIPService] 📤 Sending re-INVITE with unhold options:', {
-          hold: false,
-          note: 'SIP.js will automatically set media direction to sendrecv'
-        });
+        console.log('[SIPService] 📤 Sending re-INVITE with unhold options');
       }
       
-      await session.session.invite(options);
+      await (session.session as any).invite(options);
+      
+      // Enable sender tracks after sending re-INVITE
+      const sdh = session.session.sessionDescriptionHandler;
+      if (sdh && typeof (sdh as any).enableSenderTracks === 'function') {
+        if (verboseLogging) {
+          console.log('[SIPService] 🔊 Enabling sender tracks after unhold');
+        }
+        (sdh as any).enableSenderTracks(true);
+      }
       
       session.onHold = false;
       session.state = 'established';
@@ -1939,37 +1906,17 @@ export class SIPService {
     }
   }
 
-  async unsubscribeBLF(extension: string): Promise<void> {
-    const verboseLogging = isVerboseLoggingEnabled();
+  unsubscribeBLF(extension: string): void {
     const blfData = this.blfSubscriptions.get(extension);
-    
     if (!blfData) {
-      if (verboseLogging) {
-        console.log(`[SIPService] ⚠️ BLF subscription not found for ${extension}`);
-      }
       return;
     }
 
     try {
-      if (verboseLogging) {
-        console.log(`[SIPService] 📞 Unsubscribing and disposing BLF for ${extension}`);
-      }
-      
-      // Unsubscribe (sends SIP SUBSCRIBE with Expires: 0)
-      await blfData.subscription.unsubscribe();
-      
-      // Dispose to clean up resources (per SIP.js best practices)
-      await blfData.subscription.dispose();
-      
-      // Remove from map
+      blfData.subscription.unsubscribe();
       this.blfSubscriptions.delete(extension);
-      
-      if (verboseLogging) {
-        console.log(`[SIPService] ✅ BLF for ${extension} unsubscribed and disposed`);
-      }
     } catch (error) {
-      console.error(`[SIPService] ❌ Error unsubscribing from BLF for extension ${extension}:`, error);
-      throw error;
+      console.error(`Error unsubscribing from BLF for extension ${extension}:`, error);
     }
   }
 
@@ -2093,105 +2040,23 @@ export class SIPService {
   // ==================== Stop/Cleanup ====================
 
   async stop(): Promise<void> {
-    const verboseLogging = isVerboseLoggingEnabled();
-    
-    if (!this.userAgent) {
-      if (verboseLogging) {
-        console.log('[SIPService] 🔌 stop() called but UserAgent does not exist');
-      }
-      return;
-    }
-
-    if (verboseLogging) {
-      console.log('[SIPService] 🔌 Stopping SIP service and cleaning up...');
-    }
+    if (!this.userAgent) return;
 
     try {
-      // 1. Terminate all active sessions with dispose
-      if (verboseLogging) {
-        console.log('[SIPService] 📞 Disposing all active sessions:', this.sessions.size);
-      }
-      for (const [sessionId, sessionData] of this.sessions) {
-        try {
-          // Stop duration tracking
-          this.stopDurationTracking(sessionId);
-          
-          // Dispose the SIP.js session
-          await sessionData.session.dispose();
-          
-          if (verboseLogging) {
-            console.log(`[SIPService] ✅ Session ${sessionId} disposed`);
-          }
-        } catch (error) {
-          console.error(`[SIPService] ❌ Failed to dispose session ${sessionId}:`, error);
-        }
-      }
-      this.sessions.clear();
-      this.activeLines.clear();
-      
-      // 2. Unregister and dispose registerer
-      if (this.registerer) {
-        if (verboseLogging) {
-          console.log('[SIPService] 📝 Disposing registerer');
-        }
-        
-        try {
-          if (this.registrationState === 'registered') {
-            await this.registerer.unregister();
-          }
-          await this.registerer.dispose();
-        } catch (error) {
-          console.error('[SIPService] ❌ Failed to dispose registerer:', error);
-        }
-        
-        this.registerer = null;
+      if (this.registrationState === 'registered') {
+        await this.unregister();
       }
       
-      // 3. Dispose all BLF subscriptions
-      if (verboseLogging) {
-        console.log('[SIPService] 📞 Disposing BLF subscriptions:', this.blfSubscriptions.size);
-      }
-      for (const [extension, blfData] of this.blfSubscriptions) {
-        try {
-          await blfData.subscription.dispose();
-          
-          if (verboseLogging) {
-            console.log(`[SIPService] ✅ BLF subscription ${extension} disposed`);
-          }
-        } catch (error) {
-          console.error(`[SIPService] ❌ Failed to dispose BLF ${extension}:`, error);
-        }
-      }
-      this.blfSubscriptions.clear();
-      
-      // 4. Stop and dispose UserAgent
-      if (verboseLogging) {
-        console.log('[SIPService] 🔌 Stopping UserAgent');
-      }
       await this.userAgent.stop();
       
-      if (verboseLogging) {
-        console.log('[SIPService] 🔌 Disposing UserAgent transport');
-      }
-      await this.userAgent.transport.dispose();
-      
-      this.userAgent = null;
-      
-      // 5. Update state
       this.transportState = 'disconnected';
       this.registrationState = 'unregistered';
-      this.selectedLine = null;
       
-      // 6. Emit events
       this.emit('transportStateChanged', 'disconnected');
       this.emit('registrationStateChanged', 'unregistered');
-      
-      if (verboseLogging) {
-        console.log('[SIPService] ✅ SIP service stopped and cleaned up successfully');
-      }
+
     } catch (error) {
-      console.error('[SIPService] ❌ Error stopping UserAgent:', error);
-      throw error;
+      console.error('Error stopping UserAgent:', error);
     }
   }
 
