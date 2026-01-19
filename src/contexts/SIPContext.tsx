@@ -193,9 +193,18 @@ export function SIPProvider({ children }: SIPProviderProps) {
           console.log('[SIPContext] 🔔 Starting ringtone for incoming call');
         }
         
-        // Check if there are other active sessions to determine alert tone
+        // Check if there are other active/established sessions to determine alert tone
+        // Use alert tone (call waiting) if ANY other session exists that's not this one
         const activeSessions = service.getActiveSessions();
-        const useAlertTone = activeSessions.length > 1;
+        const useAlertTone = activeSessions.length > 0; // Any active call means use alert tone
+        
+        if (verboseLogging) {
+          console.log('[SIPContext] 🎵 Ringtone selection:', {
+            activeSessions: activeSessions.length,
+            useAlertTone,
+            note: useAlertTone ? 'Call waiting (Alert.mp3)' : 'Normal ringtone'
+          });
+        }
         
         audioService.startRinging(useAlertTone).catch(error => {
           console.error('[SIPContext] ❌ Failed to start ringtone:', error);
@@ -207,8 +216,20 @@ export function SIPProvider({ children }: SIPProviderProps) {
         }
         setTabAlert('dial', 'error');
         
-        // Show Windows notification if enabled
-        if (settings.call.incomingCallNotifications) {
+        // Show Windows notification ONLY if enabled AND no other active calls
+        // When user is on an active call, don't show notification - they're using the app
+        const shouldShowNotification = settings.call.incomingCallNotifications && !useAlertTone;
+        
+        if (verboseLogging) {
+          console.log('[SIPContext] 📱 Notification decision:', {
+            incomingCallNotificationsEnabled: settings.call.incomingCallNotifications,
+            hasActiveCall: useAlertTone,
+            shouldShowNotification,
+            reason: useAlertTone ? 'User on active call - notification suppressed' : 'Showing notification'
+          });
+        }
+        
+        if (shouldShowNotification) {
           if (verboseLogging) {
             console.log('[SIPContext] 📱 Incoming call notifications enabled - showing notification');
           }
