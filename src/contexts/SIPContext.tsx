@@ -3,7 +3,7 @@
  * Provides SIP functionality to React components and syncs with Zustand store
  */
 
-import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
@@ -25,8 +25,6 @@ import { buildSIPConfig } from '../types/sip';
 // ==================== Context ====================
 
 interface SIPContextValue {
-  sipService: SIPService;
-  
   // Connection
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -288,6 +286,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
         console.log('[SIPContext] 📞 sessionAnswered event received:', session.id);
       }
       
+      // Dispatch window event for components that need to listen
+      window.dispatchEvent(new CustomEvent('sessionAnswered', { detail: session }));
+      
       // Stop ringtone when call is answered
       if (audioService.getIsRinging()) {
         if (verboseLogging) {
@@ -533,15 +534,18 @@ export function SIPProvider({ children }: SIPProviderProps) {
     updateSession,
     removeSession,
     setSelectedLine,
-    updateBLFState
+    updateBLFState,
+    addCallFromSession,
+    clearTabAlert,
+    setTabAlert,
+    showIncomingCallNotification,
+    settings.call.autoFocusOnNotificationAnswer,
+    settings.call.incomingCallNotifications
   ]);
 
   // Context value with wrapped methods
-  // Note: Accessing serviceRef.current here is intentional - we're not using it for rendering,
-  // only to provide a stable reference to the service instance for method calls
-  const value: SIPContextValue = {
-    sipService: serviceRef.current,
-    
+  // Use useMemo to create value object to avoid accessing ref during render
+  const value: SIPContextValue = useMemo(() => ({
     // Connection
     connect: async () => {
       if (!sipConfig) {
@@ -686,7 +690,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
     selectLine: (lineNumber: 1 | 2 | 3) => {
       serviceRef.current.selectLine(lineNumber);
     }
-  };
+  }), [sipConfig]); // Include sipConfig since connect method uses it
 
   return (
     <SIPContext.Provider value={value}>

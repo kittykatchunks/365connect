@@ -10,7 +10,6 @@ import { Button } from '@/components/ui';
 import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
 import { useAppStore, useSettingsStore, useCompanyNumbersStore } from '@/stores';
 import { useSIP } from '@/hooks';
-import { useSIPContext } from '@/contexts';
 import type { PauseReason } from '@/types/agent';
 
 export type AgentState = 'logged-out' | 'available' | 'paused' | 'on-call';
@@ -34,7 +33,6 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const sipUsername = useSettingsStore((state) => state.settings.connection.username);
   
   const { isRegistered, makeCall, sendDTMFSequence, currentSession } = useSIP();
-  const { sipService } = useSIPContext();
   
   // Track if we've checked status on this registration session
   const [hasCheckedStatus, setHasCheckedStatus] = useState(false);
@@ -152,8 +150,11 @@ export function AgentKeys({ className }: AgentKeysProps) {
       });
     }
     
-    // Listen to sessionAnswered event from SIP service
-    const unsubscribe = sipService.on('sessionAnswered', async (session) => {
+    // Listen to sessionAnswered event from window
+    const handleSessionAnswered = async (event: Event) => {
+      const customEvent = event as CustomEvent<any>;
+      const session = customEvent.detail;
+      
       if (!pendingLogin) {
         return; // Login already processed
       }
@@ -266,16 +267,19 @@ export function AgentKeys({ className }: AgentKeysProps) {
           });
         }
       }
-    });
+    };
     
-    // Cleanup subscription on unmount or when pendingLogin changes
+    // Add window event listener
+    window.addEventListener('sessionAnswered', handleSessionAnswered);
+    
+    // Cleanup event listener on unmount or when pendingLogin changes
     return () => {
       if (verboseLogging) {
         console.log('[AgentKeys] 🔇 Cleaning up sessionAnswered listener');
       }
-      unsubscribe();
+      window.removeEventListener('sessionAnswered', handleSessionAnswered);
     };
-  }, [pendingLogin, sendDTMFSequence, agentState, sipUsername, sipService]);
+  }, [pendingLogin, sendDTMFSequence, agentState, sipUsername, queueState]);
   
   // Listen for session termination to complete logout
   useEffect(() => {
