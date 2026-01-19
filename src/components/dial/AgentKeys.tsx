@@ -570,8 +570,11 @@ export function AgentKeys({ className }: AgentKeysProps) {
         
         await makeCall(AGENT_CODES.pause);
         
+        // Update state to paused immediately (DTMF call will disconnect automatically after reason entry)
+        setAgentState('paused');
+        
         if (verboseLogging) {
-          console.log('[AgentKeys] 📞 Dialed *63 for DTMF pause input');
+          console.log('[AgentKeys] 📞 Dialed *63 for DTMF pause input - state set to paused');
         }
       } else if (result.reasons.length === 0) {
         // WallBoardStats succeeded but no pause reasons - use AgentpausefromPhone API
