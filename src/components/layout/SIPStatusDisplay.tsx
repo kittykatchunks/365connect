@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Wifi, WifiOff, Phone, PhoneOff, AlertCircle, Loader2 } from 'lucide-react';
+import { Wifi, WifiOff, Phone, PhoneOff, Loader2 } from 'lucide-react';
 import { cn } from '@/utils';
 import { useSIPStore, useSettingsStore } from '@/stores';
 import { useSIPContext } from '@/contexts';
@@ -25,7 +25,9 @@ export function SIPStatusDisplay() {
   const isRegistered = registrationState === 'registered';
   
   const getStatusConfig = () => {
-    if (transportState === 'disconnected') {
+    // Show disconnected if transport is down OR if registration is lost/failed
+    // This ensures the app shows disconnected when SIP connection is lost, not just WebRTC
+    if (transportState === 'disconnected' || registrationState === 'unregistered' || registrationState === 'failed') {
       return {
         icon: WifiOff,
         label: t('status.disconnected', 'Disconnected'),
@@ -43,6 +45,8 @@ export function SIPStatusDisplay() {
       };
     }
     
+    // At this point, registrationState can only be 'registered' or 'registering'
+    // ('unregistered' and 'failed' are handled above)
     switch (registrationState) {
       case 'registered':
         return {
@@ -57,13 +61,6 @@ export function SIPStatusDisplay() {
           label: t('status.registering', 'Registering...'),
           className: 'status-registering',
           color: 'text-warning'
-        };
-      case 'failed':
-        return {
-          icon: AlertCircle,
-          label: t('status.failed', 'Registration Failed'),
-          className: 'status-failed',
-          color: 'text-error'
         };
       default:
         return {
@@ -112,8 +109,9 @@ export function SIPStatusDisplay() {
   const status = getStatusConfig();
   const Icon = status.icon;
   
-  const showConnectButton = transportState === 'disconnected' && !isConnecting;
-  const showDisconnectButton = isConnected && !isConnecting;
+  // Show connect button if either transport is disconnected OR not registered (and not in a transient state)
+  const showConnectButton = (transportState === 'disconnected' || registrationState === 'unregistered' || registrationState === 'failed') && !isConnecting;
+  const showDisconnectButton = isConnected && isRegistered && !isConnecting;
   const showSpinner = isConnecting || transportState === 'connecting' || registrationState === 'registering';
   
   return (

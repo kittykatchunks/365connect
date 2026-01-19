@@ -10,7 +10,7 @@
 - [x] When select the Login agent button at bottom of dial tab it appears to open modal but it is not visible 
 
 ### CALLER INFO DISPLAY
-- [~] Enable a call status display that will show Call info when a SIP call is ringing or connected.  
+- [X] Enable a call status display that will show Call info when a SIP call is ringing or connected.  
 Firstly, I will address when this display should activate and display
 - When the app is idle and an incoming call is received (which will always be on first line available - Line 1). This should only happen when app is idle (no Calls) then first ringing line should be switch to, whilst a call is active another another call is received it should not auto switch to that line, that will have to be manually selected by user
 - If another line key is selected whilst in idle state, then the UI should automatically switch to the line key ringing and call info display appear
@@ -92,7 +92,8 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Ensure that the state of connection to the phantom server is based on an actual endpoint connection NOT just a websocket connection
 - [X] When idle (no active calls) and selected on line two or three and either an outgoing is initiated (say via voicemail icon) or an incoming call initiates then the call will use line 1, it will be necessary for these two scenarios only to auto switch to the line that is in use. advise you understanding before making changes
 - [X] Check how I initiate the upgrade banner to show in react app
-- [ ] Previously have changed the UI to reflect the Agent when logging in initially should automatically show as in-queue, after that the state should be tracked.  Can you confirm the programming still correct
+- [x] Previously have changed the UI to reflect the Agent when logging in initially should automatically show as in-queue, after that the state should be tracked.  Can you confirm the programming still correct
+- [x] I want to ensure that the app will show disconnected when the sip connection is disconnected not just when the webrtc is lost
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed

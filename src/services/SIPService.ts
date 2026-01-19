@@ -452,15 +452,21 @@ export class SIPService {
     if (verboseLogging) {
       console.log('[SIPService] 📝 Unregistration occurred', {
         isIntentional: this.isIntentionalDisconnect,
-        transportState: this.transportState
+        transportState: this.transportState,
+        registrationState: this.registrationState
       });
     }
+    
+    // Update registration state to unregistered
+    this.registrationState = 'unregistered';
+    this.emit('registrationStateChanged', 'unregistered');
     
     // Only trigger full cleanup if this is an unexpected unregistration
     // Intentional disconnects already handle cleanup in stop() or unregister()
     if (!this.isIntentionalDisconnect && this.transportState === 'connected') {
       if (verboseLogging) {
         console.log('[SIPService] 🔌 Unexpected unregistration detected - triggering full disconnect cleanup');
+        console.log('[SIPService] 🔌 This ensures UI shows disconnected when SIP registration is lost');
       }
       
       // When losing registration unexpectedly, perform the same cleanup as manual disconnect
@@ -2130,6 +2136,10 @@ export class SIPService {
     
     this.transportState = 'disconnected';
     this.emit('transportStateChanged', 'disconnected');
+    
+    // When transport disconnects, we're also unregistered
+    this.registrationState = 'unregistered';
+    this.emit('registrationStateChanged', 'unregistered');
 
     // Clear all BLF subscriptions when disconnected
     if (verboseLogging && this.blfSubscriptions.size > 0) {
