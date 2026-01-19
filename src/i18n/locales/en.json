@@ -292,7 +292,9 @@
         "export": "Export",
         "import": "Import",
         "select_file": "Select file",
-        "reset_all": "Reset All Settings"
+        "reset_all": "Reset All Settings",
+        "reset_all_title": "Reset All Settings",
+        "reset_all_message": "ALL settings will be lost, including connection settings. Are you really sure this is what you want to do? This cannot be undone."
     },
     "pwa": {
         "install": "Install App",

@@ -85,9 +85,8 @@ Thirdly, clarification of SIP call state and call-timer
 - [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 
 ### UI issues to be resolved before release
-- [ ] App loading screen has blue square that needs to be removed
-- [ ] When select reset all settings should be warning similar to deleting all contacts warning message that confirms 'ALL settings will be lost, including connect settings, are you really sure this is what you want to do'.  This links to an issue above in respect of what gets removed
-- [ ] Voicemail spool icon dislpay and location needs to be resolved - Spool Icon (theme coloured) - right justified in agent status div
-- [ ] Voicemail label upon notify needs to be (Count) New Messages - Spool Icon (Flashing Red)
-- [ ] Voicemail toast notification when dialing vicemail by selecting spool icon shows Call Voicemail {{code}}
-- [ ] Voicemail Notification status should be persistant as only
+- [X] App loading screen has blue square that needs to be removed
+- [X] When select reset all settings should be warning similar to deleting all contacts warning message that confirms 'ALL settings will be lost, including connection settings, are you really sure this is what you want to do'.  This links to an issue above in respect of what gets removed
+- [X] Voicemail spool icon dislpay and location needs to be resolved - Spool Icon (theme coloured) - right justified in agent status div
+- [X] Voicemail label upon notify needs to be (Count) New Messages - Spool Icon (Flashing Red)
+- [X] Voicemail toast notification when dialing voicemail by selecting spool icon shows 'Calling Voicemail: {{code}}' as content

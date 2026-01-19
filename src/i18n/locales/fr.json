@@ -288,7 +288,9 @@
         "export": "Exporter",
         "import": "Importer",
         "select_file": "Sélectionner fichier",
-        "reset_all": "Réinitialiser Tous Paramètres"
+        "reset_all": "Réinitialiser Tous Paramètres",
+        "reset_all_title": "Réinitialiser Tous Paramètres",
+        "reset_all_message": "TOUS les paramètres seront perdus, y compris les paramètres de connexion. Êtes-vous vraiment sûr que c'est ce que vous voulez faire ? Cette action ne peut pas être annulée."
     },
     "pwa": {
         "install": "Installer App",

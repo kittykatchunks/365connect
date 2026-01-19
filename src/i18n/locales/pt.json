@@ -288,7 +288,9 @@
         "export": "Exportar",
         "import": "Importar",
         "select_file": "Seleccionar ficheiro",
-        "reset_all": "Repor Todas Definições"
+        "reset_all": "Repor Todas Definições",
+        "reset_all_title": "Repor Todas Definições",
+        "reset_all_message": "TODAS as definições serão perdidas, incluindo as definições de ligação. Tem a certeza de que é isto que pretende fazer? Esta ação não pode ser anulada."
     },
     "pwa": {
         "install": "Instalar App",

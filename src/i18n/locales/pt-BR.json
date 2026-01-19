@@ -286,7 +286,9 @@
         "export": "Exportar",
         "import": "Importar",
         "select_file": "Selecionar arquivo",
-        "reset_all": "Resetar Todas Configurações"
+        "reset_all": "Resetar Todas Configurações",
+        "reset_all_title": "Resetar Todas Configurações",
+        "reset_all_message": "TODAS as configurações serão perdidas, incluindo as configurações de conexão. Tem certeza de que é isso que deseja fazer? Esta ação não pode ser desfeita."
     },
     "pwa": {
         "install": "Instalar App",

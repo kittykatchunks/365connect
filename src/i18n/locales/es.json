@@ -288,7 +288,9 @@
         "export": "Exportar",
         "import": "Importar",
         "select_file": "Seleccionar archivo",
-        "reset_all": "Restablecer Toda la Configuración"
+        "reset_all": "Restablecer Toda la Configuración",
+        "reset_all_title": "Restablecer Toda la Configuración",
+        "reset_all_message": "TODA la configuración se perderá, incluyendo la configuración de conexión. ¿Está realmente seguro de que esto es lo que quiere hacer? Esto no se puede deshacer."
     },
     "pwa": {
         "install": "Instalar Aplicación",

@@ -288,7 +288,9 @@
         "export": "Exporteren",
         "import": "Importeren",
         "select_file": "Selecteer bestand",
-        "reset_all": "Alle Instellingen Resetten"
+        "reset_all": "Alle Instellingen Resetten",
+        "reset_all_title": "Alle Instellingen Resetten",
+        "reset_all_message": "ALLE instellingen gaan verloren, inclusief verbindingsinstellingen. Weet u zeker dat dit is wat u wilt doen? Dit kan niet ongedaan worden gemaakt."
     },
     "pwa": {
         "install": "App Installeren",

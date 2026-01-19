@@ -33,7 +33,7 @@ import {
   Select,
   Button
 } from '@/components/ui';
-import { ImportExportModal } from '@/components/modals';
+import { ImportExportModal, ConfirmModal } from '@/components/modals';
 import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
 import { useAudioDevices } from '@/hooks';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -84,6 +84,7 @@ export function SettingsView() {
   
   // Local state
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
+  const [isResetAllConfirmOpen, setIsResetAllConfirmOpen] = useState(false);
   const [testingDevice, setTestingDevice] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [audioAccordionOpen, setAudioAccordionOpen] = useState(false);
@@ -784,7 +785,7 @@ export function SettingsView() {
                 <div className="setting-item">
                   <Button 
                     variant="danger"
-                    onClick={resetSettings}
+                    onClick={() => setIsResetAllConfirmOpen(true)}
                     className="settings-action-btn"
                   >
                     {t('settings.reset_all', 'Reset All Settings')}
@@ -800,6 +801,20 @@ export function SettingsView() {
       <ImportExportModal
         isOpen={isImportExportOpen}
         onClose={() => setIsImportExportOpen(false)}
+      />
+      
+      {/* Reset All Settings Confirmation */}
+      <ConfirmModal
+        isOpen={isResetAllConfirmOpen}
+        onClose={() => setIsResetAllConfirmOpen(false)}
+        onConfirm={() => {
+          resetSettings();
+          setIsResetAllConfirmOpen(false);
+        }}
+        title={t('settings.reset_all_title', 'Reset All Settings')}
+        message={t('settings.reset_all_message', 'ALL settings will be lost, including connection settings. Are you really sure this is what you want to do? This cannot be undone.')}
+        confirmText={t('settings.reset_all', 'Reset All Settings')}
+        variant="danger"
       />
     </div>
   );
