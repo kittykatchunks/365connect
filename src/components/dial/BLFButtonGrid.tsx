@@ -127,7 +127,7 @@ export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonG
             onTransfer={handleTransfer}
             onConfigure={handleConfigure}
             isInCall={!!isInCall}
-            disabled={!isRegistered && !!button.extension}
+            disabled={!isRegistered}
           />
         ))}
       </div>

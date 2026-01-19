@@ -1350,8 +1350,13 @@ a {
   transition: all var(--transition-fast);
 }
 
-.line-key:hover {
+.line-key:hover:not(:disabled) {
   background-color: var(--surface-color-hover);
+}
+
+.line-key:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .line-key-selected {
@@ -1868,6 +1873,11 @@ a {
   background-color: var(--surface-color-hover);
 }
 
+.blf-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .blf-btn-label {
   flex: 1;
   word-break: break-word;
@@ -2108,8 +2118,13 @@ a {
   transition: all var(--transition-fast);
 }
 
-.cli-selector-trigger:hover {
+.cli-selector-trigger:hover:not(:disabled) {
   background-color: var(--surface-color-hover);
+}
+
+.cli-selector-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .cli-selector-value {
