@@ -3826,9 +3826,7 @@ a {
   justify-content: center;
   width: 96px;
   height: 96px;
-  background-color: var(--primary-color);
-  color: white;
-  border-radius: var(--radius-xl);
+  color: var(--primary-color);
   animation: pulse 2s ease-in-out infinite;
 }
 
