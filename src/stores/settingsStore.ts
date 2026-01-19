@@ -258,7 +258,37 @@ export const useSettingsStore = create<SettingsState>()(
         updateSettings: (newSettings) => set((state) => ({
           settings: { ...state.settings, ...newSettings }
         })),
-        resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
+        resetSettings: () => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          
+          if (verboseLogging) {
+            console.log('[SettingsStore] 🔄 Resetting all settings to defaults...');
+          }
+          
+          try {
+            // Clear ALL localStorage to return to initial state
+            // This includes all Zustand stores and direct localStorage keys
+            localStorage.clear();
+            
+            if (verboseLogging) {
+              console.log('[SettingsStore] ✅ All localStorage cleared');
+            }
+            
+            // Reset this store to defaults (will be persisted)
+            set({ settings: DEFAULT_SETTINGS, sipConfig: null });
+            
+            if (verboseLogging) {
+              console.log('[SettingsStore] ✅ Settings reset to defaults');
+            }
+            
+            // Reload the page to ensure all components re-initialize with clean state
+            window.location.reload();
+            
+          } catch (error) {
+            console.error('[SettingsStore] ❌ Failed to reset settings:', error);
+            throw error;
+          }
+        },
         exportSettings: () => get().settings
       }),
       {

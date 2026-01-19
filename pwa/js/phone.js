@@ -1680,53 +1680,37 @@ async function saveSettings() {
 }
 
 function resetSettings() {
+    const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
     const t = window.languageManager?.t || ((key, def) => def);
+    
     if (confirm(t('reset_settings_confirm', 'Are you sure you want to reset all settings to defaults? This cannot be undone.'))) {
         try {
-            // Reset all settings by clearing localStorage keys
-            const keysToReset = [
-                'PhantomID', 'wssServer', 'SipUsername', 'SipPassword', 'SipDomain',
-                'SipServer', 'wssPort', 'wssPath',
-                'AutoAnswerEnabled', 'CallWaitingEnabled', 
-                'BlfEnabled', 'BusylightEnabled',
-                'audioSpeakerDevice', 'audioMicrophoneDevice', 'audioRingerDevice', 'audioRingtoneFile'
-            ];
-            
-            keysToReset.forEach(key => {
-                if (window.localDB) window.localDB.removeItem(key);
-            });
-            
-            // Reset tab visibility settings
-            localStorage.removeItem('tabVisibilitySettings');
-            
-            // Reset tab visibility checkboxes to defaults
-            const showContactsTab = document.getElementById('ShowContactsTab');
-            const showActivityTab = document.getElementById('ShowActivityTab');
-            const showCompanyNumbersTab = document.getElementById('ShowCompanyNumbersTab');
-            const showQueueMonitorTab = document.getElementById('ShowQueueMonitorTab');
-            
-            if (showContactsTab) showContactsTab.checked = true;
-            if (showActivityTab) showActivityTab.checked = true;
-            if (showCompanyNumbersTab) showCompanyNumbersTab.checked = false;
-            if (showQueueMonitorTab) showQueueMonitorTab.checked = false;
-            
-            // Update tab visibility
-            if (typeof window.updateTabVisibility === 'function') {
-                window.updateTabVisibility();
+            if (verboseLogging) {
+                console.log('[resetSettings] 🔄 Resetting all settings to defaults...');
             }
             
-            // Clear device name display immediately
-            const sipExtensionElement = document.getElementById('sipExtension');
-            if (sipExtensionElement) {
-                sipExtensionElement.textContent = '--';
+            // Clear ALL localStorage to return to initial state
+            // This removes all settings, data, and configurations
+            localStorage.clear();
+            
+            if (verboseLogging) {
+                console.log('[resetSettings] ✅ All localStorage cleared');
             }
             
-            loadSettingsIntoForm();
-            showSuccessNotification('Settings reset', 'All settings have been reset to defaults');
-            console.log('Settings reset to defaults');
+            // Show success notification before reload
+            showSuccessNotification('Settings reset', 'All settings have been reset to defaults. Reloading...');
+            
+            if (verboseLogging) {
+                console.log('[resetSettings] 🔄 Reloading page to reinitialize with clean state...');
+            }
+            
+            // Reload the page to ensure all components re-initialize with clean state
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Short delay to show the notification
             
         } catch (error) {
-            console.error('Failed to reset settings:', error);
+            console.error('[resetSettings] ❌ Failed to reset settings:', error);
             showErrorNotification('Reset failed', 'Failed to reset settings: ' + error.message);
         }
     }
