@@ -333,6 +333,14 @@
         "get_started_desc": "Para começar a fazer chamadas, precisará configurar as suas definições de ligação. Clique no botão abaixo para abrir as definições e introduzir o seu PhantomID e credenciais SIP.",
         "open_settings": "Abrir Definições",
         "skip": "Saltar por agora",
-        "footer": "Desenvolvido pela sua plataforma Autocab Phantom"
-    }
+        "footer": "Desenvolvido pela sua plataforma Autocab Phantom"    },
+    "notifications": {
+        "network_lost": "Verificar Ligação de Rede/Internet",
+        "network_lost_message": "Parece que perdeu a ligação de rede ou internet.",
+        "network_restored": "Rede/Internet Restaurada",
+        "network_restored_message": "Certifique-se de selecionar REGISTAR para reconectar ao Phantom. Se AGENTE: Sessão Encerrada aparecer, basta fazer login normalmente.",
+        "sip_connection_lost": "Ligação SIP Perdida",
+        "sip_reconnecting": "A tentar reconectar ao servidor Phantom...",
+        "sip_reconnected": "SIP Reconectado",
+        "sip_reconnected_message": "Reconectado com sucesso ao servidor Phantom. A registar novamente..."    }
 }

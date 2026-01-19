@@ -18,3 +18,4 @@ export { useTabAlert } from './useTabAlert';
 export { useTabNotification } from './useTabNotification';
 export { useBusylight, type BusylightState } from './useBusylight';
 export { usePWA } from './usePWA';
+export { useNetworkStatus } from './useNetworkStatus';

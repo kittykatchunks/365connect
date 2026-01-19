@@ -333,6 +333,14 @@
         "get_started_desc": "Para começar a fazer chamadas, você precisará configurar suas configurações de conexão. Clique no botão abaixo para abrir as configurações e inserir seu PhantomID e credenciais SIP.",
         "open_settings": "Abrir Configurações",
         "skip": "Pular por enquanto",
-        "footer": "Desenvolvido pela sua plataforma Autocab Phantom"
-    }
+        "footer": "Desenvolvido pela sua plataforma Autocab Phantom"    },
+    "notifications": {
+        "network_lost": "Verificar Conexão de Rede/Internet",
+        "network_lost_message": "Parece que você perdeu a conexão de rede ou internet.",
+        "network_restored": "Rede/Internet Restaurada",
+        "network_restored_message": "Certifique-se de selecionar REGISTRAR para reconectar ao Phantom. Se AGENTE: Desconectado aparecer, você só precisa fazer login normalmente.",
+        "sip_connection_lost": "Conexão SIP Perdida",
+        "sip_reconnecting": "Tentando reconectar ao servidor Phantom...",
+        "sip_reconnected": "SIP Reconectado",
+        "sip_reconnected_message": "Reconectado com sucesso ao servidor Phantom. Registrando novamente..."    }
 }

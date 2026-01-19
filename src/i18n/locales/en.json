@@ -336,5 +336,15 @@
         "open_settings": "Open Settings",
         "skip": "Skip for now",
         "footer": "Powered by your Autocab Phantom platform"
+    },
+    "notifications": {
+        "network_lost": "Check Network/Internet Connection",
+        "network_lost_message": "You appear to have lost network or internet connection.",
+        "network_restored": "Network/Internet Restored",
+        "network_restored_message": "Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.",
+        "sip_connection_lost": "SIP Connection Lost",
+        "sip_reconnecting": "Attempting to reconnect to Phantom server...",
+        "sip_reconnected": "SIP Reconnected",
+        "sip_reconnected_message": "Successfully reconnected to Phantom server. Re-registering..."
     }
 }

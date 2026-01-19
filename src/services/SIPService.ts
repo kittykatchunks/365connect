@@ -121,6 +121,9 @@ export class SIPService {
     totalDuration: 0
   };
   
+  // Reconnection tracking
+  private wasReconnecting = false;
+  
   // Event system
   private listeners: Map<SIPEventType, Set<SIPEventCallback>> = new Map();
   
@@ -2060,10 +2063,25 @@ export class SIPService {
   // ==================== Transport Handlers ====================
 
   private handleTransportConnect(): void {
-    console.log('SIP WebSocket transport connected');
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ SIP WebSocket transport connected');
+    }
+    
     this.transportState = 'connected';
     this.emit('transportStateChanged', 'connected');
     this.emit('transportConnected', undefined);
+    
+    // Show success toast if this was a reconnection
+    if (this.wasReconnecting) {
+      this.emit('reconnectionSuccess', undefined);
+      this.wasReconnecting = false;
+      
+      if (verboseLogging) {
+        console.log('[SIPService] Reconnection successful, emitting reconnectionSuccess event');
+      }
+    }
 
     // Auto-start registration
     if (this.userAgent && this.registrationState !== 'registered' && this.registrationState !== 'registering') {
@@ -2076,12 +2094,27 @@ export class SIPService {
   }
 
   private handleTransportDisconnect(error?: Error): void {
-    console.log('SIP WebSocket transport disconnected', error?.message);
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ❌ SIP WebSocket transport disconnected', error?.message);
+    }
+    
     this.transportState = 'disconnected';
     this.emit('transportStateChanged', 'disconnected');
 
     // Clear subscriptions
     this.blfSubscriptions.clear();
+    
+    // Mark as reconnecting if there was an error
+    if (error) {
+      this.wasReconnecting = true;
+      this.emit('reconnectionAttempting', undefined);
+      
+      if (verboseLogging) {
+        console.log('[SIPService] Transport disconnected with error, marked for reconnection');
+      }
+    }
 
     if (error) {
       this.emit('transportError', error);

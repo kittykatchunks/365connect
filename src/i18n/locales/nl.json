@@ -333,6 +333,14 @@
         "get_started_desc": "Om te beginnen met bellen, moet u uw verbindingsinstellingen configureren. Klik op de knop hieronder om instellingen te openen en uw PhantomID en SIP-inloggegevens in te voeren.",
         "open_settings": "Instellingen Openen",
         "skip": "Nu overslaan",
-        "footer": "Mogelijk gemaakt door uw Autocab Phantom platform"
-    }
+        "footer": "Mogelijk gemaakt door uw Autocab Phantom platform"    },
+    "notifications": {
+        "network_lost": "Controleer Netwerk-/Internetverbinding",
+        "network_lost_message": "Het lijkt erop dat u de netwerk- of internetverbinding hebt verloren.",
+        "network_restored": "Netwerk/Internet Hersteld",
+        "network_restored_message": "Zorg ervoor dat u REGISTREREN selecteert om opnieuw verbinding te maken met Phantom. Als AGENT: Uitgelogd verschijnt, hoeft u alleen maar normaal in te loggen.",
+        "sip_connection_lost": "SIP-verbinding Verbroken",
+        "sip_reconnecting": "Poging tot herverbinding met Phantom-server...",
+        "sip_reconnected": "SIP Opnieuw Verbonden",
+        "sip_reconnected_message": "Succesvol opnieuw verbonden met Phantom-server. Opnieuw registreren..."    }
 }

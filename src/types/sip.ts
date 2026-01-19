@@ -254,6 +254,8 @@ export type SIPEventType =
   | 'transportDisconnected'
   | 'transportError'
   | 'transportStateChanged'
+  | 'reconnectionAttempting'
+  | 'reconnectionSuccess'
   // Registration events
   | 'registered'
   | 'unregistered'
@@ -311,6 +313,8 @@ export interface SIPEventMap {
   transportDisconnected: Error | null;
   transportError: Error;
   transportStateChanged: TransportState;
+  reconnectionAttempting: undefined;
+  reconnectionSuccess: undefined;
   registered: unknown;
   unregistered: undefined;
   registrationFailed: { response?: unknown; statusCode?: number; error?: Error };
