@@ -10,6 +10,7 @@ export * from './webrtc';
 export * from './agentApi';
 export * from './contactLookup';
 export * from './diagnostics';
+export * from './version';
 
 // Common utility functions
 import { clsx, type ClassValue } from 'clsx';

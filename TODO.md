@@ -88,7 +88,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [ ] Systematically go through code to check that all hardcode text is internationalised properly
 - [X] When disconnected from the server for any reason all BLF buttons should automatically go into unsubscribed state
 - [X] When losing registration/connection to phantom server for any reason then the app should do exactly the same as if you had manually selected disconnect
-- [ ] Complete version change to initiate Update Message
+- [x] Complete version change to initiate Update Message
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed

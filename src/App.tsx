@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
 import { SIPProvider } from '@/contexts';
 import { phantomApiService } from '@/services';
+import { initializeVersionTracking } from '@/utils';
 import { 
   LoadingScreen, 
   LoadingSpinner,
@@ -19,6 +20,7 @@ import {
   SIPStatusDisplay,
   WelcomeOverlay
 } from '@/components';
+import { VersionUpdateModal } from '@/components/modals';
 // ErrorBoundary can be used to wrap views if needed
 // import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DialView } from '@/components/dial';
@@ -173,6 +175,14 @@ function App() {
   const effectiveTheme = useUIStore((state) => state.effectiveTheme);
   const settingsLanguage = useSettingsStore((state) => state.settings.interface.language);
   
+  // Version update modal state
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [versionInfo, setVersionInfo] = useState<{
+    lastVersion: string | null;
+    currentVersion: string;
+    changeType: 'upgrade' | 'downgrade' | 'unchanged';
+  } | null>(null);
+  
   // Initialize theme watcher
   useEffect(() => {
     const cleanup = initializeThemeWatcher();
@@ -206,6 +216,23 @@ function App() {
         
         if (verboseLogging) {
           console.log('[App] 🚀 Initializing application...');
+        }
+        
+        // Check version and show update modal if changed
+        const versionCheck = initializeVersionTracking();
+        
+        if (verboseLogging) {
+          console.log('[App] 📦 Version check complete:', versionCheck);
+        }
+        
+        // Show version modal if version changed (upgrade or downgrade)
+        if (versionCheck.hasChanged && versionCheck.changeType !== 'first-run') {
+          setVersionInfo({
+            lastVersion: versionCheck.lastVersion,
+            currentVersion: versionCheck.currentVersion,
+            changeType: versionCheck.changeType as 'upgrade' | 'downgrade' | 'unchanged'
+          });
+          setShowVersionModal(true);
         }
         
         // Initialize PhantomApiService if PhantomID is available
@@ -247,6 +274,17 @@ function App() {
   return (
     <SIPProvider>
       <MainLayout />
+      
+      {/* Version Update Modal */}
+      {versionInfo && (
+        <VersionUpdateModal
+          isOpen={showVersionModal}
+          onClose={() => setShowVersionModal(false)}
+          lastVersion={versionInfo.lastVersion}
+          currentVersion={versionInfo.currentVersion}
+          changeType={versionInfo.changeType}
+        />
+      )}
     </SIPProvider>
   );
 }
