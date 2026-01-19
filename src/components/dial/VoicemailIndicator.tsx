@@ -53,7 +53,7 @@ export function VoicemailIndicator() {
       addNotification({
         type: 'success',
         title: t('voicemail.title', 'Voicemail'),
-        message: t('voicemail.calling', `Calling voicemail: ${vmAccessCode}`)
+        message: t('voicemail.calling', { code: vmAccessCode })
       });
     } catch (error) {
       console.error('[VoicemailIndicator] ❌ Error dialing voicemail:', error);
