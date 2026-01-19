@@ -19,7 +19,8 @@ import {
   Speaker,
   Bell,
   Save,
-  Check
+  Check,
+  Users
 } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { 
@@ -480,6 +481,23 @@ export function SettingsView() {
                     checked={settings.call.preferBlindTransfer}
                     onChange={(checked) => setPreferBlindTransfer(checked)}
                   />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          
+          {/* Queues Settings */}
+          <AccordionItem value="queues">
+            <AccordionTrigger value="queues">
+              <Users className="accordion-icon" />
+              {t('settings.queues', 'Queues')}
+            </AccordionTrigger>
+            <AccordionContent value="queues">
+              <div className="settings-group">
+                <div className="setting-item">
+                  <p className="text-muted">
+                    {t('settings.queues_future', 'This feature will be available in a future release.')}
+                  </p>
                 </div>
               </div>
             </AccordionContent>
