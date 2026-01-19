@@ -10,7 +10,7 @@
 - [x] When select the Login agent button at bottom of dial tab it appears to open modal but it is not visible 
 
 ### CALLER INFO DISPLAY
-- [ ] Enable a call status display that will show Call info when a SIP call is ringing or connected.  
+- [~] Enable a call status display that will show Call info when a SIP call is ringing or connected.  
 Firstly, I will address when this display should activate and display
 - When the app is idle and an incoming call is received (which will always be on first line available - Line 1). This should only happen when app is idle (no Calls) then first ringing line should be switch to, whilst a call is active another another call is received it should not auto switch to that line, that will have to be manually selected by user
 - If another line key is selected whilst in idle state, then the UI should automatically switch to the line key ringing and call info display appear
@@ -31,7 +31,7 @@ Thirdly, clarification of SIP call state and call-timer
 - The call-timer should be in MINS:SECS format, It should only start to count up once the call is established (e.g. connected).  It should continue regardless of SIP state until associated SIP call is terminated in someway (by ending call or completing transfer)
 
 ### TAB CALL AND SLA ALERTING
-- [ ] I wish to import TabAlert Manager class for use in the react app, check react code as part/all may have already been created, if not create the jsx version of this class.  
+- [X] I wish to import TabAlert Manager class for use in the react app, check react code as part/all may have already been created, if not create the jsx version of this class.  
 - I wish to add to the functionality for use in a feature to be developed in the future.
 - In addition to current functionality I wish to be able to use this class to alert another tab when I call it from the future developed feature
 - I would need to be able to alert the tab in two ways, described in the follow points
@@ -43,7 +43,7 @@ Thirdly, clarification of SIP call state and call-timer
 
 ### PHANTOM API MANAGER
 
-- [ ] To improve the API functionality I need to clarify the following points
+- [~] To improve the API functionality I need to clarify the following points
 - Should have .env variables as follows
 	- PHANTOM_ID, this will be 3-4 numeric characters (e.g. 375)
 	- PHANTOM_API_BASE_URL, full URL of the destination of API (e.g. https://server1-375.phantomapi.net)
@@ -60,3 +60,18 @@ Thirdly, clarification of SIP call state and call-timer
 - If NODE_ENV is development then the API URL used should be the {DEV_CORS_PROXY_URL}/
 - POST and GET requests are needed
 - Normal protocols should be adhered to with all returns from API being JSON encoded (if any return)
+
+### Queue Monitor Tab
+
+
+
+### Queue Groups
+
+
+
+### Webphone Register
+
+
+
+### Issues to be resolved before release
+- [ ] Pause api failure should fallback to *63 dtmf dial ready for dtmf input for pause reason choice (if any available)
