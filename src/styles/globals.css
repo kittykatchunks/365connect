@@ -2614,8 +2614,27 @@ a {
 
 /* Container Queries for Component-Level Responsiveness */
 @container dial-view (max-width: 600px) {
+  .dial-view-content {
+    max-width: 100%;
+    padding: var(--spacing-xs);
+  }
+  
   .dialpad {
     max-width: 100%;
+    gap: clamp(0.5rem, 1.5vw, 0.75rem); /* Doubled from 0.125-0.25rem to 0.5-0.75rem */
+  }
+  
+  .dialpad-key {
+    min-height: clamp(56px, 8vh, 72px); /* Doubled from 28-36px to 56-72px */
+    padding: clamp(0.75rem, 2vw, 1.25rem); /* Doubled padding */
+  }
+  
+  .dialpad-digit {
+    font-size: clamp(2rem, 4vw, 2.5rem); /* Doubled font size for digits */
+  }
+  
+  .dialpad-letters {
+    font-size: clamp(0.75rem, 1.5vw, 1rem); /* Doubled font size for letters */
   }
   
   .call-actions {
@@ -2626,13 +2645,6 @@ a {
   .dial-actions {
     width: 60%;
   }
-  
-  /* COMMENTED OUT - call-action-buttons in container query */
-  /*
-  .call-action-buttons {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  */
   
   .line-keys {
     flex-wrap: wrap;
