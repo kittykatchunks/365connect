@@ -7,7 +7,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores';
-import { useSIPStore } from '@/stores/sipStore';
 import { sipService } from '@/services/SIPService';
 import { isVerboseLoggingEnabled } from '@/utils';
 
@@ -38,8 +37,6 @@ async function checkInternetConnectivity(): Promise<boolean> {
 export function useNetworkStatus() {
   const { t } = useTranslation();
   const addNotification = useUIStore((state) => state.addNotification);
-  const registrationState = useSIPStore((state) => state.registrationState);
-  const transportState = useSIPStore((state) => state.transportState);
   const wasOnlineRef = useRef(navigator.onLine);
   const checkIntervalRef = useRef<number | null>(null);
   
@@ -48,22 +45,23 @@ export function useNetworkStatus() {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
-      console.log('[useNetworkStatus] 📵 Network/Internet connection lost');
+      console.log('[useNetworkStatus] 📵 Application is offline');
+      console.log('[useNetworkStatus] Network/Internet connection lost');
     }
     
-    // Disconnect SIP service to clean up connections
-    if (transportState === 'connected' || registrationState === 'registered') {
-      try {
-        if (verboseLogging) {
-          console.log('[useNetworkStatus] Disconnecting SIP service due to network loss');
-        }
-        await sipService.stop();
-      } catch (error) {
-        console.error('[useNetworkStatus] Failed to disconnect SIP service:', error);
+    // Unregister from SIP when offline - matching PWA behavior
+    try {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] Unregistering from SIP due to network loss');
+      }
+      await sipService.unregister(true); // skipUnsubscribe = true for faster disconnect
+    } catch (error) {
+      if (verboseLogging) {
+        console.warn('[useNetworkStatus] Failed to unregister on offline:', error);
       }
     }
     
-    // Show persistent error notification
+    // Show persistent error notification - matches PWA implementation
     addNotification({
       type: 'error',
       title: t('notifications.network_lost', 'Check Network/Internet Connection'),
@@ -72,19 +70,20 @@ export function useNetworkStatus() {
     });
     
     wasOnlineRef.current = false;
-  }, [t, addNotification, registrationState, transportState]);
+  }, [t, addNotification]);
   
   // Prepare for reconnection when network is restored
   const handleNetworkRestoration = useCallback(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
-      console.log('[useNetworkStatus] 📶 Network/Internet connection restored');
+      console.log('[useNetworkStatus] 📶 Application is back online');
+      console.log('[useNetworkStatus] Network/Internet connection restored');
     }
     
-    // Show success notification with reconnection instructions
+    // Show persistent notification with reconnection instructions - matches PWA implementation
     addNotification({
-      type: 'success',
+      type: 'error', // PWA uses 'error' type for visibility even though it's a restoration message
       title: t('notifications.network_restored', 'Network/Internet Restored'),
       message: t('notifications.network_restored_message', 'Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.'),
       persistent: true

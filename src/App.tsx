@@ -8,6 +8,7 @@ import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } fro
 import { SIPProvider } from '@/contexts';
 import { phantomApiService } from '@/services';
 import { initializeVersionTracking } from '@/utils';
+import { useNetworkStatus } from '@/hooks';
 import { 
   LoadingScreen, 
   LoadingSpinner,
@@ -175,6 +176,9 @@ function App() {
   const setLoading = useAppStore((state) => state.setLoading);
   const effectiveTheme = useUIStore((state) => state.effectiveTheme);
   const settingsLanguage = useSettingsStore((state) => state.settings.interface.language);
+  
+  // Initialize network monitoring with automatic SIP disconnection
+  useNetworkStatus();
   
   // Version update modal state
   const [showVersionModal, setShowVersionModal] = useState(false);

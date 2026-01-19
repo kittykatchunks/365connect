@@ -404,9 +404,13 @@ export class SIPService {
     }
   }
 
-  async unregister(): Promise<void> {
+  async unregister(skipUnsubscribe = false): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     if (!this.userAgent || !this.registerer) {
-      console.log('Not registered, nothing to unregister');
+      if (verboseLogging) {
+        console.log('[SIPService] Not registered, nothing to unregister');
+      }
       return;
     }
 
@@ -414,8 +418,13 @@ export class SIPService {
     this.isIntentionalDisconnect = true;
 
     try {
-      // Unsubscribe from all BLF subscriptions
-      await this.unsubscribeAllBLF();
+      if (!skipUnsubscribe) {
+        if (verboseLogging) {
+          console.log('[SIPService] Unsubscribing from all BLF subscriptions...');
+        }
+        // Unsubscribe from all BLF subscriptions
+        await this.unsubscribeAllBLF();
+      }
       
       // Terminate all active sessions
       await this.terminateAllSessions();
