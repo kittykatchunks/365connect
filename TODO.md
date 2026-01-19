@@ -99,4 +99,5 @@ Thirdly, clarification of SIP call state and call-timer
 - [ ] Timer on calls overhaul
 - [x] Indicate dialling on Call button when outbound call initiated.  Use --call-dialing-color as background color of button possibly good if you could get the colour to pulse slightly and change icon to phone handset with arrow going outward. When answered stay same background color but dont pulse and change icon back to normal phone handset.  Reset back to normal Call button defaults when call terminated
 - [ ] When BLF display is hidden in browser with reduced width display then the corresponding 'enable BLF' option in interface settings should also be hidden
-- [ ] Keypad size on mobile version
+- [x] Line Keys and Company Number selection should be disabled when in disconnected state
+- [ ] Double the keypad size on mobile version only

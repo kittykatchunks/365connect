@@ -6,7 +6,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Phone, Building2 } from 'lucide-react';
 import { cn } from '@/utils';
-import { useCompanyNumbersStore, useSettingsStore } from '@/stores';
+import { useCompanyNumbersStore, useSettingsStore, useSIPStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { isVerboseLoggingEnabled } from '@/utils';
 
@@ -29,6 +29,10 @@ export function CLISelector({ className }: CLISelectorProps) {
   const isSyncing = useCompanyNumbersStore((state) => state.isSyncing);
   
   const showCLISelector = useSettingsStore((state) => state.settings.interface.showCompanyNumbersTab);
+  
+  // Get registration state
+  const registrationState = useSIPStore((state) => state.registrationState);
+  const isRegistered = registrationState === 'registered';
   
   // SIP hook for making calls
   const { makeCall } = useSIP();
@@ -99,7 +103,7 @@ export function CLISelector({ className }: CLISelectorProps) {
         onClick={handleToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        disabled={!!pendingCompany}
+        disabled={!!pendingCompany || !isRegistered}
       >
         <div className="cli-selector-value">
           <Building2 className="cli-selector-icon" />
@@ -152,7 +156,7 @@ export function CLISelector({ className }: CLISelectorProps) {
             type="button"
             className="cli-confirm-btn"
             onClick={handleConfirm}
-            disabled={isSyncing}
+            disabled={isSyncing || !isRegistered}
           >
             <Phone className="w-4 h-4" />
             <div className="cli-confirm-text">

@@ -17,8 +17,12 @@ function LineKey({ lineNumber }: LineKeyProps) {
   const { t } = useTranslation();
   const selectedLine = useSIPStore((state) => state.selectedLine);
   const lineStates = useSIPStore((state) => state.lineStates);
+  const registrationState = useSIPStore((state) => state.registrationState);
   
   const { selectLine, toggleHold } = useSIP();
+  
+  // Check if we're connected/registered
+  const isRegistered = registrationState === 'registered';
   
   const lineState = lineStates.find((l) => l.lineNumber === lineNumber);
   const isSelected = selectedLine === lineNumber;
@@ -82,6 +86,7 @@ function LineKey({ lineNumber }: LineKeyProps) {
         isSelected && 'line-key-selected'
       )}
       onClick={handleClick}
+      disabled={!isRegistered}
       aria-pressed={isSelected}
       aria-label={t('aria_label_line_state', 'Line {{number}}: {{state}}', { number: lineNumber, state })}
     >
