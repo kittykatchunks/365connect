@@ -257,6 +257,7 @@
         "prefer_blind_transfer_desc": "Use blind transfer by default instead of attended",
         "speaker": "Speaker",
         "microphone": "Microphone",
+        "mic_level": "Input Level",
         "ringer": "Ringer",
         "ringtone": "Ringtone",
         "refresh_devices": "Refresh Devices",

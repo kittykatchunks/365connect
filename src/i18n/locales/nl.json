@@ -253,6 +253,7 @@
         "prefer_blind_transfer_desc": "Gebruik standaard blind doorverbinden",
         "speaker": "Luidspreker",
         "microphone": "Microfoon",
+        "mic_level": "Invoerniveau",
         "ringer": "Beltoon",
         "ringtone": "Beltoon",
         "refresh_devices": "Apparaten Vernieuwen",

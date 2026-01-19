@@ -86,6 +86,9 @@ export function SettingsView() {
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   const [testingDevice, setTestingDevice] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [audioAccordionOpen, setAudioAccordionOpen] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [micMonitoring, setMicMonitoring] = useState(false);
   
   // Local state for connection settings (not auto-saved)
   const [localPhantomId, setLocalPhantomId] = useState(settings.connection.phantomId);
@@ -112,6 +115,85 @@ export function SettingsView() {
     }
   }, [openWithConnection, setOpenSettingsWithConnection]);
   
+  // Microphone level monitoring
+  useEffect(() => {
+    if (!audioAccordionOpen || !hasPermission || !settings.audio.microphoneDevice) {
+      setMicMonitoring(false);
+      setMicLevel(0);
+      return;
+    }
+    
+    let audioContext: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let microphone: MediaStreamAudioSourceNode | null = null;
+    let stream: MediaStream | null = null;
+    let animationFrameId: number | null = null;
+    
+    const startMonitoring = async () => {
+      try {
+        // Get microphone stream
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: settings.audio.microphoneDevice
+            ? { deviceId: { exact: settings.audio.microphoneDevice } }
+            : true
+        });
+        
+        // Create audio context and analyser
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.8;
+        
+        // Connect microphone to analyser
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        // Update level continuously
+        const updateLevel = () => {
+          if (!analyser) return;
+          
+          analyser.getByteFrequencyData(dataArray);
+          
+          // Calculate average level (0-255) and convert to percentage
+          const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+          const level = Math.min(100, (average / 255) * 100 * 1.5); // Amplify slightly for better visual
+          
+          setMicLevel(level);
+          animationFrameId = requestAnimationFrame(updateLevel);
+        };
+        
+        setMicMonitoring(true);
+        updateLevel();
+      } catch (err) {
+        console.error('[SettingsView] Failed to start microphone monitoring:', err);
+        setMicMonitoring(false);
+        setMicLevel(0);
+      }
+    };
+    
+    startMonitoring();
+    
+    // Cleanup
+    return () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      if (microphone) {
+        microphone.disconnect();
+      }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      if (audioContext) {
+        audioContext.close();
+      }
+      setMicMonitoring(false);
+      setMicLevel(0);
+    };
+  }, [audioAccordionOpen, hasPermission, settings.audio.microphoneDevice]);
+  
   // Save connection settings handler - only saves when button clicked
   const handleSaveConnectionSettings = useCallback(() => {
     setSaveStatus('saving');
@@ -127,6 +209,11 @@ export function SettingsView() {
       setTimeout(() => setSaveStatus('idle'), 2000);
     }, 300);
   }, [localPhantomId, localUsername, localPassword, localVmAccess, setPhantomID, setSIPCredentials, setVMAccess]);
+  
+  // Handle accordion state changes
+  const handleAccordionChange = useCallback((value: string | string[] | undefined) => {
+    setAudioAccordionOpen(value === 'audio');
+  }, []);
   
   // Test notification handler
   const handleTestNotification = useCallback(() => {
@@ -262,7 +349,7 @@ export function SettingsView() {
       />
       
       <div className="settings-content">
-        <Accordion type="single" defaultValue={openWithConnection ? 'connection' : undefined}>
+        <Accordion type="single" defaultValue={openWithConnection ? 'connection' : undefined} onValueChange={handleAccordionChange}>
           {/* Connection Settings */}
           <AccordionItem value="connection">
             <AccordionTrigger value="connection">
@@ -552,6 +639,20 @@ export function SettingsView() {
                         options={microphoneOptions}
                         disabled={audioLoading}
                       />
+                      {micMonitoring && (
+                        <div className="mic-level-container">
+                          <span className="mic-level-label">{t('settings.mic_level', 'Input Level')}</span>
+                          <div className="mic-level-meter">
+                            <div 
+                              className="mic-level-bar"
+                              style={{
+                                width: `${micLevel}%`,
+                                backgroundColor: micLevel > 80 ? '#ef4444' : micLevel > 60 ? '#f59e0b' : '#22c55e'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="setting-item">

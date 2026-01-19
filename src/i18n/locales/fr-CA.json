@@ -253,6 +253,7 @@
         "prefer_blind_transfer_desc": "Utiliser transfert aveugle par défaut",
         "speaker": "Haut-parleur",
         "microphone": "Microphone",
+        "mic_level": "Niveau d'entrée",
         "ringer": "Sonnerie",
         "ringtone": "Sonnerie",
         "refresh_devices": "Actualiser Appareils",

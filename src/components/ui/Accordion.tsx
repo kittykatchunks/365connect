@@ -29,13 +29,15 @@ export interface AccordionProps {
   defaultValue?: string | string[];
   children: ReactNode;
   className?: string;
+  onValueChange?: (value: string | string[] | undefined) => void;
 }
 
 export function Accordion({ 
   type = 'single', 
   defaultValue,
   children, 
-  className 
+  className,
+  onValueChange
 }: AccordionProps) {
   const [openItems, setOpenItems] = useState<string[]>(() => {
     if (!defaultValue) return [];
@@ -44,12 +46,22 @@ export function Accordion({
   
   const toggleItem = (value: string) => {
     setOpenItems((prev) => {
-      if (type === 'single') {
-        return prev.includes(value) ? [] : [value];
+      const newItems = type === 'single'
+        ? (prev.includes(value) ? [] : [value])
+        : (prev.includes(value)
+          ? prev.filter((item) => item !== value)
+          : [...prev, value]);
+      
+      // Call onValueChange callback if provided
+      if (onValueChange) {
+        if (type === 'single') {
+          onValueChange(newItems.length > 0 ? newItems[0] : undefined);
+        } else {
+          onValueChange(newItems);
+        }
       }
-      return prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value];
+      
+      return newItems;
     });
   };
   

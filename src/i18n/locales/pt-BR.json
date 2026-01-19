@@ -251,6 +251,7 @@
         "prefer_blind_transfer_desc": "Usar transferência cega por padrão",
         "speaker": "Alto-falante",
         "microphone": "Microfone",
+        "mic_level": "Nível de Entrada",
         "ringer": "Toque",
         "ringtone": "Toque",
         "refresh_devices": "Atualizar Dispositivos",

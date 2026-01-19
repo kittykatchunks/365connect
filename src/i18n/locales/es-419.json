@@ -253,6 +253,7 @@
         "prefer_blind_transfer_desc": "Usar transferencia ciega por defecto en lugar de asistida",
         "speaker": "Altavoz",
         "microphone": "Micrófono",
+        "mic_level": "Nivel de Entrada",
         "ringer": "Timbre",
         "ringtone": "Tono de Llamada",
         "refresh_devices": "Actualizar Dispositivos",
