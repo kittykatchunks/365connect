@@ -45,7 +45,6 @@ export function DialView() {
   // Get selected line and line states from store
   const selectedLine = useSIPStore((state) => state.selectedLine);
   const lineStates = useSIPStore((state) => state.lineStates);
-  const selectLine = useSIPStore((state) => state.selectLine);
   const getSessionByLine = useSIPStore((state) => state.getSessionByLine);
   const getIncomingSession = useSIPStore((state) => state.getIncomingSession);
   
@@ -58,7 +57,8 @@ export function DialView() {
     hangupCall,
     toggleMute,
     toggleHold,
-    sendDTMF
+    sendDTMF,
+    selectLine
   } = useSIP();
   
   const verboseLogging = isVerboseLoggingEnabled();

@@ -17,9 +17,8 @@ function LineKey({ lineNumber }: LineKeyProps) {
   const { t } = useTranslation();
   const selectedLine = useSIPStore((state) => state.selectedLine);
   const lineStates = useSIPStore((state) => state.lineStates);
-  const selectLine = useSIPStore((state) => state.selectLine);
   
-  const { selectLineWithSession, toggleHold } = useSIP();
+  const { selectLine, toggleHold } = useSIP();
   
   const lineState = lineStates.find((l) => l.lineNumber === lineNumber);
   const isSelected = selectedLine === lineNumber;
@@ -64,23 +63,15 @@ function LineKey({ lineNumber }: LineKeyProps) {
         try {
           await toggleHold(sessionId);
         } catch (error) {
-          console.error('Toggle hold error:', error);
+          console.error('[LineKey] Toggle hold error:', error);
         }
       }
     } else {
-      // Select this line
-      selectLine(lineNumber);
-      
-      // If this line has a session, make it the current session
-      if (sessionId) {
-        try {
-          await selectLineWithSession(sessionId);
-        } catch (error) {
-          console.error('Select line error:', error);
-        }
-      }
+      // Select this line (auto-hold logic is handled in useSIP.selectLine)
+      // Do NOT use selectLineWithSession to avoid any auto-unhold behavior
+      await selectLine(lineNumber);
     }
-  }, [isSelected, state, sessionId, lineNumber, selectLine, selectLineWithSession, toggleHold]);
+  }, [isSelected, state, sessionId, lineNumber, selectLine, toggleHold]);
   
   return (
     <button

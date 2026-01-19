@@ -332,22 +332,91 @@ export function useSIP(): UseSIPReturn {
   }, [sipContext]);
   
   // Line management
-  const selectLine = useCallback((lineNumber: LineNumber) => {
+  const selectLine = useCallback(async (lineNumber: LineNumber) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Get the current line's session before switching
+    const currentLineState = lineStates.find(ls => ls.lineNumber === store.selectedLine);
+    const currentSession = currentLineState?.sessionId ? store.sessions.get(currentLineState.sessionId) : undefined;
+    
+    if (verboseLogging) {
+      console.log('[useSIP] 📞 selectLine called:', {
+        from: store.selectedLine,
+        to: lineNumber,
+        currentSession: currentSession ? {
+          id: currentSession.id,
+          state: currentSession.state,
+          onHold: currentSession.onHold
+        } : 'none'
+      });
+    }
+    
+    // If switching away from a line with an active (not on hold) call, auto-hold it
+    if (currentSession && 
+        (currentSession.state === 'established' || currentSession.state === 'active') && 
+        !currentSession.onHold &&
+        store.selectedLine !== lineNumber) {
+      
+      if (verboseLogging) {
+        console.log('[useSIP] 🔄 Auto-holding current call before line switch:', {
+          sessionId: currentSession.id,
+          fromLine: store.selectedLine,
+          toLine: lineNumber
+        });
+      }
+      
+      try {
+        await sipContext.holdCall(currentSession.id);
+        
+        if (verboseLogging) {
+          console.log('[useSIP] ✅ Current call auto-held successfully');
+        }
+      } catch (error) {
+        console.error('[useSIP] ❌ Failed to auto-hold current call:', error);
+        // Continue with line switch even if hold fails
+      }
+    }
+    
+    // Switch to the new line
     sipContext.selectLine(lineNumber);
-  }, [sipContext]);
+    
+    if (verboseLogging) {
+      console.log('[useSIP] ✅ Line switched to:', lineNumber);
+    }
+  }, [sipContext, lineStates, store.selectedLine, store.sessions]);
   
   const selectLineWithSession = useCallback(async (sessionId: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     // Find which line has this session and select it
     const lineState = lineStates.find(ls => ls.sessionId === sessionId);
-    if (lineState) {
-      sipContext.selectLine(lineState.lineNumber);
+    if (!lineState) {
+      if (verboseLogging) {
+        console.warn('[useSIP] ⚠️ selectLineWithSession: Session not found on any line:', sessionId);
+      }
+      return;
     }
-    // If the session is on hold, take it off hold
-    const session = store.sessions.get(sessionId);
-    if (session?.onHold) {
-      await sipContext.unholdCall(sessionId);
+    
+    if (verboseLogging) {
+      const session = store.sessions.get(sessionId);
+      console.log('[useSIP] 📞 selectLineWithSession called:', {
+        sessionId,
+        lineNumber: lineState.lineNumber,
+        sessionState: session?.state,
+        onHold: session?.onHold
+      });
     }
-  }, [sipContext, lineStates, store.sessions]);
+    
+    // Use the selectLine callback which will auto-hold the current call
+    await selectLine(lineState.lineNumber);
+    
+    // NOTE: We do NOT auto-unhold the session when selecting it
+    // The agent must manually unhold using the hold button
+    
+    if (verboseLogging) {
+      console.log('[useSIP] ✅ Line selected for session (manual unhold required if on hold):', sessionId);
+    }
+  }, [lineStates, store.sessions, selectLine]);
   
   const getSessionByLine = useCallback((lineNumber: LineNumber) => {
     return store.getSessionByLine(lineNumber);

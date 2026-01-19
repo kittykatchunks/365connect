@@ -84,7 +84,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages)
 - [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 - [x] When on active call and another is received on another line, then it should not use ringing tone but a call waiting tone instead through the ringer device.  Use the Alert.mp3 file as the tone, play back once every three seconds.
-- [ ] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returned to a call on hold it should NOT automatically unhold the call that should have to be done manually by the agent 
+- [x] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returning to a line when the call is on hold should NOT automatically unhold the call that should have to be done manually by the agent 
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
