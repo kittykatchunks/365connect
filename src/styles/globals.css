@@ -2619,6 +2619,10 @@ a {
     padding: var(--spacing-xs);
   }
   
+  .blf-grid {
+    width: clamp(18%, 20vw, 23%);
+  }
+  
   .dialpad {
     max-width: 100%;
     gap: clamp(0.5rem, 1.5vw, 0.75rem); /* Doubled from 0.125-0.25rem to 0.5-0.75rem */
