@@ -368,6 +368,11 @@ a {
   margin-bottom: var(--spacing-md);
 }
 
+.panel-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .panel-header-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -377,6 +382,7 @@ a {
   font-size: 0.875rem;
   color: var(--text-color-muted);
   transition: color 0.2s ease;
+  width: 100%;
 }
 
 /* Agent Status Colors */
