@@ -91,7 +91,8 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] Complete version change to initiate Update Message
 - [X] Ensure that the state of connection to the phantom server is based on an actual endpoint connection NOT just a websocket connection
 - [X] When idle (no active calls) and selected on line two or three and either an outgoing is initiated (say via voicemail icon) or an incoming call initiates then the call will use line 1, it will be necessary for these two scenarios only to auto switch to the line that is in use. advise you understanding before making changes
-- [ ] Check how I initiate the upgrade banner to show in react app
+- [X] Check how I initiate the upgrade banner to show in react app
+- [ ] Previously have changed the UI to reflect the Agent when logging in initially should automatically show as in-queue, after that the state should be tracked.  Can you confirm the programming still correct
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
@@ -99,7 +100,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Voicemail spool icon dislpay and location needs to be resolved - Spool Icon (theme coloured) - right justified in agent status div
 - [X] Voicemail label upon notify needs to be (Count) New Messages - Spool Icon (Flashing Red)
 - [X] Voicemail toast notification when dialing voicemail by selecting spool icon shows 'Calling Voicemail: {{code}}' as content
-- [ ] Timer on calls overhaul
+- [X] Need to look at the Timer on calls, not sure how it is implemented at this moment but it seems to make intensive calls to SIPService (sessiondurationchanged).  The logic for the timer on each line is simple.  In the case of an outgoing call the timer should start upon answer by recipient.  Then the timer should just count up in seconds regardless of the state of the call (muted/on hold/off hold/transfer state) any time that return to call info display it should be continuing the timer as if nothing has happened.  The only time that the timer reacts to a change is when it stops upon disonnection of the call (either by caller/agent or by transfer).  The incoming call scenario is slightly different.  It is in two parts, the first is the incoming ringing.  The ringing should have timer that starts to count up upon initial start of incoming call (ringing), it should continue to count up until disconnection or call answered by agent either one of these should restart the time at 0.  If the agent answered the the call timer will continue to count up following exactly the same method/rules as an outgoing call.
 - [x] Indicate dialling on Call button when outbound call initiated.  Use --call-dialing-color as background color of button possibly good if you could get the colour to pulse slightly and change icon to phone handset with arrow going outward. When answered stay same background color but dont pulse and change icon back to normal phone handset.  Reset back to normal Call button defaults when call terminated
 - [x] When BLF display is hidden in browser with reduced width display then the corresponding 'enable BLF' option in interface settings should also be hidden
 - [x] Line Keys and Company Number selection should be disabled when in disconnected state

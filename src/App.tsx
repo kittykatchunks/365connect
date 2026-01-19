@@ -18,7 +18,8 @@ import {
   LeftPanelContent,
   NavigationTabs,
   SIPStatusDisplay,
-  WelcomeOverlay
+  WelcomeOverlay,
+  UpdatePrompt
 } from '@/components';
 import { VersionUpdateModal } from '@/components/modals';
 // ErrorBoundary can be used to wrap views if needed
@@ -273,6 +274,9 @@ function App() {
   
   return (
     <SIPProvider>
+      {/* PWA Update Banner - Shows when new version is available */}
+      <UpdatePrompt />
+      
       <MainLayout />
       
       {/* Version Update Modal */}
