@@ -13,3 +13,4 @@ export { BLFButtonGrid, BLFButtonPanel } from './BLFButtonGrid';
 export { CLISelector } from './CLISelector';
 export { AgentKeys } from './AgentKeys';
 export { CallInfoDisplay } from './CallInfoDisplay';
+export { VoicemailIndicator } from './VoicemailIndicator';

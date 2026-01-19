@@ -29,6 +29,10 @@ interface SIPState {
   // BLF
   blfStates: Map<string, BLFPresenceState>;
   
+  // Voicemail
+  voicemailCount: number;
+  hasNewVoicemail: boolean;
+  
   // Actions
   setRegistrationState: (state: RegistrationState) => void;
   setTransportState: (state: TransportState) => void;
@@ -46,6 +50,10 @@ interface SIPState {
   setBLFState: (extension: string, state: BLFPresenceState) => void;
   updateBLFState: (extension: string, state: BLFPresenceState) => void;
   clearBLFState: (extension: string) => void;
+  
+  // Voicemail actions
+  updateVoicemailMWI: (count: number, hasMessages: boolean) => void;
+  clearVoicemailMWI: () => void;
   
   // Line actions (with aliases)
   setSelectedLine: (line: 1 | 2 | 3 | null) => void;
@@ -69,6 +77,8 @@ export const useSIPStore = create<SIPState>()(
       // Initial state
       registrationState: 'unregistered',
       transportState: 'disconnected',
+      voicemailCount: 0,
+      hasNewVoicemail: false,
       sessions: new Map(),
       selectedLine: 1,
       lineStates: initialLineStates,
@@ -205,6 +215,29 @@ export const useSIPStore = create<SIPState>()(
         newBLFStates.delete(extension);
         return { blfStates: newBLFStates };
       }),
+      
+      // Voicemail actions
+      updateVoicemailMWI: (count: number, hasMessages: boolean) => {
+        const verboseLogging = isVerboseLoggingEnabled();
+        
+        if (verboseLogging) {
+          console.log('[sipStore] 📧 Updating voicemail MWI:', { count, hasMessages });
+        }
+        
+        set({ voicemailCount: count, hasNewVoicemail: hasMessages });
+      },
+      
+      clearVoicemailMWI: () => {
+        const verboseLogging = isVerboseLoggingEnabled();
+        
+        if (verboseLogging) {
+          console.log('[sipStore] 📧 Clearing voicemail MWI');
+        }
+        
+        set({ voicemailCount: 0, hasNewVoicemail: false });
+      },
+      
+      // 
       
       // Alias for selectLine used by SIPContext
       setSelectedLine: (line: 1 | 2 | 3 | null) => set({ selectedLine: line || 1 }),

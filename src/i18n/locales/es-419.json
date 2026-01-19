@@ -95,8 +95,16 @@
         "no_cli_selected": "No hay CLI seleccionado",
         "select_cli": "Seleccionar CLI",
         "confirm_change": "¿Cambiar CLI?"
-    },
-    "agent": {
+    },    "voicemail": {
+        "title": "Correo de voz",
+        "new": "NUEVO",
+        "title_with_count": "Correo de voz ({{count}} mensaje nuevo)",
+        "check_messages": "Revisar {{count}} mensaje nuevo de correo de voz",
+        "not_configured": "Código de acceso al correo de voz no configurado. Por favor, configúrelo en Ajustes de Conexión.",
+        "calling": "Llamando al correo de voz: {{code}}",
+        "error": "Error de Correo de Voz",
+        "dial_failed": "Error al marcar el código de acceso al correo de voz"
+    },    "agent": {
         "login": "Iniciar Sesión",
         "logout": "Cerrar Sesión",
         "login_title": "Inicio de Sesión de Agente",

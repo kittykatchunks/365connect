@@ -95,8 +95,16 @@
         "no_cli_selected": "Aucun CLI sélectionné",
         "select_cli": "Sélectionner CLI",
         "confirm_change": "Changer CLI?"
-    },
-    "agent": {
+    },    "voicemail": {
+        "title": "Messagerie vocale",
+        "new": "NOUVEAU",
+        "title_with_count": "Messagerie vocale ({{count}} nouveau message)",
+        "check_messages": "Vérifier {{count}} nouveau message vocal",
+        "not_configured": "Code d'accès à la boîte vocale non configuré. Veuillez le définir dans les paramètres de connexion.",
+        "calling": "Appel de la boîte vocale: {{code}}",
+        "error": "Erreur de boîte vocale",
+        "dial_failed": "Échec de la composition du code d'accès à la boîte vocale"
+    },    "agent": {
         "login": "Connexion",
         "logout": "Déconnexion",
         "login_title": "Connexion Agent",

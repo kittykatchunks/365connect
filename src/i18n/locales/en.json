@@ -96,6 +96,16 @@
         "select_cli": "Select CLI",
         "confirm_change": "Change CLI?"
     },
+    "voicemail": {
+        "title": "Voicemail",
+        "new": "NEW",
+        "title_with_count": "Voicemail ({{count}} new message)",
+        "check_messages": "Check {{count}} new voicemail message",
+        "not_configured": "VM Access code not configured. Please set it in Connection Settings.",
+        "calling": "Calling voicemail: {{code}}",
+        "error": "Voicemail Error",
+        "dial_failed": "Failed to dial voicemail access code"
+    },
     "agent": {
         "login": "Login",
         "logout": "Logout",

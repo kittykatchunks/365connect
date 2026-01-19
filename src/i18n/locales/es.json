@@ -95,8 +95,16 @@
         "no_cli_selected": "No hay CLI seleccionado",
         "select_cli": "Seleccionar CLI",
         "confirm_change": "¿Cambiar CLI?"
-    },
-    "agent": {
+    },    "voicemail": {
+        "title": "Buzón de voz",
+        "new": "NUEVO",
+        "title_with_count": "Buzón de voz ({{count}} mensaje nuevo)",
+        "check_messages": "Revisar {{count}} mensaje nuevo de buzón de voz",
+        "not_configured": "Código de acceso al buzón de voz no configurado. Por favor, configúrelo en Ajustes de Conexión.",
+        "calling": "Llamando al buzón de voz: {{code}}",
+        "error": "Error de Buzón de Voz",
+        "dial_failed": "Error al marcar el código de acceso al buzón de voz"
+    },    "agent": {
         "login": "Iniciar Sesión",
         "logout": "Cerrar Sesión",
         "login_title": "Inicio de Sesión de Agente",

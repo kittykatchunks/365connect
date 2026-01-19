@@ -95,8 +95,16 @@
         "no_cli_selected": "Geen CLI geselecteerd",
         "select_cli": "Selecteer CLI",
         "confirm_change": "CLI wijzigen?"
-    },
-    "agent": {
+    },    "voicemail": {
+        "title": "Voicemail",
+        "new": "NIEUW",
+        "title_with_count": "Voicemail ({{count}} nieuw bericht)",
+        "check_messages": "Controleer {{count}} nieuw voicemailbericht",
+        "not_configured": "Voicemail toegangscode niet geconfigureerd. Stel deze in bij Verbindingsinstellingen.",
+        "calling": "Voicemail bellen: {{code}}",
+        "error": "Voicemail Fout",
+        "dial_failed": "Fout bij het kiezen van voicemail toegangscode"
+    },    "agent": {
         "login": "Inloggen",
         "logout": "Uitloggen",
         "login_title": "Agent Inloggen",

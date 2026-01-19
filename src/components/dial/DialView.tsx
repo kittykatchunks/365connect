@@ -14,6 +14,7 @@ import { CLISelector } from './CLISelector';
 import { AgentKeys } from './AgentKeys';
 import { CallInfoDisplay } from './CallInfoDisplay';
 import { TransferModal } from '@/components/modals';
+import { VoicemailIndicator } from './VoicemailIndicator';
 import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
@@ -530,10 +531,13 @@ export function DialView() {
     
     if (agentState === 'logged-out') {
       return (
-        <>
-          <span className="agent-prefix">Agent: </span>
-          <span className="status-not-logged-in">Not Logged In</span>
-        </>
+        <div className="status-subtitle-row">
+          <div className="status-subtitle-left">
+            <span className="agent-prefix">Agent: </span>
+            <span className="status-not-logged-in">Not Logged In</span>
+          </div>
+          <VoicemailIndicator />
+        </div>
       );
     }
     
@@ -541,18 +545,24 @@ export function DialView() {
     
     if (agentState === 'paused') {
       return (
-        <>
-          <span className="agent-prefix">Agent: </span>
-          <span className="status-paused">[PAUSED] {agentDisplay}</span>
-        </>
+        <div className="status-subtitle-row">
+          <div className="status-subtitle-left">
+            <span className="agent-prefix">Agent: </span>
+            <span className="status-paused">[PAUSED] {agentDisplay}</span>
+          </div>
+          <VoicemailIndicator />
+        </div>
       );
     }
     
     return (
-      <>
-        <span className="agent-prefix">Agent: </span>
-        <span className="status-connected">{agentDisplay}</span>
-      </>
+      <div className="status-subtitle-row">
+        <div className="status-subtitle-left">
+          <span className="agent-prefix">Agent: </span>
+          <span className="status-connected">{agentDisplay}</span>
+        </div>
+        <VoicemailIndicator />
+      </div>
     );
   };
   

@@ -1,0 +1,91 @@
+// ============================================
+// Voicemail Indicator - Shows new voicemail count and provides quick access to voicemail
+// ============================================
+
+import { useTranslation } from 'react-i18next';
+import { useSIPStore, useSettingsStore, useUIStore } from '@/stores';
+import { useSIP } from '@/hooks';
+import { isVerboseLoggingEnabled } from '@/utils';
+import { cn } from '@/utils';
+
+export function VoicemailIndicator() {
+  const { t } = useTranslation();
+  const { makeCall } = useSIP();
+  const { voicemailCount, hasNewVoicemail } = useSIPStore();
+  const { settings } = useSettingsStore();
+  const addNotification = useUIStore((state) => state.addNotification);
+  
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Don't render if no voicemail messages
+  if (!hasNewVoicemail || voicemailCount === 0) {
+    return null;
+  }
+  
+  const handleVoicemailClick = async () => {
+    if (verboseLogging) {
+      console.log('[VoicemailIndicator] 📧 Voicemail icon clicked');
+    }
+    
+    try {
+      const vmAccessCode = settings.connection.vmAccess?.trim();
+      
+      if (!vmAccessCode) {
+        if (verboseLogging) {
+          console.warn('[VoicemailIndicator] ⚠️ VM Access code not configured');
+        }
+        
+        addNotification({
+          type: 'warning',
+          title: t('voicemail.title', 'Voicemail'),
+          message: t('voicemail.not_configured', 'VM Access code not configured. Please set it in Connection Settings.')
+        });
+        return;
+      }
+      
+      if (verboseLogging) {
+        console.log('[VoicemailIndicator] 📞 Dialing VM Access code:', vmAccessCode);
+      }
+      
+      await makeCall(vmAccessCode);
+      
+      addNotification({
+        type: 'success',
+        title: t('voicemail.title', 'Voicemail'),
+        message: t('voicemail.calling', `Calling voicemail: ${vmAccessCode}`)
+      });
+    } catch (error) {
+      console.error('[VoicemailIndicator] ❌ Error dialing voicemail:', error);
+      
+      addNotification({
+        type: 'error',
+        title: t('voicemail.error', 'Voicemail Error'),
+        message: t('voicemail.dial_failed', 'Failed to dial voicemail access code')
+      });
+    }
+  };
+  
+  return (
+    <div className="voicemail-item">
+      <span className="voicemail-count">{voicemailCount}</span>
+      <span className="voicemail-text">{t('voicemail.new', 'NEW')}</span>
+      <i
+        className={cn(
+          'fas fa-voicemail voicemail-icon',
+          hasNewVoicemail && 'message-waiting'
+        )}
+        title={t('voicemail.title_with_count', `Voicemail (${voicemailCount} new message${voicemailCount > 1 ? 's' : ''})`)}
+        onClick={handleVoicemailClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleVoicemailClick();
+          }
+        }}
+        aria-label={t('voicemail.check_messages', `Check ${voicemailCount} new voicemail message${voicemailCount > 1 ? 's' : ''}`)}
+      />
+    </div>
+  );
+}

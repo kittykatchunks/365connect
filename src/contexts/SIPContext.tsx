@@ -17,7 +17,8 @@ import type {
   SessionData, 
   RegistrationState, 
   TransportState,
-  BLFStateChangeData 
+  BLFStateChangeData,
+  NotifyData
 } from '../types/sip';
 import type { CallStatus } from '../types/callHistory';
 import { buildSIPConfig } from '../types/sip';
@@ -83,7 +84,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
     updateSession,
     removeSession,
     setSelectedLine,
-    updateBLFState
+    updateBLFState,
+    updateVoicemailMWI,
+    clearVoicemailMWI
   } = useSIPStore();
   
   const { sipConfig, settings } = useSettingsStore();
@@ -159,6 +162,14 @@ export function SIPProvider({ children }: SIPProviderProps) {
         console.log('[SIPContext] 📝 registrationStateChanged event received:', state);
       }
       setRegistrationState(state);
+      
+      // Clear voicemail indicator on unregistration
+      if (state === 'unregistered') {
+        if (verboseLogging) {
+          console.log('[SIPContext] 📧 Clearing voicemail MWI on unregistration');
+        }
+        clearVoicemailMWI();
+      }
     });
     
     // Session events
@@ -504,6 +515,30 @@ export function SIPProvider({ children }: SIPProviderProps) {
       }
     });
     
+    // Voicemail NOTIFY events
+    const unsubNotifyReceived = service.on('notifyReceived', (data: NotifyData) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 📧 notifyReceived event received:', data);
+      }
+      
+      // Check if this is a message-summary event (voicemail MWI)
+      if (data.event && data.event.toLowerCase().includes('message-summary') && data.voicemailData) {
+        const { voicemailData } = data;
+        const newMessages = voicemailData.newVoiceMessages || 0;
+        const hasMessages = newMessages > 0;
+        
+        if (verboseLogging) {
+          console.log('[SIPContext] 📧 Voicemail MWI update:', {
+            newMessages,
+            messagesWaiting: voicemailData.messagesWaiting,
+            hasMessages
+          });
+        }
+        
+        updateVoicemailMWI(newMessages, hasMessages);
+      }
+    });
+    
     // Cleanup
     return () => {
       unsubTransportState();
@@ -526,6 +561,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
       unsubAttendedTransferTerminated();
       unsubAttendedTransferCompleted();
       unsubAttendedTransferCancelled();
+      unsubNotifyReceived();
     };
   }, [
     setRegistrationState,
@@ -534,6 +570,8 @@ export function SIPProvider({ children }: SIPProviderProps) {
     updateSession,
     removeSession,
     setSelectedLine,
+    updateVoicemailMWI,
+    clearVoicemailMWI,
     updateBLFState,
     addCallFromSession,
     clearTabAlert,

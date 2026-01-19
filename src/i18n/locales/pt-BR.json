@@ -95,8 +95,16 @@
         "no_cli_selected": "Nenhum CLI selecionado",
         "select_cli": "Selecionar CLI",
         "confirm_change": "Alterar CLI?"
-    },
-    "agent": {
+    },    "voicemail": {
+        "title": "Correio de voz",
+        "new": "NOVO",
+        "title_with_count": "Correio de voz ({{count}} nova mensagem)",
+        "check_messages": "Verificar {{count}} nova mensagem de correio de voz",
+        "not_configured": "Código de acesso ao correio de voz não configurado. Por favor, configure nas Configurações de Conexão.",
+        "calling": "Ligando para o correio de voz: {{code}}",
+        "error": "Erro do Correio de Voz",
+        "dial_failed": "Falha ao discar o código de acesso ao correio de voz"
+    },    "agent": {
         "login": "Entrar",
         "logout": "Sair",
         "login_title": "Login Agente",

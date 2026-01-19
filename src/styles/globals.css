@@ -404,6 +404,102 @@ a {
   color: var(--text-color-muted);
 }
 
+/* Status Subtitle Row for Voicemail Indicator */
+.status-subtitle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--spacing-md);
+}
+
+.status-subtitle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Voicemail Indicator Styling */
+.voicemail-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  flex: none;
+  font-size: 12px;
+  min-width: auto;
+  margin-left: auto;
+}
+
+.voicemail-count {
+  color: var(--text-color-muted);
+  font-weight: 600;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.voicemail-text {
+  color: var(--text-color-muted);
+  font-weight: 500;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.voicemail-icon {
+  color: var(--text-color-muted);
+  font-size: 16px;
+  opacity: 0.9;
+  transition: all 0.2s ease;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.voicemail-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.voicemail-icon:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Message waiting indication - flashing red */
+.voicemail-icon.message-waiting {
+  color: red;
+  animation: flashRed 2s infinite;
+}
+
+@keyframes flashRed {
+  0%, 50% {
+    color: white;
+  }
+  25%, 75% {
+    color: red;
+    text-shadow: 0 0 6px rgba(204, 0, 0, 1);
+  }
+}
+
+/* Dark theme adjustments for voicemail */
+[data-theme="dark"] .voicemail-count,
+[data-theme="dark"] .voicemail-text,
+[data-theme="dark"] .voicemail-icon {
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .voicemail-icon.message-waiting {
+  animation: flashRedDark 2s infinite;
+}
+
+@keyframes flashRedDark {
+  0%, 50% {
+    color: #cbd5e0; /* Light gray for dark theme */
+  }
+  25%, 75% {
+    color: #ff4444; /* Brighter red for dark theme */
+    text-shadow: 0 0 8px rgba(255, 68, 68, 0.8);
+  }
+}
+
 /* SIP Status */
 .sip-status {
   display: flex;
