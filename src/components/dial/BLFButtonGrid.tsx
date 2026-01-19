@@ -7,16 +7,18 @@ import { BLFButton } from './BLFButton';
 import { BLFConfigModal } from '@/components/modals';
 import { useBLFStore, useSIPStore, useSettingsStore } from '@/stores';
 import { useSIP } from '@/hooks';
-import { cn } from '@/utils';
+import { cn, isVerboseLoggingEnabled } from '@/utils';
 import type { BLFButton as BLFButtonType } from '@/types';
 
 interface BLFButtonGridProps {
   side: 'left' | 'right';
   className?: string;
+  onTransferRequest?: (target: string, autoStartAttended: boolean) => void;
 }
 
-export function BLFButtonGrid({ side, className }: BLFButtonGridProps) {
+export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonGridProps) {
   const [configureIndex, setConfigureIndex] = useState<number | null>(null);
+  const verboseLogging = isVerboseLoggingEnabled();
   
   // Stores
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
@@ -26,7 +28,7 @@ export function BLFButtonGrid({ side, className }: BLFButtonGridProps) {
   const blfStates = useSIPStore((state) => state.blfStates);
   
   // SIP
-  const { makeCall, blindTransfer, startAttendedTransfer, subscribeBLF, currentSession, isRegistered } = useSIP();
+  const { makeCall, blindTransfer, subscribeBLF, currentSession, isRegistered } = useSIP();
   
   const isInCall = currentSession && currentSession.state !== 'terminated';
   
@@ -72,21 +74,36 @@ export function BLFButtonGrid({ side, className }: BLFButtonGridProps) {
     let useBlindTransfer = preferBlindTransfer;
     if (button?.overrideTransfer && button.transferMethod) {
       useBlindTransfer = button.transferMethod === 'blind';
-      console.log(`📞 Using button-specific transfer override: ${button.transferMethod}`);
+      if (verboseLogging) {
+        console.log(`[BLFButtonGrid] 📞 Using button-specific transfer override: ${button.transferMethod}`);
+      }
     }
     
     try {
       if (useBlindTransfer) {
         // Perform blind transfer immediately
+        if (verboseLogging) {
+          console.log(`[BLFButtonGrid] 📞 Performing blind transfer to ${extension}`);
+        }
         await blindTransfer(extension);
       } else {
-        // Start attended transfer (which will show the modal with controls)
-        await startAttendedTransfer(extension);
+        // Start attended transfer - open modal with pre-filled target
+        if (verboseLogging) {
+          console.log(`[BLFButtonGrid] 📞 Initiating attended transfer to ${extension} via modal`);
+        }
+        
+        if (onTransferRequest) {
+          // Use parent's transfer request handler to show modal with pre-filled target
+          onTransferRequest(extension, true);
+        } else {
+          // Fallback - shouldn't happen but handle gracefully
+          console.warn('[BLFButtonGrid] ⚠️ onTransferRequest not provided, cannot initiate attended transfer');
+        }
       }
     } catch (error) {
-      console.error('BLF transfer error:', error);
+      console.error('[BLFButtonGrid] ❌ BLF transfer error:', error);
     }
-  }, [blindTransfer, startAttendedTransfer, isInCall, preferBlindTransfer]);
+  }, [blindTransfer, isInCall, preferBlindTransfer, onTransferRequest, verboseLogging]);
   const handleConfigure = useCallback((index: number) => {
     setConfigureIndex(index);
   }, []);

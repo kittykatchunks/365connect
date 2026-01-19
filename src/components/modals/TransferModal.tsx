@@ -17,13 +17,15 @@ interface TransferModalProps {
   isOpen: boolean;
   onClose: () => void;
   sessionId?: string;
+  initialTarget?: string;
+  autoStartAttended?: boolean;
 }
 
-export function TransferModal({ isOpen, onClose, sessionId }: TransferModalProps) {
+export function TransferModal({ isOpen, onClose, sessionId, initialTarget, autoStartAttended }: TransferModalProps) {
   const { t } = useTranslation();
   const verboseLogging = isVerboseLoggingEnabled();
   
-  const [transferTarget, setTransferTarget] = useState('');
+  const [transferTarget, setTransferTarget] = useState(initialTarget || '');
   const [isInAttendedMode, setIsInAttendedMode] = useState(false);
   const [attendedStatus, setAttendedStatus] = useState('Calling transfer target...');
   const [canCompleteTransfer, setCanCompleteTransfer] = useState(false);
@@ -63,10 +65,15 @@ export function TransferModal({ isOpen, onClose, sessionId }: TransferModalProps
       setError(null);
     } else {
       if (verboseLogging) {
-        console.log('[TransferModal] 🔄 Opening transfer modal');
+        console.log('[TransferModal] 🔄 Opening transfer modal', { initialTarget, autoStartAttended });
+      }
+      
+      // Set initial target if provided
+      if (initialTarget) {
+        setTransferTarget(initialTarget);
       }
     }
-  }, [isOpen, verboseLogging]);
+  }, [isOpen, initialTarget, autoStartAttended, verboseLogging]);
   
   // Listen for attended transfer events
   useEffect(() => {
@@ -299,6 +306,23 @@ export function TransferModal({ isOpen, onClose, sessionId }: TransferModalProps
       });
     }
   }, [transferTarget, targetSessionId, startAttendedTransfer, addNotification, t, verboseLogging]);
+  
+  // Auto-start attended transfer if requested (must be after handleAttendedTransfer is defined)
+  useEffect(() => {
+    if (isOpen && autoStartAttended && initialTarget && targetSessionId && !isInAttendedMode) {
+      // Small delay to ensure modal is fully rendered and transferTarget state is set
+      const timer = setTimeout(() => {
+        if (verboseLogging) {
+          console.log('[TransferModal] 🚀 Auto-starting attended transfer to:', initialTarget);
+        }
+        handleAttendedTransfer();
+      }, 150);
+      
+      return () => clearTimeout(timer);
+    }
+    // Only run when modal opens with auto-start flag
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, autoStartAttended, initialTarget, targetSessionId]);
   
   // Handle complete attended transfer
   const handleCompleteTransfer = useCallback(async () => {

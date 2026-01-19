@@ -25,6 +25,8 @@ export function DialView() {
   // const [showInCallDialpad, setShowInCallDialpad] = useState(false);
   const [isDialing, setIsDialing] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferTarget, setTransferTarget] = useState<string | undefined>(undefined);
+  const [autoStartAttended, setAutoStartAttended] = useState(false);
   
   // Last dialed number for redial functionality (persisted)
   const [lastDialedNumber, setLastDialedNumber] = useLocalStorage('LastDialedNumber', '');
@@ -432,6 +434,9 @@ export function DialView() {
         await toggleHold(selectedLineSession.id);
       }
       
+      // Clear any previous target and auto-start flag
+      setTransferTarget(undefined);
+      setAutoStartAttended(false);
       setShowTransferModal(true);
     } catch (error) {
       console.error('[DialView] Error preparing transfer:', error);
@@ -454,6 +459,33 @@ export function DialView() {
     }
     
     setShowTransferModal(false);
+    setTransferTarget(undefined);
+    setAutoStartAttended(false);
+  }, [selectedLineSession?.id, selectedLineSession?.onHold, toggleHold]);
+  
+  const handleBLFTransfer = useCallback(async (target: string, shouldAutoStart: boolean) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    try {
+      // Automatically put call on hold before transfer
+      if (selectedLineSession?.id && !selectedLineSession.onHold) {
+        if (verboseLogging) {
+          console.log('[DialView] ⏸️ Putting call on hold before BLF transfer to:', target);
+        }
+        await toggleHold(selectedLineSession.id);
+      }
+      
+      // Set transfer target and auto-start flag, then show modal
+      setTransferTarget(target);
+      setAutoStartAttended(shouldAutoStart);
+      setShowTransferModal(true);
+      
+      if (verboseLogging) {
+        console.log('[DialView] 📞 Opening transfer modal with target:', target, 'autoStart:', shouldAutoStart);
+      }
+    } catch (error) {
+      console.error('[DialView] Error preparing BLF transfer:', error);
+    }
   }, [selectedLineSession?.id, selectedLineSession?.onHold, toggleHold]);
   
   // Keyboard support
@@ -535,7 +567,7 @@ export function DialView() {
       <div className="dial-view-layout">
         {/* Left BLF Panel */}
         {blfEnabled && (
-          <BLFButtonGrid side="left" className="dial-blf-left" />
+          <BLFButtonGrid side="left" className="dial-blf-left" onTransferRequest={handleBLFTransfer} />
         )}
         
         <div className="dial-view-content">
@@ -598,7 +630,7 @@ export function DialView() {
         
         {/* Right BLF Panel */}
         {blfEnabled && (
-          <BLFButtonGrid side="right" className="dial-blf-right" />
+          <BLFButtonGrid side="right" className="dial-blf-right" onTransferRequest={handleBLFTransfer} />
         )}
       </div>
       
@@ -607,6 +639,8 @@ export function DialView() {
         isOpen={showTransferModal}
         onClose={handleTransferModalClose}
         sessionId={selectedLineSession?.id}
+        initialTarget={transferTarget}
+        autoStartAttended={autoStartAttended}
       />
     </div>
   );
