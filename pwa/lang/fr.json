@@ -403,5 +403,11 @@
     "networkInternetRestored": "Réseau/Internet Rétabli",
     "networkRestoredMessage": "Veuillez vous assurer de sélectionner ENREGISTRER pour vous reconnecter à Phantom. Si AGENT : Déconnecté s'affiche, vous devez simplement vous connecter normalement.",
     "checkNetworkConnection": "Vérifier la Connexion Réseau/Internet",
-    "networkLostMessage": "Vous semblez avoir perdu votre connexion réseau ou internet."
+    "networkLostMessage": "Vous semblez avoir perdu la connexion réseau ou internet.",
+    "sipConnectionLost": "Connexion SIP Perdue",
+    "sipReconnecting": "Tentative de reconnexion au serveur Phantom...",
+    "sipReconnectionFailed": "Échec de la Reconnexion SIP",
+    "sipReconnectionMaxAttempts": "Nombre maximum de tentatives de reconnexion atteint. Veuillez vérifier votre connexion et vous réinscrire manuellement.",
+    "sipReconnected": "SIP Reconnecté",
+    "sipReconnectedMessage": "Reconnecté avec succès au serveur Phantom. Réinscription en cours..."
 }

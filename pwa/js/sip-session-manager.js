@@ -1916,6 +1916,8 @@ class SipSessionManager {
         
         // Reset reconnection attempts (critical for working version compatibility)
         if (this.userAgent) {
+            const wasReconnecting = this.userAgent.transport.attemptingReconnection;
+            
             this.userAgent.isReRegister = false;
             this.userAgent.transport.attemptingReconnection = false;
             this.userAgent.transport.ReconnectionAttempts = this.config.reconnectionAttempts || 5;
@@ -1924,6 +1926,22 @@ class SipSessionManager {
             //console.log('   isReRegister:', this.userAgent.isReRegister);
             //console.log('   attemptingReconnection:', this.userAgent.transport.attemptingReconnection);
             //console.log('   ReconnectionAttempts:', this.userAgent.transport.ReconnectionAttempts);
+            
+            // Show toast notification if this was a reconnection
+            if (wasReconnecting && window.App?.managers?.ui && typeof window.lang === 'object') {
+                const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+                if (verboseLogging) {
+                    console.log('[SipSessionManager] Showing SIP reconnection success toast notification');
+                }
+                
+                window.App.managers.ui.addNotification({
+                    type: 'success',
+                    title: window.lang.sipReconnected || 'SIP Reconnected',
+                    message: window.lang.sipReconnectedMessage || 'Successfully reconnected to Phantom server. Re-registering...',
+                    duration: 5000,
+                    forceShow: false
+                });
+            }
         }
         
         // Auto-start registration (matching working phone.js pattern)
@@ -1959,6 +1977,22 @@ class SipSessionManager {
         if (this.userAgent) {
             this.userAgent.isReRegister = false;
             this.userAgent.registering = false;
+        }
+        
+        // Show toast notification when transport disconnects with error
+        if (error && window.App?.managers?.ui && typeof window.lang === 'object') {
+            const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+            if (verboseLogging) {
+                console.log('[SipSessionManager] Showing SIP disconnect toast notification');
+            }
+            
+            window.App.managers.ui.addNotification({
+                type: 'warning',
+                title: window.lang.sipConnectionLost || 'SIP Connection Lost',
+                message: window.lang.sipReconnecting || 'Attempting to reconnect to Phantom server...',
+                duration: 5000,
+                forceShow: false
+            });
         }
         
         if (error) {
@@ -2036,6 +2070,23 @@ class SipSessionManager {
         
         if (attemptsLeft <= 0) {
             console.warn('Max reconnection attempts reached');
+            
+            // Show toast notification for max reconnection attempts
+            if (window.App?.managers?.ui && typeof window.lang === 'object') {
+                const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+                if (verboseLogging) {
+                    console.log('[SipSessionManager] Showing max reconnection attempts toast notification');
+                }
+                
+                window.App.managers.ui.addNotification({
+                    type: 'error',
+                    title: window.lang.sipReconnectionFailed || 'SIP Reconnection Failed',
+                    message: window.lang.sipReconnectionMaxAttempts || 'Maximum reconnection attempts reached. Please check your connection and re-register manually.',
+                    duration: null,
+                    forceShow: true
+                });
+            }
+            
             this.emit('transportError', new Error('Max reconnection attempts reached'));
             return;
         }

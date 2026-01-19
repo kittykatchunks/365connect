@@ -401,5 +401,11 @@
     "networkInternetRestored": "Netwerk/Internet Hersteld",
     "networkRestoredMessage": "Zorg ervoor dat u REGISTREREN selecteert om opnieuw verbinding te maken met Phantom. Als AGENT: Uitgelogd wordt weergegeven, hoeft u alleen maar normaal in te loggen.",
     "checkNetworkConnection": "Controleer Netwerk/Internetverbinding",
-    "networkLostMessage": "U lijkt uw netwerk- of internetverbinding te hebben verloren."
+    "networkLostMessage": "U lijkt uw netwerk- of internetverbinding te hebben verloren.",
+    "sipConnectionLost": "SIP-verbinding Verbroken",
+    "sipReconnecting": "Poging tot herverbinding met Phantom-server...",
+    "sipReconnectionFailed": "SIP-herverbinding Mislukt",
+    "sipReconnectionMaxAttempts": "Maximum aantal herverbindingspogingen bereikt. Controleer uw verbinding en registreer handmatig opnieuw.",
+    "sipReconnected": "SIP Opnieuw Verbonden",
+    "sipReconnectedMessage": "Succesvol opnieuw verbonden met Phantom-server. Opnieuw registreren..."
 }

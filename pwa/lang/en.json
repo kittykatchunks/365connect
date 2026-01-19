@@ -403,5 +403,11 @@
     "networkInternetRestored": "Network/Internet Restored",
     "networkRestoredMessage": "Please ensure you select REGISTER to reconnect to Phantom. If AGENT: Logged Out shows, you just need to login as normal.",
     "checkNetworkConnection": "Check Network/Internet Connection",
-    "networkLostMessage": "You appear to have lost network or internet connection."
+    "networkLostMessage": "You appear to have lost network or internet connection.",
+    "sipConnectionLost": "SIP Connection Lost",
+    "sipReconnecting": "Attempting to reconnect to Phantom server...",
+    "sipReconnectionFailed": "SIP Reconnection Failed",
+    "sipReconnectionMaxAttempts": "Maximum reconnection attempts reached. Please check your connection and re-register manually.",
+    "sipReconnected": "SIP Reconnected",
+    "sipReconnectedMessage": "Successfully reconnected to Phantom server. Re-registering..."
 }

@@ -399,5 +399,11 @@
     "networkInternetRestored": "Red/Internet Restaurada",
     "networkRestoredMessage": "Por favor asegúrese de seleccionar REGISTRAR para reconectar a Phantom. Si aparece AGENTE: Sesión cerrada, solo necesita iniciar sesión normalmente.",
     "checkNetworkConnection": "Verificar Conexión de Red/Internet",
-    "networkLostMessage": "Parece que ha perdido la conexión de red o internet."
+    "networkLostMessage": "Parece que ha perdido la conexión de red o internet.",
+    "sipConnectionLost": "Conexión SIP Perdida",
+    "sipReconnecting": "Intentando reconectar al servidor Phantom...",
+    "sipReconnectionFailed": "Fallo en la Reconexión SIP",
+    "sipReconnectionMaxAttempts": "Se alcanzó el máximo de intentos de reconexión. Por favor, verifique su conexión y regístrese manualmente.",
+    "sipReconnected": "SIP Reconectado",
+    "sipReconnectedMessage": "Reconectado exitosamente al servidor Phantom. Registrando nuevamente..."
 }
