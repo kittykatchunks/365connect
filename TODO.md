@@ -78,14 +78,17 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] If no pause reasons retrieved from succesfull API call to WallBoardStats then API call AgentpausefromPhone should be used to pause agent
 - [x] if WallBoardStats api failure then fallback should be to dial *63 ready for dtmf input to select pause reason code (if any available) It should NOT try and use AgentpausefromPhone
 - [x] Add to verbose logging to display contents sent and recieved for all API calls
-- [ ] When SIP connection is lost or unregistered all BLF subscriptions should be unsubscribed
-- [ ] Need to identify what settings should be removed with reset all settings option in advanced under settings
+- [X] When SIP connection is lost or unregistered all BLF subscriptions should be unsubscribed
+- [X] Need to identify what settings should be removed with reset all settings option in advanced under settings
 - [ ] Import/export feature has to be overhauled
 - [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages)
 - [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 - [x] When on active call and another is received on another line, then it should not use ringing tone but a call waiting tone instead through the ringer device.  Use the Alert.mp3 file as the tone, play back once every three seconds.
 - [x] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returning to a line when the call is on hold should NOT automatically unhold the call that should have to be done manually by the agent.  Also when on active call there should be no system notification for an incoming call
 - [ ] Systematically go through code to check that all hardcode text is internationalised properly
+- [X] When disconnected from the server for any reason all BLF buttons should automatically go into unsubscribed state
+- [X] When losing registration/connection to phantom server for any reason then the app should do exactly the same as if you had manually selected disconnect
+- [ ] Complete version change to initiate Update Message
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
@@ -95,3 +98,5 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Voicemail toast notification when dialing voicemail by selecting spool icon shows 'Calling Voicemail: {{code}}' as content
 - [ ] Timer on calls overhaul
 - [x] Indicate dialling on Call button when outbound call initiated.  Use --call-dialing-color as background color of button possibly good if you could get the colour to pulse slightly and change icon to phone handset with arrow going outward. When answered stay same background color but dont pulse and change icon back to normal phone handset.  Reset back to normal Call button defaults when call terminated
+- [ ] When BLF display is hidden in browser with reduced width display then the corresponding 'enable BLF' option in interface settings should also be hidden
+- [ ] Keypad size on mobile version

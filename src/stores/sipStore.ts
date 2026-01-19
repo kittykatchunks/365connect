@@ -50,6 +50,7 @@ interface SIPState {
   setBLFState: (extension: string, state: BLFPresenceState) => void;
   updateBLFState: (extension: string, state: BLFPresenceState) => void;
   clearBLFState: (extension: string) => void;
+  clearAllBLFStates: () => void;
   
   // Voicemail actions
   updateVoicemailMWI: (count: number, hasMessages: boolean) => void;
@@ -214,6 +215,17 @@ export const useSIPStore = create<SIPState>()(
         const newBLFStates = new Map(state.blfStates);
         newBLFStates.delete(extension);
         return { blfStates: newBLFStates };
+      }),
+      
+      clearAllBLFStates: () => set(() => {
+        const verboseLogging = isVerboseLoggingEnabled();
+        
+        if (verboseLogging) {
+          console.log('[sipStore] 🔕 Clearing all BLF button states - setting all to inactive/unsubscribed');
+        }
+        
+        // Clear all BLF states (this will cause buttons to show as inactive/unsubscribed)
+        return { blfStates: new Map() };
       }),
       
       // Voicemail actions

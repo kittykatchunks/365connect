@@ -124,6 +124,9 @@ export class SIPService {
   // Reconnection tracking
   private wasReconnecting = false;
   
+  // Track intentional disconnection to avoid cleanup loops
+  private isIntentionalDisconnect = false;
+  
   // Event system
   private listeners: Map<SIPEventType, Set<SIPEventCallback>> = new Map();
   
@@ -410,6 +413,9 @@ export class SIPService {
       return;
     }
 
+    // Mark this as an intentional disconnect
+    this.isIntentionalDisconnect = true;
+
     try {
       // Unsubscribe from all BLF subscriptions
       await this.unsubscribeAllBLF();
@@ -425,6 +431,9 @@ export class SIPService {
 
     } catch (error) {
       console.error('SIP unregistration error:', error);
+    } finally {
+      // Reset flag after unregister completes
+      this.isIntentionalDisconnect = false;
     }
   }
 
@@ -441,6 +450,35 @@ export class SIPService {
   }
 
   private handleUnregistration(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📝 Unregistration occurred', {
+        isIntentional: this.isIntentionalDisconnect,
+        transportState: this.transportState
+      });
+    }
+    
+    // Only trigger full cleanup if this is an unexpected unregistration
+    // Intentional disconnects already handle cleanup in stop() or unregister()
+    if (!this.isIntentionalDisconnect && this.transportState === 'connected') {
+      if (verboseLogging) {
+        console.log('[SIPService] 🔌 Unexpected unregistration detected - triggering full disconnect cleanup');
+      }
+      
+      // When losing registration unexpectedly, perform the same cleanup as manual disconnect
+      Promise.resolve().then(async () => {
+        try {
+          if (verboseLogging) {
+            console.log('[SIPService] 📞 Executing stop() to cleanup after unexpected registration loss');
+          }
+          await this.stop();
+        } catch (error) {
+          console.error('[SIPService] ❌ Error during registration loss cleanup:', error);
+        }
+      });
+    }
+    
     this.emit('unregistered', undefined);
   }
 
@@ -2098,13 +2136,43 @@ export class SIPService {
     
     if (verboseLogging) {
       console.log('[SIPService] ❌ SIP WebSocket transport disconnected', error?.message);
+      console.log('[SIPService] � Triggering full disconnect cleanup (same as manual disconnect)');
     }
     
     this.transportState = 'disconnected';
     this.emit('transportStateChanged', 'disconnected');
 
-    // Clear subscriptions
+    // Clear all BLF subscriptions when disconnected
+    if (verboseLogging && this.blfSubscriptions.size > 0) {
+      console.log(`[SIPService] 🔕 Clearing ${this.blfSubscriptions.size} BLF subscription(s)`);
+    }
     this.blfSubscriptions.clear();
+    
+    // When losing connection, perform the same cleanup as manual disconnect
+    // This ensures all sessions are terminated, subscriptions cleared, and state reset
+    // Only do this if it's not already an intentional disconnect (to avoid loops)
+    if (!this.isIntentionalDisconnect) {
+      if (verboseLogging) {
+        console.log('[SIPService] 🧹 Performing full disconnect cleanup to match manual disconnect behavior');
+      }
+      
+      // Call stop() asynchronously to perform full cleanup
+      // Use Promise.resolve() to avoid blocking the disconnect handler
+      Promise.resolve().then(async () => {
+        try {
+          if (verboseLogging) {
+            console.log('[SIPService] 📞 Executing stop() to cleanup after connection loss');
+          }
+          await this.stop();
+        } catch (error) {
+          console.error('[SIPService] ❌ Error during connection loss cleanup:', error);
+        }
+      });
+    } else {
+      if (verboseLogging) {
+        console.log('[SIPService] ℹ️ Skipping cleanup as this is part of intentional disconnect');
+      }
+    }
     
     // Mark as reconnecting if there was an error
     if (error) {
@@ -2134,6 +2202,9 @@ export class SIPService {
       }
       return;
     }
+
+    // Mark this as an intentional disconnect to prevent cleanup loops
+    this.isIntentionalDisconnect = true;
 
     if (verboseLogging) {
       console.log('[SIPService] 🔌 Stopping SIP service and cleaning up...');
@@ -2219,11 +2290,16 @@ export class SIPService {
       this.emit('transportStateChanged', 'disconnected');
       this.emit('registrationStateChanged', 'unregistered');
       
+      // 7. Reset the intentional disconnect flag
+      this.isIntentionalDisconnect = false;
+      
       if (verboseLogging) {
         console.log('[SIPService] ✅ SIP service stopped and cleaned up successfully');
       }
     } catch (error) {
       console.error('[SIPService] ❌ Error stopping UserAgent:', error);
+      // Reset flag even on error
+      this.isIntentionalDisconnect = false;
       throw error;
     }
   }

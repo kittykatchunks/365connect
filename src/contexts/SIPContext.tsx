@@ -85,6 +85,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
     removeSession,
     setSelectedLine,
     updateBLFState,
+    clearAllBLFStates,
     updateVoicemailMWI,
     clearVoicemailMWI
   } = useSIPStore();
@@ -170,6 +171,22 @@ export function SIPProvider({ children }: SIPProviderProps) {
         }
         clearVoicemailMWI();
       }
+    });
+    
+    // Listen for unregistered event to clear BLF states
+    const unsubUnregistered = service.on('unregistered', () => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔕 Unregistered event received - clearing all BLF button states');
+      }
+      clearAllBLFStates();
+    });
+    
+    // Listen for transport disconnection to clear BLF states
+    const unsubTransportDisconnected = service.on('transportDisconnected', (error: Error | null) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔌 Transport disconnected event received - clearing all BLF button states', error?.message);
+      }
+      clearAllBLFStates();
     });
     
     // Session events
@@ -566,6 +583,8 @@ export function SIPProvider({ children }: SIPProviderProps) {
     return () => {
       unsubTransportState();
       unsubRegState();
+      unsubUnregistered();
+      unsubTransportDisconnected();
       unsubSessionCreated();
       unsubSessionAnswered();
       unsubSessionTerminated();
@@ -595,6 +614,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
     setSelectedLine,
     updateVoicemailMWI,
     clearVoicemailMWI,
+    clearAllBLFStates,
     updateBLFState,
     addCallFromSession,
     clearTabAlert,
