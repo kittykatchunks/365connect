@@ -19,6 +19,7 @@ import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import type { SessionData } from '@/types';
 
 export function DialView() {
   const { t } = useTranslation();
@@ -45,6 +46,7 @@ export function DialView() {
   // Get selected line and line states from store
   const selectedLine = useSIPStore((state) => state.selectedLine);
   const lineStates = useSIPStore((state) => state.lineStates);
+  const sessions = useSIPStore((state) => state.sessions);
   const getSessionByLine = useSIPStore((state) => state.getSessionByLine);
   const getIncomingSession = useSIPStore((state) => state.getIncomingSession);
   
@@ -167,11 +169,57 @@ export function DialView() {
     // App is idle and we have an incoming call - auto-switch to it
     if (selectedLine !== incomingLine.lineNumber) {
       if (verboseLogging) {
-        console.log('[DialView] 📞 App idle - Auto-switching to first ringing line:', incomingLine.lineNumber, 'from:', selectedLine);
+        console.log('[DialView] 📞 App idle (incoming) - Auto-switching to ringing line:', incomingLine.lineNumber, 'from:', selectedLine);
       }
       selectLine(incomingLine.lineNumber as 1 | 2 | 3);
     }
   }, [lineStates, selectedLine, selectLine, getIncomingSession, verboseLogging]);
+
+  // Automatic line switching for outgoing calls - ONLY when app is idle and line 2/3 selected
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Find any outgoing/dialing session
+    const outgoingSession = Array.from(sessions.values()).find(
+      (session: SessionData) => session.direction === 'outgoing' && 
+                   (session.state === 'initiating' || session.state === 'connecting' || session.state === 'dialing')
+    );
+    
+    if (!outgoingSession) {
+      return;
+    }
+    
+    // Check if app was idle before this call (only one session exists - the new outgoing one)
+    const allSessions = Array.from(sessions.values());
+    const wasIdle = allSessions.length === 1 && allSessions[0].id === outgoingSession.id;
+    
+    if (!wasIdle) {
+      if (verboseLogging) {
+        console.log('[DialView] 📞 Outgoing call but other calls exist - NOT auto-switching');
+      }
+      return;
+    }
+    
+    // Find which line has the outgoing call
+    const outgoingLine = lineStates.find(
+      (line) => line.sessionId === outgoingSession.id
+    );
+    
+    if (!outgoingLine) {
+      if (verboseLogging) {
+        console.log('[DialView] ⚠️ Outgoing call but no line assigned:', outgoingSession.id);
+      }
+      return;
+    }
+    
+    // App was idle and we initiated an outgoing call - auto-switch to the line it's on (usually Line 1)
+    if (selectedLine !== outgoingLine.lineNumber) {
+      if (verboseLogging) {
+        console.log('[DialView] 📞 App idle (outgoing) - Auto-switching to dialing line:', outgoingLine.lineNumber, 'from:', selectedLine);
+      }
+      selectLine(outgoingLine.lineNumber as 1 | 2 | 3);
+    }
+  }, [sessions, lineStates, selectedLine, selectLine]);
   
   // Log line state changes
   useEffect(() => {

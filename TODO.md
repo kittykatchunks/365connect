@@ -89,6 +89,9 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] When disconnected from the server for any reason all BLF buttons should automatically go into unsubscribed state
 - [X] When losing registration/connection to phantom server for any reason then the app should do exactly the same as if you had manually selected disconnect
 - [x] Complete version change to initiate Update Message
+- [X] Ensure that the state of connection to the phantom server is based on an actual endpoint connection NOT just a websocket connection
+- [X] When idle (no active calls) and selected on line two or three and either an outgoing is initiated (say via voicemail icon) or an incoming call initiates then the call will use line 1, it will be necessary for these two scenarios only to auto switch to the line that is in use. advise you understanding before making changes
+- [ ] Check how I initiate the upgrade banner to show in react app
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
