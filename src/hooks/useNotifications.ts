@@ -119,7 +119,7 @@ export function useNotifications() {
           if (verboseLogging) {
             console.log('[useNotifications] 🖱️ Notification clicked');
           }
-          window.focus();
+          // Note: window.focus() is handled by the caller based on autoFocusOnNotificationAnswer setting
           options.onClick?.();
           notification.close();
         };

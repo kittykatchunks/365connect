@@ -250,6 +250,8 @@ export function SIPProvider({ children }: SIPProviderProps) {
                   console.log('[SIPContext] 📱 Auto-focus enabled - bringing window to front');
                 }
                 window.focus();
+              } else if (verboseLogging) {
+                console.log('[SIPContext] 📱 Auto-focus disabled - window will NOT be focused');
               }
               
               // Answer the call
