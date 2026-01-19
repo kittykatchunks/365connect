@@ -62,7 +62,8 @@ export function CompanyNumberModal({ isOpen, onClose, companyNumber }: CompanyNu
         cid: formData.cid
       });
       if (result) {
-        setError(result);
+        // Translate the error key returned from the store
+        setError(t(result, result));
         return;
       }
     } else {
@@ -74,7 +75,8 @@ export function CompanyNumberModal({ isOpen, onClose, companyNumber }: CompanyNu
       
       const result = addNumber(formData);
       if (result) {
-        setError(result);
+        // Translate the error key returned from the store
+        setError(t(result, result));
         return;
       }
     }

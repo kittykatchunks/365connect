@@ -25,6 +25,11 @@ export function WebRTCWarningBanner() {
   const [micError, setMicError] = useState<string | null>(null);
   const [isRequestingMic, setIsRequestingMic] = useState(false);
   
+  // Create wrapper function with the signature expected by utility functions
+  const translate = (key: string, fallback?: string): string => {
+    return t(key, fallback || '');
+  };
+  
   // Check permissions on mount (async operation)
   useEffect(() => {
     checkMediaPermissions().then(setPermissions);
@@ -55,7 +60,7 @@ export function WebRTCWarningBanner() {
   
   // Show WebRTC not supported error
   if (!capabilities.isSupported) {
-    const errorMessage = getWebRTCErrorMessage(capabilities);
+    const errorMessage = getWebRTCErrorMessage(capabilities, translate);
     
     return (
       <div className="webrtc-warning webrtc-warning--error">
@@ -119,7 +124,7 @@ export function WebRTCWarningBanner() {
             <p>{t('webrtc.mic_needed_desc', 'Grant microphone access to enable voice calls.')}</p>
             {micError && (
               <p className="webrtc-warning-error">
-                {getMicrophoneErrorMessage(micError)}
+                {getMicrophoneErrorMessage(micError, translate)}
               </p>
             )}
           </div>

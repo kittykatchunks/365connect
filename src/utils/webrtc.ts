@@ -118,25 +118,25 @@ export async function requestMicrophonePermission(): Promise<{
 /**
  * Get error message for WebRTC capability issues
  */
-export function getWebRTCErrorMessage(capabilities: WebRTCCapabilities): string | null {
+export function getWebRTCErrorMessage(capabilities: WebRTCCapabilities, t: (key: string, fallback?: string) => string): string | null {
   if (!capabilities.isSecureContext) {
-    return 'WebRTC requires a secure context (HTTPS). Please access this site via HTTPS.';
+    return t('error_webrtc_secure_context', 'WebRTC requires a secure context (HTTPS). Please access this site via HTTPS.');
   }
   
   if (!capabilities.hasWebSocket) {
-    return 'Your browser does not support WebSocket connections required for SIP signaling.';
+    return t('error_webrtc_websocket', 'Your browser does not support WebSocket connections required for SIP signaling.');
   }
   
   if (!capabilities.hasRTCPeerConnection) {
-    return 'Your browser does not support WebRTC peer connections required for voice calls.';
+    return t('error_webrtc_peerconnection', 'Your browser does not support WebRTC peer connections required for voice calls.');
   }
   
   if (!capabilities.hasGetUserMedia || !capabilities.hasMediaDevices) {
-    return 'Your browser does not support media device access required for microphone and speaker.';
+    return t('error_webrtc_media_devices', 'Your browser does not support media device access required for microphone and speaker.');
   }
   
   if (!capabilities.isSupported) {
-    return 'Your browser does not fully support WebRTC. Please use a modern browser like Chrome, Firefox, or Edge.';
+    return t('error_webrtc_not_supported', 'Your browser does not fully support WebRTC. Please use a modern browser like Chrome, Firefox, or Edge.');
   }
   
   return null;
@@ -145,16 +145,16 @@ export function getWebRTCErrorMessage(capabilities: WebRTCCapabilities): string 
 /**
  * Get user-friendly error message for microphone permission issues
  */
-export function getMicrophoneErrorMessage(errorCode: string): string {
+export function getMicrophoneErrorMessage(errorCode: string, t: (key: string, fallback?: string) => string): string {
   switch (errorCode) {
     case 'microphone_denied':
-      return 'Microphone access was denied. Please allow microphone access in your browser settings to make calls.';
+      return t('error_microphone_denied', 'Microphone access was denied. Please allow microphone access in your browser settings to make calls.');
     case 'microphone_not_found':
-      return 'No microphone was found. Please connect a microphone to make calls.';
+      return t('error_microphone_not_found', 'No microphone was found. Please connect a microphone to make calls.');
     case 'microphone_in_use':
-      return 'Your microphone is being used by another application. Please close other apps using your microphone.';
+      return t('error_microphone_in_use', 'Your microphone is being used by another application. Please close other apps using your microphone.');
     default:
-      return 'Failed to access microphone. Please check your audio settings and try again.';
+      return t('error_microphone_access', 'Failed to access microphone. Please check your audio settings and try again.');
   }
 }
 

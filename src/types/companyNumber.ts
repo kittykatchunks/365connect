@@ -14,17 +14,18 @@ export interface CompanyNumberFormData {
   cid: string;
 }
 
+// Validation returns translation key instead of translated string
 export function validateCompanyNumber(data: Partial<CompanyNumberFormData>): string | null {
   if (!data.company_id || data.company_id < 1 || data.company_id > 99) {
-    return 'Company ID must be between 1 and 99';
+    return 'error_company_id_range';
   }
   
   if (!data.name?.trim()) {
-    return 'Company name is required';
+    return 'error_company_name_required';
   }
   
   if (!data.cid?.trim()) {
-    return 'Telephone number is required';
+    return 'error_company_number_required';
   }
   
   return null;

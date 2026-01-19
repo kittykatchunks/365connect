@@ -28,32 +28,32 @@ export const AGENT_CODES = {
   unpause: '*63'
 } as const;
 
-export function getAgentStatusText(state: AgentState): string {
+export function getAgentStatusText(state: AgentState, t: (key: string, fallback?: string) => string): string {
   if (state.loginState === 'logged-out') {
-    return 'Logged Out';
+    return t('agent_status_logged_out', 'Logged Out');
   }
   
   if (state.loginState === 'logging-in') {
-    return 'Logging In...';
+    return t('agent_status_logging_in', 'Logging In...');
   }
   
   if (state.loginState === 'logging-out') {
-    return 'Logging Out...';
+    return t('agent_status_logging_out', 'Logging Out...');
   }
   
   if (state.pauseState === 'paused') {
-    return 'Paused';
+    return t('agent_status_paused', 'Paused');
   }
   
   if (state.pauseState === 'pausing') {
-    return 'Pausing...';
+    return t('agent_status_pausing', 'Pausing...');
   }
   
   if (state.pauseState === 'unpausing') {
-    return 'Resuming...';
+    return t('agent_status_resuming', 'Resuming...');
   }
   
-  return state.agentName || state.agentNumber || 'Logged In';
+  return state.agentName || state.agentNumber || t('agent_status_logged_in', 'Logged In');
 }
 
 export function formatAgentLoginDial(credentials: AgentLoginCredentials): string {

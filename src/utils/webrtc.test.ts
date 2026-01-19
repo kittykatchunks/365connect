@@ -36,6 +36,9 @@ describe('checkWebRTCSupport', () => {
 });
 
 describe('getWebRTCErrorMessage', () => {
+  // Mock translation function
+  const mockT = (key: string, fallback?: string) => fallback || key;
+  
   it('should return message for insecure context', () => {
     const capabilities = {
       isSupported: false,
@@ -47,7 +50,7 @@ describe('getWebRTCErrorMessage', () => {
       isSecureContext: false
     };
     
-    const message = getWebRTCErrorMessage(capabilities);
+    const message = getWebRTCErrorMessage(capabilities, mockT);
     expect(message).toContain('HTTPS');
   });
   
@@ -62,7 +65,7 @@ describe('getWebRTCErrorMessage', () => {
       isSecureContext: true
     };
     
-    const message = getWebRTCErrorMessage(capabilities);
+    const message = getWebRTCErrorMessage(capabilities, mockT);
     expect(message).toContain('WebSocket');
   });
   
@@ -77,7 +80,7 @@ describe('getWebRTCErrorMessage', () => {
       isSecureContext: true
     };
     
-    const message = getWebRTCErrorMessage(capabilities);
+    const message = getWebRTCErrorMessage(capabilities, mockT);
     expect(message).toContain('WebRTC');
   });
   
@@ -92,29 +95,32 @@ describe('getWebRTCErrorMessage', () => {
       isSecureContext: true
     };
     
-    const message = getWebRTCErrorMessage(capabilities);
+    const message = getWebRTCErrorMessage(capabilities, mockT);
     expect(message).toBeNull();
   });
 });
 
 describe('getMicrophoneErrorMessage', () => {
+  // Mock translation function
+  const mockT = (key: string, fallback?: string) => fallback || key;
+  
   it('should return message for denied permission', () => {
-    const message = getMicrophoneErrorMessage('microphone_denied');
+    const message = getMicrophoneErrorMessage('microphone_denied', mockT);
     expect(message).toContain('denied');
   });
   
   it('should return message for not found', () => {
-    const message = getMicrophoneErrorMessage('microphone_not_found');
+    const message = getMicrophoneErrorMessage('microphone_not_found', mockT);
     expect(message).toContain('found');
   });
   
   it('should return message for in use', () => {
-    const message = getMicrophoneErrorMessage('microphone_in_use');
+    const message = getMicrophoneErrorMessage('microphone_in_use', mockT);
     expect(message).toContain('another application');
   });
   
   it('should return generic message for unknown error', () => {
-    const message = getMicrophoneErrorMessage('unknown');
+    const message = getMicrophoneErrorMessage('unknown', mockT);
     expect(message).toBeTruthy();
   });
 });

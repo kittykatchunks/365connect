@@ -93,7 +93,7 @@ function LineKey({ lineNumber }: LineKeyProps) {
       {getIcon()}
       <span className="line-key-label">{getLabel()}</span>
       {state === 'hold' && (
-        <span className="line-key-status text-warning text-xs">HOLD</span>
+        <span className="line-key-status text-warning text-xs">{t('call_hold', 'HOLD')}</span>
       )}
     </button>
   );

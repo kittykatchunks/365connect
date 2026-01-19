@@ -3,13 +3,16 @@
 // ============================================
 
 import { cn } from '@/utils';
+import { useTranslation } from 'react-i18next';
 
 export interface LoadingScreenProps {
   message?: string;
   className?: string;
 }
 
-export function LoadingScreen({ message = 'Loading...', className }: LoadingScreenProps) {
+export function LoadingScreen({ message, className }: LoadingScreenProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className={cn('loading-screen', className)}>
       <div className="loading-content">
@@ -21,7 +24,7 @@ export function LoadingScreen({ message = 'Loading...', className }: LoadingScre
           />
         </div>
         <div className="loading-spinner" />
-        <p className="loading-message">{message}</p>
+        <p className="loading-message">{message || t('loading_default', 'Loading...')}</p>
       </div>
     </div>
   );
