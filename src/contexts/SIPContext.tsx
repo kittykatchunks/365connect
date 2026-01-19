@@ -4,15 +4,13 @@
  */
 
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
-import { useUIStore } from '../stores/uiStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useContactsStore } from '../stores/contactsStore';
-import { useTabNotification, useNetworkStatus } from '../hooks';
+import { useTabNotification } from '../hooks';
 import { useNotifications } from '../hooks/useNotifications';
 import { isVerboseLoggingEnabled } from '../utils';
 import type { 
@@ -77,7 +75,6 @@ interface SIPProviderProps {
 }
 
 export function SIPProvider({ children }: SIPProviderProps) {
-  const { t } = useTranslation();
   const serviceRef = useRef<SIPService>(sipService);
   
   // Get store actions
@@ -91,15 +88,11 @@ export function SIPProvider({ children }: SIPProviderProps) {
     updateBLFState
   } = useSIPStore();
   
-  const addNotification = useUIStore((state) => state.addNotification);
   const { sipConfig, settings } = useSettingsStore();
   const { setTabAlert, clearTabAlert } = useTabNotification();
   const { addCallFromSession } = useCallHistoryStore();
   const { showIncomingCallNotification, requestPermission } = useNotifications();
   const { contacts } = useContactsStore();
-  
-  // Monitor network status
-  useNetworkStatus();
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
@@ -510,33 +503,6 @@ export function SIPProvider({ children }: SIPProviderProps) {
       }
     });
     
-    // Reconnection events
-    const unsubReconnecting = service.on('reconnectionAttempting', () => {
-      if (verboseLogging) {
-        console.log('[SIPContext] 🔄 SIP reconnection attempting');
-      }
-      
-      addNotification({
-        type: 'warning',
-        title: t('notifications.sip_connection_lost', 'SIP Connection Lost'),
-        message: t('notifications.sip_reconnecting', 'Attempting to reconnect to Phantom server...'),
-        duration: 5000
-      });
-    });
-    
-    const unsubReconnected = service.on('reconnectionSuccess', () => {
-      if (verboseLogging) {
-        console.log('[SIPContext] ✅ SIP reconnection successful');
-      }
-      
-      addNotification({
-        type: 'success',
-        title: t('notifications.sip_reconnected', 'SIP Reconnected'),
-        message: t('notifications.sip_reconnected_message', 'Successfully reconnected to Phantom server. Re-registering...'),
-        duration: 5000
-      });
-    });
-    
     // Cleanup
     return () => {
       unsubTransportState();
@@ -559,8 +525,6 @@ export function SIPProvider({ children }: SIPProviderProps) {
       unsubAttendedTransferTerminated();
       unsubAttendedTransferCompleted();
       unsubAttendedTransferCancelled();
-      unsubReconnecting();
-      unsubReconnected();
     };
   }, [
     setRegistrationState,
@@ -715,9 +679,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
     },
     
     unsubscribeBLF: (extension: string) => {
-      serviceRef.current.unsubscribeBLF(extension).catch(error => {
-        console.error('[SIPContext] ❌ Failed to unsubscribe BLF:', error);
-      });
+      serviceRef.current.unsubscribeBLF(extension);
     },
     
     // Line management
