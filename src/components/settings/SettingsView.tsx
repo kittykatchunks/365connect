@@ -227,22 +227,18 @@ export function SettingsView() {
     }
   };
   
-  const testMicrophone = async () => {
-    setTestingDevice('microphone');
+  const testRinger = async () => {
+    setTestingDevice('ringer');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: settings.audio.microphoneDevice 
-          ? { deviceId: { exact: settings.audio.microphoneDevice } }
-          : true
-      });
-      
-      // Stop after 3 seconds
-      setTimeout(() => {
-        stream.getTracks().forEach((track) => track.stop());
-        setTestingDevice(null);
-      }, 3000);
+      const audio = new Audio(`/media/${settings.audio.ringtoneFile}`);
+      const ringerDevice = settings.audio.ringerDevice;
+      if ('setSinkId' in audio && ringerDevice) {
+        await (audio as HTMLAudioElement & { setSinkId: (id: string) => Promise<void> }).setSinkId(ringerDevice);
+      }
+      await audio.play();
+      audio.onended = () => setTestingDevice(null);
     } catch (err) {
-      console.error('Failed to test microphone:', err);
+      console.error('Failed to test ringer:', err);
       setTestingDevice(null);
     }
   };
@@ -550,25 +546,12 @@ export function SettingsView() {
                         <Mic className="inline-icon" />
                         {t('settings.microphone', 'Microphone')}
                       </label>
-                      <div className="audio-device-row">
-                        <Select
-                          value={settings.audio.microphoneDevice}
-                          onChange={(e) => setMicrophoneDevice(e.target.value)}
-                          options={microphoneOptions}
-                          disabled={audioLoading}
-                        />
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={testMicrophone}
-                          disabled={testingDevice === 'microphone'}
-                        >
-                          <Play className={`w-4 h-4 ${testingDevice === 'microphone' ? 'animate-pulse' : ''}`} />
-                        </Button>
-                      </div>
-                      {testingDevice === 'microphone' && (
-                        <span className="form-hint">{t('settings.mic_testing', 'Testing microphone... speak now')}</span>
-                      )}
+                      <Select
+                        value={settings.audio.microphoneDevice}
+                        onChange={(e) => setMicrophoneDevice(e.target.value)}
+                        options={microphoneOptions}
+                        disabled={audioLoading}
+                      />
                     </div>
                     
                     <div className="setting-item">
@@ -583,6 +566,14 @@ export function SettingsView() {
                           options={speakerOptions}
                           disabled={audioLoading}
                         />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={testRinger}
+                          disabled={testingDevice === 'ringer'}
+                        >
+                          <Play className={`w-4 h-4 ${testingDevice === 'ringer' ? 'animate-pulse' : ''}`} />
+                        </Button>
                       </div>
                     </div>
                     
