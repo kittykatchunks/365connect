@@ -4,7 +4,7 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
-import { Phone, PhoneOff, Mic, MicOff, Pause, Play, PhoneForwarded } from 'lucide-react';
+import { Phone, PhoneOff, PhoneOutgoing, Mic, MicOff, Pause, Play, PhoneForwarded } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled } from '@/utils';
 import { Button } from '@/components/ui';
 
@@ -18,6 +18,7 @@ interface CallActionButtonsProps {
   // Call info
   isMuted?: boolean;
   isOnHold?: boolean;
+  isEstablished?: boolean; // true when call is answered/connected
   
   // Actions
   onCall: () => void;
@@ -44,6 +45,7 @@ export function CallActionButtons({
   hasIncoming,
   isMuted = false,
   isOnHold = false,
+  isEstablished = false,
   onCall,
   onAnswer,
   onEndCall,
@@ -68,6 +70,7 @@ export function CallActionButtons({
       hasIncoming,
       isMuted,
       isOnHold,
+      isEstablished,
       disabled,
       isDialing,
       hasDialValue,
@@ -153,6 +156,18 @@ export function CallActionButtons({
   if (verboseLogging) {
     console.log('[CallActionButtons] 📱 Rendering dial-actions container (idle/ringing state)');
   }
+  
+  // Determine button state for styling
+  // - 'dialing' when isDialing is true (call initiated but not yet answered)
+  // - 'answered' when isEstablished is true (call is connected/answered) but not yet in call state
+  // - normal when idle
+  const callButtonState = isDialing && !isEstablished ? 'dialing' : isEstablished ? 'answered' : '';
+  
+  // Icon logic:
+  // - PhoneOutgoing when dialing
+  // - Phone when answered or normal
+  const CallIcon = isDialing && !isEstablished ? PhoneOutgoing : Phone;
+  
   return (
     <div className={cn('call-controls-container', className)}>
       <div className="dial-actions">{
@@ -166,7 +181,9 @@ export function CallActionButtons({
               hasIncoming,
               action: hasIncoming ? 'answer' : 'call',
               hasDialValue,
-              isDialing
+              isDialing,
+              isEstablished,
+              callButtonState
             });
           }
           if (hasIncoming) {
@@ -185,10 +202,11 @@ export function CallActionButtons({
         }
         className={cn(
           'call-button uppercase',
-          hasIncoming && 'answer-btn'
+          hasIncoming && 'answer-btn',
+          callButtonState // 'dialing' or 'answered' or ''
         )}
       >
-        <Phone className="icon" />
+        <CallIcon className="icon" />
       </Button>
       
       {/* END/REJECT Button */}

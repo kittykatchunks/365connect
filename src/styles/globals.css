@@ -246,6 +246,17 @@ a {
   50% { opacity: 0.5; }
 }
 
+@keyframes pulse-dial {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
+}
+
 @keyframes ring {
   0%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(15deg); }
@@ -1616,6 +1627,19 @@ a {
 /* Answer button animation (when incoming call) */
 .answer-btn {
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Call button dialing state - purple background with pulse */
+.call-button.dialing {
+  background-color: var(--call-dialing-color) !important;
+  border-color: var(--call-dialing-color) !important;
+  animation: pulse-dial 1.2s ease-in-out infinite;
+}
+
+/* Call button answered state - purple background without pulse */
+.call-button.answered {
+  background-color: var(--call-dialing-color) !important;
+  border-color: var(--call-dialing-color) !important;
 }
 
 /* Call Action Buttons - Responsive sizing */

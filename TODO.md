@@ -84,7 +84,8 @@ Thirdly, clarification of SIP call state and call-timer
 - [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages)
 - [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 - [x] When on active call and another is received on another line, then it should not use ringing tone but a call waiting tone instead through the ringer device.  Use the Alert.mp3 file as the tone, play back once every three seconds.
-- [x] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returning to a line when the call is on hold should NOT automatically unhold the call that should have to be done manually by the agent 
+- [x] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returning to a line when the call is on hold should NOT automatically unhold the call that should have to be done manually by the agent.  Also when on active call there should be no system notification for an incoming call
+- [ ] Systematically go through code to check that all hardcode text is internationalised properly
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
@@ -92,4 +93,5 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Voicemail spool icon dislpay and location needs to be resolved - Spool Icon (theme coloured) - right justified in agent status div
 - [X] Voicemail label upon notify needs to be (Count) New Messages - Spool Icon (Flashing Red)
 - [X] Voicemail toast notification when dialing voicemail by selecting spool icon shows 'Calling Voicemail: {{code}}' as content
-- [ ] Timer on calls overhaul 
+- [ ] Timer on calls overhaul
+- [x] Indicate dialling on Call button when outbound call initiated.  Use --call-dialing-color as background color of button possibly good if you could get the colour to pulse slightly and change icon to phone handset with arrow going outward. When answered stay same background color but dont pulse and change icon back to normal phone handset.  Reset back to normal Call button defaults when call terminated

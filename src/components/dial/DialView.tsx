@@ -77,6 +77,13 @@ export function DialView() {
     selectedLineSession.onHold
   );
   
+  // Check if call is established (answered/connected) - for call button styling
+  const isCallEstablished = selectedLineSession && (
+    selectedLineSession.state === 'established' ||
+    selectedLineSession.state === 'active' ||
+    selectedLineSession.state === 'hold'
+  );
+  
   // Determine if we should show call info display or dial input
   const showCallInfo = selectedLineSession && selectedLineSession.state !== 'terminated';
   
@@ -162,6 +169,23 @@ export function DialView() {
       console.log('[DialView] 📊 Selected line changed:', selectedLine, 'sessionOnLine:', selectedLineSession?.id || 'none');
     }
   }, [selectedLine, selectedLineSession?.id, verboseLogging]);
+  
+  // Reset isDialing when call becomes established or terminates
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (isDialing && selectedLineSession) {
+      const sessionState = selectedLineSession.state;
+      
+      // Reset dialing state when call is established/answered or terminated
+      if (sessionState === 'established' || sessionState === 'active' || sessionState === 'terminated') {
+        if (verboseLogging) {
+          console.log('[DialView] 🔄 Resetting isDialing state due to session state:', sessionState);
+        }
+        setIsDialing(false);
+      }
+    }
+  }, [isDialing, selectedLineSession, verboseLogging]);
   
   // Handle pending dial number from callback/contact actions
   useEffect(() => {
@@ -623,6 +647,7 @@ export function DialView() {
             hasIncoming={!!hasIncomingOnSelectedLine}
             isMuted={selectedLineSession?.muted || false}
             isOnHold={selectedLineSession?.onHold || false}
+            isEstablished={!!isCallEstablished}
             onCall={handleCall}
             onAnswer={handleAnswer}
             onEndCall={handleEndCall}
