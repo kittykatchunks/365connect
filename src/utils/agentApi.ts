@@ -66,11 +66,23 @@ export async function fetchPauseReasons(deviceExtension: string): Promise<PauseR
       console.log('[AgentAPI] 📥 Pause reasons response:', result);
     }
     
-    if (!result.success || !result.data?.pausereasons) {
+    if (!result.success) {
+      // API call FAILED - should fallback to DTMF *63
       if (verboseLogging) {
-        console.log('[AgentAPI] ⚠️ No pause reasons in response');
+        console.log('[AgentAPI] ❌ WallBoardStats API call failed');
       }
-      // API succeeded but no pause reasons data
+      return {
+        success: false,
+        apiCallSucceeded: false,
+        reasons: []
+      };
+    }
+    
+    if (!result.data?.pausereasons) {
+      // API call SUCCEEDED but no pause reasons data - should use AgentpausefromPhone NoAuth API
+      if (verboseLogging) {
+        console.log('[AgentAPI] ⚠️ No pause reasons in successful response');
+      }
       return {
         success: true,
         apiCallSucceeded: true,
