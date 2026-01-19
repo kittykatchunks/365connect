@@ -464,10 +464,6 @@ export function SIPProvider({ children }: SIPProviderProps) {
       updateSession(sessionId, { state: state as SessionData['state'] });
     });
     
-    const unsubSessionDuration = service.on('sessionDurationChanged', ({ sessionId, duration }) => {
-      updateSession(sessionId, { duration });
-    });
-    
     const unsubSessionMuted = service.on('sessionMuted', ({ sessionId, muted }) => {
       updateSession(sessionId, { muted });
     });
@@ -589,7 +585,6 @@ export function SIPProvider({ children }: SIPProviderProps) {
       unsubSessionAnswered();
       unsubSessionTerminated();
       unsubSessionStateChanged();
-      unsubSessionDuration();
       unsubSessionMuted();
       unsubSessionModified();
       unsubLineSelected();

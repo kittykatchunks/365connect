@@ -55,33 +55,55 @@ export function CallInfoDisplay({ session, className }: CallInfoDisplayProps) {
     callStateClass = 'call-dialing';
   }
   
-  // Timer effect - update duration every second when call is active
-  // Timer continues regardless of hold state
+  // Timer effect - handles both ringing and established call timers
+  // For incoming ringing calls: counts up from startTime until answered or disconnected
+  // For established calls: counts up from answerTime, continues regardless of hold/mute state
   useEffect(() => {
-    // Only run timer when call is established (connected)
-    if ((session.state !== 'established' && session.state !== 'active') || !session.startTime) {
+    // Determine which time reference to use
+    let referenceTime: Date | null = null;
+    let timerType: 'ring' | 'talk' | 'none' = 'none';
+    
+    // Incoming call ringing - show ring duration
+    if (session.direction === 'incoming' && session.state === 'ringing' && session.startTime) {
+      referenceTime = session.startTime;
+      timerType = 'ring';
+    } 
+    // Established call (any direction) - show talk duration from answer time
+    else if ((session.state === 'established' || session.state === 'active') && session.answerTime) {
+      referenceTime = session.answerTime;
+      timerType = 'talk';
+    }
+    
+    // No timer needed for other states (outgoing dialing, etc.)
+    if (!referenceTime || timerType === 'none') {
       setCallDuration(0);
       return;
     }
     
-    const startTimeMs = session.startTime instanceof Date 
-      ? session.startTime.getTime() 
-      : new Date(session.startTime).getTime();
+    const referenceTimeMs = referenceTime instanceof Date 
+      ? referenceTime.getTime() 
+      : new Date(referenceTime).getTime();
     
-    // Validate start time
-    if (isNaN(startTimeMs) || startTimeMs <= 0) {
-      console.error('[CallInfoDisplay] Invalid start time:', session.startTime);
+    // Validate reference time
+    if (isNaN(referenceTimeMs) || referenceTimeMs <= 0) {
+      console.error('[CallInfoDisplay] Invalid reference time:', referenceTime);
       setCallDuration(0);
       return;
     }
     
     if (verboseLogging) {
-      console.log('[CallInfoDisplay] ⏱️ Starting call timer - sessionId:', session.id, 'startTime:', new Date(startTimeMs).toISOString());
+      console.log('[CallInfoDisplay] ⏱️ Starting timer:', {
+        sessionId: session.id,
+        type: timerType,
+        direction: session.direction,
+        state: session.state,
+        referenceTime: new Date(referenceTimeMs).toISOString()
+      });
     }
     
     // Update duration immediately
     const updateDuration = () => {
-      const elapsed = Math.floor((Date.now() - startTimeMs) / 1000);
+      const elapsed = Math.floor((Date.now() - referenceTimeMs) / 1000);
       // Ensure elapsed time is valid and positive
       if (elapsed >= 0 && elapsed < 86400) { // Sanity check: less than 24 hours
         setCallDuration(elapsed);
@@ -96,11 +118,11 @@ export function CallInfoDisplay({ session, className }: CallInfoDisplayProps) {
     // Cleanup interval on unmount or when session state changes
     return () => {
       if (verboseLogging) {
-        console.log('[CallInfoDisplay] ⏱️ Stopping call timer - sessionId:', session.id);
+        console.log('[CallInfoDisplay] ⏱️ Stopping timer - sessionId:', session.id, 'type:', timerType);
       }
       clearInterval(intervalId);
     };
-  }, [session.id, session.state, session.startTime, verboseLogging]);
+  }, [session.id, session.direction, session.state, session.startTime, session.answerTime, verboseLogging]);
   
   // Log when component mounts/updates (excluding duration changes to avoid spam)
   useEffect(() => {
@@ -130,7 +152,12 @@ export function CallInfoDisplay({ session, className }: CallInfoDisplayProps) {
       <div className="call-secondary-info">
         <span className="call-direction">{callState}</span>
         <span className="call-duration">
-          {(session.state === 'established' || session.state === 'active') ? formatCallTimer(callDuration) : '00:00'}
+          {/* Show timer for ringing incoming calls or established calls */}
+          {((session.direction === 'incoming' && session.state === 'ringing') || 
+            session.state === 'established' || 
+            session.state === 'active') 
+            ? formatCallTimer(callDuration) 
+            : '00:00'}
         </span>
       </div>
     </div>

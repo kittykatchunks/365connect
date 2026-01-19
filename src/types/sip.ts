@@ -267,7 +267,6 @@ export type SIPEventType =
   | 'sessionTerminated'
   | 'sessionModified'
   | 'sessionStateChanged'
-  | 'sessionDurationChanged'
   | 'sessionMuted'
   | 'sessionError'
   | 'incomingCall'
@@ -324,7 +323,6 @@ export interface SIPEventMap {
   sessionTerminated: SessionData & { reason?: string };
   sessionModified: { sessionId: string; action: 'mute' | 'unmute' | 'hold' | 'unhold' };
   sessionStateChanged: { sessionId: string; state: SessionState | string };
-  sessionDurationChanged: { sessionId: string; duration: number };
   sessionMuted: { sessionId: string; muted: boolean };
   sessionError: { sessionId?: string; target?: string; error: Error };
   incomingCall: SessionData;

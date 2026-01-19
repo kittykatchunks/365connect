@@ -129,9 +129,6 @@ export class SIPService {
   
   // Event system
   private listeners: Map<SIPEventType, Set<SIPEventCallback>> = new Map();
-  
-  // Duration tracking intervals
-  private durationIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
 
   // ==================== Constructor ====================
   
@@ -786,9 +783,6 @@ export class SIPService {
           
           const { session: _s, ...answeredData } = sessionData;
           this.emit('sessionAnswered', answeredData);
-          
-          // Start duration tracking
-          this.startDurationTracking(sessionId);
           break;
         }
           
@@ -799,25 +793,7 @@ export class SIPService {
     });
   }
 
-  private startDurationTracking(sessionId: string): void {
-    const interval = setInterval(() => {
-      const sessionData = this.sessions.get(sessionId);
-      if (sessionData && sessionData.answerTime && isSessionEstablished(sessionData.session.state)) {
-        sessionData.duration = Math.floor((Date.now() - sessionData.answerTime.getTime()) / 1000);
-        this.emit('sessionDurationChanged', { sessionId, duration: sessionData.duration });
-      }
-    }, 1000);
-    
-    this.durationIntervals.set(sessionId, interval);
-  }
 
-  private stopDurationTracking(sessionId: string): void {
-    const interval = this.durationIntervals.get(sessionId);
-    if (interval) {
-      clearInterval(interval);
-      this.durationIntervals.delete(sessionId);
-    }
-  }
 
   private setupAudioRouting(session: SIP.Session): void {
     try {
@@ -910,9 +886,6 @@ export class SIPService {
         });
       }
       
-      // Stop duration tracking immediately
-      this.stopDurationTracking(sessionId);
-      
       switch (session.state) {
         case SIP.SessionState.Initial:
         case SIP.SessionState.Establishing:
@@ -954,18 +927,34 @@ export class SIPService {
     sessionData: SessionData & { session: SIP.Session }, 
     reason = 'Normal termination'
   ): void {
+    const verboseLogging = isVerboseLoggingEnabled();
     const { id: sessionId, lineNumber } = sessionData;
 
-    // Calculate final duration
+    // Calculate final duration based on call state
     if (sessionData.answerTime) {
+      // Call was answered - calculate talk duration
       sessionData.duration = Math.floor((Date.now() - sessionData.answerTime.getTime()) / 1000);
       this.stats.totalDuration += sessionData.duration;
-    } else if (sessionData.direction === 'incoming') {
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📊 Call completed - talk duration:', sessionData.duration, 'seconds');
+      }
+    } else if (sessionData.direction === 'incoming' && sessionData.startTime) {
+      // Incoming call was never answered - calculate ring duration for call history
+      sessionData.duration = Math.floor((Date.now() - sessionData.startTime.getTime()) / 1000);
       this.stats.missedCalls++;
+      
+      if (verboseLogging) {
+        console.log('[SIPService] 📞 Missed call - ring duration:', sessionData.duration, 'seconds');
+      }
+    } else if (sessionData.direction === 'incoming') {
+      // Incoming call with no startTime (shouldn't happen, but handle gracefully)
+      this.stats.missedCalls++;
+      
+      if (verboseLogging) {
+        console.warn('[SIPService] ⚠️ Missed call with no startTime');
+      }
     }
-
-    // Stop duration tracking
-    this.stopDurationTracking(sessionId);
 
     // Clean up audio elements
     this.cleanupAudioElements();
@@ -2217,9 +2206,6 @@ export class SIPService {
       }
       for (const [sessionId, sessionData] of this.sessions) {
         try {
-          // Stop duration tracking
-          this.stopDurationTracking(sessionId);
-          
           // Dispose the SIP.js session
           await sessionData.session.dispose();
           
