@@ -35,8 +35,9 @@ import {
 } from '@/components/ui';
 import { ImportExportModal, ConfirmModal } from '@/components/modals';
 import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
-import { useAudioDevices } from '@/hooks';
+import { useAudioDevices, useMediaQuery } from '@/hooks';
 import { useNotifications } from '@/hooks/useNotifications';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 export function SettingsView() {
   const { t } = useTranslation();
@@ -71,6 +72,9 @@ export function SettingsView() {
   
   // Notifications hook for test
   const { showIncomingCallNotification, permission: notificationPermission } = useNotifications();
+  
+  // Responsive hook - hide BLF toggle when BLF panels are hidden (< 480px)
+  const isBLFHidden = useMediaQuery('(max-width: 480px)');
   
   // Audio devices hook
   const { 
@@ -115,6 +119,18 @@ export function SettingsView() {
       return () => clearTimeout(timer);
     }
   }, [openWithConnection, setOpenSettingsWithConnection]);
+  
+  // Log BLF visibility changes for debugging
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    if (verboseLogging) {
+      console.log('[SettingsView] 📱 BLF display responsive state changed:', {
+        isBLFHidden,
+        screenWidth: window.innerWidth,
+        toggleVisible: !isBLFHidden
+      });
+    }
+  }, [isBLFHidden]);
   
   // Microphone level monitoring
   useEffect(() => {
@@ -457,14 +473,16 @@ export function SettingsView() {
                 
                 <div className="settings-divider" />
                 
-                <div className="setting-item">
-                  <Toggle
-                    label={t('settings.blf_enabled', 'Enable BLF Panels')}
-                    description={t('settings.blf_enabled_desc', 'Show Busy Lamp Field panels on dial view')}
-                    checked={settings.interface.blfEnabled}
-                    onChange={(checked) => setBLFEnabled(checked)}
-                  />
-                </div>
+                {!isBLFHidden && (
+                  <div className="setting-item">
+                    <Toggle
+                      label={t('settings.blf_enabled', 'Enable BLF Panels')}
+                      description={t('settings.blf_enabled_desc', 'Show Busy Lamp Field panels on dial view')}
+                      checked={settings.interface.blfEnabled}
+                      onChange={(checked) => setBLFEnabled(checked)}
+                    />
+                  </div>
+                )}
                 <div className="setting-item">
                   <Toggle
                     label={t('settings.onscreen_notifications', 'On-screen Notifications')}

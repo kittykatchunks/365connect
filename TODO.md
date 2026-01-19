@@ -80,7 +80,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] Add to verbose logging to display contents sent and recieved for all API calls
 - [X] When SIP connection is lost or unregistered all BLF subscriptions should be unsubscribed
 - [X] Need to identify what settings should be removed with reset all settings option in advanced under settings
-- [ ] Import/export feature has to be overhauled
+- [X] Import/export feature has to be overhauled
 - [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages)
 - [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 - [x] When on active call and another is received on another line, then it should not use ringing tone but a call waiting tone instead through the ringer device.  Use the Alert.mp3 file as the tone, play back once every three seconds.
@@ -98,6 +98,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Voicemail toast notification when dialing voicemail by selecting spool icon shows 'Calling Voicemail: {{code}}' as content
 - [ ] Timer on calls overhaul
 - [x] Indicate dialling on Call button when outbound call initiated.  Use --call-dialing-color as background color of button possibly good if you could get the colour to pulse slightly and change icon to phone handset with arrow going outward. When answered stay same background color but dont pulse and change icon back to normal phone handset.  Reset back to normal Call button defaults when call terminated
-- [ ] When BLF display is hidden in browser with reduced width display then the corresponding 'enable BLF' option in interface settings should also be hidden
+- [x] When BLF display is hidden in browser with reduced width display then the corresponding 'enable BLF' option in interface settings should also be hidden
 - [x] Line Keys and Company Number selection should be disabled when in disconnected state
-- [ ] Double the keypad size on mobile version only
+- [X] Double the dialpad size on mobile version only
+- [ ] Double the size of the dialpad on the desktop version
