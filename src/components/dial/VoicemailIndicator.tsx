@@ -65,10 +65,14 @@ export function VoicemailIndicator() {
     }
   };
   
+  const messageText = voicemailCount === 1 
+    ? t('voicemail.new_message', 'New Message')
+    : t('voicemail.new_messages', 'New Messages');
+
   return (
     <div className="voicemail-item">
       <span className="voicemail-count">{voicemailCount}</span>
-      <span className="voicemail-text">{t('voicemail.new', 'NEW')}</span>
+      <span className="voicemail-text">{messageText}</span>
       <i
         className={cn(
           'fas fa-voicemail voicemail-icon',

@@ -423,38 +423,37 @@ a {
 .voicemail-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   justify-content: flex-end;
   flex: none;
-  font-size: 12px;
+  font-size: 0.875rem;
   min-width: auto;
   margin-left: auto;
 }
 
 .voicemail-count {
-  color: var(--text-color-muted);
+  color: var(--text-color);
   font-weight: 600;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .voicemail-text {
-  color: var(--text-color-muted);
-  font-weight: 500;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  color: var(--text-color);
+  font-weight: 400;
 }
 
 .voicemail-icon {
   color: var(--text-color-muted);
-  font-size: 16px;
+  font-size: 18px;
   opacity: 0.9;
   transition: all 0.2s ease;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
   cursor: pointer;
+  margin-left: 2px;
 }
 
 .voicemail-icon:hover {
   opacity: 1;
   transform: scale(1.1);
+  color: var(--primary-color);
 }
 
 .voicemail-icon:focus {
@@ -463,40 +462,37 @@ a {
   border-radius: var(--radius-sm);
 }
 
-/* Message waiting indication - flashing red */
+/* Message waiting indication - slowly flashing red icon only */
 .voicemail-icon.message-waiting {
-  color: red;
-  animation: flashRed 2s infinite;
+  animation: flashRedSlow 3s infinite ease-in-out;
 }
 
-@keyframes flashRed {
-  0%, 50% {
-    color: white;
+@keyframes flashRedSlow {
+  0%, 100% {
+    color: var(--text-color-muted);
+    opacity: 0.9;
   }
-  25%, 75% {
-    color: red;
-    text-shadow: 0 0 6px rgba(204, 0, 0, 1);
+  50% {
+    color: #e53e3e;
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(229, 62, 62, 0.6));
   }
 }
 
 /* Dark theme adjustments for voicemail */
-[data-theme="dark"] .voicemail-count,
-[data-theme="dark"] .voicemail-text,
-[data-theme="dark"] .voicemail-icon {
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-}
-
 [data-theme="dark"] .voicemail-icon.message-waiting {
-  animation: flashRedDark 2s infinite;
+  animation: flashRedSlowDark 3s infinite ease-in-out;
 }
 
-@keyframes flashRedDark {
-  0%, 50% {
-    color: #cbd5e0; /* Light gray for dark theme */
+@keyframes flashRedSlowDark {
+  0%, 100% {
+    color: var(--text-color-muted);
+    opacity: 0.9;
   }
-  25%, 75% {
-    color: #ff4444; /* Brighter red for dark theme */
-    text-shadow: 0 0 8px rgba(255, 68, 68, 0.8);
+  50% {
+    color: #ff5555;
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(255, 85, 85, 0.7));
   }
 }
 

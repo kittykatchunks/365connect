@@ -97,7 +97,8 @@
         "confirm_change": "Alterar CLI?"
     },    "voicemail": {
         "title": "Correio de voz",
-        "new": "NOVO",
+        "new_message": "Nova Mensagem",
+        "new_messages": "Novas Mensagens",
         "title_with_count": "Correio de voz ({{count}} nova mensagem)",
         "check_messages": "Verificar {{count}} nova mensagem de correio de voz",
         "not_configured": "Código de acesso ao correio de voz não configurado. Por favor, configure nas Configurações de Conexão.",

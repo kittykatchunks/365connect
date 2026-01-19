@@ -74,4 +74,18 @@ Thirdly, clarification of SIP call state and call-timer
 
 
 ### Issues to be resolved before release
-- [ ] Pause api failure should fallback to *63 dtmf dial ready for dtmf input for pause reason choice (if any available)
+- [ ] If no pause reasons retrieved from succesfull API call to WallBoardStats then API call AgentpausefromPhone should be used to pause agent
+- [ ] Pause api failure should fallback to *63 dtmf dial ready for dtmf input for pause reason choice (if any available) not try and use AgentpausefromPhone
+- [ ] AgentpausefromPhone api should be requested with NoAuth
+- [ ] Add to verbose logging to display contents sent and recieved for all API calls
+- [ ] When unregistered all BLF subscriptions should be terminated
+- [ ] Need to identify what settings should be removed with reset all settings option in advanced under settings
+- [ ] Import/export feature has to be overhauled
+- [ ] Toast notifications need to be overhauled - need to identify when to use (all error should be shown, user options for warning, success messages)
+- [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
+
+### UI issues to be resolved before release
+- [ ] App loading screen has blue square that needs to be removed
+- [ ] When select reset all settings should be warning similar to deleting all contacts warning message that confirms 'ALL settings will be lost, including connect settings, are you really sure this is what you want to do'.  This links to an issue above in respect of what gets removed
+- [ ] Voicemail spool icon dislpay and location needs to be resolved - Spool Icon (theme coloured) - right justified in agent status div
+- [ ] Voicemail label upon notify needs to be (Count) New Messages - Spool Icon (Flashing Red)

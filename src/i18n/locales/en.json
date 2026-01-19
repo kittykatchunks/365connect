@@ -98,7 +98,8 @@
     },
     "voicemail": {
         "title": "Voicemail",
-        "new": "NEW",
+        "new_message": "New Message",
+        "new_messages": "New Messages",
         "title_with_count": "Voicemail ({{count}} new message)",
         "check_messages": "Check {{count}} new voicemail message",
         "not_configured": "VM Access code not configured. Please set it in Connection Settings.",
