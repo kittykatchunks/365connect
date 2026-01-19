@@ -875,15 +875,17 @@ class AgentButtonsManager {
             const result = await apiManager.post('WallBoardStats', { phone: username });
             
             if (!result.success) {
-                console.warn('Failed to fetch pause reasons, falling back to DTMF method');
+                // WallBoardStats API FAILED - fallback to DTMF *63
+                console.warn('WallBoardStats API failed, falling back to DTMF method');
                 await this.performPause();
                 return;
             }
             
             const pausereasons = result.data?.pausereasons;
             if (!pausereasons) {
-                console.warn('No pause reasons in API response, falling back to DTMF method');
-                await this.performPause();
+                // WallBoardStats succeeded but no pausereasons object - use AgentpausefromPhone API
+                console.log('📋 No pause reasons in successful API response - using AgentpausefromPhone API');
+                await this.pauseAgentViaAPI();
                 return;
             }
             
@@ -897,8 +899,8 @@ class AgentButtonsManager {
             }
             
             if (validReasons.length === 0) {
-                // All empty - pause directly via API
-                console.log('📋 No pause reasons available - pausing directly via API');
+                // WallBoardStats succeeded but all pause reasons empty - use AgentpausefromPhone API
+                console.log('📋 No pause reasons available - using AgentpausefromPhone API');
                 await this.pauseAgentViaAPI();
             } else {
                 // Show modal with pause reasons
@@ -912,7 +914,7 @@ class AgentButtonsManager {
         } catch (error) {
             console.error('Error fetching pause reasons:', error);
             this.showNotification('error', t('agentFailedFetchPauseReasons', 'Failed to fetch pause reasons, using fallback method'));
-            // Fall back to standard DTMF pause
+            // API EXCEPTION/ERROR - fall back to standard DTMF pause *63
             await this.performPause();
         }
     }
@@ -939,7 +941,11 @@ class AgentButtonsManager {
                 throw new Error('API manager not available');
             }
             
+            // NOTE: React version uses postNoAuth() for AgentpausefromPhone
+            // PWA uses post() but should be updated to use NoAuth port 19773
             console.log('📡 Pausing agent via API:', username);
+            // NOTE: React version uses postNoAuth() for AgentpausefromPhone
+            // PWA uses post() but should be updated to use NoAuth port 19773
             const result = await apiManager.post('AgentpausefromPhone', { phone: username });
             
             if (result.success) {
@@ -984,7 +990,11 @@ class AgentButtonsManager {
                 throw new Error('API manager not available');
             }
             
+            // NOTE: React version uses postNoAuth() for AgentpausefromPhone
+            // PWA uses post() but should be updated to use NoAuth port 19773
             console.log('📡 Unpausing agent via API:', username);
+            // NOTE: React version uses postNoAuth() for AgentpausefromPhone
+            // PWA uses post() but should be updated to use NoAuth port 19773
             const result = await apiManager.post('AgentpausefromPhone', { phone: username });
             
             if (result.success) {

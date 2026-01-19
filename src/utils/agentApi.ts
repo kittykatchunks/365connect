@@ -6,6 +6,13 @@ import { phantomApiService } from '@/services';
 import type { AgentStatusResponse, AgentData, PauseReasonsResponse, PauseReason } from '@/types/agent';
 import { isVerboseLoggingEnabled } from '@/utils';
 
+// Pause reasons fetch result - distinguishes between API failure and success with no reasons
+export interface PauseReasonsFetchResult {
+  success: boolean;           // True if API call succeeded
+  apiCallSucceeded: boolean;  // True if WallBoardStats API responded (even if empty)
+  reasons: PauseReason[];     // Pause reasons if any
+}
+
 /**
  * Query agent status from API (NoAuth endpoint)
  * @param deviceExtension - The SIP username/extension
@@ -41,9 +48,9 @@ export async function queryAgentStatus(deviceExtension: string): Promise<AgentDa
 /**
  * Fetch pause reasons from API
  * @param deviceExtension - The SIP username/extension
- * @returns Array of pause reasons or empty array
+ * @returns Result object indicating API status and pause reasons
  */
-export async function fetchPauseReasons(deviceExtension: string): Promise<PauseReason[]> {
+export async function fetchPauseReasons(deviceExtension: string): Promise<PauseReasonsFetchResult> {
   const verboseLogging = isVerboseLoggingEnabled();
   
   try {
@@ -63,7 +70,12 @@ export async function fetchPauseReasons(deviceExtension: string): Promise<PauseR
       if (verboseLogging) {
         console.log('[AgentAPI] ⚠️ No pause reasons in response');
       }
-      return [];
+      // API succeeded but no pause reasons data
+      return {
+        success: true,
+        apiCallSucceeded: true,
+        reasons: []
+      };
     }
     
     // Convert pausereasons object to array
@@ -81,15 +93,24 @@ export async function fetchPauseReasons(deviceExtension: string): Promise<PauseR
       console.log(`[AgentAPI] ✅ Found ${reasons.length} pause reasons`);
     }
     
-    return reasons;
+    return {
+      success: true,
+      apiCallSucceeded: true,
+      reasons
+    };
   } catch (error) {
     console.error('[AgentAPI] ❌ Error fetching pause reasons:', error);
-    return [];
+    // API call failed - should fallback to DTMF
+    return {
+      success: false,
+      apiCallSucceeded: false,
+      reasons: []
+    };
   }
 }
 
 /**
- * Pause agent via API (Basic Auth endpoint)
+ * Pause agent via API (NoAuth endpoint)
  * @param deviceExtension - The SIP username/extension
  * @returns Success status
  */
@@ -98,10 +119,10 @@ export async function pauseAgentViaAPI(deviceExtension: string): Promise<boolean
   
   try {
     if (verboseLogging) {
-      console.log('[AgentAPI] 📡 Pausing agent via API:', deviceExtension);
+      console.log('[AgentAPI] 📡 Pausing agent via NoAuth API:', deviceExtension);
     }
     
-    const result = await phantomApiService.post('AgentpausefromPhone', {
+    const result = await phantomApiService.postNoAuth('AgentpausefromPhone', {
       phone: deviceExtension
     });
     
@@ -117,7 +138,7 @@ export async function pauseAgentViaAPI(deviceExtension: string): Promise<boolean
 }
 
 /**
- * Unpause agent via API (Basic Auth endpoint - same endpoint toggles)
+ * Unpause agent via API (NoAuth endpoint - same endpoint toggles)
  * @param deviceExtension - The SIP username/extension
  * @returns Success status
  */
@@ -126,10 +147,10 @@ export async function unpauseAgentViaAPI(deviceExtension: string): Promise<boole
   
   try {
     if (verboseLogging) {
-      console.log('[AgentAPI] 📡 Unpausing agent via API:', deviceExtension);
+      console.log('[AgentAPI] 📡 Unpausing agent via NoAuth API:', deviceExtension);
     }
     
-    const result = await phantomApiService.post('AgentpausefromPhone', {
+    const result = await phantomApiService.postNoAuth('AgentpausefromPhone', {
       phone: deviceExtension
     });
     

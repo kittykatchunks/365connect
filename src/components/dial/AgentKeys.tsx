@@ -560,12 +560,23 @@ export function AgentKeys({ className }: AgentKeysProps) {
         console.log('[AgentKeys] 📡 Fetching pause reasons');
       }
       
-      const reasons = await fetchPauseReasons(sipUsername);
+      const result = await fetchPauseReasons(sipUsername);
       
-      if (reasons.length === 0) {
-        // No pause reasons configured - pause directly via API
+      if (!result.apiCallSucceeded) {
+        // WallBoardStats API failed - fallback to DTMF *63
         if (verboseLogging) {
-          console.log('[AgentKeys] ℹ️ No pause reasons - pausing directly via API');
+          console.log('[AgentKeys] ⚠️ WallBoardStats API failed - falling back to DTMF *63');
+        }
+        
+        await makeCall(AGENT_CODES.pause);
+        
+        if (verboseLogging) {
+          console.log('[AgentKeys] 📞 Dialed *63 for DTMF pause input');
+        }
+      } else if (result.reasons.length === 0) {
+        // WallBoardStats succeeded but no pause reasons - use AgentpausefromPhone API
+        if (verboseLogging) {
+          console.log('[AgentKeys] ℹ️ No pause reasons from WallBoardStats - using AgentpausefromPhone API');
         }
         
         const success = await pauseAgentViaAPI(sipUsername);
@@ -573,7 +584,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
         if (success) {
           setAgentState('paused');
           if (verboseLogging) {
-            console.log('[AgentKeys] ✅ Agent paused successfully');
+            console.log('[AgentKeys] ✅ Agent paused successfully via API');
           }
         } else {
           throw new Error('Pause API call failed');
@@ -581,10 +592,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
       } else {
         // Show pause reason modal
         if (verboseLogging) {
-          console.log(`[AgentKeys] 📋 Showing pause reason modal with ${reasons.length} reasons`);
+          console.log(`[AgentKeys] 📋 Showing pause reason modal with ${result.reasons.length} reasons`);
         }
         
-        setPauseReasons(reasons);
+        setPauseReasons(result.reasons);
         setShowPauseReasonModal(true);
       }
     } catch (error) {
@@ -592,7 +603,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn, isPaused, setAgentState, agentState, agentNumber, sipUsername, currentSession]);
+  }, [isLoggedIn, isPaused, setAgentState, agentState, agentNumber, sipUsername, currentSession, makeCall]);
   
   // Handle pause reason selection
   const handlePauseReasonSelect = useCallback(async (code: number, label: string) => {

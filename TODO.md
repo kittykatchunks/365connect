@@ -74,9 +74,9 @@ Thirdly, clarification of SIP call state and call-timer
 
 
 ### Issues to be resolved before release
-- [ ] If no pause reasons retrieved from succesfull API call to WallBoardStats then API call AgentpausefromPhone should be used to pause agent
-- [ ] Pause api failure should fallback to *63 dtmf dial ready for dtmf input for pause reason choice (if any available) not try and use AgentpausefromPhone
-- [ ] AgentpausefromPhone api should be requested with NoAuth
+- [x] AgentpausefromPhone api should be requested with NoAuth
+- [x] If no pause reasons retrieved from succesfull API call to WallBoardStats then API call AgentpausefromPhone should be used to pause agent
+- [x] if WallBoardStats api failure then fallback should be to dial *63 ready for dtmf input to select pause reason code (if any available) It should NOT try and use AgentpausefromPhone
 - [ ] Add to verbose logging to display contents sent and recieved for all API calls
 - [ ] When unregistered all BLF subscriptions should be terminated
 - [ ] Need to identify what settings should be removed with reset all settings option in advanced under settings
