@@ -26,6 +26,7 @@ class AudioSettingsManager {
         this.testAudio = null;
         this.ringtoneAudio = null; // For incoming call ringtone
         this.isRinging = false;
+        this.callWaitingInterval = null; // Timer for call waiting tone (play every 3 seconds)
         
         this.levelUpdateCallback = null;
         
@@ -386,6 +387,8 @@ class AudioSettingsManager {
 
     async startRinging(useAlertTone = false) {
         console.log('🔔 Starting incoming call ringtone...', useAlertTone ? '(Alert tone)' : '(Normal ringtone)');
+        
+        const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
 
         try {
             // Don't start if already ringing
@@ -414,11 +417,21 @@ class AudioSettingsManager {
             // Select audio file based on whether this is a second call
             const audioFile = useAlertTone ? 'Alert.mp3' : this.settings.selectedRingtone;
             
+            if (verboseLogging) {
+                console.log('[AudioSettingsManager] 🎵 Loading ringtone:', audioFile);
+                if (useAlertTone) {
+                    console.log('[AudioSettingsManager] 📞 Call waiting mode - Alert.mp3 will play once every 3 seconds');
+                }
+            }
+            
             // Create ringtone audio element
             this.ringtoneAudio = new Audio(`media/${audioFile}`);
-            this.ringtoneAudio.loop = true; // Loop the ringtone
             this.ringtoneAudio.volume = useAlertTone ? 0.5 : 0.8; // Lower volume for alert tone
             this.ringtoneAudio.preload = 'auto'; // Preload for immediate playback
+            
+            // For call waiting (alert tone), do NOT loop - play once every 3 seconds
+            // For normal ringtone, loop continuously
+            this.ringtoneAudio.loop = !useAlertTone;
             
             // Set ringer device if supported
             if (this.ringtoneAudio.setSinkId && 
@@ -444,7 +457,46 @@ class AudioSettingsManager {
             await this.ringtoneAudio.play();
             this.isRinging = true;
 
-            console.log('✅ Ringtone started successfully');
+            // If using alert tone (call waiting), set up interval to play every 3 seconds
+            if (useAlertTone) {
+                if (verboseLogging) {
+                    console.log('[AudioSettingsManager] ⏰ Setting up call waiting interval (play every 3000ms)');
+                }
+                
+                // When audio ends, restart after delay to create 3-second intervals
+                this.ringtoneAudio.addEventListener('ended', () => {
+                    if (this.isRinging && this.ringtoneAudio) {
+                        // Reset and play again
+                        this.ringtoneAudio.currentTime = 0;
+                        this.ringtoneAudio.play().catch(error => {
+                            console.error('[AudioSettingsManager] ❌ Failed to replay call waiting tone:', error);
+                        });
+                    }
+                });
+                
+                // Also set up interval as backup to ensure consistent 3-second spacing
+                this.callWaitingInterval = setInterval(() => {
+                    if (this.isRinging && this.ringtoneAudio) {
+                        if (verboseLogging) {
+                            console.log('[AudioSettingsManager] 📞 Playing call waiting tone (interval trigger)');
+                        }
+                        this.ringtoneAudio.currentTime = 0;
+                        this.ringtoneAudio.play().catch(error => {
+                            console.error('[AudioSettingsManager] ❌ Failed to play call waiting tone in interval:', error);
+                        });
+                    }
+                }, 3000);
+            }
+
+            if (verboseLogging) {
+                console.log('[AudioSettingsManager] ✅ Ringtone started successfully', {
+                    audioFile,
+                    isCallWaiting: useAlertTone,
+                    loop: this.ringtoneAudio.loop
+                });
+            } else {
+                console.log('✅ Ringtone started successfully');
+            }
         } catch (error) {
             console.error('❌ Failed to start ringtone:', error);
             this.isRinging = false;
@@ -481,6 +533,17 @@ class AudioSettingsManager {
 
     stopRinging() {
         console.log('🔕 Stopping incoming call ringtone...');
+
+        const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
+
+        // Clear call waiting interval if active
+        if (this.callWaitingInterval !== null) {
+            if (verboseLogging) {
+                console.log('[AudioSettingsManager] ⏰ Clearing call waiting interval');
+            }
+            clearInterval(this.callWaitingInterval);
+            this.callWaitingInterval = null;
+        }
 
         if (this.ringtoneAudio) {
             this.ringtoneAudio.pause();
