@@ -18,11 +18,6 @@ export function VoicemailIndicator() {
   
   const verboseLogging = isVerboseLoggingEnabled();
   
-  // Don't render if no voicemail messages
-  if (!hasNewVoicemail || voicemailCount === 0) {
-    return null;
-  }
-  
   const handleVoicemailClick = async () => {
     if (verboseLogging) {
       console.log('[VoicemailIndicator] 📧 Voicemail icon clicked');
@@ -82,10 +77,17 @@ export function VoicemailIndicator() {
       }}
       role="button"
       tabIndex={0}
-      aria-label={t('voicemail.check_messages', `Check ${voicemailCount} new voicemail message${voicemailCount > 1 ? 's' : ''}`)}
+      aria-label={hasNewVoicemail 
+        ? t('voicemail.check_messages', `Check ${voicemailCount} new voicemail message${voicemailCount > 1 ? 's' : ''}`)
+        : t('voicemail.title', 'Voicemail')
+      }
     >
-      <span className="voicemail-count">{voicemailCount}</span>
-      <span className="voicemail-text">{messageText}</span>
+      {hasNewVoicemail && voicemailCount > 0 && (
+        <>
+          <span className="voicemail-count">{voicemailCount}</span>
+          <span className="voicemail-text">{messageText}</span>
+        </>
+      )}
       <Voicemail
         className={cn(
           'voicemail-icon',
