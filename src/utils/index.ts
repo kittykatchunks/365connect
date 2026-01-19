@@ -9,6 +9,7 @@ export * from './constants';
 export * from './webrtc';
 export * from './agentApi';
 export * from './contactLookup';
+export * from './diagnostics';
 
 // Common utility functions
 import { clsx, type ClassValue } from 'clsx';
@@ -56,6 +57,27 @@ export function isVerboseLoggingEnabled(): boolean {
     
     // Fallback to direct localStorage check (legacy)
     return localStorage.getItem('autocab365_VerboseLogging') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get SIP message logging setting
+ * Matches PWA pattern: window.localDB?.getItem('SipMessagesEnabled', 'false') === 'true'
+ * Checks localStorage directly to avoid circular dependencies
+ */
+export function isSipMessagesEnabled(): boolean {
+  try {
+    // Check Zustand persist storage first (where settings are stored)
+    const settingsStore = localStorage.getItem('settings-store');
+    if (settingsStore) {
+      const parsed = JSON.parse(settingsStore);
+      return parsed?.state?.settings?.advanced?.sipMessagesEnabled === true;
+    }
+    
+    // Fallback to direct localStorage check (legacy PWA compatibility)
+    return localStorage.getItem('SipMessagesEnabled') === 'true';
   } catch {
     return false;
   }
