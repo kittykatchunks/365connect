@@ -443,11 +443,11 @@ a {
 
 .voicemail-icon {
   color: var(--text-color-muted);
-  font-size: 18px;
   opacity: 0.9;
   transition: all 0.2s ease;
   cursor: pointer;
   margin-left: 2px;
+  flex-shrink: 0;
 }
 
 .voicemail-icon:hover {

@@ -3,6 +3,7 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
+import { Voicemail } from 'lucide-react';
 import { useSIPStore, useSettingsStore, useUIStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { isVerboseLoggingEnabled } from '@/utils';
@@ -70,25 +71,27 @@ export function VoicemailIndicator() {
     : t('voicemail.new_messages', 'New Messages');
 
   return (
-    <div className="voicemail-item">
+    <div 
+      className="voicemail-item"
+      onClick={handleVoicemailClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleVoicemailClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={t('voicemail.check_messages', `Check ${voicemailCount} new voicemail message${voicemailCount > 1 ? 's' : ''}`)}
+    >
       <span className="voicemail-count">{voicemailCount}</span>
       <span className="voicemail-text">{messageText}</span>
-      <i
+      <Voicemail
         className={cn(
-          'fas fa-voicemail voicemail-icon',
+          'voicemail-icon',
           hasNewVoicemail && 'message-waiting'
         )}
-        title={t('voicemail.title_with_count', `Voicemail (${voicemailCount} new message${voicemailCount > 1 ? 's' : ''})`)}
-        onClick={handleVoicemailClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleVoicemailClick();
-          }
-        }}
-        aria-label={t('voicemail.check_messages', `Check ${voicemailCount} new voicemail message${voicemailCount > 1 ? 's' : ''}`)}
+        size={18}
       />
     </div>
   );
