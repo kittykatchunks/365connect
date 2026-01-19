@@ -320,9 +320,7 @@ export function TransferModal({ isOpen, onClose, sessionId, initialTarget, autoS
       
       return () => clearTimeout(timer);
     }
-    // Only run when modal opens with auto-start flag
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, autoStartAttended, initialTarget, targetSessionId]);
+  }, [isOpen, autoStartAttended, initialTarget, targetSessionId, isInAttendedMode, handleAttendedTransfer, verboseLogging]);
   
   // Handle complete attended transfer
   const handleCompleteTransfer = useCallback(async () => {
