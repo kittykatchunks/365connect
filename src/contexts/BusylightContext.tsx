@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useCallback, type ReactNode } fro
 import { useBusylight, type BusylightState } from '@/hooks/useBusylight';
 import { useSIPStore } from '@/stores/sipStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useAppStore } from '@/stores/appStore';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 // ==================== Context ====================
@@ -36,6 +37,9 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
   const hasNewVoicemail = useSIPStore((state) => state.hasNewVoicemail);
   const voicemailCount = useSIPStore((state) => state.voicemailCount);
   
+  // Get agent state
+  const agentState = useAppStore((state) => state.agentState);
+  
   // Get settings
   const voicemailNotifyEnabled = useSettingsStore((state) => state.settings.busylight.voicemailNotify);
   
@@ -51,7 +55,16 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       return 'DISCONNECTED';
     }
     
-    // 2. Get all sessions
+    // 2. Registered but no agent logged in
+    const isAgentLoggedIn = agentState !== 'logged-out';
+    if (!isAgentLoggedIn) {
+      if (verboseLogging) {
+        console.log('[Busylight] State evaluation: CONNECTED (registered but no agent logged in)');
+      }
+      return 'CONNECTED';
+    }
+    
+    // 3. Get all sessions
     const allSessions = Array.from(sessions.values());
     const ringingSession = allSessions.filter(s => s.state === 'ringing');
     const activeSessions = allSessions.filter(s => s.state === 'established' || s.state === 'active');
@@ -60,6 +73,8 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
     if (verboseLogging) {
       console.log('[Busylight] State evaluation:', {
         registrationState,
+        agentState,
+        isAgentLoggedIn,
         totalSessions: allSessions.length,
         ringingCount: ringingSession.length,
         activeCount: activeSessions.length,
@@ -71,7 +86,7 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       });
     }
     
-    // 3. Has active call(s) and incoming call
+    // 4. Has active call(s) and incoming call
     if (activeSessions.length > 0 && ringingSession.length > 0) {
       if (verboseLogging) {
         console.log('[Busylight] State: RINGWAITING (active + ringing)');
@@ -79,7 +94,7 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       return 'RINGWAITING';
     }
     
-    // 4. Incoming call ringing
+    // 5. Incoming call ringing
     if (ringingSession.length > 0) {
       if (verboseLogging) {
         console.log('[Busylight] State: RINGING');
@@ -87,7 +102,7 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       return 'RINGING';
     }
     
-    // 5. Active call
+    // 6. Active call
     if (activeSessions.length > 0) {
       // Check if selected line session is on hold
       const selectedSession = allSessions.find(s => s.lineNumber === selectedLine);
@@ -104,7 +119,7 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       return 'BUSY';
     }
     
-    // 6. On hold (no active calls)
+    // 7. On hold (no active calls)
     if (heldSessions.length > 0) {
       if (verboseLogging) {
         console.log('[Busylight] State: HOLD');
@@ -112,7 +127,7 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       return 'HOLD';
     }
     
-    // 7. Idle with voicemail notification
+    // 8. Idle with voicemail notification
     if (voicemailNotifyEnabled && hasNewVoicemail) {
       if (verboseLogging) {
         console.log('[Busylight] State: IDLENOTIFY (voicemail)');
@@ -120,13 +135,14 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
       return 'IDLENOTIFY';
     }
     
-    // 8. Idle
+    // 9. Idle
     if (verboseLogging) {
       console.log('[Busylight] State: IDLE');
     }
     return 'IDLE';
   }, [
     registrationState,
+    agentState,
     sessions,
     selectedLine,
     hasNewVoicemail,
@@ -139,10 +155,22 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
     if (!busylight.enabled || !busylight.isConnected) return;
     
     const newState = evaluateState();
-    busylight.setState(newState);
+    
+    // When not registered, turn off the light (don't use setState which has guards)
+    if (newState === 'DISCONNECTED') {
+      const verboseLogging = isVerboseLoggingEnabled();
+      if (verboseLogging) {
+        console.log('[Busylight] Not registered - turning off light');
+      }
+      // Directly call turnOff via setState to ensure light turns off
+      busylight.setState(newState);
+    } else {
+      busylight.setState(newState);
+    }
   }, [
     busylight,
     registrationState,
+    agentState,
     sessions,
     selectedLine,
     hasNewVoicemail,
