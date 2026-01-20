@@ -209,16 +209,17 @@ app.use(express.static(staticFolder, {
 }));
 
 app.use('/api/phantom', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net',
+  target: 'https://server1-000.phantomapi.net:443',  // Default fallback
   changeOrigin: true,
-  secure: false,
   pathRewrite: {
     '^/api/phantom': '/api',
   },
   router: (req) => {
+    // Extract phantomId from query string
     const phantomId = req.query.phantomId || '000';
     console.log(`[PROXY ROUTER] phantomId: ${phantomId}`);
-    const target = `https://server1-${phantomId}.phantomapi.net`;
+    const apiPort = process.env.PHANTOM_API_PORT || 443;
+    const target = `https://server1-${phantomId}.phantomapi.net:${apiPort}`;
     console.log(`[PROXY ROUTER] Routing to: ${target}`);
     return target;
   },
@@ -230,8 +231,8 @@ app.use('/api/phantom', createProxyMiddleware({
     
     // Get the actual path being called after rewrite
     const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api').replace(/\?phantomId=\d+/, '');
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net${rewrittenPath}`;
+    const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api');
+    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}${rewrittenPath}`;
     
     console.log(`  🔄 PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);
@@ -253,6 +254,11 @@ app.use('/api/phantom', createProxyMiddleware({
       for (const [key, value] of queryParams) {
         console.log(`       • ${key} = ${value}`);
       }
+    }
+    
+    // Log request body if present
+    if (req.body && Object.keys(req.body).length > 0) {
+      console.log(`     Body: ${JSON.stringify(req.body)}`);
     }
   },
   onProxyRes: (proxyRes, req, res) => {
@@ -284,87 +290,6 @@ app.use('/api/phantom', createProxyMiddleware({
   },
   onError: (err, req, res) => {
     console.log(`  ❌ PROXY ERROR:`);
-    console.log(`     URL: ${req.originalUrl}`);
-    console.log(`     Error: ${err.message}`);
-    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
-    if (err.code === 'ECONNREFUSED') {
-      console.log(`     💡 Hint: Target server may be down or unreachable`);
-    }
-    res.status(502).json({ error: 'Proxy error', message: err.message });
-  }
-}));
-
-
-// NoAuth Phantom API Proxy (Port 19773 - No Authentication)
-app.use('/api/phantom-noauth', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net:19773',
-  changeOrigin: true,
-  secure: false,
-  pathRewrite: {
-    '^/api/phantom-noauth': '/api',
-  },
-  router: (req) => {
-    const phantomId = req.query.phantomId || '000';
-    console.log(`[NOAUTH PROXY ROUTER] phantomId: ${phantomId}`);
-    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    const target = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
-    console.log(`[NOAUTH PROXY ROUTER] Routing to: ${target}`);
-    return target;
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    const phantomId = req.query.phantomId || '000';
-    const host = req.headers.host || 'unknown';
-    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    
-    // Get the actual path being called after rewrite
-    const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom-noauth/, '/api').replace(/\?phantomId=\d+/, '');
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}${rewrittenPath}`;
-    
-    console.log(`  🔄 NOAUTH PROXY TRANSLATION:`);
-    console.log(`     Input:  https://${host}${originalPath}`);
-    console.log(`     Output: ${targetUrl}`);
-    console.log(`     PhantomID: ${phantomId}`);
-    console.log(`     Auth: ❌ None (NoAuth endpoint)`);
-    
-    // Log query params if present
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
-      console.log(`     Query Params:`);
-      for (const [key, value] of queryParams) {
-        console.log(`       • ${key} = ${value}`);
-      }
-    }
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    let responseBody = '';
-    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
-    
-    console.log(`  ${statusIcon} NOAUTH PROXY RESPONSE:`);
-    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
-    console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
-    
-    proxyRes.on('data', (chunk) => {
-      responseBody += chunk.toString();
-    });
-    
-    proxyRes.on('end', () => {
-      if (responseBody.length > 0) {
-        try {
-          const parsed = JSON.parse(responseBody);
-          const preview = JSON.stringify(parsed).substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
-        } catch {
-          const preview = responseBody.substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
-        }
-      }
-    });
-    
-    delete proxyRes.headers['www-authenticate'];
-  },
-  onError: (err, req, res) => {
-    console.log(`  ❌ NOAUTH PROXY ERROR:`);
     console.log(`     URL: ${req.originalUrl}`);
     console.log(`     Error: ${err.message}`);
     console.log(`     Code: ${err.code || 'UNKNOWN'}`);
