@@ -141,7 +141,7 @@ app.use(helmet({
 app.use(cors({
   origin: '*', // Restrict to your domain in production
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-connect365-username']
 }));
 
 app.use(compression());
