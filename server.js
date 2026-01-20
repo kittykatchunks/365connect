@@ -223,6 +223,10 @@ app.use('/api/phantom', createProxyMiddleware({
   changeOrigin: true,
   secure: false, // Allow self-signed certificates
   followRedirects: true,
+  // Ensure body is properly streamed
+  parseReqBody: false,
+  preserveHeaderKeyCase: true,
+  timeout: 30000, // 30 second timeout
   pathRewrite: (path, req) => {
     // Strip phantomId query parameter and rewrite path
     const url = new URL(path, 'http://dummy-base');
@@ -340,6 +344,10 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
   changeOrigin: true,
   secure: false, // Allow self-signed certificates
   followRedirects: true,
+  // Ensure body is properly streamed
+  parseReqBody: false,
+  preserveHeaderKeyCase: true,
+  timeout: 30000, // 30 second timeout
   pathRewrite: (path, req) => {
     // Strip phantomId query parameter and rewrite path
     const url = new URL(path, 'http://dummy-base');
