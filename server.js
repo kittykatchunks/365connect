@@ -149,57 +149,6 @@ app.use(compression());
 // Parse JSON bodies for API endpoints
 app.use(express.json());
 
-// ============================================
-// API Endpoints - API Key Management
-// ============================================
-
-// Track API key changes
-let currentApiKey = process.env.REACT_APP_PHANTOM_API_KEY;
-let keyLastModified = Date.now();
-
-// Watch .env file for changes (optional - requires server restart in production)
-if (process.env.NODE_ENV === 'development') {
-  fs.watch('.env', (eventType) => {
-    if (eventType === 'change') {
-      // Reload environment variables
-      delete require.cache[require.resolve('dotenv')];
-      require('dotenv').config();
-      const newKey = process.env.REACT_APP_PHANTOM_API_KEY;
-      
-      if (newKey !== currentApiKey) {
-        currentApiKey = newKey;
-        keyLastModified = Date.now();
-        console.log('[SERVER] 🔑 API key reloaded from .env');
-      }
-    }
-  });
-}
-
-// Endpoint to fetch current API key
-app.get('/api/phantom/current-key', (req, res) => {
-  if (!currentApiKey) {
-    return res.status(503).json({ 
-      error: 'API key not configured',
-      message: 'REACT_APP_PHANTOM_API_KEY not found in environment'
-    });
-  }
-  
-  res.json({
-    apiKey: currentApiKey,
-    lastModified: keyLastModified,
-    timestamp: Date.now()
-  });
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: Date.now(),
-    apiKeyConfigured: !!currentApiKey
-  });
-});
-
 // Determine static folder based on environment
 const staticFolder = process.env.NODE_ENV === 'production' 
   ? path.join(__dirname, 'dist')
@@ -265,8 +214,12 @@ app.use(express.static(staticFolder, {
 app.use('/api/phantom', createProxyMiddleware({
   target: 'https://server1-000.phantomapi.net:443',  // Default fallback
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/phantom': '/api',
+  pathRewrite: (path, req) => {
+    // Strip phantomId query parameter and rewrite path
+    const url = new URL(path, 'http://dummy-base');
+    url.searchParams.delete('phantomId');
+    const cleanPath = url.pathname + (url.search || '');
+    return cleanPath.replace(/^\/api\/phantom/, '/api');
   },
   router: (req) => {
     // Extract phantomId from query string
@@ -283,29 +236,30 @@ app.use('/api/phantom', createProxyMiddleware({
     const apiKey = process.env.PHANTOM_API_KEY;
     const host = req.headers.host || 'unknown';
     
+    // Add Basic Auth header
+    if (apiUsername && apiKey) {
+      const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
+      proxyReq.setHeader('Authorization', `Basic ${authString}`);
+    }
+    
     // Get the actual path being called after rewrite
     const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api');
+    const url = new URL(originalPath, 'http://dummy-base');
+    url.searchParams.delete('phantomId');
+    const cleanPath = url.pathname + (url.search || '');
+    const rewrittenPath = cleanPath.replace(/^\/api\/phantom/, '/api');
     const targetUrl = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}${rewrittenPath}`;
     
     console.log(`  🔄 PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);
     console.log(`     Output: ${targetUrl}`);
     console.log(`     PhantomID: ${phantomId}`);
+    console.log(`     Auth: ${apiUsername && apiKey ? '✅ Basic Auth (' + apiUsername + ')' : '⚠️ Missing credentials'}`);
     
-    if (apiUsername && apiKey) {
-      const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
-      proxyReq.setHeader('Authorization', `Basic ${authString}`);
-      console.log(`     Auth: ✅ Basic Auth (${apiUsername})`);
-    } else {
-      console.warn(`     Auth: ⚠️ Missing credentials`);
-    }
-    
-    // Log query params if present
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
+    // Log remaining query params if present
+    if (url.search && url.search !== '?') {
       console.log(`     Query Params:`);
-      for (const [key, value] of queryParams) {
+      for (const [key, value] of url.searchParams) {
         console.log(`       • ${key} = ${value}`);
       }
     }
