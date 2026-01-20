@@ -338,6 +338,8 @@ app.options('/api/busylight/*', cors());
 app.use('/api/phantom-noauth', createProxyMiddleware({
   target: 'https://server1-000.phantomapi.net:19773',  // Default fallback
   changeOrigin: true,
+  secure: false, // Allow self-signed certificates
+  followRedirects: true,
   pathRewrite: (path, req) => {
     // Strip phantomId query parameter and rewrite path
     const url = new URL(path, 'http://dummy-base');
@@ -367,7 +369,13 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     // Update the proxy request path (this is what actually gets sent)
     proxyReq.path = cleanPath.replace(/^\/api\/phantom-noauth/, '/api');
     
-    // For logging
+    // Log headers being sent
+    console.log(`[NOAUTH PROXY HEADERS] Content-Type: ${proxyReq.getHeader('Content-Type') || 'none'}`);
+    console.log(`[NOAUTH PROXY HEADERS] Content-Length: ${proxyReq.getHeader('Content-Length') || 'none'}`);
+    console.log(`[NOAUTH PROXY HEADERS] Content-Type: ${proxyReq.getHeader('Content-Type') || 'none'}`);
+    console.log(`[NOAUTH PROXY HEADERS] Content-Length: ${proxyReq.getHeader('Content-Length') || 'none'}`);
+    
+    // For logging - show actual URL that will be forwarded
     const originalPath = req.originalUrl;
     const targetUrl = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}${proxyReq.path}`;
     
