@@ -242,8 +242,12 @@ app.use('/api/phantom', createProxyMiddleware({
       const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
       proxyReq.setHeader('Authorization', `Basic ${authString}`);
       console.log(`     Auth: ✅ Basic Auth (${apiUsername})`);
+      console.log(`     Authorization Header: Basic ${authString.substring(0, 20)}...`);
+      console.log(`     Credentials: ${apiUsername}:${apiKey.substring(0, 4)}***`);
     } else {
       console.warn(`     Auth: ⚠️ Missing credentials`);
+      console.warn(`     PHANTOM_API_USERNAME: ${apiUsername || 'undefined'}`);
+      console.warn(`     PHANTOM_API_KEY: ${apiKey ? 'set' : 'undefined'}`);
     }
     
     // Log query params if present
