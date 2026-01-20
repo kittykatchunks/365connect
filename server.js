@@ -146,8 +146,15 @@ app.use(cors({
 
 app.use(compression());
 
-// Parse JSON bodies for API endpoints
-app.use(express.json());
+// Parse JSON bodies ONLY for non-proxy routes
+// Proxies need raw body to pass through without parsing
+app.use((req, res, next) => {
+  // Skip body parsing for proxy routes - they need raw body passthrough
+  if (req.url.startsWith('/api/phantom') || req.url.startsWith('/api/busylight')) {
+    return next();
+  }
+  express.json()(req, res, next);
+});
 
 // Determine static folder based on environment
 const staticFolder = process.env.NODE_ENV === 'production' 
@@ -242,13 +249,17 @@ app.use('/api/phantom', createProxyMiddleware({
       proxyReq.setHeader('Authorization', `Basic ${authString}`);
     }
     
-    // Get the actual path being called after rewrite
-    const originalPath = req.originalUrl;
-    const url = new URL(originalPath, 'http://dummy-base');
+    // Strip phantomId from the actual proxy request path
+    const url = new URL(req.url, 'http://dummy-base');
     url.searchParams.delete('phantomId');
     const cleanPath = url.pathname + (url.search || '');
-    const rewrittenPath = cleanPath.replace(/^\/api\/phantom/, '/api');
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}${rewrittenPath}`;
+    
+    // Update the proxy request path (this is what actually gets sent)
+    proxyReq.path = cleanPath.replace(/^\/api\/phantom/, '/api');
+    
+    // For logging
+    const originalPath = req.originalUrl;
+    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}${proxyReq.path}`;
     
     console.log(`  🔄 PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);
@@ -262,11 +273,6 @@ app.use('/api/phantom', createProxyMiddleware({
       for (const [key, value] of url.searchParams) {
         console.log(`       • ${key} = ${value}`);
       }
-    }
-    
-    // Log request body if present
-    if (req.body && Object.keys(req.body).length > 0) {
-      console.log(`     Body: ${JSON.stringify(req.body)}`);
     }
   },
   onProxyRes: (proxyRes, req, res) => {
@@ -338,13 +344,17 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     const host = req.headers.host || 'unknown';
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
     
-    // Get the actual path being called after rewrite (with phantomId stripped)
-    const originalPath = req.originalUrl;
-    const url = new URL(originalPath, 'http://dummy-base');
+    // Strip phantomId from the actual proxy request path
+    const url = new URL(req.url, 'http://dummy-base');
     url.searchParams.delete('phantomId');
     const cleanPath = url.pathname + (url.search || '');
-    const rewrittenPath = cleanPath.replace(/^\/api\/phantom-noauth/, '/api');
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}${rewrittenPath}`;
+    
+    // Update the proxy request path (this is what actually gets sent)
+    proxyReq.path = cleanPath.replace(/^\/api\/phantom-noauth/, '/api');
+    
+    // For logging
+    const originalPath = req.originalUrl;
+    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}${proxyReq.path}`;
     
     console.log(`  🔄 NOAUTH PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);
@@ -358,11 +368,6 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
       for (const [key, value] of url.searchParams) {
         console.log(`       • ${key} = ${value}`);
       }
-    }
-    
-    // Log request body if present
-    if (req.body && Object.keys(req.body).length > 0) {
-      console.log(`     Body: ${JSON.stringify(req.body)}`);
     }
   },
   onProxyRes: (proxyRes, req, res) => {
