@@ -436,33 +436,44 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
-      console.log('[Busylight] Disconnecting...');
+      console.log('[Busylight] Disconnecting and turning off light...');
     }
     
     stopMonitoring();
     stopSlowFlash();
     
-    if (isConnected) {
+    // Always try to turn off the light when disconnecting (use current isConnected state)
+    try {
       await turnOff();
+    } catch (error) {
+      if (verboseLogging) {
+        console.warn('[Busylight] Error turning off during disconnect:', error);
+      }
     }
     
     setIsConnected(false);
     setCurrentState('DISCONNECTED');
     setRetryCount(0);
-  }, [stopMonitoring, stopSlowFlash, isConnected, turnOff]);
+  }, [stopMonitoring, stopSlowFlash, turnOff]);
   
   // Initialize and start monitoring when enabled
   // Only re-run when enabled changes or username/bridgeUrl changes
   useEffect(() => {
+    let mounted = true;
+    
     if (enabled) {
       initialize().then(() => {
-        startMonitoring();
+        if (mounted) {
+          startMonitoring();
+        }
       });
     } else {
+      // When disabled, ensure we turn off the light
       disconnect();
     }
     
     return () => {
+      mounted = false;
       stopMonitoring();
       stopSlowFlash();
     };
