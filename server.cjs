@@ -16,6 +16,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const compression = require('compression');
+require('dotenv').config();
 
 const app = express();
 
@@ -30,6 +31,9 @@ const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', '
 // Enable compression
 app.use(compression());
 
+// Parse JSON bodies for API endpoints
+app.use(express.json());
+
 // Security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -37,6 +41,57 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
+});
+
+// ============================================
+// API Endpoints
+// ============================================
+
+// Track API key changes
+let currentApiKey = process.env.REACT_APP_PHANTOM_API_KEY;
+let keyLastModified = Date.now();
+
+// Watch .env file for changes (optional - requires server restart in production)
+if (process.env.NODE_ENV === 'development') {
+  fs.watch('.env', (eventType) => {
+    if (eventType === 'change') {
+      // Reload environment variables
+      delete require.cache[require.resolve('dotenv')];
+      require('dotenv').config();
+      const newKey = process.env.REACT_APP_PHANTOM_API_KEY;
+      
+      if (newKey !== currentApiKey) {
+        currentApiKey = newKey;
+        keyLastModified = Date.now();
+        console.log('[Server] 🔑 API key reloaded from .env');
+      }
+    }
+  });
+}
+
+// Endpoint to fetch current API key
+app.get('/api/phantom/current-key', (req, res) => {
+  if (!currentApiKey) {
+    return res.status(503).json({ 
+      error: 'API key not configured',
+      message: 'REACT_APP_PHANTOM_API_KEY not found in environment'
+    });
+  }
+  
+  res.json({
+    apiKey: currentApiKey,
+    lastModified: keyLastModified,
+    timestamp: Date.now()
+  });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    apiKeyConfigured: !!currentApiKey
+  });
 });
 
 // Serve static files from dist folder

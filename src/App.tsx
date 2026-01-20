@@ -5,9 +5,9 @@
 import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
-import { SIPProvider } from '@/contexts';
+import { SIPProvider, PhantomAPIProvider, usePhantomAPI } from '@/contexts';
 import { phantomApiService } from '@/services';
-import { initializeVersionTracking } from '@/utils';
+import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback } from '@/utils';
 import { useNetworkStatus } from '@/hooks';
 import { 
   LoadingScreen, 
@@ -277,24 +277,46 @@ function App() {
   }
   
   return (
-    <SIPProvider>
-      {/* PWA Update Banner - Shows when new version is available */}
-      <UpdatePrompt />
-      
-      <MainLayout />
-      
-      {/* Version Update Modal */}
-      {versionInfo && (
-        <VersionUpdateModal
-          isOpen={showVersionModal}
-          onClose={() => setShowVersionModal(false)}
-          lastVersion={versionInfo.lastVersion}
-          currentVersion={versionInfo.currentVersion}
-          changeType={versionInfo.changeType}
-        />
-      )}
-    </SIPProvider>
+    <PhantomAPIProvider pollInterval={5}>
+      <PhantomAPIInitializer>
+        <SIPProvider>
+          {/* PWA Update Banner - Shows when new version is available */}
+          <UpdatePrompt />
+          
+          <MainLayout />
+          
+          {/* Version Update Modal */}
+          {versionInfo && (
+            <VersionUpdateModal
+              isOpen={showVersionModal}
+              onClose={() => setShowVersionModal(false)}
+              lastVersion={versionInfo.lastVersion}
+              currentVersion={versionInfo.currentVersion}
+              changeType={versionInfo.changeType}
+            />
+          )}
+        </SIPProvider>
+      </PhantomAPIInitializer>
+    </PhantomAPIProvider>
   );
+}
+
+// Component to initialize Phantom API client with context values
+function PhantomAPIInitializer({ children }: { children: React.ReactNode }) {
+  const { apiKey, refreshAPIKey } = usePhantomAPI();
+  const verboseLogging = localStorage.getItem('autocab365_VerboseLogging') === 'true';
+
+  useEffect(() => {
+    if (apiKey) {
+      if (verboseLogging) {
+        console.log('[App] 🔑 Setting Phantom API key in client');
+      }
+      setPhantomAPIKey(apiKey);
+      setPhantomAPIRefreshCallback(refreshAPIKey);
+    }
+  }, [apiKey, refreshAPIKey, verboseLogging]);
+
+  return <>{children}</>;
 }
 
 export default App;

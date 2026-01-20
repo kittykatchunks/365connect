@@ -146,6 +146,60 @@ app.use(cors({
 
 app.use(compression());
 
+// Parse JSON bodies for API endpoints
+app.use(express.json());
+
+// ============================================
+// API Endpoints - API Key Management
+// ============================================
+
+// Track API key changes
+let currentApiKey = process.env.REACT_APP_PHANTOM_API_KEY;
+let keyLastModified = Date.now();
+
+// Watch .env file for changes (optional - requires server restart in production)
+if (process.env.NODE_ENV === 'development') {
+  fs.watch('.env', (eventType) => {
+    if (eventType === 'change') {
+      // Reload environment variables
+      delete require.cache[require.resolve('dotenv')];
+      require('dotenv').config();
+      const newKey = process.env.REACT_APP_PHANTOM_API_KEY;
+      
+      if (newKey !== currentApiKey) {
+        currentApiKey = newKey;
+        keyLastModified = Date.now();
+        console.log('[SERVER] 🔑 API key reloaded from .env');
+      }
+    }
+  });
+}
+
+// Endpoint to fetch current API key
+app.get('/api/phantom/current-key', (req, res) => {
+  if (!currentApiKey) {
+    return res.status(503).json({ 
+      error: 'API key not configured',
+      message: 'REACT_APP_PHANTOM_API_KEY not found in environment'
+    });
+  }
+  
+  res.json({
+    apiKey: currentApiKey,
+    lastModified: keyLastModified,
+    timestamp: Date.now()
+  });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    apiKeyConfigured: !!currentApiKey
+  });
+});
+
 // Determine static folder based on environment
 const staticFolder = process.env.NODE_ENV === 'production' 
   ? path.join(__dirname, 'dist')

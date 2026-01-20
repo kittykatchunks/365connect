@@ -99,6 +99,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Check how I initiate the upgrade banner to show in react app
 - [x] Previously have changed the UI to reflect the Agent when logging in initially should automatically show as in-queue, after that the state should be tracked.  Can you confirm the programming still correct
 - [x] I want to ensure that the app will show disconnected when the sip connection is disconnected not just when the webrtc is lost
+- [X] I wish to implement monitoring the internet connection with warning toast and reconnection info toast
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
@@ -111,4 +112,4 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] When BLF display is hidden in browser with reduced width display then the corresponding 'enable BLF' option in interface settings should also be hidden
 - [x] Line Keys and Company Number selection should be disabled when in disconnected state
 - [X] Double the dialpad size on mobile version only
-- [ ] Double the size of the dialpad on the desktop version
+- [X] Double the size of the dialpad on the desktop version
