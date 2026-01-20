@@ -66,24 +66,36 @@ export function useBusylight(options: UseBusylightOptions = {}) {
   
   // Build API URL with query parameters
   const buildApiUrl = useCallback((action: string, params?: Record<string, string | number>) => {
-    const url = new URL(bridgeUrl, window.location.origin);
-    url.searchParams.set('action', action);
+    // Use URLSearchParams to build query string
+    const queryParams = new URLSearchParams();
+    queryParams.set('action', action);
     
     // Add username as bridgeId for routing
     if (username) {
-      url.searchParams.set('bridgeId', username);
+      queryParams.set('bridgeId', username);
     }
     
     // Add additional parameters
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          url.searchParams.set(key, value.toString());
+          queryParams.set(key, value.toString());
         }
       });
     }
     
-    return url.toString();
+    const queryString = queryParams.toString();
+    
+    // In development, force port 443; in production, use relative URL
+    if (import.meta.env.DEV) {
+      // Development: use absolute URL with port 443
+      const protocol = window.location.protocol;
+      const hostname = window.location.hostname;
+      return `${protocol}//${hostname}:443${bridgeUrl}?${queryString}`;
+    } else {
+      // Production: use relative URL to avoid port number issues
+      return `${bridgeUrl}?${queryString}`;
+    }
   }, [bridgeUrl, username]);
   
   // Make API request to busylight bridge
