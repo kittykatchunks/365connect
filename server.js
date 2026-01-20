@@ -219,8 +219,10 @@ app.use(express.static(staticFolder, {
 }));
 
 app.use('/api/phantom', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net:443',  // Default fallback
+  target: 'https://server1-000.phantomapi.net',  // Default fallback
   changeOrigin: true,
+  secure: false, // Allow self-signed certificates
+  followRedirects: true,
   pathRewrite: (path, req) => {
     // Strip phantomId query parameter and rewrite path
     const url = new URL(path, 'http://dummy-base');
@@ -232,8 +234,8 @@ app.use('/api/phantom', createProxyMiddleware({
     // Extract phantomId from query string
     const phantomId = req.query.phantomId || '000';
     console.log(`[PROXY ROUTER] phantomId: ${phantomId}`);
-    const apiPort = process.env.PHANTOM_API_PORT || 443;
-    const target = `https://server1-${phantomId}.phantomapi.net:${apiPort}`;
+    // Auth proxy uses standard HTTPS port (no explicit port in URL)
+    const target = `https://server1-${phantomId}.phantomapi.net`;
     console.log(`[PROXY ROUTER] Routing to: ${target}`);
     return target;
   },
@@ -243,10 +245,13 @@ app.use('/api/phantom', createProxyMiddleware({
     const apiKey = process.env.PHANTOM_API_KEY;
     const host = req.headers.host || 'unknown';
     
-    // Add Basic Auth header
+    // Add Basic Auth header - MUST be set before forwarding
     if (apiUsername && apiKey) {
       const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
       proxyReq.setHeader('Authorization', `Basic ${authString}`);
+      console.log(`[PROXY AUTH] Added Basic Auth: ${apiUsername}:${apiKey.substring(0, 4)}...`);
+    } else {
+      console.error(`[PROXY AUTH] ❌ MISSING CREDENTIALS - Check PHANTOM_API_USERNAME and PHANTOM_API_KEY in .env`);
     }
     
     // Strip phantomId from the actual proxy request path
@@ -257,9 +262,14 @@ app.use('/api/phantom', createProxyMiddleware({
     // Update the proxy request path (this is what actually gets sent)
     proxyReq.path = cleanPath.replace(/^\/api\/phantom/, '/api');
     
+    // Log headers being sent
+    console.log(`[PROXY HEADERS] Authorization: ${proxyReq.getHeader('Authorization') ? '✅ Set' : '❌ Missing'}`);
+    console.log(`[PROXY HEADERS] Content-Type: ${proxyReq.getHeader('Content-Type') || 'none'}`);
+    console.log(`[PROXY HEADERS] Content-Length: ${proxyReq.getHeader('Content-Length') || 'none'}`);
+    
     // For logging
     const originalPath = req.originalUrl;
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${PROXY_PORT}${proxyReq.path}`;
+    const targetUrl = `https://server1-${phantomId}.phantomapi.net${proxyReq.path}`;
     
     console.log(`  🔄 PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);
@@ -282,6 +292,11 @@ app.use('/api/phantom', createProxyMiddleware({
     console.log(`  ${statusIcon} PROXY RESPONSE:`);
     console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
     console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
+    
+    // Log authentication-related headers from response
+    if (proxyRes.headers['www-authenticate']) {
+      console.log(`     WWW-Authenticate: ${proxyRes.headers['www-authenticate']}`);
+    }
     
     proxyRes.on('data', (chunk) => {
       responseBody += chunk.toString();
