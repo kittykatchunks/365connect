@@ -317,8 +317,12 @@ app.options('/api/busylight/*', cors());
 app.use('/api/phantom-noauth', createProxyMiddleware({
   target: 'https://server1-000.phantomapi.net:19773',  // Default fallback
   changeOrigin: true,
-  pathRewrite: {
-    '^/api/phantom-noauth': '/api',
+  pathRewrite: (path, req) => {
+    // Strip phantomId query parameter and rewrite path
+    const url = new URL(path, 'http://dummy-base');
+    url.searchParams.delete('phantomId');
+    const cleanPath = url.pathname + (url.search || '');
+    return cleanPath.replace(/^\/api\/phantom-noauth/, '/api');
   },
   router: (req) => {
     // Extract phantomId from query string
@@ -334,9 +338,12 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     const host = req.headers.host || 'unknown';
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
     
-    // Get the actual path being called after rewrite
+    // Get the actual path being called after rewrite (with phantomId stripped)
     const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom-noauth/, '/api');
+    const url = new URL(originalPath, 'http://dummy-base');
+    url.searchParams.delete('phantomId');
+    const cleanPath = url.pathname + (url.search || '');
+    const rewrittenPath = cleanPath.replace(/^\/api\/phantom-noauth/, '/api');
     const targetUrl = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}${rewrittenPath}`;
     
     console.log(`  🔄 NOAUTH PROXY TRANSLATION:`);
@@ -345,11 +352,10 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     console.log(`     PhantomID: ${phantomId}`);
     console.log(`     Auth: ❌ None (NoAuth endpoint)`);
     
-    // Log query params if present
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
+    // Log remaining query params if present (phantomId already removed)
+    if (url.search && url.search !== '?') {
       console.log(`     Query Params:`);
-      for (const [key, value] of queryParams) {
+      for (const [key, value] of url.searchParams) {
         console.log(`       • ${key} = ${value}`);
       }
     }
