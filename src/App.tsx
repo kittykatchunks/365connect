@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
-import { SIPProvider, PhantomAPIProvider, usePhantomAPI } from '@/contexts';
+import { SIPProvider, PhantomAPIProvider, BusylightProvider, usePhantomAPI } from '@/contexts';
 import { phantomApiService } from '@/services';
 import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback } from '@/utils';
 import { useNetworkStatus } from '@/hooks';
@@ -280,21 +280,23 @@ function App() {
     <PhantomAPIProvider pollInterval={5}>
       <PhantomAPIInitializer>
         <SIPProvider>
-          {/* PWA Update Banner - Shows when new version is available */}
-          <UpdatePrompt />
-          
-          <MainLayout />
-          
-          {/* Version Update Modal */}
-          {versionInfo && (
-            <VersionUpdateModal
-              isOpen={showVersionModal}
-              onClose={() => setShowVersionModal(false)}
-              lastVersion={versionInfo.lastVersion}
-              currentVersion={versionInfo.currentVersion}
-              changeType={versionInfo.changeType}
-            />
-          )}
+          <BusylightProvider>
+            {/* PWA Update Banner - Shows when new version is available */}
+            <UpdatePrompt />
+            
+            <MainLayout />
+            
+            {/* Version Update Modal */}
+            {versionInfo && (
+              <VersionUpdateModal
+                isOpen={showVersionModal}
+                onClose={() => setShowVersionModal(false)}
+                lastVersion={versionInfo.lastVersion}
+                currentVersion={versionInfo.currentVersion}
+                changeType={versionInfo.changeType}
+              />
+            )}
+          </BusylightProvider>
         </SIPProvider>
       </PhantomAPIInitializer>
     </PhantomAPIProvider>

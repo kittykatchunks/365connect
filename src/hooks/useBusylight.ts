@@ -53,6 +53,9 @@ export function useBusylight(options: UseBusylightOptions = {}) {
   } = options;
   
   const enabled = useSettingsStore((state) => state.settings.busylight.enabled);
+  const ringSound = useSettingsStore((state) => state.settings.busylight.ringSound);
+  const ringVolume = useSettingsStore((state) => state.settings.busylight.ringVolume);
+  const username = useSettingsStore((state) => state.settings.connection.username);
   
   const [isConnected, setIsConnected] = useState(false);
   const [currentState, setCurrentState] = useState<BusylightState>('DISCONNECTED');
@@ -61,38 +64,58 @@ export function useBusylight(options: UseBusylightOptions = {}) {
   const monitoringIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const slowFlashIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
-  // Build API URL with optional SIP username header
-  const buildApiUrl = useCallback((endpoint: string) => {
-    return `${bridgeUrl}/${endpoint}`;
-  }, [bridgeUrl]);
+  // Build API URL with query parameters
+  const buildApiUrl = useCallback((action: string, params?: Record<string, string | number>) => {
+    const url = new URL(bridgeUrl, window.location.origin);
+    url.searchParams.set('action', action);
+    
+    // Add username as bridgeId for routing
+    if (username) {
+      url.searchParams.set('bridgeId', username);
+    }
+    
+    // Add additional parameters
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          url.searchParams.set(key, value.toString());
+        }
+      });
+    }
+    
+    return url.toString();
+  }, [bridgeUrl, username]);
   
   // Make API request to busylight bridge
   const apiRequest = useCallback(async (
-    endpoint: string, 
-    data?: Record<string, unknown>
+    action: string, 
+    params?: Record<string, string | number>
   ): Promise<boolean> => {
     const verboseLogging = isVerboseLoggingEnabled();
     
+    if (!enabled || !isConnected) return false;
+    
     try {
-      const url = buildApiUrl(endpoint);
-      const method = data ? 'POST' : 'GET';
+      const url = buildApiUrl(action, params);
       
       if (verboseLogging) {
         console.log('[Busylight] 📤 API Request:', {
           url,
-          endpoint,
-          method,
-          requestBody: data
+          action,
+          params,
+          username
         });
       }
       
+      const headers: HeadersInit = {};
+      if (username) {
+        headers['x-connect365-username'] = username;
+      }
+      
       const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: data ? JSON.stringify(data) : undefined,
-        signal: AbortSignal.timeout(3000)
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(2000)
       });
       
       if (verboseLogging) {
@@ -103,19 +126,22 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         });
       }
       
-      return response.ok;
+      if (response.ok) {
+        setRetryCount(0);
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       if (verboseLogging) {
         console.error('[Busylight] ❌ API request failed:', {
-          endpoint,
+          action,
           error: error instanceof Error ? error.message : String(error)
         });
-      } else {
-        console.error('[Busylight] API request failed:', error);
       }
       return false;
     }
-  }, [buildApiUrl]);
+  }, [buildApiUrl, enabled, isConnected, username]);
   
   // Check connection to bridge
   const checkConnection = useCallback(async (): Promise<boolean> => {
@@ -128,8 +154,14 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         console.log('[Busylight] 🔍 Checking connection:', { url });
       }
       
+      const headers: HeadersInit = {};
+      if (username) {
+        headers['x-connect365-username'] = username;
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
+        headers,
         signal: AbortSignal.timeout(3000)
       });
       
@@ -147,7 +179,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
       }
       return false;
     }
-  }, [buildApiUrl]);
+  }, [buildApiUrl, username]);
   
   // Set light color
   const setLight = useCallback(async (color: BusylightColor): Promise<boolean> => {
@@ -159,67 +191,125 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     return apiRequest('off');
   }, [apiRequest]);
   
-  // Start alert/ringtone
+  // Start alert with color and sound
   const startAlert = useCallback(async (
-    alertNumber: number = 3, 
-    volume: number = 50
+    color: BusylightColor,
+    sound?: number,
+    volume?: number
   ): Promise<boolean> => {
-    return apiRequest('alert', { number: alertNumber, volume });
-  }, [apiRequest]);
-  
-  // Stop alert
-  const stopAlert = useCallback(async (): Promise<boolean> => {
-    return apiRequest('stopalert');
-  }, [apiRequest]);
-  
-  // Apply state to busylight
-  const applyState = useCallback(async (state: BusylightState) => {
-    const config = STATE_CONFIG[state];
+    const alertSound = sound ?? parseInt(ringSound, 10) ?? 3;
+    const alertVolume = volume ?? ringVolume ?? 50;
     
-    // Stop any ongoing slow flash
+    return apiRequest('alert', {
+      red: color.red,
+      green: color.green,
+      blue: color.blue,
+      sound: alertSound,
+      volume: alertVolume
+    });
+  }, [apiRequest, ringSound, ringVolume]);
+  
+  // Stop slow flash
+  const stopSlowFlash = useCallback(() => {
     if (slowFlashIntervalRef.current) {
       clearInterval(slowFlashIntervalRef.current);
       slowFlashIntervalRef.current = null;
     }
+  }, []);
+  
+  // Start slow flash for IDLENOTIFY (1000ms ON / 1000ms OFF)
+  const startSlowFlash = useCallback((color: BusylightColor) => {
+    const verboseLogging = isVerboseLoggingEnabled();
     
-    // Stop any ongoing alert
-    await stopAlert();
+    if (slowFlashIntervalRef.current) return;
     
-    if (!config.color) {
-      // Turn off light
+    if (verboseLogging) {
+      console.log('[Busylight] Starting slow flash (1000ms ON/OFF)');
+    }
+    
+    let isOn = true;
+    
+    // Set initial ON state
+    setLight(color);
+    
+    // Setup flashing interval
+    slowFlashIntervalRef.current = setInterval(async () => {
+      if (!enabled || !isConnected) {
+        stopSlowFlash();
+        return;
+      }
+      
+      if (isOn) {
+        await turnOff();
+      } else {
+        await setLight(color);
+      }
+      isOn = !isOn;
+    }, 1000); // 1000ms interval
+  }, [enabled, isConnected, setLight, turnOff, stopSlowFlash]);
+  
+  // Apply state to busylight
+  const applyState = useCallback(async (state: BusylightState) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const config = STATE_CONFIG[state];
+    
+    if (!config) {
+      console.warn(`[Busylight] Unknown state: ${state}`);
+      return;
+    }
+    
+    if (verboseLogging) {
+      console.log('[Busylight] Applying state:', state, config);
+    }
+    
+    // Stop any slow flashing first
+    stopSlowFlash();
+    
+    // DISCONNECTED - Turn off
+    if (state === 'DISCONNECTED') {
       await turnOff();
       return;
     }
     
-    // Handle slow flash
-    if (config.flash === 'slow') {
-      let flashOn = true;
-      slowFlashIntervalRef.current = setInterval(async () => {
-        if (flashOn) {
-          await setLight(config.color!);
-        } else {
-          await turnOff();
-        }
-        flashOn = !flashOn;
-      }, 1500); // 1.5 second interval for slow flash
+    // RINGING - Use alert with sound
+    if (state === 'RINGING' && config.alert === true && config.color) {
+      await startAlert(config.color);
       return;
     }
     
-    // Set solid color
-    await setLight(config.color);
-    
-    // Handle alert
-    if (config.alert === true) {
-      await startAlert();
+    // RINGWAITING - Use alert with SILENT (volume 0)
+    if (state === 'RINGWAITING' && config.color) {
+      await startAlert(config.color, undefined, 0);
+      return;
     }
-  }, [setLight, turnOff, startAlert, stopAlert]);
+    
+    // IDLENOTIFY - Slow flash (1000ms ON / 1000ms OFF)
+    if (state === 'IDLENOTIFY' && config.flash === 'slow' && config.color) {
+      startSlowFlash(config.color);
+      return;
+    }
+    
+    // All other states - Solid color
+    if (config.color) {
+      await setLight(config.color);
+    }
+  }, [stopSlowFlash, turnOff, startAlert, startSlowFlash, setLight]);
   
   // Update state
   const setState = useCallback(async (newState: BusylightState) => {
-    if (!enabled || !isConnected) return;
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (!enabled || !isConnected) {
+      if (verboseLogging) {
+        console.log('[Busylight] setState blocked - enabled:', enabled, 'isConnected:', isConnected);
+      }
+      return;
+    }
     
     if (newState !== currentState) {
-      console.log(`[Busylight] State change: ${currentState} → ${newState}`);
+      if (verboseLogging) {
+        console.log(`[Busylight] State change: ${currentState} → ${newState}`);
+      }
       setCurrentState(newState);
       await applyState(newState);
     }
@@ -253,9 +343,17 @@ export function useBusylight(options: UseBusylightOptions = {}) {
   
   // Initialize connection
   const initialize = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     if (!enabled) {
-      console.log('[Busylight] Disabled in settings');
+      if (verboseLogging) {
+        console.log('[Busylight] Disabled in settings');
+      }
       return false;
+    }
+    
+    if (verboseLogging) {
+      console.log('[Busylight] Initializing...', { username, bridgeUrl });
     }
     
     const connected = await checkConnection();
@@ -264,34 +362,54 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     if (connected) {
       console.log('[Busylight] Connected successfully');
       setRetryCount(0);
+      
+      // Run test sequence
       await testConnection();
+      
+      // Add delay after test sequence
+      await new Promise(r => setTimeout(r, 500));
+      
+      // Update to current state
+      await applyState(currentState);
+      
       return true;
     }
     
-    console.warn('[Busylight] Failed initial connection');
+    console.warn('[Busylight] Failed initial connection - will retry via monitoring');
     return false;
-  }, [enabled, checkConnection, testConnection]);
+  }, [enabled, username, bridgeUrl, checkConnection, testConnection, applyState, currentState]);
   
   // Start monitoring connection
   const startMonitoring = useCallback(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     if (monitoringIntervalRef.current) return;
     
+    if (verboseLogging) {
+      console.log(`[Busylight] Starting monitoring (${monitoringInterval}ms)`);
+    }
+    
     monitoringIntervalRef.current = setInterval(async () => {
-      if (!enabled) return;
+      if (!enabled) {
+        stopMonitoring();
+        return;
+      }
       
+      const wasConnected = isConnected;
       const connected = await checkConnection();
       
-      if (connected && !isConnected) {
-        console.log('[Busylight] Reconnected');
+      if (!wasConnected && connected) {
+        console.log('[Busylight] Bridge reconnected');
         setIsConnected(true);
         setRetryCount(0);
-      } else if (!connected && isConnected) {
-        console.warn('[Busylight] Connection lost');
+        await applyState(currentState);
+      } else if (wasConnected && !connected) {
+        console.warn('[Busylight] Bridge disconnected');
         setIsConnected(false);
-        setRetryCount(prev => prev + 1);
+        stopSlowFlash();
       }
     }, monitoringInterval);
-  }, [enabled, checkConnection, isConnected, monitoringInterval]);
+  }, [enabled, checkConnection, isConnected, monitoringInterval, applyState, currentState, stopSlowFlash]);
   
   // Stop monitoring
   const stopMonitoring = useCallback(() => {
@@ -301,6 +419,26 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     }
   }, []);
   
+  // Disconnect and cleanup
+  const disconnect = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[Busylight] Disconnecting...');
+    }
+    
+    stopMonitoring();
+    stopSlowFlash();
+    
+    if (isConnected) {
+      await turnOff();
+    }
+    
+    setIsConnected(false);
+    setCurrentState('DISCONNECTED');
+    setRetryCount(0);
+  }, [stopMonitoring, stopSlowFlash, isConnected, turnOff]);
+  
   // Initialize and start monitoring when enabled
   useEffect(() => {
     if (enabled) {
@@ -308,18 +446,14 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         startMonitoring();
       });
     } else {
-      setIsConnected(false);
-      setCurrentState('DISCONNECTED');
-      stopMonitoring();
+      disconnect();
     }
     
     return () => {
       stopMonitoring();
-      if (slowFlashIntervalRef.current) {
-        clearInterval(slowFlashIntervalRef.current);
-      }
+      stopSlowFlash();
     };
-  }, [enabled, initialize, startMonitoring, stopMonitoring]);
+  }, [enabled, initialize, startMonitoring, disconnect, stopMonitoring, stopSlowFlash]);
   
   return {
     enabled,
@@ -331,9 +465,9 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     setLight,
     turnOff,
     startAlert,
-    stopAlert,
     testConnection,
-    initialize
+    initialize,
+    disconnect
   };
 }
 

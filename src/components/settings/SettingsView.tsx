@@ -37,6 +37,7 @@ import { ImportExportModal, ConfirmModal } from '@/components/modals';
 import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
 import { useAudioDevices, useMediaQuery } from '@/hooks';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useBusylightContext } from '@/contexts';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 export function SettingsView() {
@@ -70,6 +71,9 @@ export function SettingsView() {
   const setSipMessagesEnabled = useSettingsStore((state) => state.setSipMessagesEnabled);
   const setBusylightEnabled = useSettingsStore((state) => state.setBusylightEnabled);
   const resetSettings = useSettingsStore((state) => state.resetSettings);
+  
+  // Busylight context
+  const busylight = useBusylightContext();
   
   // Notifications hook for test
   const { showIncomingCallNotification, permission: notificationPermission } = useNotifications();
@@ -750,6 +754,91 @@ export function SettingsView() {
                     {t('settings.busylight_enabled_desc', 'Enable USB busylight status indicator')}
                   </p>
                 </div>
+                
+                {settings.busylight.enabled && (
+                  <>
+                    <div className="setting-item">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const success = await busylight.testConnection();
+                            if (success) {
+                              console.log('[Busylight] Test completed successfully');
+                            } else {
+                              console.warn('[Busylight] Test failed - not connected');
+                            }
+                          } catch (error) {
+                            console.error('[Busylight] Test error:', error);
+                          }
+                        }}
+                        disabled={!busylight.isConnected}
+                      >
+                        {t('settings.busylight_test', 'Test Connection')}
+                      </Button>
+                      <p className="setting-help-text">
+                        {busylight.isConnected 
+                          ? t('settings.busylight_test_desc', 'Run a quick test to verify busylight is working')
+                          : t('settings.busylight_not_connected', 'Bridge not connected - ensure bridge client is running')
+                        }
+                      </p>
+                    </div>
+                    
+                    <div className="setting-item">
+                      <label className="setting-label">
+                        {t('settings.busylight_ring_sound', 'Ring Sound')}
+                      </label>
+                      <select
+                        className="setting-select"
+                        value={settings.busylight.ringSound}
+                        onChange={(e) => useSettingsStore.getState().setBusylightRingSound(e.target.value)}
+                      >
+                        <option value="OpenOffice">OpenOffice</option>
+                        <option value="Quiet">Quiet</option>
+                        <option value="Funky">Funky</option>
+                        <option value="FairyTale">Fairy Tale</option>
+                        <option value="KuandoTrain">Kuando Train</option>
+                        <option value="TelephoneNordic">Telephone Nordic</option>
+                        <option value="TelephoneOriginal">Telephone Original</option>
+                        <option value="TelephonePickMeUp">Telephone Pick Me Up</option>
+                      </select>
+                      <p className="setting-help-text">
+                        {t('settings.busylight_ring_sound_desc', 'Select the sound to play when receiving a call')}
+                      </p>
+                    </div>
+                    
+                    <div className="setting-item">
+                      <label className="setting-label">
+                        {t('settings.busylight_ring_volume', 'Ring Volume')}
+                      </label>
+                      <input
+                        type="range"
+                        className="setting-range"
+                        min="0"
+                        max="100"
+                        step="25"
+                        value={settings.busylight.ringVolume}
+                        onChange={(e) => useSettingsStore.getState().setBusylightRingVolume(parseInt(e.target.value, 10))}
+                      />
+                      <span className="setting-range-value">{settings.busylight.ringVolume}%</span>
+                      <p className="setting-help-text">
+                        {t('settings.busylight_ring_volume_desc', 'Adjust the volume of the ring sound')}
+                      </p>
+                    </div>
+                    
+                    <div className="setting-item">
+                      <Toggle
+                        label={t('settings.busylight_voicemail_notify', 'Voicemail Notification')}
+                        checked={settings.busylight.voicemailNotify}
+                        onChange={(checked) => useSettingsStore.getState().setBusylightVoicemailNotify?.(checked)}
+                      />
+                      <p className="setting-help-text">
+                        {t('settings.busylight_voicemail_notify_desc', 'Flash green when you have voicemail messages')}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

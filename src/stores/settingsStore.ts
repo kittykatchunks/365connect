@@ -51,6 +51,7 @@ interface SettingsState {
   setBusylightEnabled: (enabled: boolean) => void;
   setBusylightRingSound: (sound: string) => void;
   setBusylightRingVolume: (volume: number) => void;
+  setBusylightVoicemailNotify: (enabled: boolean) => void;
   
   // Bulk Actions
   updateSettings: (settings: Partial<AppSettings>) => void;
@@ -252,6 +253,9 @@ export const useSettingsStore = create<SettingsState>()(
         })),
         setBusylightRingVolume: (ringVolume) => set((state) => ({
           settings: { ...state.settings, busylight: { ...state.settings.busylight, ringVolume } }
+        })),
+        setBusylightVoicemailNotify: (voicemailNotify) => set((state) => ({
+          settings: { ...state.settings, busylight: { ...state.settings.busylight, voicemailNotify } }
         })),
         
         // Bulk actions
