@@ -452,6 +452,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
   }, [stopMonitoring, stopSlowFlash, isConnected, turnOff]);
   
   // Initialize and start monitoring when enabled
+  // Only re-run when enabled changes or username/bridgeUrl changes
   useEffect(() => {
     if (enabled) {
       initialize().then(() => {
@@ -465,7 +466,8 @@ export function useBusylight(options: UseBusylightOptions = {}) {
       stopMonitoring();
       stopSlowFlash();
     };
-  }, [enabled, initialize, startMonitoring, disconnect, stopMonitoring, stopSlowFlash]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, username, bridgeUrl]);
   
   return {
     enabled,
