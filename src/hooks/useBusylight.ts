@@ -200,7 +200,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     if (!enabled || !isConnected) return null;
     
     try {
-      const url = buildApiUrl('currentpresence');
+      const url = buildApiUrl('busylightdevices');
       const headers: HeadersInit = {};
       if (username) {
         headers['x-connect365-username'] = username;
@@ -224,10 +224,12 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         }
         
         // Parse device information from response
-        // Response format: {"red":0,"green":255,"blue":0,"sound":0}
-        if (data && typeof data === 'object') {
-          // Return a generic label if specific model not available
-          return 'Kuando Busylight';
+        // Response may be an array of devices or single device object
+        if (Array.isArray(data) && data.length > 0) {
+          const device = data[0];
+          return device.productName || device.model || 'Kuando Busylight';
+        } else if (data && typeof data === 'object') {
+          return data.productName || data.model || 'Kuando Busylight';
         }
       }
       
