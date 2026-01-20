@@ -16,7 +16,15 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const compression = require('compression');
-require('dotenv').config();
+
+// Load .env file if dotenv is available (optional in production)
+try {
+  const dotenvPath = path.join(__dirname, '.env');
+  require('dotenv').config({ path: dotenvPath });
+  console.log(`[Server] Loaded .env from: ${dotenvPath}`);
+} catch (err) {
+  console.log('[Server] dotenv not installed, using system environment variables');
+}
 
 const app = express();
 
@@ -175,14 +183,23 @@ if (sslOptions) {
     console.log(`${'='.repeat(60)}\n`);
   });
   
-  // Optional: HTTP redirect to HTTPS
+  // Optional: HTTP redirect to HTTPS (skip if port already in use)
   const httpApp = express();
   httpApp.use((req, res) => {
     const host = req.headers.host?.replace(`:${HTTP_PORT}`, `:${HTTPS_PORT}`) || `localhost:${HTTPS_PORT}`;
     res.redirect(301, `https://${host}${req.url}`);
   });
   
-  http.createServer(httpApp).listen(HTTP_PORT, '0.0.0.0', () => {
+  const httpServer = http.createServer(httpApp);
+  httpServer.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`  ℹ️  HTTP port ${HTTP_PORT} already in use, skipping redirect server`);
+    } else {
+      console.error(`  ❌ HTTP server error:`, err.message);
+    }
+  });
+  
+  httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
     console.log(`  HTTP Redirect: http://0.0.0.0:${HTTP_PORT} → https`);
   });
   
