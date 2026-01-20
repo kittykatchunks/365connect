@@ -40,6 +40,19 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useBusylightContext } from '@/contexts';
 import { isVerboseLoggingEnabled } from '@/utils';
 
+// Helper component to fetch and display device info
+function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBusylightContext> }) {
+  const [deviceInfo, setDeviceInfo] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (busylight.isConnected) {
+      busylight.getDeviceInfo().then(setDeviceInfo);
+    }
+  }, [busylight, busylight.isConnected]);
+  
+  return <span>{deviceInfo || 'Checking...'}</span>;
+}
+
 export function SettingsView() {
   const { t } = useTranslation();
   
@@ -757,7 +770,19 @@ export function SettingsView() {
                 
                 {settings.busylight.enabled && (
                   <>
-                    <div className="setting-item">
+                    <div className="setting-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label className="setting-label" style={{ marginBottom: 0 }}>
+                          {busylight.isConnected ? (
+                            <>
+                              {t('settings.busylight_device', 'Busylight Device')}:{' '}
+                              <BusylightDeviceInfo busylight={busylight} />
+                            </>
+                          ) : (
+                            t('settings.busylight_not_connected', 'Bridge not connected - ensure bridge client is running')
+                          )}
+                        </label>
+                      </div>
                       <Button
                         variant="secondary"
                         size="sm"
@@ -777,12 +802,6 @@ export function SettingsView() {
                       >
                         {t('settings.busylight_test', 'Test Connection')}
                       </Button>
-                      <p className="setting-help-text">
-                        {busylight.isConnected 
-                          ? t('settings.busylight_test_desc', 'Run a quick test to verify busylight is working')
-                          : t('settings.busylight_not_connected', 'Bridge not connected - ensure bridge client is running')
-                        }
-                      </p>
                     </div>
                     
                     <div className="setting-item">

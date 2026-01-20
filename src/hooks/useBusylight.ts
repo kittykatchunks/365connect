@@ -193,6 +193,53 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     }
   }, [buildApiUrl, username]);
   
+  // Get device information
+  const getDeviceInfo = useCallback(async (): Promise<string | null> => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (!enabled || !isConnected) return null;
+    
+    try {
+      const url = buildApiUrl('currentpresence');
+      const headers: HeadersInit = {};
+      if (username) {
+        headers['x-connect365-username'] = username;
+      }
+      
+      if (verboseLogging) {
+        console.log('[Busylight] 📤 Getting device info...');
+      }
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(2000)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (verboseLogging) {
+          console.log('[Busylight] 📥 Device info:', data);
+        }
+        
+        // Parse device information from response
+        // Response format: {"red":0,"green":255,"blue":0,"sound":0}
+        if (data && typeof data === 'object') {
+          // Return a generic label if specific model not available
+          return 'Kuando Busylight';
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      if (verboseLogging) {
+        console.error('[Busylight] ❌ Failed to get device info:', error);
+      }
+      return null;
+    }
+  }, [enabled, isConnected, buildApiUrl, username]);
+  
   // Set light color
   const setLight = useCallback(async (color: BusylightColor): Promise<boolean> => {
     return apiRequest('light', { red: color.red, green: color.green, blue: color.blue });
@@ -491,6 +538,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     turnOff,
     startAlert,
     testConnection,
+    getDeviceInfo,
     initialize,
     disconnect
   };

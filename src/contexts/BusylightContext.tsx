@@ -17,6 +17,7 @@ interface BusylightContextValue {
   isConnected: boolean;
   currentState: BusylightState;
   testConnection: () => Promise<boolean>;
+  getDeviceInfo: () => Promise<string | null>;
 }
 
 const BusylightContext = createContext<BusylightContextValue | null>(null);
@@ -184,7 +185,8 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
     enabled: busylight.enabled,
     isConnected: busylight.isConnected,
     currentState: busylight.currentState,
-    testConnection: busylight.testConnection
+    testConnection: busylight.testConnection,
+    getDeviceInfo: busylight.getDeviceInfo
   };
   
   return (
