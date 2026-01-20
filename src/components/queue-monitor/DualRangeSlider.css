@@ -1,0 +1,218 @@
+/* ============================================ */
+/* Dual Range Slider Component Styles */
+/* ============================================ */
+
+.dual-range-slider {
+  width: 100%;
+  padding: var(--spacing-sm) 0;
+}
+
+.dual-range-slider.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Value Display */
+.dual-range-slider-values {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.value-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  min-width: 80px;
+}
+
+.value-display.warn {
+  background-color: var(--warning-color-light);
+  border: 1px solid var(--warning-color);
+}
+
+.value-display.breach {
+  background-color: var(--danger-color-light);
+  border: 1px solid var(--danger-color);
+}
+
+.value-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.value-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-top: 2px;
+}
+
+/* Slider Container */
+.dual-range-slider-container {
+  position: relative;
+  width: 100%;
+}
+
+.dual-range-slider-track {
+  position: relative;
+  width: 100%;
+  height: 32px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Colored Zones */
+.zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.zone-green {
+  left: 0;
+  width: var(--warn-percent);
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.zone-amber {
+  left: var(--warn-percent);
+  width: calc(var(--breach-percent) - var(--warn-percent));
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.zone-red {
+  left: var(--breach-percent);
+  width: calc(100% - var(--breach-percent));
+  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+/* Range Highlight */
+.range-highlight {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+  transition: left 0.1s ease, width 0.1s ease;
+}
+
+/* Slider Thumbs */
+.slider-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--background-color);
+  border: 3px solid var(--primary-color);
+  cursor: grab;
+  z-index: 10;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-thumb:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider-thumb:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.slider-thumb.dragging {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.thumb-warn {
+  border-color: var(--warning-color);
+}
+
+.thumb-breach {
+  border-color: var(--danger-color);
+  z-index: 11; /* Breach thumb on top */
+}
+
+/* Thumb Tooltips */
+.thumb-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background-color: var(--background-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slider-thumb:hover .thumb-tooltip,
+.slider-thumb:focus .thumb-tooltip,
+.slider-thumb.dragging .thumb-tooltip {
+  opacity: 1;
+}
+
+/* Min/Max Labels */
+.dual-range-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-xs);
+  padding: 0 4px;
+}
+
+.label-min,
+.label-max {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .dual-range-slider-track {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .slider-thumb {
+  background-color: var(--background-elevated);
+}
+
+[data-theme="dark"] .thumb-tooltip {
+  background-color: var(--background-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive - Mobile */
+@media (max-width: 640px) {
+  .value-number {
+    font-size: 1.1rem;
+  }
+  
+  .slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .dual-range-slider-track {
+    height: 40px;
+  }
+}

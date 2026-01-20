@@ -1,43 +1,269 @@
 // ============================================
-// Queue Monitor View - SLA breach monitoring (placeholder)
+// Queue Monitor View - SLA breach monitoring
 // ============================================
 
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BarChart3, Clock, AlertTriangle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
+import { Button } from '@/components/ui';
+import { ConfirmModal } from '@/components/modals';
+import { QueueMonitorGrid } from './QueueMonitorGrid';
+import { QueueModal } from './QueueModal';
+import { useTabNotification } from '@/hooks';
+import type { QueueConfig, QueueStats, QueueAlertState, AvailableQueue } from '@/types/queue-monitor';
+import { 
+  loadQueueConfigs, 
+  saveQueueConfig, 
+  deleteQueueConfig,
+  updateQueueAlertStatus
+} from '@/utils/queueStorage';
+import { isVerboseLoggingEnabled } from '@/utils';
+import './QueueMonitorView.css';
 
 export function QueueMonitorView() {
   const { t } = useTranslation();
+  const verboseLogging = isVerboseLoggingEnabled();
+  const { setTabAlert } = useTabNotification();
+  
+  // State
+  const [queueConfigs, setQueueConfigs] = useState<QueueConfig[]>([]);
+  const [queueStats, setQueueStats] = useState<QueueStats[]>([]);
+  const [availableQueues, setAvailableQueues] = useState<AvailableQueue[]>([]);
+  const [loadingQueues, setLoadingQueues] = useState(false);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<QueueConfig | null>(null);
+  const [deleteConfirmQueue, setDeleteConfirmQueue] = useState<string | null>(null);
+  
+  // Load configs on mount
+  useEffect(() => {
+    const configs = loadQueueConfigs();
+    setQueueConfigs(configs);
+    
+    if (verboseLogging) {
+      console.log('[QueueMonitorView] 📋 Loaded configs:', configs);
+    }
+  }, [verboseLogging]);
+  
+  // Calculate alert states and update tab alerts
+  const updateTabAlerts = useCallback(() => {
+    const alerts = queueStats.map(stat => stat.alertState);
+    
+    // Determine highest alert level
+    const hasBreach = alerts.includes('breach');
+    const hasWarn = alerts.includes('warn');
+    
+    if (hasBreach) {
+      setTabAlert('queueMonitor', 'error'); // Fast red flash
+    } else if (hasWarn) {
+      setTabAlert('queueMonitor', 'warning'); // Slow yellow flash
+    } else {
+      setTabAlert('queueMonitor', 'default'); // Clear alert
+    }
+    
+    if (verboseLogging) {
+      console.log('[QueueMonitorView] 🚨 Tab alert updated:', { hasBreach, hasWarn });
+    }
+  }, [queueStats, setTabAlert, verboseLogging]);
+  
+  // Update tab alerts when stats change
+  useEffect(() => {
+    if (queueStats.length > 0) {
+      updateTabAlerts();
+    }
+  }, [queueStats, updateTabAlerts]);
+  
+  // Mock function to fetch available queues from API
+  // TODO: Replace with actual Phantom API call
+  const fetchAvailableQueues = useCallback(async () => {
+    setLoadingQueues(true);
+    
+    if (verboseLogging) {
+      console.log('[QueueMonitorView] 📡 Fetching available queues from API...');
+    }
+    
+    try {
+      // Simulated API call - replace with actual implementation
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Mock data
+      const mockQueues: AvailableQueue[] = [
+        { queueNumber: '600', queueName: 'Main Support' },
+        { queueNumber: '601', queueName: 'Sales' },
+        { queueNumber: '602', queueName: 'Technical Support' },
+        { queueNumber: '612', queueName: 'Premium Support' },
+        { queueNumber: '650', queueName: 'After Hours' }
+      ];
+      
+      setAvailableQueues(mockQueues);
+      
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ✅ Fetched queues:', mockQueues);
+      }
+    } catch (error) {
+      console.error('[QueueMonitorView] ❌ Error fetching queues:', error);
+      setAvailableQueues([]);
+    } finally {
+      setLoadingQueues(false);
+    }
+  }, [verboseLogging]);
+  
+  // Mock function to fetch queue stats
+  // TODO: Replace with actual Phantom API polling
+  const fetchQueueStats = useCallback(() => {
+    if (verboseLogging) {
+      console.log('[QueueMonitorView] 📊 Fetching queue stats...');
+    }
+    
+    // Generate mock stats for configured queues
+    const stats: QueueStats[] = queueConfigs.map(config => {
+      // Simulate random stats
+      const abandonedPercent = Math.floor(Math.random() * 100);
+      const avgWaitTime = Math.floor(Math.random() * 100);
+      
+      // Determine alert states
+      let abandonedAlert: QueueAlertState = 'normal';
+      if (abandonedPercent >= config.abandonedThreshold.breach) {
+        abandonedAlert = 'breach';
+      } else if (abandonedPercent >= config.abandonedThreshold.warn) {
+        abandonedAlert = 'warn';
+      }
+      
+      let awtAlert: QueueAlertState = 'normal';
+      if (avgWaitTime >= config.avgWaitTimeThreshold.breach) {
+        awtAlert = 'breach';
+      } else if (avgWaitTime >= config.avgWaitTimeThreshold.warn) {
+        awtAlert = 'warn';
+      }
+      
+      // Overall alert is the highest of the two
+      const overallAlert: QueueAlertState = 
+        abandonedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
+        abandonedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
+        'normal';
+      
+      // Update alert status in localStorage
+      updateQueueAlertStatus({
+        queueNumber: config.queueNumber,
+        abandonedAlert,
+        avgWaitTimeAlert: awtAlert,
+        overallAlert
+      });
+      
+      return {
+        queueNumber: config.queueNumber,
+        queueName: config.queueName,
+        agentsTotal: Math.floor(Math.random() * 20) + 1,
+        agentsFree: Math.floor(Math.random() * 10),
+        agentsBusy: Math.floor(Math.random() * 8),
+        agentsPaused: Math.floor(Math.random() * 5),
+        answeredPercent: 100 - abandonedPercent,
+        abandonedPercent,
+        avgWaitTime,
+        totalCalls: Math.floor(Math.random() * 500) + 100,
+        alertState: overallAlert
+      };
+    });
+    
+    setQueueStats(stats);
+  }, [queueConfigs, verboseLogging]);
+  
+  // Poll queue stats every 5 seconds
+  useEffect(() => {
+    if (queueConfigs.length > 0) {
+      fetchQueueStats();
+      const interval = setInterval(fetchQueueStats, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [queueConfigs, fetchQueueStats]);
+  
+  // Handlers
+  const handleAddQueue = () => {
+    fetchAvailableQueues();
+    setEditingConfig(null);
+    setIsModalOpen(true);
+  };
+  
+  const handleEditQueue = (queueNumber: string) => {
+    const config = queueConfigs.find(c => c.queueNumber === queueNumber);
+    if (config) {
+      fetchAvailableQueues();
+      setEditingConfig(config);
+      setIsModalOpen(true);
+    }
+  };
+  
+  const handleDeleteQueue = (queueNumber: string) => {
+    setDeleteConfirmQueue(queueNumber);
+  };
+  
+  const confirmDelete = () => {
+    if (deleteConfirmQueue) {
+      const updatedConfigs = deleteQueueConfig(deleteConfirmQueue);
+      setQueueConfigs(updatedConfigs);
+      setDeleteConfirmQueue(null);
+      
+      // Remove from stats
+      setQueueStats(prev => prev.filter(s => s.queueNumber !== deleteConfirmQueue));
+    }
+  };
+  
+  const handleSaveConfig = (config: QueueConfig) => {
+    const updatedConfigs = saveQueueConfig(config);
+    setQueueConfigs(updatedConfigs);
+  };
+  
+  const configuredQueueNumbers = queueConfigs.map(c => c.queueNumber);
   
   return (
     <div className="queue-monitor-view">
-      <PanelHeader 
-        title={t('queue_monitor.title', 'Queue Monitor')}
-        subtitle={t('queue_monitor.subtitle', 'Monitor SLA breaches')}
-      />
+      <div className="queue-monitor-header">
+        <PanelHeader 
+          title={t('queue_monitor.title', 'Queue Monitor')}
+          subtitle={t('queue_monitor.subtitle', 'Monitor SLA breaches')}
+        />
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={handleAddQueue}
+          className="queue-monitor-add-btn"
+        >
+          <Plus className="w-4 h-4" />
+          {t('queue_monitor.add_queue', 'Add Queue')}
+        </Button>
+      </div>
       
       <div className="queue-monitor-content">
-        <div className="coming-soon">
-          <BarChart3 className="coming-soon-icon" />
-          <h3>{t('queue_monitor.coming_soon_title', 'Coming Soon')}</h3>
-          <p>{t('queue_monitor.coming_soon_description', 'Queue monitoring and SLA breach alerts will be available in a future update.')}</p>
-          
-          <div className="coming-soon-features">
-            <div className="coming-soon-feature">
-              <Clock className="w-5 h-5" />
-              <span>{t('queue_monitor.feature_realtime', 'Real-time queue statistics')}</span>
-            </div>
-            <div className="coming-soon-feature">
-              <AlertTriangle className="w-5 h-5" />
-              <span>{t('queue_monitor.feature_alerts', 'SLA breach alerts')}</span>
-            </div>
-            <div className="coming-soon-feature">
-              <BarChart3 className="w-5 h-5" />
-              <span>{t('queue_monitor.feature_metrics', 'Performance metrics')}</span>
-            </div>
-          </div>
-        </div>
+        <QueueMonitorGrid
+          queueStats={queueStats}
+          queueConfigs={queueConfigs}
+          onEdit={handleEditQueue}
+          onDelete={handleDeleteQueue}
+        />
       </div>
+      
+      {/* Add/Edit Queue Modal */}
+      <QueueModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveConfig}
+        existingConfig={editingConfig}
+        availableQueues={availableQueues}
+        loadingQueues={loadingQueues}
+        configuredQueueNumbers={configuredQueueNumbers}
+      />
+      
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={!!deleteConfirmQueue}
+        onClose={() => setDeleteConfirmQueue(null)}
+        onConfirm={confirmDelete}
+        title={t('queue_monitor.delete_title', 'Delete Queue Monitor')}
+        message={t('queue_monitor.delete_message', 'Are you sure you want to stop monitoring this queue?')}
+        confirmText={t('common.delete', 'Delete')}
+      />
     </div>
   );
 }

@@ -61,16 +61,54 @@ Thirdly, clarification of SIP call state and call-timer
 - POST and GET requests are needed
 - Normal protocols should be adhered to with all returns from API being JSON encoded (if any return)
 
-### Queue Monitor Tab
+### QUEUE MONITOR TAB
+- This tab in the react webphone application will allow the monitoring of specific queues for very basic info in respect of the queue and to have user defineable common SLA(s) that will alert user when approaching or when breaching the SLA(s).  This would allow the supervisors of call takers to direct resource to offending queues to recover the SLA(s) during the shifts rather than looking at reports produced after the fact, leaving no chance of recovery
+	- First assumption is that this needs to be customisable for the SLA(s) as they may change dependant on what contractual agreements are in place and that may change over time for contract to contract and will most likely cover different queues at different times
+	- Second assumption is that only certain queues will require this and that they are the only ones that would be monitored by a tab in the react webphone application. All other aspects of monitoring queues would be covered by our existing wallboard solutions
+- Wallboard stats realtime information gathering and processing in respect of user definable SLA(s)
+	- What API's would be required to receive this information and how often they would be requested
 
+- UI elements required for the queue display in the tab itself and for the selection of queues and the settings of the SLA parameters for each queue
+	- What would be useful to show in the tab of what sort of format to use
+	- When would we reset the figures - again user definable is only option I think (probably daily)
 
+- Method of alerting for SLA warning/breach in the react webphone application
+	- Method has to tab into account that the tab contents will not always be on display
 
-### Queue Groups
+- What SLA(s) do we think are required and how to set the associated warning boundarys
 
+- [ ] UI requirements for both display of monitored queues and entry of Queue and SLA requirements
+	- [ ] I think a simple grid view will suffice, with common queue info and common SLA measures, similar to below grid format.  Suggest that titles may need to be in legend below active grid, with common abreviations used in title bar.  Each queue would stack below the title bar, the order would just be number queue order (lowest to highest) when no SLA triggers active.  If SLA trigger of Breach (RED) was reached for a queue that would be brought to top of stacked queues with any SLA trigger of Warn (AMBER) below any Breached queues
+	- [ ] Visual indications in the table shown in the queue monitor tab of BREACH and WARN as set by the range sliders defined later in this document would be background color of offending stat (e.g. if ABD goes above WARN % then the background of the displayed percentage would be amber) and it would move to top of list.  Only any queues that had a BREACH stat would be above the queue in the list.
+	- [ ] Also key to this will be the visual indication of the tab itself.  I will use the useTabAlert hook to indicate a WARN or BREACH queue in monitored queues the two indications will be a flashing Amber tab or a flashing Red tab.  Only the higher type will be alerted (e.g. if a few WARN and one BREACH in effect, only BREACH would alerted to the useTabAlert hook)
+	- [ ] Feel it would be likely that the two types of SLA failures should be stored in persistant localstorage per queue to allow for browser refreshes etc. The useTabAlert hook could be called for queue 602 WARN for one SLA this should switch 602 WARN localstorage from 0 to 1 for that SLA as well as initate the amber flashing of the tab.  Then if a BREACH for same queue 602 on the other SLA would switch to 1 and that would initiate Flashing Red of tab.  If the other then SLA reached BREACH and then dropped again to warn the useTabAlert would utilise the localstorage to determine on each request of cancel, warn or breach of the tab that it would compare all localstorage to see if the change to lower alert status should be completed as one or more of the queues may still have higher alert status
+	____________________________________________________________
+	| QUE | AGTS | FREE | BUSY | PAUSE | ANS | ABD | AWT | TOT |
+	| 600 | XXXX | XXXX | XXXX | XXXX  | XX% | XX% | XXs | XXXX|
 
+	Legend
+	- QUE Queue Number or Name
+	- AGTS Agents logged into queue
+	- FREE Agents currently available
+	- BUSY Agents currently on a call
+	- PAUSE Agents currently paused in the queue
+	- ANS % of total incoming calls answered
+	- ABD % of total incoming calls missed/abandoned
+	- AWT Average Waiting Time in queue to be answered in seconds
+	- TOT Total calls delivered to queue since last stats reset
 
-### Webphone Register
+	- [ ] Selection of queues and settings of SLA triggers would be done via modal with button to [add queue] button in top right of the display when tab is selcted (similar to add contact in contact tab)
+		- [ ] Selection of queue and the two SLA of ABD and AWT would need to be defined
+			- [ ] Queue would be some sort of dropdown box - preferable if queue names were available we should use them but at very least the queue numbers (e.g. 600,612 etc.).  The list of queues may be very long so a restricted dropdown box height with scrollbar may be best to allow selection.  The list of queues would have to be obtained from the Phantom via API call preferably obtained at the point of selecting the [Add Queue] button and storing them to local cache until [SAVE] or [CANCEL] button in modal selected
+			- [ ] Use two dual-handle range sliders with discrete colored zones (Green, Amber, Red)
+				- First one for abandoned/missed is percentage so slider would be 0-100% first zone would be green, second zone amber and last zone would be red
+				- Second one for AWT would be in secs but to align the bars i would use 0-100secs first zone would be green, second amber and last zone would be red
+			- [ ] Final item would be when to reset the stats for the queue, at present I cannot see a reason why this would be more than once every 24hrs but it may be useful to define what time each 24hrs to reset, so a way of entering a time to complete reset, 00:00 being the default offered and only really offering hourly options of 01:00, 02:00 etc
+		- [ ] When created each queue should be added into localstorage to allow export and import of programmed information, I have already added queue monitoring option in import export facility so link the created storage name to the selectable option in the import/export function.
 
+### QUEUE GROUPS
+- Overview - To allow queues to be grouped together and selected to be queued in/out via single selection of button
+- [ ]
 
 
 ### Issues to be resolved before release
@@ -86,7 +124,7 @@ Thirdly, clarification of SIP call state and call-timer
   - 146 unique toasts identified (excluding save settings)
   - ~35 currently implemented in React, ~111 remaining
   - All i18n keys documented for all languages
-- [ ] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
+- [X] Establish if API key stored by .env is dynamic or is re-build required upon update.  If so what alternatives are possible
 - [x] When on active call and another is received on another line, then it should not use ringing tone but a call waiting tone instead through the ringer device.  Use the Alert.mp3 file as the tone, play back once every three seconds.
 - [x] When on you are on active call and an incoming call is ring on another line and you select the other line or if you select an idle line to dial out, if the current call has not already been placed on hold then when you select the new line key the current call should automatically be placed on hold.  When returning to a line when the call is on hold should NOT automatically unhold the call that should have to be done manually by the agent.  Also when on active call there should be no system notification for an incoming call
 - [X] Ensure the other language files mirror the current en.json
@@ -113,3 +151,10 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] Line Keys and Company Number selection should be disabled when in disconnected state
 - [X] Double the dialpad size on mobile version only
 - [X] Double the size of the dialpad on the desktop version
+
+
+#### Mobile Device Usage - Investigation Only
+- [ ] How can you integrate in mobile devices audio so you can use external ringer and normal audio speaker and microphone for call audio
+- [ ] Blutooth devices and how would they integrate
+- [ ] Push notifications for calls and how do they integrate into PWA
+- [ ] Methods to allow access to server without having to allow through firewall directly

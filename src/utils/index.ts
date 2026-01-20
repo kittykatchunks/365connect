@@ -12,6 +12,7 @@ export * from './contactLookup';
 export * from './diagnostics';
 export * from './version';
 export * from './phantomApiClient';
+export * from './queueStorage';
 
 // Common utility functions
 import { clsx, type ClassValue } from 'clsx';

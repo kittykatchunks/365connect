@@ -43,5 +43,8 @@ export * from './agent';
 // Settings types
 export * from './settings';
 
+// Queue Monitor types
+export * from './queue-monitor';
+
 // Common types
 export type ViewType = 'dial' | 'contacts' | 'activity' | 'companyNumbers' | 'queueMonitor' | 'settings';

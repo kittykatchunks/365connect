@@ -1,0 +1,86 @@
+/* ============================================ */
+/* Queue Monitor View Styles */
+/* ============================================ */
+
+.queue-monitor-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.queue-monitor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.queue-monitor-add-btn {
+  flex-shrink: 0;
+}
+
+.queue-monitor-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+/* Empty State (from old design) */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.coming-soon-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.coming-soon h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-color);
+}
+
+.coming-soon p {
+  font-size: 1rem;
+  margin-bottom: var(--spacing-lg);
+  max-width: 600px;
+}
+
+.coming-soon-features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.coming-soon-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.coming-soon-feature svg {
+  color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .queue-monitor-content {
+    padding: var(--spacing-sm);
+  }
+}
