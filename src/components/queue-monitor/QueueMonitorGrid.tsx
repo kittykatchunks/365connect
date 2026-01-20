@@ -76,100 +76,145 @@ export function QueueMonitorGrid({
     );
   }
   
+  // Metrics in vertical order
+  const metrics = [
+    { key: 'que', label: t('queue_monitor.que', 'QUE') },
+    { key: 'agts', label: t('queue_monitor.agts', 'AGTS') },
+    { key: 'free', label: t('queue_monitor.free', 'FREE') },
+    { key: 'busy', label: t('queue_monitor.busy', 'BUSY') },
+    { key: 'pause', label: t('queue_monitor.pause', 'PAUSE') },
+    { key: 'ans', label: t('queue_monitor.ans', 'ANS') },
+    { key: 'abd', label: t('queue_monitor.abd', 'ABD') },
+    { key: 'awt', label: t('queue_monitor.awt', 'AWT') },
+    { key: 'tot', label: t('queue_monitor.tot', 'TOT') },
+    { key: 'actions', label: t('common.actions', 'Actions') }
+  ];
+  
   return (
     <div className="queue-monitor-grid-container">
-      <div className="queue-monitor-grid">
-        {/* Header Row */}
-        <div className="grid-header">
-          <div className="grid-cell header-cell">{t('queue_monitor.que', 'QUE')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.agts', 'AGTS')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.free', 'FREE')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.busy', 'BUSY')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.pause', 'PAUSE')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.ans', 'ANS')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.abd', 'ABD')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.awt', 'AWT')}</div>
-          <div className="grid-cell header-cell">{t('queue_monitor.tot', 'TOT')}</div>
-          <div className="grid-cell header-cell actions-cell">{t('common.actions', 'Actions')}</div>
-        </div>
-        
-        {/* Data Rows */}
-        {sortedQueues.map((queue) => {
-          const config = getConfig(queue.queueNumber);
-          const abandonedClass = config 
-            ? getCellClass(
-                queue.abandonedPercent, 
-                config.abandonedThreshold.warn, 
-                config.abandonedThreshold.breach
-              )
-            : '';
-          const awtClass = config 
-            ? getCellClass(
-                queue.avgWaitTime, 
-                config.avgWaitTimeThreshold.warn, 
-                config.avgWaitTimeThreshold.breach
-              )
-            : '';
-            
-          return (
-            <div 
-              key={queue.queueNumber} 
-              className={cn('grid-row', {
-                'row-breach': queue.alertState === 'breach',
-                'row-warn': queue.alertState === 'warn'
-              })}
-            >
-              <div className="grid-cell queue-cell">
-                <div className="queue-info">
-                  <span className="queue-number">{queue.queueNumber}</span>
-                  {queue.queueName && (
-                    <span className="queue-name">{queue.queueName}</span>
-                  )}
-                </div>
-              </div>
-              <div className="grid-cell">{queue.agentsTotal}</div>
-              <div className="grid-cell">{queue.agentsFree}</div>
-              <div className="grid-cell">{queue.agentsBusy}</div>
-              <div className="grid-cell">{queue.agentsPaused}</div>
-              <div className="grid-cell">{queue.answeredPercent}%</div>
-              <div className={cn('grid-cell', abandonedClass)}>
-                {queue.abandonedPercent}%
-                {abandonedClass && (
-                  <span className="trend-icon">
-                    {abandonedClass === 'cell-breach' ? '🔴' : '⚠️'}
-                  </span>
-                )}
-              </div>
-              <div className={cn('grid-cell', awtClass)}>
-                {queue.avgWaitTime}s
-                {awtClass && (
-                  <span className="trend-icon">
-                    {awtClass === 'cell-breach' ? '🔴' : '⚠️'}
-                  </span>
-                )}
-              </div>
-              <div className="grid-cell">{queue.totalCalls}</div>
-              <div className="grid-cell actions-cell">
-                <button
-                  className="action-btn edit-btn"
-                  onClick={() => onEdit(queue.queueNumber)}
-                  title={t('common.edit', 'Edit')}
-                  aria-label={t('queue_monitor.edit_queue_aria', 'Edit queue {{queue}}', { queue: queue.queueNumber })}
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button
-                  className="action-btn delete-btn"
-                  onClick={() => onDelete(queue.queueNumber)}
-                  title={t('common.delete', 'Delete')}
-                  aria-label={t('queue_monitor.delete_queue_aria', 'Delete queue {{queue}}', { queue: queue.queueNumber })}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+      <div className="queue-monitor-grid" style={{ gridTemplateColumns: `minmax(120px, 150px) repeat(${sortedQueues.length}, minmax(120px, 1fr))` }}>
+        {/* Render each metric as a row */}
+        {metrics.map((metric) => (
+          <div key={metric.key} className="grid-row">
+            {/* Header cell (left column) */}
+            <div className="grid-cell header-cell">
+              {metric.label}
             </div>
-          );
-        })}
+            
+            {/* Data cells for each queue */}
+            {sortedQueues.map((queue) => {
+              const config = getConfig(queue.queueNumber);
+              const abandonedClass = config 
+                ? getCellClass(
+                    queue.abandonedPercent, 
+                    config.abandonedThreshold.warn, 
+                    config.abandonedThreshold.breach
+                  )
+                : '';
+              const awtClass = config 
+                ? getCellClass(
+                    queue.avgWaitTime, 
+                    config.avgWaitTimeThreshold.warn, 
+                    config.avgWaitTimeThreshold.breach
+                  )
+                : '';
+              
+              // Render cell content based on metric
+              let cellContent: React.ReactNode;
+              let cellClass = 'grid-cell';
+              
+              switch (metric.key) {
+                case 'que':
+                  cellClass = cn('grid-cell queue-cell', {
+                    'col-breach': queue.alertState === 'breach',
+                    'col-warn': queue.alertState === 'warn'
+                  });
+                  cellContent = (
+                    <div className="queue-info">
+                      <span className="queue-number">{queue.queueNumber}</span>
+                      {queue.queueName && (
+                        <span className="queue-name">{queue.queueName}</span>
+                      )}
+                    </div>
+                  );
+                  break;
+                case 'agts':
+                  cellContent = queue.agentsTotal;
+                  break;
+                case 'free':
+                  cellContent = queue.agentsFree;
+                  break;
+                case 'busy':
+                  cellContent = queue.agentsBusy;
+                  break;
+                case 'pause':
+                  cellContent = queue.agentsPaused;
+                  break;
+                case 'ans':
+                  cellContent = `${queue.answeredPercent}%`;
+                  break;
+                case 'abd':
+                  cellClass = cn('grid-cell', abandonedClass);
+                  cellContent = (
+                    <>
+                      {queue.abandonedPercent}%
+                      {abandonedClass && (
+                        <span className="trend-icon">
+                          {abandonedClass === 'cell-breach' ? '🔴' : '⚠️'}
+                        </span>
+                      )}
+                    </>
+                  );
+                  break;
+                case 'awt':
+                  cellClass = cn('grid-cell', awtClass);
+                  cellContent = (
+                    <>
+                      {queue.avgWaitTime}s
+                      {awtClass && (
+                        <span className="trend-icon">
+                          {awtClass === 'cell-breach' ? '🔴' : '⚠️'}
+                        </span>
+                      )}
+                    </>
+                  );
+                  break;
+                case 'tot':
+                  cellContent = queue.totalCalls;
+                  break;
+                case 'actions':
+                  cellClass = 'grid-cell actions-cell';
+                  cellContent = (
+                    <>
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => onEdit(queue.queueNumber)}
+                        title={t('common.edit', 'Edit')}
+                        aria-label={t('queue_monitor.edit_queue_aria', 'Edit queue {{queue}}', { queue: queue.queueNumber })}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={() => onDelete(queue.queueNumber)}
+                        title={t('common.delete', 'Delete')}
+                        aria-label={t('queue_monitor.delete_queue_aria', 'Delete queue {{queue}}', { queue: queue.queueNumber })}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  );
+                  break;
+              }
+              
+              return (
+                <div key={queue.queueNumber} className={cellClass}>
+                  {cellContent}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
       
       {/* Legend */}

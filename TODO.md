@@ -83,8 +83,8 @@ Thirdly, clarification of SIP call state and call-timer
 	- [ ] Also key to this will be the visual indication of the tab itself.  I will use the useTabAlert hook to indicate a WARN or BREACH queue in monitored queues the two indications will be a flashing Amber tab or a flashing Red tab.  Only the higher type will be alerted (e.g. if a few WARN and one BREACH in effect, only BREACH would alerted to the useTabAlert hook)
 	- [ ] Feel it would be likely that the two types of SLA failures should be stored in persistant localstorage per queue to allow for browser refreshes etc. The useTabAlert hook could be called for queue 602 WARN for one SLA this should switch 602 WARN localstorage from 0 to 1 for that SLA as well as initate the amber flashing of the tab.  Then if a BREACH for same queue 602 on the other SLA would switch to 1 and that would initiate Flashing Red of tab.  If the other then SLA reached BREACH and then dropped again to warn the useTabAlert would utilise the localstorage to determine on each request of cancel, warn or breach of the tab that it would compare all localstorage to see if the change to lower alert status should be completed as one or more of the queues may still have higher alert status
 	____________________________________________________________
-	| QUE | AGTS | FREE | BUSY | PAUSE | ANS | ABD | AWT | TOT |
-	| 600 | XXXX | XXXX | XXXX | XXXX  | XX% | XX% | XXs | XXXX|
+	| QUE | AGTS | FREE | BUSY | PAUSE | ANS | ABD | AWT | TOT | This now vertical as allows more info to be
+	| 600 | XXXX | XXXX | XXXX | XXXX  | XX% | XX% | XXs | XXXX| on screen
 
 	Legend
 	- QUE Queue Number or Name

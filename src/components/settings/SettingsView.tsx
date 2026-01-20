@@ -68,6 +68,7 @@ export function SettingsView() {
   const setRingtoneFile = useSettingsStore((state) => state.setRingtoneFile);
   const setVerboseLogging = useSettingsStore((state) => state.setVerboseLogging);
   const setSipMessagesEnabled = useSettingsStore((state) => state.setSipMessagesEnabled);
+  const setBusylightEnabled = useSettingsStore((state) => state.setBusylightEnabled);
   const resetSettings = useSettingsStore((state) => state.resetSettings);
   
   // Notifications hook for test
@@ -740,8 +741,13 @@ export function SettingsView() {
             <AccordionContent value="busylight">
               <div className="settings-group">
                 <div className="setting-item">
-                  <p className="text-muted">
-                    {t('settings.busylight_future', 'This feature will be available in a future release.')}
+                  <Toggle
+                    label={t('settings.busylight_enabled', 'Enable Busylight')}
+                    checked={settings.busylight.enabled}
+                    onChange={(checked) => setBusylightEnabled(checked)}
+                  />
+                  <p className="setting-help-text">
+                    {t('settings.busylight_enabled_desc', 'Enable USB busylight status indicator')}
                   </p>
                 </div>
               </div>

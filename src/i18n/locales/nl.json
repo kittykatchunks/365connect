@@ -302,6 +302,8 @@
         "audio_permission_required": "Microfoon toestemming vereist.",
         "grant_permission": "Toestemming Verlenen",
         "mic_testing": "Microfoon testen... spreek nu",
+        "busylight_enabled": "Busylight inschakelen",
+        "busylight_enabled_desc": "USB-busylight statusindicator inschakelen",
         "busylight_future": "Deze functie wordt binnenkort beschikbaar.",
         "queues_future": "Deze functie wordt binnenkort beschikbaar.",
         "verbose_logging": "Uitgebreide Logging",

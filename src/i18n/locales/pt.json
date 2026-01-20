@@ -302,6 +302,8 @@
         "audio_permission_required": "Permissão microfone necessária.",
         "grant_permission": "Conceder Permissão",
         "mic_testing": "A testar microfone... fale agora",
+        "busylight_enabled": "Ativar Busylight",
+        "busylight_enabled_desc": "Ativar indicador de estado Busylight USB",
         "busylight_future": "Esta funcionalidade estará disponível brevemente.",
         "queues_future": "Esta funcionalidade estará disponível brevemente.",
         "verbose_logging": "Registo Detalhado",
