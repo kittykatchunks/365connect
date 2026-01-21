@@ -10,6 +10,7 @@ export * from './layout';
 
 // Error handling
 export { ErrorBoundary, withErrorBoundary } from './ErrorBoundary';
+export { ViewErrorBoundary } from './ViewErrorBoundary';
 
 // Feature components
 export * from './dial';

@@ -430,5 +430,9 @@
     "agent_status_pausing": "Pausing...",
     "agent_status_resuming": "Resuming...",
     "loading_default": "Loading...",
-    "call_hold": "HOLD"
+    "call_hold": "HOLD",
+    "view_recovered_title": "View Recovered",
+    "view_recovered_message": "{viewName} has been successfully recovered.",
+    "view_error_title": "View Error",
+    "view_error_message": "{viewName} encountered an error. Attempting auto-recovery..."
 }

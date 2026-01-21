@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
 import { SIPProvider, PhantomAPIProvider, BusylightProvider, usePhantomAPI } from '@/contexts';
 import { phantomApiService } from '@/services';
-import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback } from '@/utils';
+import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback, isVerboseLoggingEnabled } from '@/utils';
 import { useNetworkStatus } from '@/hooks';
 import { 
   LoadingScreen, 
@@ -20,11 +20,10 @@ import {
   NavigationTabs,
   SIPStatusDisplay,
   WelcomeOverlay,
-  UpdatePrompt
+  UpdatePrompt,
+  ViewErrorBoundary
 } from '@/components';
 import { VersionUpdateModal } from '@/components/modals';
-// ErrorBoundary can be used to wrap views if needed
-// import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DialView } from '@/components/dial';
 import '@/styles/globals.css';
 
@@ -54,45 +53,144 @@ function ViewLoadingFallback() {
   );
 }
 
-// View router component
+// View router component with error boundaries
 function ViewRouter() {
   const currentView = useAppStore((state) => state.currentView);
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
+  const addNotification = useUIStore((state) => state.addNotification);
+  const { t } = useTranslation();
+  
+  // Handle view recovery
+  const handleViewRecover = useCallback((viewName: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log(`[ViewRouter] 🔄 View "${viewName}" recovered from error`);
+    }
+    
+    // Show success notification
+    addNotification({
+      type: 'success',
+      title: t('notifications.view_recovered_title', 'View Recovered'),
+      message: t('notifications.view_recovered_message', `${viewName} has been successfully recovered.`),
+      duration: 3000
+    });
+  }, [addNotification, t]);
+  
+  // Handle view error
+  const handleViewError = useCallback((viewName: string, error: Error) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.error(`[ViewRouter] ❌ View "${viewName}" encountered error:`, error);
+    }
+    
+    // Show error notification
+    addNotification({
+      type: 'error',
+      title: t('notifications.view_error_title', 'View Error'),
+      message: t('notifications.view_error_message', `${viewName} encountered an error. Attempting auto-recovery...`),
+      duration: 5000
+    });
+  }, [addNotification, t]);
+  
+  // Listen for navigation events from error boundaries
+  useEffect(() => {
+    const handleNavigate = (event: CustomEvent<{ view: string }>) => {
+      const verboseLogging = isVerboseLoggingEnabled();
+      
+      if (verboseLogging) {
+        console.log('[ViewRouter] 🧭 Navigation event received:', event.detail.view);
+      }
+      
+      setCurrentView(event.detail.view as any);
+    };
+    
+    window.addEventListener('navigateToView', handleNavigate as EventListener);
+    return () => window.removeEventListener('navigateToView', handleNavigate as EventListener);
+  }, [setCurrentView]);
   
   switch (currentView) {
     case 'dial':
-      return <DialView />;
+      return (
+        <ViewErrorBoundary 
+          viewName="Dial"
+          onRecover={() => handleViewRecover('Dial')}
+          onError={(error) => handleViewError('Dial', error)}
+        >
+          <DialView />
+        </ViewErrorBoundary>
+      );
     case 'contacts':
       return (
-        <Suspense fallback={<ViewLoadingFallback />}>
-          <ContactsView />
-        </Suspense>
+        <ViewErrorBoundary 
+          viewName="Contacts"
+          onRecover={() => handleViewRecover('Contacts')}
+          onError={(error) => handleViewError('Contacts', error)}
+        >
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <ContactsView />
+          </Suspense>
+        </ViewErrorBoundary>
       );
     case 'activity':
       return (
-        <Suspense fallback={<ViewLoadingFallback />}>
-          <ActivityView />
-        </Suspense>
+        <ViewErrorBoundary 
+          viewName="Activity"
+          onRecover={() => handleViewRecover('Activity')}
+          onError={(error) => handleViewError('Activity', error)}
+        >
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <ActivityView />
+          </Suspense>
+        </ViewErrorBoundary>
       );
     case 'companyNumbers':
       return (
-        <Suspense fallback={<ViewLoadingFallback />}>
-          <CompanyNumbersView />
-        </Suspense>
+        <ViewErrorBoundary 
+          viewName="Company Numbers"
+          onRecover={() => handleViewRecover('Company Numbers')}
+          onError={(error) => handleViewError('Company Numbers', error)}
+        >
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <CompanyNumbersView />
+          </Suspense>
+        </ViewErrorBoundary>
       );
     case 'queueMonitor':
       return (
-        <Suspense fallback={<ViewLoadingFallback />}>
-          <QueueMonitorView />
-        </Suspense>
+        <ViewErrorBoundary 
+          viewName="Queue Monitor"
+          onRecover={() => handleViewRecover('Queue Monitor')}
+          onError={(error) => handleViewError('Queue Monitor', error)}
+        >
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <QueueMonitorView />
+          </Suspense>
+        </ViewErrorBoundary>
       );
     case 'settings':
       return (
-        <Suspense fallback={<ViewLoadingFallback />}>
-          <SettingsView />
-        </Suspense>
+        <ViewErrorBoundary 
+          viewName="Settings"
+          onRecover={() => handleViewRecover('Settings')}
+          onError={(error) => handleViewError('Settings', error)}
+        >
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <SettingsView />
+          </Suspense>
+        </ViewErrorBoundary>
       );
     default:
-      return <DialView />;
+      return (
+        <ViewErrorBoundary 
+          viewName="Dial"
+          onRecover={() => handleViewRecover('Dial')}
+          onError={(error) => handleViewError('Dial', error)}
+        >
+          <DialView />
+        </ViewErrorBoundary>
+      );
   }
 }
 
