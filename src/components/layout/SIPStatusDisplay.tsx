@@ -134,7 +134,7 @@ export function SIPStatusDisplay() {
             variant="primary"
             onClick={handleConnect}
             disabled={!sipConfig}
-            className="w-full"
+            className="w-full btn-connect-pulse"
           >
             {t('status.connect', 'Connect')}
           </Button>

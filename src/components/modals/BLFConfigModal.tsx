@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Trash2, Save, X } from 'lucide-react';
 import { Button, Input, Select } from '@/components/ui';
 import { useBLFStore, useSettingsStore } from '@/stores';
+import { useImmediateBLFSubscription } from '@/hooks';
 import type { BLFButtonType, BLFTransferMethod } from '@/types';
 
 interface BLFConfigModalProps {
@@ -22,6 +23,9 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
   const setButton = useBLFStore((state) => state.setButton);
   const clearButton = useBLFStore((state) => state.clearButton);
   const preferBlindTransfer = useSettingsStore((state) => state.settings.call.preferBlindTransfer);
+  
+  // Hook for immediate BLF subscription
+  const { subscribeImmediately } = useImmediateBLFSubscription();
   
   const button = buttons.find((b) => b.index === buttonIndex);
   
@@ -61,16 +65,24 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
       return;
     }
     
+    const trimmedExtension = extension.trim();
+    
+    // Save the button configuration
     setButton(buttonIndex, {
       type,
-      extension: extension.trim(),
-      displayName: displayName.trim() || extension.trim(),
+      extension: trimmedExtension,
+      displayName: displayName.trim() || trimmedExtension,
       overrideTransfer,
       transferMethod: overrideTransfer ? transferMethod : undefined
     });
     
+    // Immediately subscribe to BLF if this is a BLF button (not speed dial)
+    if (type === 'blf') {
+      subscribeImmediately(trimmedExtension);
+    }
+    
     onClose();
-  }, [buttonIndex, type, extension, displayName, overrideTransfer, transferMethod, setButton, onClose, t]);
+  }, [buttonIndex, type, extension, displayName, overrideTransfer, transferMethod, setButton, subscribeImmediately, onClose, t]);
   
   const handleClear = useCallback(() => {
     clearButton(buttonIndex);

@@ -1868,12 +1868,33 @@ export class SIPService {
   // ==================== BLF Subscriptions ====================
 
   subscribeBLF(extension: string, buddy?: string): SIP.Subscriber | null {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📞 subscribeBLF called:', {
+        extension,
+        buddy,
+        isRegistered: this.registrationState === 'registered',
+        userAgentExists: !!this.userAgent,
+        existingSubscription: this.blfSubscriptions.has(extension)
+      });
+    }
+    
     if (!this.userAgent || this.registrationState !== 'registered') {
+      if (verboseLogging) {
+        console.warn('[SIPService] ⚠️ Cannot subscribe to BLF - not registered:', {
+          hasUserAgent: !!this.userAgent,
+          registrationState: this.registrationState
+        });
+      }
       console.warn('Cannot subscribe to BLF - not registered');
       return null;
     }
 
     if (this.blfSubscriptions.has(extension)) {
+      if (verboseLogging) {
+        console.log(`[SIPService] ✅ Already subscribed to BLF for extension ${extension}`);
+      }
       console.log(`Already subscribed to BLF for extension ${extension}`);
       return this.blfSubscriptions.get(extension)!.subscription;
     }
@@ -1881,7 +1902,20 @@ export class SIPService {
     const domain = this.config?.domain || this.config?.server?.replace(/^wss?:\/\//, '').split(':')[0];
     const target = SIP.UserAgent.makeURI(`sip:${extension}@${domain}`);
     
+    if (verboseLogging) {
+      console.log('[SIPService] 📋 BLF subscription details:', {
+        domain,
+        targetURI: target?.toString()
+      });
+    }
+    
     if (!target) {
+      if (verboseLogging) {
+        console.error(`[SIPService] ❌ Invalid BLF target for extension ${extension}:`, {
+          domain,
+          server: this.config?.server
+        });
+      }
       console.error(`Invalid BLF target for extension ${extension}`);
       return null;
     }
@@ -1897,18 +1931,37 @@ export class SIPService {
       };
 
       subscription.stateChange.addListener((newState: SIP.SubscriptionState) => {
+        if (verboseLogging) {
+          console.log(`[SIPService] 📞 BLF subscription state changed for ${extension}:`, {
+            oldState: 'checking',
+            newState: SIP.SubscriptionState[newState],
+            extension,
+            buddy
+          });
+        }
+        
         switch (newState) {
           case SIP.SubscriptionState.Subscribed:
+            if (verboseLogging) {
+              console.log(`[SIPService] ✅ BLF subscription accepted for extension ${extension}`);
+            }
             console.log(`BLF subscription accepted for extension ${extension}`);
             this.emit('blfSubscribed', { extension, buddy });
             break;
           case SIP.SubscriptionState.Terminated:
+            if (verboseLogging) {
+              console.log(`[SIPService] 📴 BLF subscription terminated for extension ${extension}`);
+            }
             console.log(`BLF subscription terminated for extension ${extension}`);
             this.blfSubscriptions.delete(extension);
             this.emit('blfUnsubscribed', { extension, buddy });
             break;
         }
       });
+
+      if (verboseLogging) {
+        console.log(`[SIPService] 📤 Sending SUBSCRIBE request for extension ${extension}`);
+      }
 
       subscription.subscribe();
 
@@ -1919,9 +1972,22 @@ export class SIPService {
         state: 'unknown'
       });
 
+      if (verboseLogging) {
+        console.log(`[SIPService] ✅ BLF subscription created and stored for extension ${extension}:`, {
+          totalSubscriptions: this.blfSubscriptions.size,
+          allExtensions: Array.from(this.blfSubscriptions.keys())
+        });
+      }
+
       return subscription;
 
     } catch (error) {
+      if (verboseLogging) {
+        console.error(`[SIPService] ❌ Failed to create BLF subscription for extension ${extension}:`, {
+          error: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined
+        });
+      }
       console.error(`Failed to create BLF subscription for extension ${extension}:`, error);
       this.emit('blfSubscriptionFailed', { extension, buddy, error: error as Error });
       return null;
@@ -1929,11 +1995,25 @@ export class SIPService {
   }
 
   private handleBLFNotification(extension: string, buddy: string | undefined, notification: SIP.Notification): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     try {
       const contentType = notification.request.getHeader('Content-Type');
       const body = notification.request.body;
 
+      if (verboseLogging) {
+        console.log(`[SIPService] 📥 BLF notification received for extension ${extension}:`, {
+          contentType,
+          hasBody: !!body,
+          bodyLength: body?.length,
+          buddy
+        });
+      }
+
       if (!body) {
+        if (verboseLogging) {
+          console.warn(`[SIPService] ⚠️ BLF notification has no body for extension ${extension}`);
+        }
         return;
       }
 
@@ -1946,12 +2026,27 @@ export class SIPService {
         const xmlDoc = parser.parseFromString(body, 'text/xml');
         
         const dialogs = xmlDoc.getElementsByTagName('dialog');
+        
+        if (verboseLogging) {
+          console.log(`[SIPService] 📋 Parsing dialog-info XML for extension ${extension}:`, {
+            dialogCount: dialogs.length
+          });
+        }
+        
         if (dialogs.length > 0) {
           const dialog = dialogs[0];
           const state = dialog.getElementsByTagName('state')[0];
           
           if (state) {
-            dialogState = mapDialogStateToBLF(state.textContent?.trim() || 'terminated');
+            const stateText = state.textContent?.trim() || 'terminated';
+            dialogState = mapDialogStateToBLF(stateText);
+            
+            if (verboseLogging) {
+              console.log(`[SIPService] 📊 Dialog state parsed for extension ${extension}:`, {
+                rawState: stateText,
+                mappedState: dialogState
+              });
+            }
           }
 
           const remoteEl = dialog.getElementsByTagName('remote')[0];
@@ -1959,6 +2054,10 @@ export class SIPService {
             const targetEl = remoteEl.getElementsByTagName('target')[0];
             if (targetEl) {
               remoteTarget = targetEl.getAttribute('uri');
+              
+              if (verboseLogging && remoteTarget) {
+                console.log(`[SIPService] 📞 Remote target found for extension ${extension}: ${remoteTarget}`);
+              }
             }
           }
         }
@@ -1969,6 +2068,23 @@ export class SIPService {
       if (blfData) {
         blfData.state = dialogState;
         blfData.remoteTarget = remoteTarget;
+        
+        if (verboseLogging) {
+          console.log(`[SIPService] 📊 BLF subscription data updated for extension ${extension}:`, {
+            state: dialogState,
+            remoteTarget,
+            buddy
+          });
+        }
+      }
+
+      if (verboseLogging) {
+        console.log(`[SIPService] 📢 Emitting blfStateChanged event for extension ${extension}:`, {
+          extension,
+          buddy,
+          state: dialogState,
+          remoteTarget
+        });
       }
 
       // Emit state change
@@ -1980,6 +2096,12 @@ export class SIPService {
       });
 
     } catch (error) {
+      if (verboseLogging) {
+        console.error(`[SIPService] ❌ Error handling BLF notification for extension ${extension}:`, {
+          error: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined
+        });
+      }
       console.error(`Error handling BLF notification for extension ${extension}:`, error);
     }
   }
@@ -1987,6 +2109,13 @@ export class SIPService {
   async unsubscribeBLF(extension: string): Promise<void> {
     const verboseLogging = isVerboseLoggingEnabled();
     const blfData = this.blfSubscriptions.get(extension);
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] 📞 unsubscribeBLF called for extension: ${extension}`, {
+        hasSubscription: !!blfData,
+        totalSubscriptions: this.blfSubscriptions.size
+      });
+    }
     
     if (!blfData) {
       if (verboseLogging) {
@@ -1997,7 +2126,7 @@ export class SIPService {
 
     try {
       if (verboseLogging) {
-        console.log(`[SIPService] 📞 Unsubscribing and disposing BLF for ${extension}`);
+        console.log(`[SIPService] 📤 Sending unsubscribe and disposing BLF for ${extension}`);
       }
       
       // Unsubscribe (sends SIP SUBSCRIBE with Expires: 0)
@@ -2010,17 +2139,39 @@ export class SIPService {
       this.blfSubscriptions.delete(extension);
       
       if (verboseLogging) {
-        console.log(`[SIPService] ✅ BLF for ${extension} unsubscribed and disposed`);
+        console.log(`[SIPService] ✅ BLF for ${extension} unsubscribed and disposed:`, {
+          remainingSubscriptions: this.blfSubscriptions.size,
+          remainingExtensions: Array.from(this.blfSubscriptions.keys())
+        });
       }
     } catch (error) {
+      if (verboseLogging) {
+        console.error(`[SIPService] ❌ Error unsubscribing from BLF for extension ${extension}:`, {
+          error: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined
+        });
+      }
       console.error(`[SIPService] ❌ Error unsubscribing from BLF for extension ${extension}:`, error);
       throw error;
     }
   }
 
   async unsubscribeAllBLF(): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SIPService] 📞 unsubscribeAllBLF called:', {
+        totalSubscriptions: this.blfSubscriptions.size,
+        extensions: Array.from(this.blfSubscriptions.keys())
+      });
+    }
+    
     for (const [extension] of this.blfSubscriptions) {
-      this.unsubscribeBLF(extension);
+      await this.unsubscribeBLF(extension);
+    }
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ✅ All BLF subscriptions unsubscribed');
     }
   }
 

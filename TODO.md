@@ -138,6 +138,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] Previously have changed the UI to reflect the Agent when logging in initially should automatically show as in-queue, after that the state should be tracked.  Can you confirm the programming still correct
 - [x] I want to ensure that the app will show disconnected when the sip connection is disconnected not just when the webrtc is lost
 - [X] I wish to implement monitoring the internet connection with warning toast and reconnection info toast
+- [X] When creating BLF button and saving then the button should always try to subscribe to SIP initially, after that subscribition attempts upon selecting the dial tab (e.g. switching from other tab) should initiate attempt to subscribe to all BLF keys again (except ones starting 7) and again at three minute intervals (except ones starting 7) whilst displaying the dial tab.  When on any other tab no requirment to update subscriptions as refresh will be attempted once toggling back to dial tab
 
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
