@@ -151,6 +151,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] Line Keys and Company Number selection should be disabled when in disconnected state
 - [X] Double the dialpad size on mobile version only
 - [X] Double the size of the dialpad on the desktop version
+- [X] Replace the '#' in front of Company ID with 'ID' in both company number menu and related modals 
 
 
 #### Mobile Device Usage - Investigation Only

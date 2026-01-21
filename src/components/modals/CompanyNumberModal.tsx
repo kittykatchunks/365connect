@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Building2, Phone, Hash } from 'lucide-react';
+import { X, Building2, Phone } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { useCompanyNumbersStore } from '@/stores';
 import type { CompanyNumber, CompanyNumberFormData } from '@/types/companyNumber';
@@ -117,7 +117,7 @@ export function CompanyNumberModal({ isOpen, onClose, companyNumber }: CompanyNu
               value={formData.company_id}
               onChange={(e) => setFormData({ ...formData, company_id: parseInt(e.target.value) || 1 })}
               disabled={isEditing}
-              icon={<Hash className="w-4 h-4" />}
+              icon={<span className="input-icon-text">ID</span>}
               required
             />
             {!isEditing && (

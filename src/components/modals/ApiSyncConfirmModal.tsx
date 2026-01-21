@@ -62,7 +62,7 @@ export function ApiSyncConfirmModal({
               <div className="sync-preview-list">
                 {apiData.slice(0, 5).map((company) => (
                   <div key={company.company_id} className="sync-preview-item">
-                    <span className="preview-id">#{company.company_id}</span>
+                    <span className="preview-id">ID {company.company_id}</span>
                     <span className="preview-name">{company.name}</span>
                     <span className="preview-cid">{company.cid}</span>
                   </div>

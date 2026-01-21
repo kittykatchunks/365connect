@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Building2, Phone, Search, RefreshCw, Pencil, Trash2, MoreVertical, Hash } from 'lucide-react';
+import { Plus, Building2, Phone, Search, RefreshCw, Pencil, Trash2, MoreVertical } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { Button, Input } from '@/components/ui';
 import { CompanyNumberModal, ConfirmModal, ApiSyncConfirmModal } from '@/components/modals';
@@ -225,7 +225,7 @@ export function CompanyNumbersView() {
             {numbers.map((num) => (
               <div key={num.company_id} className="company-number-item">
                 <div className="company-number-id">
-                  <Hash className="w-4 h-4" />
+                  <span className="company-id-label">ID</span>
                   <span>{num.company_id}</span>
                 </div>
                 
