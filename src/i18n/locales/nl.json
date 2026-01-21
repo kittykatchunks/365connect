@@ -25,6 +25,17 @@
         "future_development": "Toekomstige ontwikkeling",
         "actions": "Acties"
     },
+    "status": {
+        "disconnected": "Niet Verbonden",
+        "connecting": "Verbinden...",
+        "connected": "Verbonden",
+        "registered": "Geregistreerd",
+        "registering": "Registreren...",
+        "unregistered": "Niet Geregistreerd",
+        "unregistering": "Uitschrijven...",
+        "connect": "Verbinden",
+        "disconnect": "Verbreken"
+    },
     "aria_label_dial_digit": "Kies {{digit}}",
     "aria_label_dismiss": "Negeren",
     "aria_label_close": "Sluiten",

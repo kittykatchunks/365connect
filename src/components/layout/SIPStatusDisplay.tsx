@@ -143,7 +143,7 @@ export function SIPStatusDisplay() {
         {showDisconnectButton && (
           <Button
             size="sm"
-            variant="ghost"
+            variant="danger"
             onClick={handleDisconnect}
             className="w-full"
           >

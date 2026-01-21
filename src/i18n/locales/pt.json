@@ -25,6 +25,17 @@
         "future_development": "Desenvolvimento futuro",
         "actions": "Ações"
     },
+    "status": {
+        "disconnected": "Desligado",
+        "connecting": "A ligar...",
+        "connected": "Ligado",
+        "registered": "Registado",
+        "registering": "A registar...",
+        "unregistered": "Não Registado",
+        "unregistering": "A desregistar...",
+        "connect": "Ligar",
+        "disconnect": "Desligar"
+    },
     "aria_label_dial_digit": "Marcar {{digit}}",
     "aria_label_dismiss": "Dispensar",
     "aria_label_close": "Fechar",

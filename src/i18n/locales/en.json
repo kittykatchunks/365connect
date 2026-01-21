@@ -25,6 +25,17 @@
         "future_development": "Future development",
         "actions": "Actions"
     },
+    "status": {
+        "disconnected": "Disconnected",
+        "connecting": "Connecting...",
+        "connected": "Connected",
+        "registered": "Registered",
+        "registering": "Registering...",
+        "unregistered": "Unregistered",
+        "unregistering": "Unregistering...",
+        "connect": "Connect",
+        "disconnect": "Disconnect"
+    },
     "aria_label_dial_digit": "Dial {{digit}}",
     "aria_label_dismiss": "Dismiss",
     "aria_label_close": "Close",

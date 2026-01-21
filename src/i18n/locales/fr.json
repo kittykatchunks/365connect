@@ -25,6 +25,17 @@
         "future_development": "Développement futur",
         "actions": "Actions"
     },
+    "status": {
+        "disconnected": "Déconnecté",
+        "connecting": "Connexion en cours...",
+        "connected": "Connecté",
+        "registered": "Enregistré",
+        "registering": "Enregistrement en cours...",
+        "unregistered": "Non Enregistré",
+        "unregistering": "Désenregistrement...",
+        "connect": "Connecter",
+        "disconnect": "Déconnecter"
+    },
     "aria_label_dial_digit": "Composer {{digit}}",
     "aria_label_dismiss": "Ignorer",
     "aria_label_close": "Fermer",
