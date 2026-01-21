@@ -140,6 +140,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] I wish to implement monitoring the internet connection with warning toast and reconnection info toast
 - [X] When creating BLF button and saving then the button should always try to subscribe to SIP initially, after that subscribition attempts upon selecting the dial tab (e.g. switching from other tab) should initiate attempt to subscribe to all BLF keys again (except ones starting 7) and again at three minute intervals (except ones starting 7) whilst displaying the dial tab.  When on any other tab no requirment to update subscriptions as refresh will be attempted once toggling back to dial tab
 
+
 ### UI issues to be resolved before release
 - [X] App loading screen has blue square that needs to be removed
 - [X] When select reset all settings should be warning similar to deleting all contacts warning message that confirms 'ALL settings will be lost, including connection settings, are you really sure this is what you want to do'.  This links to an issue above in respect of what gets removed
