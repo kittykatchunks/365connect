@@ -22,6 +22,16 @@ interface BusylightColor {
   blue: number;
 }
 
+export interface BusylightDeviceInfo {
+  productId: string;
+  firmwareRelease: string;
+  isLightSupported: boolean;
+  isSoundSupported: boolean;
+  isInputEventSupported: boolean;
+  isJingleClipSupported: boolean;
+  usbId: string;
+}
+
 interface BusylightStateConfig {
   color: BusylightColor | null;
   flash: boolean | 'slow';
@@ -60,6 +70,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const [currentState, setCurrentState] = useState<BusylightState>('DISCONNECTED');
   const [retryCount, setRetryCount] = useState(0);
+  const [deviceInfo, setDeviceInfo] = useState<BusylightDeviceInfo | null>(null);
   
   const monitoringIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const slowFlashIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -193,8 +204,8 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     }
   }, [buildApiUrl, username]);
   
-  // Get device information
-  const getDeviceInfo = useCallback(async (): Promise<string | null> => {
+  // Get device information and update state
+  const fetchDeviceInfo = useCallback(async (): Promise<BusylightDeviceInfo | null> => {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (!enabled || !isConnected) return null;
@@ -207,7 +218,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
       }
       
       if (verboseLogging) {
-        console.log('[Busylight] 📤 Getting device info...');
+        console.log('[Busylight] 📤 Fetching device info...');
       }
       
       const response = await fetch(url, {
@@ -220,23 +231,38 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         const data = await response.json();
         
         if (verboseLogging) {
-          console.log('[Busylight] 📥 Device info:', data);
+          console.log('[Busylight] 📥 Device data:', data);
         }
         
         // Parse device information from response
-        // Response may be an array of devices or single device object
+        // Response is an array of devices: [{"ProductID":"...", "FirmwareRelease":"...", ...}]
         if (Array.isArray(data) && data.length > 0) {
           const device = data[0];
-          return device.productName || device.model || 'Kuando Busylight';
-        } else if (data && typeof data === 'object') {
-          return data.productName || data.model || 'Kuando Busylight';
+          const info: BusylightDeviceInfo = {
+            productId: device.ProductID || 'Unknown Device',
+            firmwareRelease: device.FirmwareRelease || 'Unknown',
+            isLightSupported: device.IsLightSupported ?? false,
+            isSoundSupported: device.IsSoundSupported ?? false,
+            isInputEventSupported: device.IsInputEventSupported ?? false,
+            isJingleClipSupported: device.IsJingleClipSupport ?? false,
+            usbId: device.USBID || ''
+          };
+          
+          // Store device info in state
+          setDeviceInfo(info);
+          
+          if (verboseLogging) {
+            console.log('[Busylight] ✅ Device info stored:', info);
+          }
+          
+          return info;
         }
       }
       
       return null;
     } catch (error) {
       if (verboseLogging) {
-        console.error('[Busylight] ❌ Failed to get device info:', error);
+        console.error('[Busylight] ❌ Failed to fetch device info:', error);
       }
       return null;
     }
@@ -258,8 +284,17 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     sound?: number,
     volume?: number
   ): Promise<boolean> => {
-    const alertSound = sound ?? parseInt(ringSound, 10) ?? 3;
-    const alertVolume = volume ?? ringVolume ?? 50;
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Check if device supports sound/jingle clip
+    const soundSupported = deviceInfo?.isSoundSupported || deviceInfo?.isJingleClipSupported;
+    
+    if (!soundSupported && verboseLogging) {
+      console.log('[Busylight] Device does not support sound - using light only');
+    }
+    
+    const alertSound = soundSupported ? (sound ?? parseInt(ringSound, 10) ?? 3) : 0;
+    const alertVolume = soundSupported ? (volume ?? ringVolume ?? 50) : 0;
     
     return apiRequest('alert', {
       red: color.red,
@@ -268,7 +303,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
       sound: alertSound,
       volume: alertVolume
     });
-  }, [apiRequest, ringSound, ringVolume]);
+  }, [apiRequest, ringSound, ringVolume, deviceInfo]);
   
   // Stop slow flash
   const stopSlowFlash = useCallback(() => {
@@ -382,6 +417,10 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     
     try {
       console.log('[Busylight] Testing connection...');
+      
+      // Fetch device info during test
+      await fetchDeviceInfo();
+      
       const colors: BusylightColor[] = [
         { red: 100, green: 0, blue: 0 },    // Red
         { red: 0, green: 100, blue: 0 },    // Green
@@ -400,7 +439,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
       console.error('[Busylight] Test failed:', error);
       return false;
     }
-  }, [isConnected, setLight, turnOff]);
+  }, [isConnected, setLight, turnOff, fetchDeviceInfo]);
   
   // Initialize connection
   const initialize = useCallback(async () => {
@@ -424,6 +463,9 @@ export function useBusylight(options: UseBusylightOptions = {}) {
       console.log('[Busylight] Connected successfully');
       setRetryCount(0);
       
+      // Fetch device info
+      await fetchDeviceInfo();
+      
       // Run test sequence
       await testConnection();
       
@@ -438,7 +480,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     
     console.warn('[Busylight] Failed initial connection - will retry via monitoring');
     return false;
-  }, [enabled, username, bridgeUrl, checkConnection, testConnection, applyState, currentState]);
+  }, [enabled, username, bridgeUrl, checkConnection, fetchDeviceInfo, testConnection, applyState, currentState]);
   
   // Start monitoring connection
   const startMonitoring = useCallback(() => {
@@ -533,6 +575,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     enabled,
     isConnected,
     currentState,
+    deviceInfo,
     retryCount,
     isRetrying: retryCount > 0 && retryCount < maxRetryAttempts,
     setState,
@@ -540,7 +583,7 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     turnOff,
     startAlert,
     testConnection,
-    getDeviceInfo,
+    fetchDeviceInfo,
     initialize,
     disconnect
   };

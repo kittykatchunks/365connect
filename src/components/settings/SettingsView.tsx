@@ -40,17 +40,24 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useBusylightContext } from '@/contexts';
 import { isVerboseLoggingEnabled } from '@/utils';
 
-// Helper component to fetch and display device info
+// Helper component to display device info
 function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBusylightContext> }) {
-  const [deviceInfo, setDeviceInfo] = useState<string | null>(null);
+  const { deviceInfo } = busylight;
   
-  useEffect(() => {
-    if (busylight.isConnected) {
-      busylight.getDeviceInfo().then(setDeviceInfo);
-    }
-  }, [busylight, busylight.isConnected]);
+  if (!deviceInfo) {
+    return <span style={{ color: '#999' }}>Checking...</span>;
+  }
   
-  return <span>{deviceInfo || 'Checking...'}</span>;
+  return (
+    <span>
+      {deviceInfo.productId}
+      {deviceInfo.firmwareRelease && (
+        <span style={{ color: '#999', marginLeft: '8px' }}>
+          (Firmware: {deviceInfo.firmwareRelease})
+        </span>
+      )}
+    </span>
+  );
 }
 
 export function SettingsView() {
@@ -807,11 +814,17 @@ export function SettingsView() {
                     <div className="setting-item">
                       <label className="setting-label">
                         {t('settings.busylight_ring_sound', 'Ring Sound')}
+                        {busylight.deviceInfo && !busylight.deviceInfo.isSoundSupported && (
+                          <span style={{ color: '#999', marginLeft: '8px', fontSize: '0.9em' }}>
+                            (Not supported by this device)
+                          </span>
+                        )}
                       </label>
                       <select
                         className="setting-select"
                         value={settings.busylight.ringSound}
                         onChange={(e) => useSettingsStore.getState().setBusylightRingSound(e.target.value)}
+                        disabled={busylight.deviceInfo?.isSoundSupported === false}
                       >
                         <option value="OpenOffice">OpenOffice</option>
                         <option value="Quiet">Quiet</option>

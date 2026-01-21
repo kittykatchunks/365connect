@@ -4,7 +4,7 @@
  */
 
 import { createContext, useContext, useEffect, useCallback, type ReactNode } from 'react';
-import { useBusylight, type BusylightState } from '@/hooks/useBusylight';
+import { useBusylight, type BusylightState, type BusylightDeviceInfo } from '@/hooks/useBusylight';
 import { useSIPStore } from '@/stores/sipStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useAppStore } from '@/stores/appStore';
@@ -16,8 +16,9 @@ interface BusylightContextValue {
   enabled: boolean;
   isConnected: boolean;
   currentState: BusylightState;
+  deviceInfo: BusylightDeviceInfo | null;
   testConnection: () => Promise<boolean>;
-  getDeviceInfo: () => Promise<string | null>;
+  fetchDeviceInfo: () => Promise<BusylightDeviceInfo | null>;
 }
 
 const BusylightContext = createContext<BusylightContextValue | null>(null);
@@ -185,8 +186,9 @@ export function BusylightProvider({ children }: BusylightProviderProps) {
     enabled: busylight.enabled,
     isConnected: busylight.isConnected,
     currentState: busylight.currentState,
+    deviceInfo: busylight.deviceInfo,
     testConnection: busylight.testConnection,
-    getDeviceInfo: busylight.getDeviceInfo
+    fetchDeviceInfo: busylight.fetchDeviceInfo
   };
   
   return (
