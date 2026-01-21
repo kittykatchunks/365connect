@@ -78,15 +78,15 @@ export function QueueMonitorGrid({
   
   // Metrics in vertical order
   const metrics = [
-    { key: 'que', label: t('queue_monitor.que', 'QUE') },
-    { key: 'agts', label: t('queue_monitor.agts', 'AGTS') },
-    { key: 'free', label: t('queue_monitor.free', 'FREE') },
-    { key: 'busy', label: t('queue_monitor.busy', 'BUSY') },
-    { key: 'pause', label: t('queue_monitor.pause', 'PAUSE') },
-    { key: 'ans', label: t('queue_monitor.ans', 'ANS') },
-    { key: 'abd', label: t('queue_monitor.abd', 'ABD') },
-    { key: 'awt', label: t('queue_monitor.awt', 'AWT') },
-    { key: 'tot', label: t('queue_monitor.tot', 'TOT') },
+    { key: 'que', label: 'QUE' },
+    { key: 'agts', label: 'AGTS' },
+    { key: 'free', label: 'FREE' },
+    { key: 'busy', label: 'BUSY' },
+    { key: 'pause', label: 'PAUSE' },
+    { key: 'ans', label: 'ANS' },
+    { key: 'abd', label: 'ABD' },
+    { key: 'awt', label: 'AWT' },
+    { key: 'tot', label: 'TOT' },
     { key: 'actions', label: t('common.actions', 'Actions') }
   ];
   

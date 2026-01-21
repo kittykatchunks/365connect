@@ -3,6 +3,7 @@
 // ============================================
 
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 export type NotificationPermission = 'default' | 'granted' | 'denied';
@@ -19,6 +20,7 @@ interface NotificationOptions {
 }
 
 export function useNotifications() {
+  const { t } = useTranslation();
   const [permission, setPermission] = useState<NotificationPermission>(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
       return 'denied';
@@ -173,8 +175,10 @@ export function useNotifications() {
       });
     }
     
-    const displayTitle = callerName ? `Incoming Call: ${callerName}` : `Incoming Call: ${callerNumber}`;
-    const displayBody = callerName ? callerNumber : 'Tap to answer';
+    const displayTitle = callerName 
+      ? t('notifications.incoming_call_with_name', { name: callerName }) 
+      : t('notifications.incoming_call_with_number', { number: callerNumber });
+    const displayBody = callerName ? callerNumber : t('notifications.tap_to_answer');
     
     return showNotification(displayTitle, {
       body: displayBody,
@@ -184,7 +188,7 @@ export function useNotifications() {
       onClick: onAnswer,
       onClose: onDismiss
     });
-  }, [showNotification]);
+  }, [showNotification, t]);
   
   return {
     isSupported,

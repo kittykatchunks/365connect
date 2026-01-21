@@ -42,10 +42,11 @@ import { isVerboseLoggingEnabled } from '@/utils';
 
 // Helper component to display device info
 function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBusylightContext> }) {
+  const { t } = useTranslation();
   const { deviceInfo } = busylight;
   
   if (!deviceInfo) {
-    return <span style={{ color: '#999' }}>Checking...</span>;
+    return <span style={{ color: '#999' }}>{t('settings.busylight_checking', 'Checking...')}</span>;
   }
   
   return (
@@ -53,7 +54,7 @@ function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBu
       {deviceInfo.productId}
       {deviceInfo.firmwareRelease && (
         <span style={{ color: '#999', marginLeft: '8px' }}>
-          (Firmware: {deviceInfo.firmwareRelease})
+          ({t('settings.busylight_firmware', 'Firmware')}: {deviceInfo.firmwareRelease})
         </span>
       )}
     </span>
@@ -583,10 +584,10 @@ export function SettingsView() {
                         onClick={handleTestNotification}
                       >
                         <Bell size={14} style={{ marginRight: '0.25rem' }} />
-                        Test Notification
+                        {t('settings.test_notification', 'Test Notification')}
                       </Button>
                       <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                        Permission: {notificationPermission}
+                        {t('settings.permission', 'Permission')}: {t(`settings.permission_${notificationPermission}`, notificationPermission)}
                       </span>
                     </div>
                   )}
@@ -816,7 +817,7 @@ export function SettingsView() {
                         {t('settings.busylight_ring_sound', 'Ring Sound')}
                         {busylight.deviceInfo && !busylight.deviceInfo.isSoundSupported && (
                           <span style={{ color: '#999', marginLeft: '8px', fontSize: '0.9em' }}>
-                            (Not supported by this device)
+                            ({t('settings.busylight_device_not_supported', 'Not supported by this device')})
                           </span>
                         )}
                       </label>
@@ -826,14 +827,14 @@ export function SettingsView() {
                         onChange={(e) => useSettingsStore.getState().setBusylightRingSound(e.target.value)}
                         disabled={busylight.deviceInfo?.isSoundSupported === false}
                       >
-                        <option value="OpenOffice">OpenOffice</option>
-                        <option value="Quiet">Quiet</option>
-                        <option value="Funky">Funky</option>
-                        <option value="FairyTale">Fairy Tale</option>
-                        <option value="KuandoTrain">Kuando Train</option>
-                        <option value="TelephoneNordic">Telephone Nordic</option>
-                        <option value="TelephoneOriginal">Telephone Original</option>
-                        <option value="TelephonePickMeUp">Telephone Pick Me Up</option>
+                        <option value="OpenOffice">{t('settings.busylight_sound_openoffice', 'OpenOffice')}</option>
+                        <option value="Quiet">{t('settings.busylight_sound_quiet', 'Quiet')}</option>
+                        <option value="Funky">{t('settings.busylight_sound_funky', 'Funky')}</option>
+                        <option value="FairyTale">{t('settings.busylight_sound_fairytale', 'Fairy Tale')}</option>
+                        <option value="KuandoTrain">{t('settings.busylight_sound_kuandotrain', 'Kuando Train')}</option>
+                        <option value="TelephoneNordic">{t('settings.busylight_sound_telephone_nordic', 'Telephone Nordic')}</option>
+                        <option value="TelephoneOriginal">{t('settings.busylight_sound_telephone_original', 'Telephone Original')}</option>
+                        <option value="TelephonePickMeUp">{t('settings.busylight_sound_telephone_pickmeup', 'Telephone Pick Me Up')}</option>
                       </select>
                       <p className="setting-help-text">
                         {t('settings.busylight_ring_sound_desc', 'Select the sound to play when receiving a call')}
