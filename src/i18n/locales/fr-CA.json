@@ -345,6 +345,7 @@
         "busylight_sound_telephone_pickmeup": "Téléphone Pick Me Up",
         "busylight_future": "Cette fonction sera disponible prochainement.",
         "queues_future": "Cette fonction sera disponible prochainement.",
+        "feature_alpha_disabled": "Cette fonction est désactivée dans la version alpha.",
         "verbose_logging": "Journal Détaillé",
         "verbose_logging_desc": "Activer journal détaillé console",
         "sip_messages_enabled": "Activer Journal des Messages SIP dans la Console",

@@ -345,6 +345,7 @@
         "busylight_sound_telephone_pickmeup": "Telefoon Pick Me Up",
         "busylight_future": "Deze functie wordt binnenkort beschikbaar.",
         "queues_future": "Deze functie wordt binnenkort beschikbaar.",
+        "feature_alpha_disabled": "Deze functie is uitgeschakeld in de alpha-versie.",
         "verbose_logging": "Uitgebreide Logging",
         "verbose_logging_desc": "Schakel gedetailleerde console logging in",
         "sip_messages_enabled": "SIP Berichten Console Logging Inschakelen",
