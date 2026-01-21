@@ -218,25 +218,45 @@ app.use('/api/phantom', createProxyMiddleware({
   router: (req) => {
     const phantomId = req.query.phantomId || '000';
     console.log(`[PROXY ROUTER] phantomId: ${phantomId}`);
-    const target = `https://server1-${phantomId}.phantomapi.net`;
+    
+    // Check for server-specific base URL first, then fall back to pattern
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const customBaseUrl = process.env[specificBaseUrlKey];
+    
+    const target = customBaseUrl || `https://server1-${phantomId}.phantomapi.net`;
+    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
+    
     console.log(`[PROXY ROUTER] Routing to: ${target}`);
+    console.log(`[PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
     return target;
   },
   onProxyReq: (proxyReq, req, res) => {
     const phantomId = req.query.phantomId || '000';
-    const apiUsername = process.env.PHANTOM_API_USERNAME;
-    const apiKey = process.env.PHANTOM_API_KEY;
+    
+    // Get credentials - try server-specific first, then fall back to default
+    const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
+    const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
+    
+    const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
+    const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
+    
+    const isUsingSpecificCredentials = !!(process.env[specificUsernameKey] && process.env[specificKeyKey]);
     const host = req.headers.host || 'unknown';
     
     // Get the actual path being called after rewrite
     const originalPath = req.originalUrl;
     const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api').replace(/\?phantomId=\d+/, '');
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net${rewrittenPath}`;
+    
+    // Get base URL (check for custom first)
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
+    const targetUrl = `${baseUrl}${rewrittenPath}`;
     
     console.log(`  🔄 PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);
     console.log(`     Output: ${targetUrl}`);
     console.log(`     PhantomID: ${phantomId}`);
+    console.log(`     Credentials Source: ${isUsingSpecificCredentials ? `Specific (${specificUsernameKey})` : 'Default (PHANTOM_API_USERNAME)'}`);
     
     if (apiUsername && apiKey) {
       const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
@@ -245,9 +265,11 @@ app.use('/api/phantom', createProxyMiddleware({
       console.log(`     Authorization Header: Basic ${authString.substring(0, 20)}...`);
       console.log(`     Credentials: ${apiUsername}:${apiKey.substring(0, 4)}***`);
     } else {
-      console.warn(`     Auth: ⚠️ Missing credentials`);
-      console.warn(`     PHANTOM_API_USERNAME: ${apiUsername || 'undefined'}`);
-      console.warn(`     PHANTOM_API_KEY: ${apiKey ? 'set' : 'undefined'}`);
+      console.warn(`     Auth: ⚠️ Missing credentials for server ${phantomId}`);
+      console.warn(`     Checked: ${specificUsernameKey}, ${specificKeyKey}`);
+      console.warn(`     Fallback: PHANTOM_API_USERNAME, PHANTOM_API_KEY`);
+      console.warn(`     Username: ${apiUsername || 'undefined'}`);
+      console.warn(`     API Key: ${apiKey ? 'set' : 'undefined'}`);
     }
     
     // Log query params if present
@@ -310,9 +332,19 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
   router: (req) => {
     const phantomId = req.query.phantomId || '000';
     console.log(`[NOAUTH PROXY ROUTER] phantomId: ${phantomId}`);
+    
+    // Check for server-specific base URL first, then fall back to pattern
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const customBaseUrl = process.env[specificBaseUrlKey];
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    const target = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
+    
+    const target = customBaseUrl 
+      ? `${customBaseUrl}:${noAuthPort}` 
+      : `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
+    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
+    
     console.log(`[NOAUTH PROXY ROUTER] Routing to: ${target}`);
+    console.log(`[NOAUTH PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
     return target;
   },
   onProxyReq: (proxyReq, req, res) => {
@@ -323,7 +355,11 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     // Get the actual path being called after rewrite
     const originalPath = req.originalUrl;
     const rewrittenPath = originalPath.replace(/^\/api\/phantom-noauth/, '/api').replace(/\?phantomId=\d+/, '');
-    const targetUrl = `https://server1-${phantomId}.phantomapi.net:${noAuthPort}${rewrittenPath}`;
+    
+    // Get base URL (check for custom first)
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
+    const targetUrl = `${baseUrl}:${noAuthPort}${rewrittenPath}`;
     
     console.log(`  🔄 NOAUTH PROXY TRANSLATION:`);
     console.log(`     Input:  https://${host}${originalPath}`);

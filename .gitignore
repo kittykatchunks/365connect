@@ -35,5 +35,6 @@ Thumbs.db
 *.sw?
 
 # Environment
+.env
 .env.local
 .env.*.local

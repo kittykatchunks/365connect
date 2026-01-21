@@ -41,11 +41,14 @@ export function PhantomAPIProvider({
 
     setIsRefreshing(true);
     try {
+      // Get PhantomID from localStorage
+      const phantomId = localStorage.getItem('PhantomID') || '000';
+      
       if (verboseLogging) {
-        console.log('[PhantomAPI] 🔄 Fetching current API key from server...');
+        console.log('[PhantomAPI] 🔄 Fetching current API key from server...', { phantomId });
       }
 
-      const response = await fetch('/api/phantom/current-key');
+      const response = await fetch(`/api/phantom/current-key?phantomId=${phantomId}`);
       
       if (!response.ok) {
         const error = await response.json();
@@ -58,7 +61,9 @@ export function PhantomAPIProvider({
         console.log('[PhantomAPI] 📥 Received API key response:', {
           hasKey: !!data.apiKey,
           lastModified: data.lastModified,
-          timestamp: data.timestamp
+          timestamp: data.timestamp,
+          phantomId: data.phantomId,
+          source: data.source
         });
       }
 

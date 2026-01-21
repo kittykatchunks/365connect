@@ -55,9 +55,24 @@ app.use((req, res, next) => {
 // API Endpoints
 // ============================================
 
-// Track API key changes
-let currentApiKey = process.env.REACT_APP_PHANTOM_API_KEY;
-let keyLastModified = Date.now();
+// Track API key changes per server
+const apiKeyCache = new Map(); // phantomId -> { apiKey, lastModified }
+let globalKeyLastModified = Date.now();
+
+// Helper function to get API key for a specific server
+function getApiKeyForServer(phantomId) {
+  // Check for server-specific key first
+  const specificKeyVar = `REACT_APP_PHANTOM_API_KEY_${phantomId}`;
+  const specificKey = process.env[specificKeyVar];
+  
+  if (specificKey) {
+    return { apiKey: specificKey, source: `Specific (${specificKeyVar})` };
+  }
+  
+  // Fall back to default key
+  const defaultKey = process.env.REACT_APP_PHANTOM_API_KEY;
+  return { apiKey: defaultKey, source: 'Default (REACT_APP_PHANTOM_API_KEY)' };
+}
 
 // Watch .env file for changes (optional - requires server restart in production)
 if (process.env.NODE_ENV === 'development') {
@@ -66,39 +81,62 @@ if (process.env.NODE_ENV === 'development') {
       // Reload environment variables
       delete require.cache[require.resolve('dotenv')];
       require('dotenv').config();
-      const newKey = process.env.REACT_APP_PHANTOM_API_KEY;
       
-      if (newKey !== currentApiKey) {
-        currentApiKey = newKey;
-        keyLastModified = Date.now();
-        console.log('[Server] 🔑 API key reloaded from .env');
-      }
+      // Clear cache to force re-read of all keys
+      apiKeyCache.clear();
+      globalKeyLastModified = Date.now();
+      console.log('[Server] 🔑 API keys reloaded from .env');
     }
   });
 }
 
-// Endpoint to fetch current API key
+// Endpoint to fetch current API key for a specific server
 app.get('/api/phantom/current-key', (req, res) => {
-  if (!currentApiKey) {
-    return res.status(503).json({ 
-      error: 'API key not configured',
-      message: 'REACT_APP_PHANTOM_API_KEY not found in environment'
-    });
+  const phantomId = req.query.phantomId || '000';
+  
+  // Check cache first
+  let cached = apiKeyCache.get(phantomId);
+  
+  if (!cached || cached.lastModified < globalKeyLastModified) {
+    // Get fresh key for this server
+    const { apiKey, source } = getApiKeyForServer(phantomId);
+    
+    if (!apiKey) {
+      return res.status(503).json({ 
+        error: 'API key not configured',
+        message: `No API key found for server ${phantomId}. Check REACT_APP_PHANTOM_API_KEY_${phantomId} or REACT_APP_PHANTOM_API_KEY in environment`,
+        phantomId
+      });
+    }
+    
+    cached = {
+      apiKey,
+      source,
+      lastModified: globalKeyLastModified
+    };
+    
+    apiKeyCache.set(phantomId, cached);
+    
+    console.log(`[Server] 🔑 API key for server ${phantomId}: ${source}`);
   }
   
   res.json({
-    apiKey: currentApiKey,
-    lastModified: keyLastModified,
-    timestamp: Date.now()
+    apiKey: cached.apiKey,
+    lastModified: cached.lastModified,
+    timestamp: Date.now(),
+    phantomId,
+    source: cached.source
   });
 });
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const hasDefaultKey = !!process.env.REACT_APP_PHANTOM_API_KEY;
   res.json({
     status: 'ok',
     timestamp: Date.now(),
-    apiKeyConfigured: !!currentApiKey
+    apiKeyConfigured: hasDefaultKey,
+    multiServerSupport: true
   });
 });
 
