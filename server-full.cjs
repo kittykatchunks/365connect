@@ -522,40 +522,24 @@ app.use('/api/phantom', createProxyMiddleware({
 
 
 // NoAuth Phantom API Proxy (Port 19773 - No Authentication)
+// Simplified configuration to debug proxy not forwarding
+app.use('/api/phantom-noauth', (req, res, next) => {
+  console.log(`\n🔵 [NOAUTH ENTRY] ${req.method} ${req.originalUrl}`);
+  console.log(`   Content-Type: ${req.headers['content-type']}`);
+  console.log(`   Content-Length: ${req.headers['content-length']}`);
+  next();
+});
+
 app.use('/api/phantom-noauth', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net:19773',
+  target: 'https://server1-833.phantomapi.net:19773', // Direct target for testing
   changeOrigin: true,
   secure: false,
-  logLevel: 'debug', // Enable debug logging
-  pathRewrite: {
-    '^/api/phantom-noauth': '/api',
-  },
-  router: (req) => {
-    const phantomId = req.query.phantomId || '000';
-    console.log(`\n🔶 [NOAUTH PROXY ROUTER] START`);
-    console.log(`   phantomId: ${phantomId}`);
-    
-    // Check for server-specific base URL first, then fall back to pattern
-    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
-    const customBaseUrl = process.env[specificBaseUrlKey];
-    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    
-    // Strip any existing port from custom base URL before adding noauth port
-    let baseUrlWithoutPort = customBaseUrl;
-    if (customBaseUrl) {
-      // Remove port if present (e.g., https://server1-833.phantomapi.net:443 -> https://server1-833.phantomapi.net)
-      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
-    }
-    
-    const target = baseUrlWithoutPort 
-      ? `${baseUrlWithoutPort}:${noAuthPort}` 
-      : `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
-    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
-    
-    console.log(`   Target URL: ${target}`);
-    console.log(`   Base URL Source: ${baseUrlSource}`);
-    console.log(`🔶 [NOAUTH PROXY ROUTER] END - Target: ${target}\n`);
-    return target;
+  logLevel: 'debug',
+  ws: false,
+  pathRewrite: (path, req) => {
+    const newPath = path.replace(/^\/api\/phantom-noauth/, '/api');
+    console.log(`🔶 [NOAUTH PATHREWRITE] ${path} -> ${newPath}`);
+    return newPath;
   },
   onProxyReq: (proxyReq, req, res) => {
     console.log(`\n🟢 [NOAUTH onProxyReq] START - Preparing request to send`);
