@@ -16,13 +16,11 @@ import { isVerboseLoggingEnabled } from '@/utils';
  */
 async function checkInternetConnectivity(): Promise<boolean> {
   try {
-    // Use a small, fast endpoint - try to fetch a small resource
-    // Using a CORS-friendly endpoint or our own server
+    // Use our own server's health check endpoint
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
     
-    await fetch('https://www.google.com/favicon.ico', {
-      mode: 'no-cors',
+    await fetch('/api/health', {
       cache: 'no-cache',
       signal: controller.signal
     });

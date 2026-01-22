@@ -10,7 +10,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
-const BusylightBridgeServer = require('./bridge-server');
+const BusylightBridgeServer = require('./bridge-server.cjs');
 
 // Create logs directory if it doesn't exist
 const logsDir = path.join(__dirname, 'logs');
@@ -129,7 +129,7 @@ app.use(helmet({
       ],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
       fontSrc: ["'self'", "data:"],
       mediaSrc: ["'self'", "blob:"],
       workerSrc: ["'self'", "blob:"],
@@ -147,9 +147,7 @@ app.use(cors({
 app.use(compression());
 
 // Determine static folder based on environment
-const staticFolder = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, 'dist')
-  : path.join(__dirname, 'pwa');
+const staticFolder = path.join(__dirname, 'dist');
 
 console.log(`[SERVER] Serving static files from: ${staticFolder}`);
 console.log(`[SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -208,219 +206,46 @@ app.use(express.static(staticFolder, {
   }
 }));
 
-app.use('/api/phantom', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net',
-  changeOrigin: true,
-  secure: false,
-  pathRewrite: {
-    '^/api/phantom': '/api',
-  },
-  router: (req) => {
-    const phantomId = req.query.phantomId || '000';
-    console.log(`[PROXY ROUTER] phantomId: ${phantomId}`);
-    
-    // Check for server-specific base URL first, then fall back to pattern
-    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
-    const customBaseUrl = process.env[specificBaseUrlKey];
-    
-    const target = customBaseUrl || `https://server1-${phantomId}.phantomapi.net`;
-    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
-    
-    console.log(`[PROXY ROUTER] Routing to: ${target}`);
-    console.log(`[PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
-    return target;
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    const phantomId = req.query.phantomId || '000';
-    
-    // Get credentials - try server-specific first, then fall back to default
-    const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
-    const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
-    
-    const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
-    const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
-    
-    const isUsingSpecificCredentials = !!(process.env[specificUsernameKey] && process.env[specificKeyKey]);
-    const host = req.headers.host || 'unknown';
-    
-    // Get the actual path being called after rewrite
-    const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api').replace(/\?phantomId=\d+/, '');
-    
-    // Get base URL (check for custom first)
-    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
-    const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
-    const targetUrl = `${baseUrl}${rewrittenPath}`;
-    
-    console.log(`  🔄 PROXY TRANSLATION:`);
-    console.log(`     Input:  https://${host}${originalPath}`);
-    console.log(`     Output: ${targetUrl}`);
-    console.log(`     PhantomID: ${phantomId}`);
-    console.log(`     Credentials Source: ${isUsingSpecificCredentials ? `Specific (${specificUsernameKey})` : 'Default (PHANTOM_API_USERNAME)'}`);
-    
-    if (apiUsername && apiKey) {
-      const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
-      proxyReq.setHeader('Authorization', `Basic ${authString}`);
-      console.log(`     Auth: ✅ Basic Auth (${apiUsername})`);
-      console.log(`     Authorization Header: Basic ${authString.substring(0, 20)}...`);
-      console.log(`     Credentials: ${apiUsername}:${apiKey.substring(0, 4)}***`);
-    } else {
-      console.warn(`     Auth: ⚠️ Missing credentials for server ${phantomId}`);
-      console.warn(`     Checked: ${specificUsernameKey}, ${specificKeyKey}`);
-      console.warn(`     Fallback: PHANTOM_API_USERNAME, PHANTOM_API_KEY`);
-      console.warn(`     Username: ${apiUsername || 'undefined'}`);
-      console.warn(`     API Key: ${apiKey ? 'set' : 'undefined'}`);
-    }
-    
-    // Log query params if present
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
-      console.log(`     Query Params:`);
-      for (const [key, value] of queryParams) {
-        console.log(`       • ${key} = ${value}`);
-      }
-    }
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    let responseBody = '';
-    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
-    
-    console.log(`  ${statusIcon} PROXY RESPONSE:`);
-    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
-    console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
-    
-    proxyRes.on('data', (chunk) => {
-      responseBody += chunk.toString();
+// ============================================================================
+// DIRECT API ENDPOINTS - Must be registered BEFORE proxy middleware
+// ============================================================================
+
+// Phantom API current key endpoint
+app.get('/api/phantom/current-key', (req, res) => {
+  const phantomId = req.query.phantomId || '000';
+  
+  console.log(`[API] GET /api/phantom/current-key - PhantomID: ${phantomId}`);
+  
+  // Check for server-specific credentials first, then fall back to default
+  const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
+  const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
+  
+  const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
+  const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
+  const isUsingSpecificCredentials = !!(process.env[specificUsernameKey] && process.env[specificKeyKey]);
+  
+  console.log(`[API] Credentials source: ${isUsingSpecificCredentials ? `Specific (${specificKeyKey})` : 'Default (PHANTOM_API_KEY)'}`);
+  console.log(`[API] Username: ${apiUsername || 'undefined'}`);
+  console.log(`[API] API Key: ${apiKey ? apiKey.substring(0, 8) + '***' : 'undefined'}`);
+  
+  if (!apiUsername || !apiKey) {
+    console.warn(`[API] ⚠️ Missing credentials for PhantomID ${phantomId}`);
+    return res.status(404).json({ 
+      error: 'API key not configured',
+      message: `No credentials found for PhantomID ${phantomId}`,
+      phantomId,
+      checked: [specificUsernameKey, specificKeyKey, 'PHANTOM_API_USERNAME', 'PHANTOM_API_KEY']
     });
-    
-    proxyRes.on('end', () => {
-      if (responseBody.length > 0) {
-        try {
-          const parsed = JSON.parse(responseBody);
-          const preview = JSON.stringify(parsed).substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
-        } catch {
-          const preview = responseBody.substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
-        }
-      }
-    });
-    
-    delete proxyRes.headers['www-authenticate'];
-  },
-  onError: (err, req, res) => {
-    console.log(`  ❌ PROXY ERROR:`);
-    console.log(`     URL: ${req.originalUrl}`);
-    console.log(`     Error: ${err.message}`);
-    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
-    if (err.code === 'ECONNREFUSED') {
-      console.log(`     💡 Hint: Target server may be down or unreachable`);
-    }
-    res.status(502).json({ error: 'Proxy error', message: err.message });
   }
-}));
-
-
-// NoAuth Phantom API Proxy (Port 19773 - No Authentication)
-app.use('/api/phantom-noauth', createProxyMiddleware({
-  target: 'https://server1-000.phantomapi.net:19773',
-  changeOrigin: true,
-  secure: false,
-  pathRewrite: {
-    '^/api/phantom-noauth': '/api',
-  },
-  router: (req) => {
-    const phantomId = req.query.phantomId || '000';
-    console.log(`[NOAUTH PROXY ROUTER] phantomId: ${phantomId}`);
-    
-    // Check for server-specific base URL first, then fall back to pattern
-    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
-    const customBaseUrl = process.env[specificBaseUrlKey];
-    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    
-    const target = customBaseUrl 
-      ? `${customBaseUrl}:${noAuthPort}` 
-      : `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
-    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
-    
-    console.log(`[NOAUTH PROXY ROUTER] Routing to: ${target}`);
-    console.log(`[NOAUTH PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
-    return target;
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    const phantomId = req.query.phantomId || '000';
-    const host = req.headers.host || 'unknown';
-    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    
-    // Get the actual path being called after rewrite
-    const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom-noauth/, '/api').replace(/\?phantomId=\d+/, '');
-    
-    // Get base URL (check for custom first)
-    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
-    const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
-    const targetUrl = `${baseUrl}:${noAuthPort}${rewrittenPath}`;
-    
-    console.log(`  🔄 NOAUTH PROXY TRANSLATION:`);
-    console.log(`     Input:  https://${host}${originalPath}`);
-    console.log(`     Output: ${targetUrl}`);
-    console.log(`     PhantomID: ${phantomId}`);
-    console.log(`     Auth: ❌ None (NoAuth endpoint)`);
-    
-    // Log query params if present
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
-      console.log(`     Query Params:`);
-      for (const [key, value] of queryParams) {
-        console.log(`       • ${key} = ${value}`);
-      }
-    }
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    let responseBody = '';
-    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
-    
-    console.log(`  ${statusIcon} NOAUTH PROXY RESPONSE:`);
-    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
-    console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
-    
-    proxyRes.on('data', (chunk) => {
-      responseBody += chunk.toString();
-    });
-    
-    proxyRes.on('end', () => {
-      if (responseBody.length > 0) {
-        try {
-          const parsed = JSON.parse(responseBody);
-          const preview = JSON.stringify(parsed).substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
-        } catch {
-          const preview = responseBody.substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
-        }
-      }
-    });
-    
-    delete proxyRes.headers['www-authenticate'];
-  },
-  onError: (err, req, res) => {
-    console.log(`  ❌ NOAUTH PROXY ERROR:`);
-    console.log(`     URL: ${req.originalUrl}`);
-    console.log(`     Error: ${err.message}`);
-    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
-    if (err.code === 'ECONNREFUSED') {
-      console.log(`     💡 Hint: Target server may be down or unreachable`);
-    }
-    res.status(502).json({ error: 'Proxy error', message: err.message });
-  }
-}));
-
-// Busylight Bridge HTTP middleware
-app.use('/api/busylight', busylightBridge.createHttpMiddleware());
-
-// Busylight Bridge status endpoint
-app.get('/api/busylight-status', (req, res) => {
-  res.json(busylightBridge.getStatus());
+  
+  res.json({
+    apiKey,
+    username: apiUsername,
+    phantomId,
+    lastModified: Date.now(),
+    timestamp: new Date().toISOString(),
+    source: isUsingSpecificCredentials ? 'server-specific' : 'default'
+  });
 });
 
 // Configuration endpoint for SIP/WebSocket
@@ -447,7 +272,76 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Health check endpoint
+// Test WebSocket connectivity to Phantom server
+app.get('/api/phantom/test-ws', (req, res) => {
+  const phantomId = req.query.phantomId || '000';
+  const domain = `server1-${phantomId}.phantomapi.net`;
+  const wsUrl = `wss://${domain}:8089/ws`;
+  
+  console.log(`[API] Testing WebSocket connection to: ${wsUrl}`);
+  
+  try {
+    const ws = new WebSocket(wsUrl, ['sip']);
+    let connected = false;
+    
+    const timeout = setTimeout(() => {
+      if (!connected) {
+        ws.close();
+        res.json({
+          success: false,
+          url: wsUrl,
+          error: 'Connection timeout (5s)',
+          message: 'WebSocket connection timed out. Server may be unreachable or blocking connections.'
+        });
+      }
+    }, 5000);
+    
+    ws.on('open', () => {
+      connected = true;
+      clearTimeout(timeout);
+      console.log(`[API] ✅ WebSocket connection successful: ${wsUrl}`);
+      ws.close();
+      res.json({
+        success: true,
+        url: wsUrl,
+        message: 'WebSocket connection successful'
+      });
+    });
+    
+    ws.on('error', (error) => {
+      clearTimeout(timeout);
+      console.error(`[API] ❌ WebSocket connection error: ${error.message}`);
+      if (!connected) {
+        res.json({
+          success: false,
+          url: wsUrl,
+          error: error.message,
+          code: error.code
+        });
+      }
+    });
+  } catch (error) {
+    console.error(`[API] ❌ WebSocket test failed: ${error.message}`);
+    res.json({
+      success: false,
+      url: wsUrl,
+      error: error.message
+    });
+  }
+});
+
+// Health check endpoint for network status monitoring
+app.get('/api/health', async (req, res) => {
+  const hasDefaultKey = !!process.env.PHANTOM_API_KEY;
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    apiKeyConfigured: hasDefaultKey,
+    multiServerSupport: true
+  });
+});
+
+// Legacy health check endpoint (deprecated, use /api/health instead)
 app.get('/health', async (req, res) => {
   try {
     const url = PHANTOM_API_BASE_URL + '/api/ping';
@@ -467,6 +361,258 @@ app.get('/health', async (req, res) => {
   } catch (err) {
     res.status(503).json({ status: 'unreachable', error: err.message });
   }
+});
+
+// ============================================================================
+// PROXY MIDDLEWARE - Catch-all for /api/phantom/* and /api/phantom-noauth/*
+// ============================================================================
+
+app.use('/api/phantom', createProxyMiddleware({
+  target: 'https://server1-000.phantomapi.net',
+  changeOrigin: true,
+  secure: false,
+  pathRewrite: (path, req) => {
+    // The matched /api/phantom is already stripped by middleware
+    // Add /api prefix and remove phantomId query param (used only for routing)
+    const pathWithoutQuery = path.split('?')[0];
+    let query = '';
+    if (path.includes('?')) {
+      const queryString = path.substring(path.indexOf('?') + 1);
+      const params = new URLSearchParams(queryString);
+      params.delete('phantomId'); // Remove routing parameter
+      const cleanQuery = params.toString();
+      query = cleanQuery ? `?${cleanQuery}` : '';
+    }
+    const newPath = `/api${pathWithoutQuery}${query}`;
+    console.log(`🔶 [AUTH PATHREWRITE] ${path} -> ${newPath}`);
+    return newPath;
+  },
+  router: (req) => {
+    const phantomId = req.query.phantomId || '000';
+    console.log(`[PROXY ROUTER] phantomId: ${phantomId}`);
+    
+    // Check for server-specific base URL first, then fall back to pattern
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const customBaseUrl = process.env[specificBaseUrlKey];
+    const authPort = process.env.PHANTOM_API_PORT || 443;
+    
+    // Strip any existing port from custom base URL before adding auth port
+    let baseUrlWithoutPort = customBaseUrl;
+    if (customBaseUrl) {
+      // Remove port if present (e.g., https://server1-833.phantomapi.net:443 -> https://server1-833.phantomapi.net)
+      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
+    }
+    
+    const target = baseUrlWithoutPort 
+      ? `${baseUrlWithoutPort}:${authPort}` 
+      : `https://server1-${phantomId}.phantomapi.net:${authPort}`;
+    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
+    
+    console.log(`[PROXY ROUTER] Routing to: ${target}`);
+    console.log(`[PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
+    return target;
+  },
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      const phantomId = req.query.phantomId || '000';
+      
+      // Get credentials - try server-specific first, then fall back to default
+      const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
+      const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
+      
+      const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
+      const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
+      
+      console.log(`\n${'='.repeat(80)}`);
+      console.log(`  🔄 AUTH PROXY REQUEST`);
+      console.log(`${'='.repeat(80)}`);
+      console.log(`     PhantomID: ${phantomId}`);
+      
+      if (apiUsername && apiKey) {
+        const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
+        proxyReq.setHeader('Authorization', `Basic ${authString}`);
+        console.log(`     ✅ Auth: Basic ${apiUsername}:${apiKey.substring(0, 4)}***`);
+      } else {
+        console.warn(`     ⚠️  Missing credentials for server ${phantomId}`);
+      }
+      console.log(`${'='.repeat(80)}`);
+    },
+    proxyRes: (proxyRes, req, res) => {
+      const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+      console.log(`\n  ${statusIcon} AUTH PROXY RESPONSE: ${proxyRes.statusCode}`);
+      delete proxyRes.headers['www-authenticate'];
+    },
+    error: (err, req, res) => {
+      console.error(`  ❌ AUTH PROXY ERROR: ${err.message}`);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Proxy error', message: err.message });
+      }
+    }
+  }
+}));
+
+
+// NoAuth Phantom API Proxy (Port 19773 - No Authentication)
+app.use('/api/phantom-noauth', createProxyMiddleware({
+  target: 'https://server1-000.phantomapi.net:19773',
+  changeOrigin: true,
+  secure: false,
+  ws: false,
+  pathRewrite: (path, req) => {
+    // The matched /api/phantom-noauth is already stripped by middleware
+    // Add /api prefix and remove phantomId query param (used only for routing)
+    const pathWithoutQuery = path.split('?')[0];
+    let query = '';
+    if (path.includes('?')) {
+      const queryString = path.substring(path.indexOf('?') + 1);
+      const params = new URLSearchParams(queryString);
+      params.delete('phantomId'); // Remove routing parameter
+      const cleanQuery = params.toString();
+      query = cleanQuery ? `?${cleanQuery}` : '';
+    }
+    const newPath = `/api${pathWithoutQuery}${query}`;
+    return newPath;
+  },
+  router: (req) => {
+    const phantomId = req.query.phantomId || '000';
+    
+    // Check for server-specific base URL first, then fall back to pattern
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const customBaseUrl = process.env[specificBaseUrlKey];
+    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
+    
+    // Strip any existing port from custom base URL before adding noauth port
+    let baseUrlWithoutPort = customBaseUrl;
+    if (customBaseUrl) {
+      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
+    }
+    
+    const target = baseUrlWithoutPort 
+      ? `${baseUrlWithoutPort}:${noAuthPort}` 
+      : `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
+    
+    return target;
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`\n🟢 [NOAUTH onProxyReq] START - Preparing request to send`);
+    
+    const phantomId = req.query.phantomId || '000';
+    const host = req.headers.host || 'unknown';
+    const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
+    
+    // Get the actual path being called after rewrite
+    const originalPath = req.originalUrl;
+    const rewrittenPath = originalPath.replace(/^\/api\/phantom-noauth/, '/api').replace(/\?phantomId=\d+/, '');
+    
+    // Get base URL (check for custom first)
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
+    const targetUrl = `${baseUrl}:${noAuthPort}${rewrittenPath}`;
+    
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`  🔄 NOAUTH PROXY REQUEST DETAILS`);
+    console.log(`${'='.repeat(80)}`);
+    console.log(`     Method: ${req.method}`);
+    console.log(`     Input:  https://${host}${originalPath}`);
+    console.log(`     Output: ${targetUrl}`);
+    console.log(`     PhantomID: ${phantomId}`);
+    console.log(`     Auth: ❌ None (NoAuth endpoint)`);
+    console.log(`     Content-Type: ${req.headers['content-type'] || 'none'}`);
+    console.log(`     Content-Length: ${req.headers['content-length'] || '0'}`);
+    
+    console.log(`\n     📋 Request Headers Sent to Phantom API:`);
+    for (const [key, value] of Object.entries(proxyReq.getHeaders())) {
+      console.log(`       • ${key}: ${value}`);
+    }
+    
+    // Log query params if present
+    const queryParams = new URLSearchParams(req.url.split('?')[1]);
+    if (queryParams.toString()) {
+      console.log(`\n     🔍 Query Parameters:`);
+      for (const [key, value] of queryParams) {
+        console.log(`       • ${key} = ${value}`);
+      }
+    }
+    
+    console.log(`${'='.repeat(80)}`);
+    console.log(`🟢 [NOAUTH onProxyReq] END - Request sent to Phantom API\n`);
+    console.log(`${'='.repeat(80)}`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`\n🟣 [NOAUTH onProxyRes] START - Received response from Phantom API`);
+    
+    let responseBody = '';
+    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+    
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`  ${statusIcon} NOAUTH PROXY RESPONSE`);
+    console.log(`${'='.repeat(80)}`);
+    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
+    console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
+    console.log(`     Content-Length: ${proxyRes.headers['content-length'] || 'unknown'}`);
+    console.log(`\n     📋 Response Headers from Phantom API:`);
+    for (const [key, value] of Object.entries(proxyRes.headers)) {
+      console.log(`       • ${key}: ${value}`);
+    }
+    
+    proxyRes.on('data', (chunk) => {
+      console.log(`🟣 [NOAUTH onProxyRes] Received data chunk: ${chunk.length} bytes`);
+      responseBody += chunk.toString();
+    });
+    
+    proxyRes.on('end', () => {
+      console.log(`🟣 [NOAUTH onProxyRes] Response stream ended`);
+      if (responseBody.length > 0) {
+        console.log(`\n     📦 Response Body (${responseBody.length} bytes):`);
+        try {
+          const parsed = JSON.parse(responseBody);
+          console.log(JSON.stringify(parsed, null, 2).split('\n').map(line => `       ${line}`).join('\n'));
+        } catch {
+          // Not JSON, log raw text
+          const lines = responseBody.split('\n');
+          lines.slice(0, 20).forEach(line => {
+            console.log(`       ${line}`);
+          });
+          if (lines.length > 20) {
+            console.log(`       ... (${lines.length - 20} more lines)`);
+          }
+        }
+      } else {
+        console.log(`\n     📦 Response Body: (empty)`);
+      }
+      console.log(`${'='.repeat(80)}`);
+      console.log(`🟣 [NOAUTH onProxyRes] END - Sending response to client\n`);
+    });
+  },
+  onError: (err, req, res) => {
+    console.log(`\n🔴 [NOAUTH onError] ERROR OCCURRED!`);
+    console.log(`${'!'.repeat(80)}`);
+    console.log(`  ❌ NOAUTH PROXY ERROR:`);
+    console.log(`     URL: ${req.originalUrl}`);
+    console.log(`     Error: ${err.message}`);
+    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
+    console.log(`     Stack: ${err.stack}`);
+    if (err.code === 'ECONNREFUSED') {
+      console.log(`     💡 Hint: Target server may be down or unreachable`);
+    }
+    if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
+      console.log(`     💡 Hint: Request timed out - possible body parser issue or network problem`);
+    }
+    console.log(`${'!'.repeat(80)}`);
+    console.log(`🔴 [NOAUTH onError] END\n`);
+    
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Proxy error', message: err.message, code: err.code });
+    }
+  }
+}));
+
+// Busylight Bridge HTTP middleware
+app.use('/api/busylight', busylightBridge.createHttpMiddleware());
+
+// Busylight Bridge status endpoint
+app.get('/api/busylight-status', (req, res) => {
+  res.json(busylightBridge.getStatus());
 });
 
 // Fallback: serve index.html for SPA routes (but NOT for static files)
