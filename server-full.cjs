@@ -537,7 +537,11 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
   logLevel: 'debug',
   ws: false,
   pathRewrite: (path, req) => {
-    const newPath = path.replace(/^\/api\/phantom-noauth/, '/api');
+    // The matched /api/phantom-noauth is already stripped by middleware
+    // We just need to add /api prefix to whatever path remains
+    const pathWithoutQuery = path.split('?')[0];
+    const query = path.includes('?') ? path.substring(path.indexOf('?')) : '';
+    const newPath = `/api${pathWithoutQuery}${query}`;
     console.log(`🔶 [NOAUTH PATHREWRITE] ${path} -> ${newPath}`);
     return newPath;
   },
