@@ -522,19 +522,15 @@ app.use('/api/phantom', createProxyMiddleware({
 
 
 // NoAuth Phantom API Proxy (Port 19773 - No Authentication)
-app.use('/api/phantom-noauth', (req, res, next) => {
-  console.log(`\n${'*'.repeat(80)}`);
-  console.log(`🔵 NOAUTH MIDDLEWARE ENTRY POINT`);
-  console.log(`${'*'.repeat(80)}`);
-  console.log(`   Request URL: ${req.originalUrl}`);
-  console.log(`   Method: ${req.method}`);
-  console.log(`   Content-Type: ${req.headers['content-type'] || 'none'}`);
-  console.log(`   Content-Length: ${req.headers['content-length'] || '0'}`);
-  console.log(`   Body available: ${!!req.body}`);
-  console.log(`   Raw body chunks will be logged by proxy...`);
-  console.log(`${'*'.repeat(80)}\n`);
-  next();
-}, createProxyMiddleware({
+app.use('/api/phantom-noauth', createProxyMiddleware({
+  target: 'https://server1-000.phantomapi.net:19773',
+  changeOrigin: true,
+  secure: false,
+  logLevel: 'debug', // Enable debug logging
+  pathRewrite: {
+    '^/api/phantom-noauth': '/api',
+  },
+  router: (req) => {
   target: 'https://server1-000.phantomapi.net:19773',
   changeOrigin: true,
   secure: false,
