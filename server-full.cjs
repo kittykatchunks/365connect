@@ -146,6 +146,10 @@ app.use(cors({
 
 app.use(compression());
 
+// Body parser middleware - REQUIRED for POST/PUT/PATCH to work with proxy
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // Determine static folder based on environment
 const staticFolder = path.join(__dirname, 'dist');
 
