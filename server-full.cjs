@@ -250,7 +250,10 @@ app.use('/api/phantom', createProxyMiddleware({
     const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
     const targetUrl = `${baseUrl}${rewrittenPath}`;
     
-    console.log(`  🔄 PROXY TRANSLATION:`);
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`  🔄 AUTH PROXY REQUEST DETAILS`);
+    console.log(`${'='.repeat(80)}`);
+    console.log(`     Method: ${req.method}`);
     console.log(`     Input:  https://${host}${originalPath}`);
     console.log(`     Output: ${targetUrl}`);
     console.log(`     PhantomID: ${phantomId}`);
@@ -270,22 +273,41 @@ app.use('/api/phantom', createProxyMiddleware({
       console.warn(`     API Key: ${apiKey ? 'set' : 'undefined'}`);
     }
     
+    console.log(`\n     📋 Request Headers Sent to Phantom API:`);
+    for (const [key, value] of Object.entries(proxyReq.getHeaders())) {
+      console.log(`       • ${key}: ${value}`);
+    }
+    
     // Log query params if present
     const queryParams = new URLSearchParams(req.url.split('?')[1]);
     if (queryParams.toString()) {
-      console.log(`     Query Params:`);
+      console.log(`\n     🔍 Query Parameters:`);
       for (const [key, value] of queryParams) {
         console.log(`       • ${key} = ${value}`);
       }
     }
+    
+    // Log request body for POST/PUT/PATCH
+    if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+      console.log(`\n     📦 Request Body:`);
+      console.log(`${JSON.stringify(req.body, null, 2).split('\n').map(line => `       ${line}`).join('\n')}`);
+    }
+    console.log(`${'='.repeat(80)}`);
   },
   onProxyRes: (proxyRes, req, res) => {
     let responseBody = '';
     const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
     
-    console.log(`  ${statusIcon} PROXY RESPONSE:`);
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`  ${statusIcon} AUTH PROXY RESPONSE`);
+    console.log(`${'='.repeat(80)}`);
     console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
     console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
+    console.log(`     Content-Length: ${proxyRes.headers['content-length'] || 'unknown'}`);
+    console.log(`\n     📋 Response Headers from Phantom API:`);
+    for (const [key, value] of Object.entries(proxyRes.headers)) {
+      console.log(`       • ${key}: ${value}`);
+    }
     
     proxyRes.on('data', (chunk) => {
       responseBody += chunk.toString();
@@ -293,15 +315,24 @@ app.use('/api/phantom', createProxyMiddleware({
     
     proxyRes.on('end', () => {
       if (responseBody.length > 0) {
+        console.log(`\n     📦 Response Body (${responseBody.length} bytes):`);
         try {
           const parsed = JSON.parse(responseBody);
-          const preview = JSON.stringify(parsed).substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
+          console.log(JSON.stringify(parsed, null, 2).split('\n').map(line => `       ${line}`).join('\n'));
         } catch {
-          const preview = responseBody.substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
+          // Not JSON, log raw text
+          const lines = responseBody.split('\n');
+          lines.slice(0, 20).forEach(line => {
+            console.log(`       ${line}`);
+          });
+          if (lines.length > 20) {
+            console.log(`       ... (${lines.length - 20} more lines)`);
+          }
         }
+      } else {
+        console.log(`\n     📦 Response Body: (empty)`);
       }
+      console.log(`${'='.repeat(80)}\n`);
     });
     
     delete proxyRes.headers['www-authenticate'];
@@ -359,28 +390,49 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
     const targetUrl = `${baseUrl}:${noAuthPort}${rewrittenPath}`;
     
-    console.log(`  🔄 NOAUTH PROXY TRANSLATION:`);
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`  🔄 NOAUTH PROXY REQUEST DETAILS`);
+    console.log(`${'='.repeat(80)}`);
+    console.log(`     Method: ${req.method}`);
     console.log(`     Input:  https://${host}${originalPath}`);
     console.log(`     Output: ${targetUrl}`);
     console.log(`     PhantomID: ${phantomId}`);
     console.log(`     Auth: ❌ None (NoAuth endpoint)`);
+    console.log(`\n     📋 Request Headers Sent to Phantom API:`);
+    for (const [key, value] of Object.entries(proxyReq.getHeaders())) {
+      console.log(`       • ${key}: ${value}`);
+    }
     
     // Log query params if present
     const queryParams = new URLSearchParams(req.url.split('?')[1]);
     if (queryParams.toString()) {
-      console.log(`     Query Params:`);
+      console.log(`\n     🔍 Query Parameters:`);
       for (const [key, value] of queryParams) {
         console.log(`       • ${key} = ${value}`);
       }
     }
+    
+    // Log request body for POST/PUT/PATCH
+    if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+      console.log(`\n     📦 Request Body:`);
+      console.log(`${JSON.stringify(req.body, null, 2).split('\n').map(line => `       ${line}`).join('\n')}`);
+    }
+    console.log(`${'='.repeat(80)}`);
   },
   onProxyRes: (proxyRes, req, res) => {
     let responseBody = '';
     const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
     
-    console.log(`  ${statusIcon} NOAUTH PROXY RESPONSE:`);
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`  ${statusIcon} NOAUTH PROXY RESPONSE`);
+    console.log(`${'='.repeat(80)}`);
     console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
     console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
+    console.log(`     Content-Length: ${proxyRes.headers['content-length'] || 'unknown'}`);
+    console.log(`\n     📋 Response Headers from Phantom API:`);
+    for (const [key, value] of Object.entries(proxyRes.headers)) {
+      console.log(`       • ${key}: ${value}`);
+    }
     
     proxyRes.on('data', (chunk) => {
       responseBody += chunk.toString();
@@ -388,15 +440,24 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     
     proxyRes.on('end', () => {
       if (responseBody.length > 0) {
+        console.log(`\n     📦 Response Body (${responseBody.length} bytes):`);
         try {
           const parsed = JSON.parse(responseBody);
-          const preview = JSON.stringify(parsed).substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
+          console.log(JSON.stringify(parsed, null, 2).split('\n').map(line => `       ${line}`).join('\n'));
         } catch {
-          const preview = responseBody.substring(0, 200);
-          console.log(`     Body Preview: ${preview}${responseBody.length > 200 ? '...' : ''}`);
+          // Not JSON, log raw text
+          const lines = responseBody.split('\n');
+          lines.slice(0, 20).forEach(line => {
+            console.log(`       ${line}`);
+          });
+          if (lines.length > 20) {
+            console.log(`       ... (${lines.length - 20} more lines)`);
+          }
         }
+      } else {
+        console.log(`\n     📦 Response Body: (empty)`);
       }
+      console.log(`${'='.repeat(80)}\n`);
     });
     
     delete proxyRes.headers['www-authenticate'];
