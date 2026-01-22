@@ -367,8 +367,15 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     const customBaseUrl = process.env[specificBaseUrlKey];
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
     
-    const target = customBaseUrl 
-      ? `${customBaseUrl}:${noAuthPort}` 
+    // Strip any existing port from custom base URL before adding noAuth port
+    let baseUrlWithoutPort = customBaseUrl;
+    if (customBaseUrl) {
+      // Remove port if present (e.g., https://server1-833.phantomapi.net:443 -> https://server1-833.phantomapi.net)
+      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
+    }
+    
+    const target = baseUrlWithoutPort 
+      ? `${baseUrlWithoutPort}:${noAuthPort}` 
       : `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
     const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
     
