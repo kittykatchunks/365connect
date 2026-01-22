@@ -404,124 +404,42 @@ app.use('/api/phantom', createProxyMiddleware({
     console.log(`[PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
     return target;
   },
-  onProxyReq: (proxyReq, req, res) => {
-    const phantomId = req.query.phantomId || '000';
-    
-    // Get credentials - try server-specific first, then fall back to default
-    const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
-    const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
-    
-    const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
-    const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
-    
-    const isUsingSpecificCredentials = !!(process.env[specificUsernameKey] && process.env[specificKeyKey]);
-    const host = req.headers.host || 'unknown';
-    
-    // Get the actual path being called after rewrite
-    const originalPath = req.originalUrl;
-    const rewrittenPath = originalPath.replace(/^\/api\/phantom/, '/api').replace(/\?phantomId=\d+/, '');
-    
-    // Get base URL (check for custom first)
-    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
-    const baseUrl = process.env[specificBaseUrlKey] || `https://server1-${phantomId}.phantomapi.net`;
-    const targetUrl = `${baseUrl}${rewrittenPath}`;
-    
-    console.log(`\n${'='.repeat(80)}`);
-    console.log(`  🔄 AUTH PROXY REQUEST DETAILS`);
-    console.log(`${'='.repeat(80)}`);
-    console.log(`     Method: ${req.method}`);
-    console.log(`     Input:  https://${host}${originalPath}`);
-    console.log(`     Output: ${targetUrl}`);
-    console.log(`     PhantomID: ${phantomId}`);
-    console.log(`     Credentials Source: ${isUsingSpecificCredentials ? `Specific (${specificUsernameKey})` : 'Default (PHANTOM_API_USERNAME)'}`);
-    
-    if (apiUsername && apiKey) {
-      const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
-      proxyReq.setHeader('Authorization', `Basic ${authString}`);
-      console.log(`     Auth: ✅ Basic Auth (${apiUsername})`);
-      console.log(`     Authorization Header: Basic ${authString.substring(0, 20)}...`);
-      console.log(`     Credentials: ${apiUsername}:${apiKey.substring(0, 4)}***`);
-    } else {
-      console.warn(`     Auth: ⚠️ Missing credentials for server ${phantomId}`);
-      console.warn(`     Checked: ${specificUsernameKey}, ${specificKeyKey}`);
-      console.warn(`     Fallback: PHANTOM_API_USERNAME, PHANTOM_API_KEY`);
-      console.warn(`     Username: ${apiUsername || 'undefined'}`);
-      console.warn(`     API Key: ${apiKey ? 'set' : 'undefined'}`);
-    }
-    
-    console.log(`\n     📋 Request Headers Sent to Phantom API:`);
-    for (const [key, value] of Object.entries(proxyReq.getHeaders())) {
-      console.log(`       • ${key}: ${value}`);
-    }
-    
-    // Log query params if present
-    const queryParams = new URLSearchParams(req.url.split('?')[1]);
-    if (queryParams.toString()) {
-      console.log(`\n     🔍 Query Parameters:`);
-      for (const [key, value] of queryParams) {
-        console.log(`       • ${key} = ${value}`);
-      }
-    }
-    
-    // Log request body for POST/PUT/PATCH
-    if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
-      console.log(`\n     📦 Request Body:`);
-      console.log(`${JSON.stringify(req.body, null, 2).split('\n').map(line => `       ${line}`).join('\n')}`);
-    }
-    console.log(`${'='.repeat(80)}`);
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    let responseBody = '';
-    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
-    
-    console.log(`\n${'='.repeat(80)}`);
-    console.log(`  ${statusIcon} AUTH PROXY RESPONSE`);
-    console.log(`${'='.repeat(80)}`);
-    console.log(`     Status: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
-    console.log(`     Content-Type: ${proxyRes.headers['content-type'] || 'unknown'}`);
-    console.log(`     Content-Length: ${proxyRes.headers['content-length'] || 'unknown'}`);
-    console.log(`\n     📋 Response Headers from Phantom API:`);
-    for (const [key, value] of Object.entries(proxyRes.headers)) {
-      console.log(`       • ${key}: ${value}`);
-    }
-    
-    proxyRes.on('data', (chunk) => {
-      responseBody += chunk.toString();
-    });
-    
-    proxyRes.on('end', () => {
-      if (responseBody.length > 0) {
-        console.log(`\n     📦 Response Body (${responseBody.length} bytes):`);
-        try {
-          const parsed = JSON.parse(responseBody);
-          console.log(JSON.stringify(parsed, null, 2).split('\n').map(line => `       ${line}`).join('\n'));
-        } catch {
-          // Not JSON, log raw text
-          const lines = responseBody.split('\n');
-          lines.slice(0, 20).forEach(line => {
-            console.log(`       ${line}`);
-          });
-          if (lines.length > 20) {
-            console.log(`       ... (${lines.length - 20} more lines)`);
-          }
-        }
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      const phantomId = req.query.phantomId || '000';
+      
+      // Get credentials - try server-specific first, then fall back to default
+      const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
+      const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
+      
+      const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
+      const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
+      
+      console.log(`\n${'='.repeat(80)}`);
+      console.log(`  🔄 AUTH PROXY REQUEST`);
+      console.log(`${'='.repeat(80)}`);
+      console.log(`     PhantomID: ${phantomId}`);
+      
+      if (apiUsername && apiKey) {
+        const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
+        proxyReq.setHeader('Authorization', `Basic ${authString}`);
+        console.log(`     ✅ Auth: Basic ${apiUsername}:${apiKey.substring(0, 4)}***`);
       } else {
-        console.log(`\n     📦 Response Body: (empty)`);
+        console.warn(`     ⚠️  Missing credentials for server ${phantomId}`);
       }
-      console.log(`${'='.repeat(80)}\n`);
-    });
-    
-    delete proxyRes.headers['www-authenticate'];
-  },
-  onError: (err, req, res) => {
-    console.log(`  ❌ PROXY ERROR:`);
-    console.log(`     URL: ${req.originalUrl}`);
-    console.log(`     Error: ${err.message}`);
-    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
-    if (err.code === 'ECONNREFUSED') {
-      console.log(`     💡 Hint: Target server may be down or unreachable`);
+      console.log(`${'='.repeat(80)}`);
+    },
+    proxyRes: (proxyRes, req, res) => {
+      const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+      console.log(`\n  ${statusIcon} AUTH PROXY RESPONSE: ${proxyRes.statusCode}`);
+      delete proxyRes.headers['www-authenticate'];
+    },
+    error: (err, req, res) => {
+      console.error(`  ❌ AUTH PROXY ERROR: ${err.message}`);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Proxy error', message: err.message });
+      }
     }
-    res.status(502).json({ error: 'Proxy error', message: err.message });
   }
 }));
 
