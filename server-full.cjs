@@ -377,6 +377,7 @@ app.use('/api/phantom', createProxyMiddleware({
     const pathWithoutQuery = path.split('?')[0];
     const query = path.includes('?') ? path.substring(path.indexOf('?')) : '';
     const newPath = `/api${pathWithoutQuery}${query}`;
+    console.log(`🔶 [AUTH PATHREWRITE] ${path} -> ${newPath}`);
     return newPath;
   },
   router: (req) => {
