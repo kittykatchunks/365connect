@@ -531,13 +531,6 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     '^/api/phantom-noauth': '/api',
   },
   router: (req) => {
-  target: 'https://server1-000.phantomapi.net:19773',
-  changeOrigin: true,
-  secure: false,
-  pathRewrite: {
-    '^/api/phantom-noauth': '/api',
-  },
-  router: (req) => {
     const phantomId = req.query.phantomId || '000';
     console.log(`\n🔶 [NOAUTH PROXY ROUTER] START`);
     console.log(`   phantomId: ${phantomId}`);
