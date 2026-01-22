@@ -146,10 +146,6 @@ app.use(cors({
 
 app.use(compression());
 
-// Body parser middleware - REQUIRED for POST/PUT/PATCH to work with proxy
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
 // Determine static folder based on environment
 const staticFolder = path.join(__dirname, 'dist');
 
@@ -526,7 +522,19 @@ app.use('/api/phantom', createProxyMiddleware({
 
 
 // NoAuth Phantom API Proxy (Port 19773 - No Authentication)
-app.use('/api/phantom-noauth', createProxyMiddleware({
+app.use('/api/phantom-noauth', (req, res, next) => {
+  console.log(`\n${'*'.repeat(80)}`);
+  console.log(`🔵 NOAUTH MIDDLEWARE ENTRY POINT`);
+  console.log(`${'*'.repeat(80)}`);
+  console.log(`   Request URL: ${req.originalUrl}`);
+  console.log(`   Method: ${req.method}`);
+  console.log(`   Content-Type: ${req.headers['content-type'] || 'none'}`);
+  console.log(`   Content-Length: ${req.headers['content-length'] || '0'}`);
+  console.log(`   Body available: ${!!req.body}`);
+  console.log(`   Raw body chunks will be logged by proxy...`);
+  console.log(`${'*'.repeat(80)}\n`);
+  next();
+}, createProxyMiddleware({
   target: 'https://server1-000.phantomapi.net:19773',
   changeOrigin: true,
   secure: false,
@@ -535,14 +543,16 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
   },
   router: (req) => {
     const phantomId = req.query.phantomId || '000';
-    console.log(`[NOAUTH PROXY ROUTER] phantomId: ${phantomId}`);
+    console.log(`\n🔶 [NOAUTH PROXY ROUTER] START`);
+    console.log(`   phantomId: ${phantomId}`);
     
     // Check for server-specific base URL first, then fall back to pattern
     const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
     const customBaseUrl = process.env[specificBaseUrlKey];
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-    
-    // Strip any existing port from custom base URL before adding noAuth port
+       Target URL: ${target}`);
+    console.log(`   Base URL Source: ${baseUrlSource}`);
+    console.log(`🔶 [NOAUTH PROXY ROUTER] END - Target: ${target}\n port
     let baseUrlWithoutPort = customBaseUrl;
     if (customBaseUrl) {
       // Remove port if present (e.g., https://server1-833.phantomapi.net:443 -> https://server1-833.phantomapi.net)
@@ -558,7 +568,8 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     console.log(`[NOAUTH PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
     return target;
   },
-  onProxyReq: (proxyReq, req, res) => {
+  onProxole.log(`\n🟢 [NOAUTH onProxyReq] START - Preparing request to send`);
+    
     const phantomId = req.query.phantomId || '000';
     const host = req.headers.host || 'unknown';
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
@@ -580,6 +591,9 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     console.log(`     Output: ${targetUrl}`);
     console.log(`     PhantomID: ${phantomId}`);
     console.log(`     Auth: ❌ None (NoAuth endpoint)`);
+    console.log(`     Content-Type: ${req.headers['content-type'] || 'none'}`);
+    console.log(`     Content-Length: ${req.headers['content-length'] || '0'}`);
+    
     console.log(`\n     📋 Request Headers Sent to Phantom API:`);
     for (const [key, value] of Object.entries(proxyReq.getHeaders())) {
       console.log(`       • ${key}: ${value}`);
@@ -594,14 +608,11 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
       }
     }
     
-    // Log request body for POST/PUT/PATCH
-    if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
-      console.log(`\n     📦 Request Body:`);
-      console.log(`${JSON.stringify(req.body, null, 2).split('\n').map(line => `       ${line}`).join('\n')}`);
-    }
     console.log(`${'='.repeat(80)}`);
-  },
-  onProxyRes: (proxyRes, req, res) => {
+    console.log(`🟢 [NOAUTH onProxyReq] END - Request sent to Phantom API\n
+    console.log(`${'='.repeat(80)}`);
+  },console.log(`\n🟣 [NOAUTH onProxyRes] START - Received response from Phantom API`);
+    
     let responseBody = '';
     const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
     
@@ -617,10 +628,12 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
     }
     
     proxyRes.on('data', (chunk) => {
+      console.log(`🟣 [NOAUTH onProxyRes] Received data chunk: ${chunk.length} bytes`);
       responseBody += chunk.toString();
     });
     
     proxyRes.on('end', () => {
+      console.log(`🟣 [NOAUTH onProxyRes] Response stream ended`);
       if (responseBody.length > 0) {
         console.log(`\n     📦 Response Body (${responseBody.length} bytes):`);
         try {
@@ -639,14 +652,28 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
       } else {
         console.log(`\n     📦 Response Body: (empty)`);
       }
-      console.log(`${'='.repeat(80)}\n`);
-    });
-    
-    delete proxyRes.headers['www-authenticate'];
-  },
-  onError: (err, req, res) => {
+      console.log(`${'='.repeat(80)}`);
+      console.log(`🟣 [NOAUTH onProxyRes] END - Sending response to clientnse Body: (empty)`);
+      }
+      console.log\n🔴 [NOAUTH onError] ERROR OCCURRED!`);
+    console.log(`${'!'.repeat(80)}`);
     console.log(`  ❌ NOAUTH PROXY ERROR:`);
     console.log(`     URL: ${req.originalUrl}`);
+    console.log(`     Error: ${err.message}`);
+    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
+    console.log(`     Stack: ${err.stack}`);
+    if (err.code === 'ECONNREFUSED') {
+      console.log(`     💡 Hint: Target server may be down or unreachable`);
+    }
+    if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
+      console.log(`     💡 Hint: Request timed out - possible body parser issue or network problem`);
+    }
+    console.log(`${'!'.repeat(80)}`);
+    console.log(`🔴 [NOAUTH onError] END\n`);
+    
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Proxy error', message: err.message, code: err.code });
+    }
     console.log(`     Error: ${err.message}`);
     console.log(`     Code: ${err.code || 'UNKNOWN'}`);
     if (err.code === 'ECONNREFUSED') {
