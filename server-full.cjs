@@ -550,9 +550,8 @@ app.use('/api/phantom-noauth', (req, res, next) => {
     const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
     const customBaseUrl = process.env[specificBaseUrlKey];
     const noAuthPort = process.env.PHANTOM_NOAUTH_PORT || 19773;
-       Target URL: ${target}`);
-    console.log(`   Base URL Source: ${baseUrlSource}`);
-    console.log(`🔶 [NOAUTH PROXY ROUTER] END - Target: ${target}\n port
+    
+    // Strip any existing port from custom base URL before adding noauth port
     let baseUrlWithoutPort = customBaseUrl;
     if (customBaseUrl) {
       // Remove port if present (e.g., https://server1-833.phantomapi.net:443 -> https://server1-833.phantomapi.net)
@@ -564,11 +563,13 @@ app.use('/api/phantom-noauth', (req, res, next) => {
       : `https://server1-${phantomId}.phantomapi.net:${noAuthPort}`;
     const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
     
-    console.log(`[NOAUTH PROXY ROUTER] Routing to: ${target}`);
-    console.log(`[NOAUTH PROXY ROUTER] Base URL Source: ${baseUrlSource}`);
+    console.log(`   Target URL: ${target}`);
+    console.log(`   Base URL Source: ${baseUrlSource}`);
+    console.log(`🔶 [NOAUTH PROXY ROUTER] END - Target: ${target}\n`);
     return target;
   },
-  onProxole.log(`\n🟢 [NOAUTH onProxyReq] START - Preparing request to send`);
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`\n🟢 [NOAUTH onProxyReq] START - Preparing request to send`);
     
     const phantomId = req.query.phantomId || '000';
     const host = req.headers.host || 'unknown';
@@ -609,9 +610,11 @@ app.use('/api/phantom-noauth', (req, res, next) => {
     }
     
     console.log(`${'='.repeat(80)}`);
-    console.log(`🟢 [NOAUTH onProxyReq] END - Request sent to Phantom API\n
+    console.log(`🟢 [NOAUTH onProxyReq] END - Request sent to Phantom API\n`);
     console.log(`${'='.repeat(80)}`);
-  },console.log(`\n🟣 [NOAUTH onProxyRes] START - Received response from Phantom API`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`\n🟣 [NOAUTH onProxyRes] START - Received response from Phantom API`);
     
     let responseBody = '';
     const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
@@ -653,9 +656,11 @@ app.use('/api/phantom-noauth', (req, res, next) => {
         console.log(`\n     📦 Response Body: (empty)`);
       }
       console.log(`${'='.repeat(80)}`);
-      console.log(`🟣 [NOAUTH onProxyRes] END - Sending response to clientnse Body: (empty)`);
-      }
-      console.log\n🔴 [NOAUTH onError] ERROR OCCURRED!`);
+      console.log(`🟣 [NOAUTH onProxyRes] END - Sending response to client\n`);
+    });
+  },
+  onError: (err, req, res) => {
+    console.log(`\n🔴 [NOAUTH onError] ERROR OCCURRED!`);
     console.log(`${'!'.repeat(80)}`);
     console.log(`  ❌ NOAUTH PROXY ERROR:`);
     console.log(`     URL: ${req.originalUrl}`);
@@ -674,12 +679,6 @@ app.use('/api/phantom-noauth', (req, res, next) => {
     if (!res.headersSent) {
       res.status(502).json({ error: 'Proxy error', message: err.message, code: err.code });
     }
-    console.log(`     Error: ${err.message}`);
-    console.log(`     Code: ${err.code || 'UNKNOWN'}`);
-    if (err.code === 'ECONNREFUSED') {
-      console.log(`     💡 Hint: Target server may be down or unreachable`);
-    }
-    res.status(502).json({ error: 'Proxy error', message: err.message });
   }
 }));
 
