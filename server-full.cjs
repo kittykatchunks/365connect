@@ -206,6 +206,167 @@ app.use(express.static(staticFolder, {
   }
 }));
 
+// ============================================================================
+// DIRECT API ENDPOINTS - Must be registered BEFORE proxy middleware
+// ============================================================================
+
+// Phantom API current key endpoint
+app.get('/api/phantom/current-key', (req, res) => {
+  const phantomId = req.query.phantomId || '000';
+  
+  console.log(`[API] GET /api/phantom/current-key - PhantomID: ${phantomId}`);
+  
+  // Check for server-specific credentials first, then fall back to default
+  const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
+  const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
+  
+  const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
+  const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
+  const isUsingSpecificCredentials = !!(process.env[specificUsernameKey] && process.env[specificKeyKey]);
+  
+  console.log(`[API] Credentials source: ${isUsingSpecificCredentials ? `Specific (${specificKeyKey})` : 'Default (PHANTOM_API_KEY)'}`);
+  console.log(`[API] Username: ${apiUsername || 'undefined'}`);
+  console.log(`[API] API Key: ${apiKey ? apiKey.substring(0, 8) + '***' : 'undefined'}`);
+  
+  if (!apiUsername || !apiKey) {
+    console.warn(`[API] ⚠️ Missing credentials for PhantomID ${phantomId}`);
+    return res.status(404).json({ 
+      error: 'API key not configured',
+      message: `No credentials found for PhantomID ${phantomId}`,
+      phantomId,
+      checked: [specificUsernameKey, specificKeyKey, 'PHANTOM_API_USERNAME', 'PHANTOM_API_KEY']
+    });
+  }
+  
+  res.json({
+    apiKey,
+    username: apiUsername,
+    phantomId,
+    lastModified: Date.now(),
+    timestamp: new Date().toISOString(),
+    source: isUsingSpecificCredentials ? 'server-specific' : 'default'
+  });
+});
+
+// Configuration endpoint for SIP/WebSocket
+app.get('/api/config', (req, res) => {
+  const phantomId = req.query.phantomId || '000';
+  const domain = `server1-${phantomId}.phantomapi.net`;
+  const wssPort = 8089;
+  const wssPath = '/ws';
+  const sipPort = 5061;
+  const sipServer = domain;
+  const apiPort = process.env.PHANTOM_API_PORT || 443;
+  
+  res.json({
+    phantomId,
+    wssServerUrl: `wss://${domain}:${wssPort}${wssPath}`,
+    wssPort,
+    wssPath,
+    sipDomain: domain,
+    sipServer,
+    sipPort,
+    phantomApiBase: `https://${domain}:${apiPort}/api`,
+    apiUsername: process.env.PHANTOM_API_USERNAME,
+    apiKey: process.env.PHANTOM_API_KEY
+  });
+});
+
+// Test WebSocket connectivity to Phantom server
+app.get('/api/phantom/test-ws', (req, res) => {
+  const phantomId = req.query.phantomId || '000';
+  const domain = `server1-${phantomId}.phantomapi.net`;
+  const wsUrl = `wss://${domain}:8089/ws`;
+  
+  console.log(`[API] Testing WebSocket connection to: ${wsUrl}`);
+  
+  try {
+    const ws = new WebSocket(wsUrl, ['sip']);
+    let connected = false;
+    
+    const timeout = setTimeout(() => {
+      if (!connected) {
+        ws.close();
+        res.json({
+          success: false,
+          url: wsUrl,
+          error: 'Connection timeout (5s)',
+          message: 'WebSocket connection timed out. Server may be unreachable or blocking connections.'
+        });
+      }
+    }, 5000);
+    
+    ws.on('open', () => {
+      connected = true;
+      clearTimeout(timeout);
+      console.log(`[API] ✅ WebSocket connection successful: ${wsUrl}`);
+      ws.close();
+      res.json({
+        success: true,
+        url: wsUrl,
+        message: 'WebSocket connection successful'
+      });
+    });
+    
+    ws.on('error', (error) => {
+      clearTimeout(timeout);
+      console.error(`[API] ❌ WebSocket connection error: ${error.message}`);
+      if (!connected) {
+        res.json({
+          success: false,
+          url: wsUrl,
+          error: error.message,
+          code: error.code
+        });
+      }
+    });
+  } catch (error) {
+    console.error(`[API] ❌ WebSocket test failed: ${error.message}`);
+    res.json({
+      success: false,
+      url: wsUrl,
+      error: error.message
+    });
+  }
+});
+
+// Health check endpoint for network status monitoring
+app.get('/api/health', async (req, res) => {
+  const hasDefaultKey = !!process.env.PHANTOM_API_KEY;
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    apiKeyConfigured: hasDefaultKey,
+    multiServerSupport: true
+  });
+});
+
+// Legacy health check endpoint (deprecated, use /api/health instead)
+app.get('/health', async (req, res) => {
+  try {
+    const url = PHANTOM_API_BASE_URL + '/api/ping';
+    https.get(url, (apiRes) => {
+      let data = '';
+      apiRes.on('data', chunk => { data += chunk; });
+      apiRes.on('end', () => {
+        if (apiRes.statusCode === 200) {
+          res.status(200).json({ status: 'ok', data });
+        } else {
+          res.status(503).json({ status: 'unreachable', code: apiRes.statusCode, data });
+        }
+      });
+    }).on('error', (err) => {
+      res.status(503).json({ status: 'unreachable', error: err.message });
+    });
+  } catch (err) {
+    res.status(503).json({ status: 'unreachable', error: err.message });
+  }
+});
+
+// ============================================================================
+// PROXY MIDDLEWARE - Catch-all for /api/phantom/* and /api/phantom-noauth/*
+// ============================================================================
+
 app.use('/api/phantom', createProxyMiddleware({
   target: 'https://server1-000.phantomapi.net',
   changeOrigin: true,
@@ -220,8 +381,18 @@ app.use('/api/phantom', createProxyMiddleware({
     // Check for server-specific base URL first, then fall back to pattern
     const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
     const customBaseUrl = process.env[specificBaseUrlKey];
+    const authPort = process.env.PHANTOM_API_PORT || 443;
     
-    const target = customBaseUrl || `https://server1-${phantomId}.phantomapi.net`;
+    // Strip any existing port from custom base URL before adding auth port
+    let baseUrlWithoutPort = customBaseUrl;
+    if (customBaseUrl) {
+      // Remove port if present (e.g., https://server1-833.phantomapi.net:443 -> https://server1-833.phantomapi.net)
+      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
+    }
+    
+    const target = baseUrlWithoutPort 
+      ? `${baseUrlWithoutPort}:${authPort}` 
+      : `https://server1-${phantomId}.phantomapi.net:${authPort}`;
     const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
     
     console.log(`[PROXY ROUTER] Routing to: ${target}`);
@@ -487,159 +658,6 @@ app.use('/api/busylight', busylightBridge.createHttpMiddleware());
 // Busylight Bridge status endpoint
 app.get('/api/busylight-status', (req, res) => {
   res.json(busylightBridge.getStatus());
-});
-
-// Phantom API current key endpoint
-app.get('/api/phantom/current-key', (req, res) => {
-  const phantomId = req.query.phantomId || '000';
-  
-  console.log(`[API] GET /api/phantom/current-key - PhantomID: ${phantomId}`);
-  
-  // Check for server-specific credentials first, then fall back to default
-  const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
-  const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
-  
-  const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
-  const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
-  const isUsingSpecificCredentials = !!(process.env[specificUsernameKey] && process.env[specificKeyKey]);
-  
-  console.log(`[API] Credentials source: ${isUsingSpecificCredentials ? `Specific (${specificKeyKey})` : 'Default (PHANTOM_API_KEY)'}`);
-  console.log(`[API] Username: ${apiUsername || 'undefined'}`);
-  console.log(`[API] API Key: ${apiKey ? apiKey.substring(0, 8) + '***' : 'undefined'}`);
-  
-  if (!apiUsername || !apiKey) {
-    console.warn(`[API] ⚠️ Missing credentials for PhantomID ${phantomId}`);
-    return res.status(404).json({ 
-      error: 'API key not configured',
-      message: `No credentials found for PhantomID ${phantomId}`,
-      phantomId,
-      checked: [specificUsernameKey, specificKeyKey, 'PHANTOM_API_USERNAME', 'PHANTOM_API_KEY']
-    });
-  }
-  
-  res.json({
-    apiKey,
-    username: apiUsername,
-    phantomId,
-    lastModified: Date.now(),
-    timestamp: new Date().toISOString(),
-    source: isUsingSpecificCredentials ? 'server-specific' : 'default'
-  });
-});
-
-// Configuration endpoint for SIP/WebSocket
-app.get('/api/config', (req, res) => {
-  const phantomId = req.query.phantomId || '000';
-  const domain = `server1-${phantomId}.phantomapi.net`;
-  const wssPort = 8089;
-  const wssPath = '/ws';
-  const sipPort = 5061;
-  const sipServer = domain;
-  const apiPort = process.env.PHANTOM_API_PORT || 443;
-  
-  res.json({
-    phantomId,
-    wssServerUrl: `wss://${domain}:${wssPort}${wssPath}`,
-    wssPort,
-    wssPath,
-    sipDomain: domain,
-    sipServer,
-    sipPort,
-    phantomApiBase: `https://${domain}:${apiPort}/api`,
-    apiUsername: process.env.PHANTOM_API_USERNAME,
-    apiKey: process.env.PHANTOM_API_KEY
-  });
-});
-
-// Test WebSocket connectivity to Phantom server
-app.get('/api/phantom/test-ws', (req, res) => {
-  const phantomId = req.query.phantomId || '000';
-  const domain = `server1-${phantomId}.phantomapi.net`;
-  const wsUrl = `wss://${domain}:8089/ws`;
-  
-  console.log(`[API] Testing WebSocket connection to: ${wsUrl}`);
-  
-  try {
-    const ws = new WebSocket(wsUrl, ['sip']);
-    let connected = false;
-    
-    const timeout = setTimeout(() => {
-      if (!connected) {
-        ws.close();
-        res.json({
-          success: false,
-          url: wsUrl,
-          error: 'Connection timeout (5s)',
-          message: 'WebSocket connection timed out. Server may be unreachable or blocking connections.'
-        });
-      }
-    }, 5000);
-    
-    ws.on('open', () => {
-      connected = true;
-      clearTimeout(timeout);
-      console.log(`[API] ✅ WebSocket connection successful: ${wsUrl}`);
-      ws.close();
-      res.json({
-        success: true,
-        url: wsUrl,
-        message: 'WebSocket connection successful'
-      });
-    });
-    
-    ws.on('error', (error) => {
-      clearTimeout(timeout);
-      console.error(`[API] ❌ WebSocket connection error: ${error.message}`);
-      if (!connected) {
-        res.json({
-          success: false,
-          url: wsUrl,
-          error: error.message,
-          code: error.code
-        });
-      }
-    });
-  } catch (error) {
-    console.error(`[API] ❌ WebSocket test failed: ${error.message}`);
-    res.json({
-      success: false,
-      url: wsUrl,
-      error: error.message
-    });
-  }
-});
-
-// Health check endpoint for network status monitoring
-app.get('/api/health', async (req, res) => {
-  const hasDefaultKey = !!process.env.PHANTOM_API_KEY;
-  res.json({
-    status: 'ok',
-    timestamp: Date.now(),
-    apiKeyConfigured: hasDefaultKey,
-    multiServerSupport: true
-  });
-});
-
-// Legacy health check endpoint (deprecated, use /api/health instead)
-app.get('/health', async (req, res) => {
-  try {
-    const url = PHANTOM_API_BASE_URL + '/api/ping';
-    https.get(url, (apiRes) => {
-      let data = '';
-      apiRes.on('data', chunk => { data += chunk; });
-      apiRes.on('end', () => {
-        if (apiRes.statusCode === 200) {
-          res.status(200).json({ status: 'ok', data });
-        } else {
-          res.status(503).json({ status: 'unreachable', code: apiRes.statusCode, data });
-        }
-      });
-    }).on('error', (err) => {
-      res.status(503).json({ status: 'unreachable', error: err.message });
-    });
-  } catch (err) {
-    res.status(503).json({ status: 'unreachable', error: err.message });
-  }
 });
 
 // Fallback: serve index.html for SPA routes (but NOT for static files)
