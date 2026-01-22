@@ -373,9 +373,16 @@ app.use('/api/phantom', createProxyMiddleware({
   secure: false,
   pathRewrite: (path, req) => {
     // The matched /api/phantom is already stripped by middleware
-    // We just need to add /api prefix to whatever path remains
+    // Add /api prefix and remove phantomId query param (used only for routing)
     const pathWithoutQuery = path.split('?')[0];
-    const query = path.includes('?') ? path.substring(path.indexOf('?')) : '';
+    let query = '';
+    if (path.includes('?')) {
+      const queryString = path.substring(path.indexOf('?') + 1);
+      const params = new URLSearchParams(queryString);
+      params.delete('phantomId'); // Remove routing parameter
+      const cleanQuery = params.toString();
+      query = cleanQuery ? `?${cleanQuery}` : '';
+    }
     const newPath = `/api${pathWithoutQuery}${query}`;
     console.log(`🔶 [AUTH PATHREWRITE] ${path} -> ${newPath}`);
     return newPath;
@@ -453,9 +460,16 @@ app.use('/api/phantom-noauth', createProxyMiddleware({
   ws: false,
   pathRewrite: (path, req) => {
     // The matched /api/phantom-noauth is already stripped by middleware
-    // We just need to add /api prefix to whatever path remains
+    // Add /api prefix and remove phantomId query param (used only for routing)
     const pathWithoutQuery = path.split('?')[0];
-    const query = path.includes('?') ? path.substring(path.indexOf('?')) : '';
+    let query = '';
+    if (path.includes('?')) {
+      const queryString = path.substring(path.indexOf('?') + 1);
+      const params = new URLSearchParams(queryString);
+      params.delete('phantomId'); // Remove routing parameter
+      const cleanQuery = params.toString();
+      query = cleanQuery ? `?${cleanQuery}` : '';
+    }
     const newPath = `/api${pathWithoutQuery}${query}`;
     return newPath;
   },
