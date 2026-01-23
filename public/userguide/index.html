@@ -69,8 +69,8 @@
             left: 0;
             right: 0;
             height: 60px;
-            background: var(--bg-color);
-            border-bottom: 1px solid var(--border-color);
+            background: var(--primary-color);
+            border-bottom: 1px solid var(--primary-color);
             display: flex;
             align-items: center;
             padding: 0 2rem;
@@ -93,13 +93,14 @@
             gap: 0.75rem;
             font-size: 1.25rem;
             font-weight: 600;
-            color: var(--primary-color);
+            color: #ffffff;
             text-decoration: none;
         }
 
         .logo-icon {
             width: 32px;
             height: 32px;
+            color: #ffffff;
         }
 
         .header-actions {
@@ -114,15 +115,20 @@
 
         .search-input {
             padding: 0.5rem 2.5rem 0.5rem 1rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
-            background: var(--bg-color);
-            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
             width: 250px;
             font-size: 0.875rem;
             transition: all 0.2s;
         }
-
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255
         .search-input:focus {
             outline: none;
             border-color: var(--primary-color);
@@ -131,23 +137,24 @@
 
         .search-icon {
             position: absolute;
-            right: 0.75rem;
+            right: 0.757;
+            color: #ffffffem;
             top: 50%;
             transform: translateY(-50%);
             width: 16px;
-            height: 16px;
-            opacity: 0.5;
-        }
-
-        .theme-toggle {
-            padding: 0.5rem;
-            background: none;
-            border: 1px solid var(--border-color);
+            height: 16pxrgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
             cursor: pointer;
-            color: var(--text-color);
+            color: #ffffff;
             display: flex;
             align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.25
             justify-content: center;
             transition: all 0.2s;
         }

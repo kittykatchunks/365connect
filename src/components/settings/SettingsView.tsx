@@ -383,7 +383,7 @@ export function SettingsView() {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => window.open('/userguide/index.html', '_blank', 'noopener,noreferrer')}
+              onClick={() => window.open('/userguide/index.html', '_blank', 'width=1000,height=800,noopener,noreferrer')}
               title={t('settings.user_guide_title', 'Open User Guide')}
             >
               <BookOpen className="w-4 h-4" />
