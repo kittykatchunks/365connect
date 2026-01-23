@@ -17,7 +17,7 @@ export default defineConfig({
         name: 'Autocab Connect365',
         short_name: 'Connect365',
         description: 'Autocab Connect365 is a fully featured browser based WebRTC SIP phone for your Autocab365 platform. Powered by your Autocab Phantom PBX.',
-        theme_color: '#3182ce',
+        theme_color: '#011222',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
