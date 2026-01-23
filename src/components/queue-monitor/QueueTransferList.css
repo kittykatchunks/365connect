@@ -1,0 +1,258 @@
+/* ============================================ */
+/* Queue Transfer List Styles (Method 2) */
+/* Two-column transfer interface for >20 queues */
+/* ============================================ */
+
+.queue-transfer-list {
+  width: 100%;
+}
+
+.transfer-list-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: stretch;
+  min-height: 400px;
+}
+
+/* Transfer Columns */
+.transfer-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--background-color);
+  overflow: hidden;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: var(--background-muted);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.column-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-color);
+}
+
+.column-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Search Box */
+.search-box {
+  position: relative;
+  padding: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-icon {
+  position: absolute;
+  left: calc(var(--spacing-xs) + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 8px 6px 32px;
+  border: 1px solid var(--border-color);
+  border-radius: calc(var(--border-radius) / 2);
+  background-color: var(--background-elevated);
+  color: var(--text-color);
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.search-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Queue List */
+.queue-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xs);
+}
+
+.queue-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid transparent;
+  border-radius: calc(var(--border-radius) / 2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+  user-select: none;
+}
+
+.queue-item:hover {
+  background-color: var(--background-muted);
+  border-color: var(--border-color);
+}
+
+.queue-item.highlighted {
+  background-color: var(--primary-color-light);
+  border-color: var(--primary-color);
+}
+
+.queue-number {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.queue-name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.list-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 150px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+/* Transfer Buttons */
+.transfer-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) 0;
+}
+
+.transfer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--background-elevated);
+  color: var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transfer-btn:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: scale(1.05);
+}
+
+.transfer-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.transfer-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+
+/* Hint Text */
+.transfer-hint {
+  margin-top: var(--spacing-sm);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .transfer-column {
+  background-color: var(--background-elevated);
+}
+
+[data-theme="dark"] .search-input {
+  background-color: var(--background-color);
+}
+
+[data-theme="dark"] .transfer-btn {
+  background-color: var(--background-color);
+}
+
+/* Scrollbar Styling */
+.queue-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.queue-list::-webkit-scrollbar-track {
+  background: var(--background-muted);
+  border-radius: 4px;
+}
+
+.queue-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.queue-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .transfer-list-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+  
+  .transfer-buttons {
+    flex-direction: row;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    order: 1;
+  }
+  
+  .transfer-column:first-child {
+    order: 0;
+  }
+  
+  .transfer-column:last-child {
+    order: 2;
+  }
+  
+  .transfer-btn {
+    transform: rotate(90deg);
+  }
+  
+  .transfer-btn:hover:not(:disabled) {
+    transform: rotate(90deg) scale(1.05);
+  }
+  
+  .transfer-btn:active:not(:disabled) {
+    transform: rotate(90deg) scale(0.95);
+  }
+  
+  .queue-list {
+    max-height: 200px;
+  }
+}

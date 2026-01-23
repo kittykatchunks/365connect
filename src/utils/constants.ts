@@ -60,7 +60,7 @@ export const DIALPAD_KEYS = [
 export const CALL_STATE_TEXT = {
   idle: 'Idle',
   ringing: 'Ringing',
-  dialing: 'Dialing',
+  dialing: 'Dialling',
   connecting: 'Connecting',
   active: 'Connected',
   established: 'Connected',

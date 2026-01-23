@@ -420,7 +420,9 @@
             "speeddial": "Composition Rapide"
         },
         "error": {
-            "extension_required": "Extension ou numéro requis"
+            "extension_required": "Extension ou numéro requis",
+            "extension_invalid": "L'extension doit contenir uniquement 3-5 chiffres",
+            "number_invalid": "Le numéro de téléphone ne peut contenir que +, *, # et des chiffres (0-9)"
         }
     },
     "welcome": {

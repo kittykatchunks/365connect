@@ -416,7 +416,9 @@
             "speeddial": "Marcação Rápida"
         },
         "error": {
-            "extension_required": "Extensão ou número obrigatório"
+            "extension_required": "Extensão ou número obrigatório",
+            "extension_invalid": "A extensão deve ter apenas 3-5 dígitos",
+            "number_invalid": "O número de telefone só pode conter +, *, # e dígitos (0-9)"
         }
     },
     "welcome": {

@@ -77,7 +77,7 @@ Thirdly, clarification of SIP call state and call-timer
 
 - What SLA(s) do we think are required and how to set the associated warning boundarys
 
-- [ ] UI requirements for both display of monitored queues and entry of Queue and SLA requirements
+	- [x] UI requirements for both display of monitored queues and entry of Queue and SLA requirements
 	- [ ] I think a simple grid view will suffice, with common queue info and common SLA measures, similar to below grid format.  Suggest that titles may need to be in legend below active grid, with common abreviations used in title bar.  Each queue would stack below the title bar, the order would just be number queue order (lowest to highest) when no SLA triggers active.  If SLA trigger of Breach (RED) was reached for a queue that would be brought to top of stacked queues with any SLA trigger of Warn (AMBER) below any Breached queues
 	- [ ] Visual indications in the table shown in the queue monitor tab of BREACH and WARN as set by the range sliders defined later in this document would be background color of offending stat (e.g. if ABD goes above WARN % then the background of the displayed percentage would be amber) and it would move to top of list.  Only any queues that had a BREACH stat would be above the queue in the list.
 	- [ ] Also key to this will be the visual indication of the tab itself.  I will use the useTabAlert hook to indicate a WARN or BREACH queue in monitored queues the two indications will be a flashing Amber tab or a flashing Red tab.  Only the higher type will be alerted (e.g. if a few WARN and one BREACH in effect, only BREACH would alerted to the useTabAlert hook)
@@ -153,7 +153,11 @@ Thirdly, clarification of SIP call state and call-timer
 - [x] Line Keys and Company Number selection should be disabled when in disconnected state
 - [X] Double the dialpad size on mobile version only
 - [X] Double the size of the dialpad on the desktop version
-- [X] Replace the '#' in front of Company ID with 'ID' in both company number menu and related modals 
+- [X] Replace the '#' in front of Company ID with 'ID' in both company number menu and related modals
+- [X] Validate the input field for extension in BLF button entry/edit modal to be 3-5 numerical characters only
+- [X] Validate the input field for Phone Number in sppeddial to be '+','*','#','0-9' characters only
+- [X] On exporting of settings change the default filename to be 'connect365-settings-{date(YYYY-MM-DD)}.json'
+- [X] Correct the spelling of call status 'Dialing' to 'Dialling' 
 
 
 #### Mobile Device Usage - Investigation Only

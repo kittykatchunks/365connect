@@ -63,78 +63,95 @@
 .dual-range-slider-track {
   position: relative;
   width: 100%;
-  height: 32px;
-  border-radius: 16px;
+  height: 16px; /* Reduced from 32px to half */
+  border-radius: 8px; /* Adjusted for new height */
   overflow: hidden;
   cursor: pointer;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Colored Zones */
+/* Colored Zones - Horizontal bars with distinct color zones */
 .zone {
   position: absolute;
   top: 0;
   height: 100%;
   pointer-events: none;
+  transition: width 0.2s ease, left 0.2s ease;
 }
 
 .zone-green {
   left: 0;
   width: var(--warn-percent);
-  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  background: linear-gradient(90deg, 
+    #10b981 0%, 
+    #22c55e 50%, 
+    #34d399 100%
+  );
+  border-right: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .zone-amber {
   left: var(--warn-percent);
   width: calc(var(--breach-percent) - var(--warn-percent));
-  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  background: linear-gradient(90deg, 
+    #f59e0b 0%, 
+    #fbbf24 50%, 
+    #fcd34d 100%
+  );
+  border-right: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .zone-red {
   left: var(--breach-percent);
   width: calc(100% - var(--breach-percent));
-  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+  background: linear-gradient(90deg, 
+    #ef4444 0%, 
+    #f87171 50%, 
+    #fca5a5 100%
+  );
 }
 
-/* Range Highlight */
+/* Range Highlight - subtle overlay between handles */
 .range-highlight {
   position: absolute;
   top: 0;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
   pointer-events: none;
-  transition: left 0.1s ease, width 0.1s ease;
+  transition: left 0.2s ease, width 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Slider Thumbs */
+/* Slider Thumbs - adjusted for reduced track height */
 .slider-thumb {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
+  width: 20px; /* Slightly reduced from 24px */
+  height: 20px;
   border-radius: 50%;
   background-color: var(--background-color);
   border: 3px solid var(--primary-color);
   cursor: grab;
   z-index: 10;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .slider-thumb:hover {
-  transform: translate(-50%, -50%) scale(1.15);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
 .slider-thumb:focus {
   outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .slider-thumb.dragging {
   cursor: grabbing;
-  transform: translate(-50%, -50%) scale(1.2);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
 }
 
 .thumb-warn {
@@ -208,11 +225,11 @@
   }
   
   .slider-thumb {
-    width: 28px;
-    height: 28px;
+    width: 24px; /* Larger on mobile for easier touch */
+    height: 24px;
   }
   
   .dual-range-slider-track {
-    height: 40px;
+    height: 20px; /* Slightly larger on mobile */
   }
 }

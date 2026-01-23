@@ -39,6 +39,7 @@
     "aria_label_dial_digit": "Dial {{digit}}",
     "aria_label_dismiss": "Dismiss",
     "aria_label_close": "Close",
+    "aria_label_remove": "Remove",
     "aria_label_configure_button": "Configure button {{index}}",
     "aria_label_line_state": "Line {{number}}: {{state}}",
     "aria_label_make_call": "Make call",
@@ -74,7 +75,7 @@
         "state_ringing": "Ringing",
         "state_connected": "Connected",
         "state_on_hold": "On-Hold",
-        "state_dialing": "Dialing",
+        "state_dialing": "Dialling",
         "error": "Call error"
     },
     "transfer": {
@@ -230,7 +231,26 @@
         "add_queue": "Add Queue",
         "edit_queue": "Edit Queue Monitor",
         "select_queue": "Select Queue",
+        "select_queues": "Select Queue(s)",
         "select_queue_placeholder": "Select a queue",
+        "select_queues_placeholder": "Click to select queues",
+        "select_multiple_queues_desc": "Select one or more queues to apply the same SLA settings",
+        "edit_single_queue_desc": "Editing settings for this queue",
+        "transfer_list_desc": "Select queues using the transfer list - click to highlight, double-click to move",
+        "queues_selected": "{{count}} queue(s) selected",
+        "select_all": "Select All",
+        "clear_all": "Clear All",
+        "available_queues": "Available Queues",
+        "selected_queues_title": "Selected Queues",
+        "search_queues": "Search queues...",
+        "no_matches": "No matching queues",
+        "all_queues_selected": "All queues selected",
+        "no_queues_selected": "No queues selected",
+        "move_all_right": "Move all to selected",
+        "move_right": "Move selected to right",
+        "move_left": "Move selected to left",
+        "move_all_left": "Move all to available",
+        "transfer_hint": "Click to highlight, double-click to move, or use buttons to transfer queues",
         "loading_queues": "Loading queues...",
         "no_queues_available": "No queues available or all queues are already configured",
         "abandoned_threshold": "Abandoned Calls Threshold",
@@ -422,7 +442,9 @@
             "speeddial": "Speed Dial"
         },
         "error": {
-            "extension_required": "Extension or number is required"
+            "extension_required": "Extension or number is required",
+            "extension_invalid": "Extension must be 3-5 digits only",
+            "number_invalid": "Phone number can only contain +, *, #, and digits (0-9)"
         }
     },
     "welcome": {

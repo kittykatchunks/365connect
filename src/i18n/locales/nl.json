@@ -416,7 +416,9 @@
             "speeddial": "Snelkeuze"
         },
         "error": {
-            "extension_required": "Toestel of nummer vereist"
+            "extension_required": "Toestel of nummer vereist",
+            "extension_invalid": "Toestel moet alleen 3-5 cijfers bevatten",
+            "number_invalid": "Telefoonnummer mag alleen +, *, # en cijfers (0-9) bevatten"
         }
     },
     "welcome": {

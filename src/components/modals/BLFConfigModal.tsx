@@ -67,6 +67,23 @@ export function BLFConfigModal({ isOpen, onClose, buttonIndex }: BLFConfigModalP
     
     const trimmedExtension = extension.trim();
     
+    // Validate based on button type
+    if (type === 'blf') {
+      // BLF extension must be 3-5 numerical characters only
+      const blfRegex = /^\d{3,5}$/;
+      if (!blfRegex.test(trimmedExtension)) {
+        setError(t('blf.error.extension_invalid', 'Extension must be 3-5 digits only'));
+        return;
+      }
+    } else if (type === 'speeddial') {
+      // Speed dial phone number must be +, *, #, or 0-9 characters only
+      const speedDialRegex = /^[+*#0-9]+$/;
+      if (!speedDialRegex.test(trimmedExtension)) {
+        setError(t('blf.error.number_invalid', 'Phone number can only contain +, *, #, and digits (0-9)'));
+        return;
+      }
+    }
+    
     // Save the button configuration
     setButton(buttonIndex, {
       type,

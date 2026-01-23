@@ -414,7 +414,9 @@
             "speeddial": "Discagem Rápida"
         },
         "error": {
-            "extension_required": "Ramal ou número obrigatório"
+            "extension_required": "Ramal ou número obrigatório",
+            "extension_invalid": "O ramal deve ter apenas 3-5 dígitos",
+            "number_invalid": "O número de telefone só pode conter +, *, # e dígitos (0-9)"
         }
     },
     "welcome": {
