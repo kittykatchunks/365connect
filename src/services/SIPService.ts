@@ -964,18 +964,22 @@ export class SIPService {
       }
     } else if (sessionData.direction === 'incoming' && sessionData.startTime) {
       // Incoming call that was not locally answered = missed call
-      sessionData.duration = 0; // No talk time for missed calls
+      // Calculate ring duration to show in call history
+      const ringDuration = Math.floor((Date.now() - sessionData.startTime.getTime()) / 1000);
+      sessionData.duration = ringDuration;
       this.stats.missedCalls++;
       
       if (verboseLogging) {
         console.log('[SIPService] ❌ Missed call detected:', {
           direction: sessionData.direction,
+          ringDuration: ringDuration + 's',
           answerTime: sessionData.answerTime ? 'set' : 'not set',
           locallyAnswered: sessionData.locallyAnswered || false
         });
       }
     } else if (sessionData.direction === 'incoming') {
       // Incoming call with no startTime (shouldn't happen, but handle gracefully)
+      sessionData.duration = 0;
       this.stats.missedCalls++;
       
       if (verboseLogging) {
