@@ -16,6 +16,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const compression = require('compression');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // Load .env file if dotenv is available (optional in production)
 try {
@@ -29,8 +30,10 @@ try {
 const app = express();
 
 // Configuration
-const HTTPS_PORT = process.env.HTTPS_PORT || 444;
+const HTTPS_PORT = process.env.REACT_HTTPS_PORT || 444;
 const HTTP_PORT = process.env.HTTP_PORT || 8080;
+const PHANTOM_API_PORT = process.env.PHANTOM_API_PORT || 443;
+const PHANTOM_NOAUTH_PORT = process.env.PHANTOM_NOAUTH_PORT || 19773;
 
 // SSL Certificate paths - in project root certs folder
 const SSL_CERT_PATH = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'fullchain.pem');
@@ -140,6 +143,157 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ============================================
+// PHANTOM API PROXY MIDDLEWARE
+// ============================================
+
+// Authenticated Phantom API Proxy (Port 443 or custom - With Authentication)
+app.use('/api/phantom', createProxyMiddleware({
+  target: 'https://server1-000.phantomapi.net',
+  changeOrigin: true,
+  secure: false,
+  pathRewrite: (path, req) => {
+    // Strip /api/phantom prefix and add /api, remove phantomId query param
+    const pathWithoutQuery = path.split('?')[0];
+    let query = '';
+    if (path.includes('?')) {
+      const queryString = path.substring(path.indexOf('?') + 1);
+      const params = new URLSearchParams(queryString);
+      params.delete('phantomId'); // Remove routing parameter
+      const cleanQuery = params.toString();
+      query = cleanQuery ? `?${cleanQuery}` : '';
+    }
+    const newPath = `/api${pathWithoutQuery}${query}`;
+    console.log(`[Phantom API] Path rewrite: ${path} → ${newPath}`);
+    return newPath;
+  },
+  router: (req) => {
+    const phantomId = req.query.phantomId || '000';
+    
+    // Check for server-specific base URL first, then fall back to pattern
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const customBaseUrl = process.env[specificBaseUrlKey];
+    
+    // Strip any existing port from custom base URL before adding auth port
+    let baseUrlWithoutPort = customBaseUrl;
+    if (customBaseUrl) {
+      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
+    }
+    
+    const target = baseUrlWithoutPort 
+      ? `${baseUrlWithoutPort}:${PHANTOM_API_PORT}` 
+      : `https://server1-${phantomId}.phantomapi.net:${PHANTOM_API_PORT}`;
+    const baseUrlSource = customBaseUrl ? `Specific (${specificBaseUrlKey})` : 'Default Pattern';
+    
+    console.log(`[Phantom API] Routing to: ${target} (${baseUrlSource})`);
+    return target;
+  },
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      const phantomId = req.query.phantomId || '000';
+      
+      // Get credentials - try server-specific first, then fall back to default
+      const specificUsernameKey = `PHANTOM_API_USERNAME_${phantomId}`;
+      const specificKeyKey = `PHANTOM_API_KEY_${phantomId}`;
+      
+      const apiUsername = process.env[specificUsernameKey] || process.env.PHANTOM_API_USERNAME;
+      const apiKey = process.env[specificKeyKey] || process.env.PHANTOM_API_KEY;
+      
+      console.log(`[Phantom API] Auth proxy request - PhantomID: ${phantomId}`);
+      
+      if (apiUsername && apiKey) {
+        const authString = Buffer.from(`${apiUsername}:${apiKey}`).toString('base64');
+        proxyReq.setHeader('Authorization', `Basic ${authString}`);
+        console.log(`[Phantom API] ✅ Auth: Basic ${apiUsername}:${apiKey.substring(0, 4)}***`);
+      } else {
+        console.warn(`[Phantom API] ⚠️  Missing credentials for server ${phantomId}`);
+      }
+    },
+    proxyRes: (proxyRes, req, res) => {
+      const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+      console.log(`[Phantom API] ${statusIcon} Response: ${proxyRes.statusCode}`);
+      delete proxyRes.headers['www-authenticate'];
+    },
+    error: (err, req, res) => {
+      console.error(`[Phantom API] ❌ Proxy error: ${err.message}`);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Proxy error', message: err.message });
+      }
+    }
+  }
+}));
+
+// NoAuth Phantom API Proxy (Port 19773 - No Authentication)
+app.use('/api/phantom-noauth', createProxyMiddleware({
+  target: 'https://server1-000.phantomapi.net:19773',
+  changeOrigin: true,
+  secure: false,
+  ws: false,
+  pathRewrite: (path, req) => {
+    // Strip /api/phantom-noauth prefix and add /api, remove phantomId query param
+    const pathWithoutQuery = path.split('?')[0];
+    let query = '';
+    if (path.includes('?')) {
+      const queryString = path.substring(path.indexOf('?') + 1);
+      const params = new URLSearchParams(queryString);
+      params.delete('phantomId'); // Remove routing parameter
+      const cleanQuery = params.toString();
+      query = cleanQuery ? `?${cleanQuery}` : '';
+    }
+    const newPath = `/api${pathWithoutQuery}${query}`;
+    console.log(`[Phantom NoAuth] Path rewrite: ${path} → ${newPath}`);
+    return newPath;
+  },
+  router: (req) => {
+    const phantomId = req.query.phantomId || '000';
+    
+    // Check for server-specific base URL first, then fall back to pattern
+    const specificBaseUrlKey = `PHANTOM_API_BASE_URL_${phantomId}`;
+    const customBaseUrl = process.env[specificBaseUrlKey];
+    
+    // Strip any existing port from custom base URL before adding noauth port
+    let baseUrlWithoutPort = customBaseUrl;
+    if (customBaseUrl) {
+      baseUrlWithoutPort = customBaseUrl.replace(/:\d+$/, '');
+    }
+    
+    const target = baseUrlWithoutPort 
+      ? `${baseUrlWithoutPort}:${PHANTOM_NOAUTH_PORT}` 
+      : `https://server1-${phantomId}.phantomapi.net:${PHANTOM_NOAUTH_PORT}`;
+    
+    console.log(`[Phantom NoAuth] Routing to: ${target}`);
+    return target;
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    const phantomId = req.query.phantomId || '000';
+    const originalPath = req.originalUrl;
+    
+    console.log(`[Phantom NoAuth] Request - Method: ${req.method}, Path: ${originalPath}, PhantomID: ${phantomId}`);
+    console.log(`[Phantom NoAuth] ❌ Auth: None (NoAuth endpoint)`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    const statusIcon = proxyRes.statusCode >= 400 ? '❌' : '✅';
+    console.log(`[Phantom NoAuth] ${statusIcon} Response: ${proxyRes.statusCode} ${proxyRes.statusMessage}`);
+  },
+  onError: (err, req, res) => {
+    console.error(`[Phantom NoAuth] ❌ Proxy error: ${err.message}`);
+    if (err.code === 'ECONNREFUSED') {
+      console.error(`[Phantom NoAuth] 💡 Target server may be down or unreachable`);
+    }
+    if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
+      console.error(`[Phantom NoAuth] 💡 Request timed out`);
+    }
+    
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Proxy error', message: err.message, code: err.code });
+    }
+  }
+}));
+
+// ============================================
+// STATIC FILE SERVING
+// ============================================
+
 // Serve static files from dist folder
 const distPath = path.join(__dirname, 'dist');
 console.log(`[Server] Serving static files from: ${distPath}`);
@@ -216,8 +370,12 @@ if (sslOptions) {
     console.log(`\n${'='.repeat(60)}`);
     console.log(`  365Connect React App - Production Server`);
     console.log(`${'='.repeat(60)}`);
-    console.log(`  HTTPS Server: https://0.0.0.0:${HTTPS_PORT}`);
+    console.log(`  HTTPS Server: https://0.0.0.0:444 (Port ${HTTPS_PORT})`);
     console.log(`  Static Files: ${distPath}`);
+    console.log(`  Phantom API Proxy (Auth): /api/phantom → https://server1-{phantomId}.phantomapi.net:${PHANTOM_API_PORT}/api`);
+    console.log(`  Phantom API Proxy (NoAuth): /api/phantom-noauth → https://server1-{phantomId}.phantomapi.net:${PHANTOM_NOAUTH_PORT}/api`);
+    console.log(`  API Key Endpoint: /api/phantom/current-key`);
+    console.log(`  Health Check: /api/health`);
     console.log(`${'='.repeat(60)}\n`);
   });
   
@@ -254,6 +412,10 @@ if (sslOptions) {
     console.log(`${'='.repeat(60)}`);
     console.log(`  HTTP Server: http://0.0.0.0:${HTTP_PORT}`);
     console.log(`  Static Files: ${distPath}`);
+    console.log(`  Phantom API Proxy (Auth): /api/phantom → https://server1-{phantomId}.phantomapi.net:${PHANTOM_API_PORT}/api`);
+    console.log(`  Phantom API Proxy (NoAuth): /api/phantom-noauth → https://server1-{phantomId}.phantomapi.net:${PHANTOM_NOAUTH_PORT}/api`);
+    console.log(`  API Key Endpoint: /api/phantom/current-key`);
+    console.log(`  Health Check: /api/health`);
     console.log(`${'='.repeat(60)}\n`);
   });
 }
