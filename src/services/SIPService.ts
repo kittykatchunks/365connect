@@ -857,6 +857,9 @@ export class SIPService {
       }
     });
 
+    // Mark that user explicitly answered this incoming call
+    session.locallyAnswered = true;
+
     this.selectedLine = session.lineNumber;
     
     const { session: _session, ...publicData } = session;
@@ -945,30 +948,49 @@ export class SIPService {
     const verboseLogging = isVerboseLoggingEnabled();
     const { id: sessionId, lineNumber } = sessionData;
 
-    // Calculate final duration based on call state
-    if (sessionData.answerTime) {
-      // Call was answered - calculate talk duration
+    // Calculate final duration - only for calls that were locally answered
+    // For incoming calls, answerTime may be set even if call went to voicemail/other device
+    // so we must check locallyAnswered flag to distinguish actual answered vs missed
+    if (sessionData.answerTime && sessionData.locallyAnswered) {
+      // Call was locally answered - calculate talk duration
       sessionData.duration = Math.floor((Date.now() - sessionData.answerTime.getTime()) / 1000);
       this.stats.totalDuration += sessionData.duration;
       
       if (verboseLogging) {
-        console.log('[SIPService] 📊 Call completed - talk duration:', sessionData.duration, 'seconds');
+        console.log('[SIPService] ✅ Call completed - talk duration:', sessionData.duration, 'seconds', {
+          direction: sessionData.direction,
+          locallyAnswered: true
+        });
       }
     } else if (sessionData.direction === 'incoming' && sessionData.startTime) {
-      // Incoming call was never answered - calculate ring duration for call history
-      sessionData.duration = Math.floor((Date.now() - sessionData.startTime.getTime()) / 1000);
+      // Incoming call that was not locally answered = missed call
+      // Calculate ring duration to show in call history
+      const ringDuration = Math.floor((Date.now() - sessionData.startTime.getTime()) / 1000);
+      sessionData.duration = ringDuration;
       this.stats.missedCalls++;
       
       if (verboseLogging) {
-        console.log('[SIPService] 📞 Missed call - ring duration:', sessionData.duration, 'seconds');
+        console.log('[SIPService] ❌ Missed call detected:', {
+          direction: sessionData.direction,
+          ringDuration: ringDuration + 's',
+          answerTime: sessionData.answerTime ? 'set' : 'not set',
+          locallyAnswered: sessionData.locallyAnswered || false
+        });
       }
     } else if (sessionData.direction === 'incoming') {
       // Incoming call with no startTime (shouldn't happen, but handle gracefully)
+      sessionData.duration = 0;
       this.stats.missedCalls++;
       
       if (verboseLogging) {
         console.warn('[SIPService] ⚠️ Missed call with no startTime');
       }
+    } else if (verboseLogging && sessionData.direction === 'outgoing') {
+      // Outgoing call that was not answered
+      console.log('[SIPService] 📞 Outgoing call cancelled:', {
+        direction: sessionData.direction,
+        locallyAnswered: sessionData.locallyAnswered || false
+      });
     }
 
     // Clean up audio elements

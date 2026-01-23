@@ -89,6 +89,7 @@ export interface SessionData {
   startTime: Date | null;
   answerTime?: Date | null;
   duration: number;
+  locallyAnswered?: boolean; // True only when user explicitly answered incoming call
   
   // Transfer tracking
   isConsultationCall?: boolean;

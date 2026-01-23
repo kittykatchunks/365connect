@@ -418,16 +418,16 @@ export function SIPProvider({ children }: SIPProviderProps) {
         }
       }
       
-      // Determine call status
+      // Determine call status based on locallyAnswered flag
       let status: CallStatus;
-      if (session.duration > 0) {
-        // Call was answered
+      if (session.locallyAnswered && session.duration > 0) {
+        // Call was locally answered - this is a completed call
         status = 'completed';
       } else if (session.direction === 'incoming') {
-        // Incoming call with no duration = missed
+        // Incoming call not locally answered = missed (duration shows ring time)
         status = 'missed';
       } else {
-        // Outgoing call with no duration = cancelled
+        // Outgoing call with no answer = cancelled
         status = 'cancelled';
       }
       
@@ -439,7 +439,8 @@ export function SIPProvider({ children }: SIPProviderProps) {
           name,
           direction: session.direction,
           duration,
-          status
+          status,
+          locallyAnswered: session.locallyAnswered || false
         });
       }
       

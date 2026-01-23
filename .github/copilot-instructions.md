@@ -9,22 +9,22 @@ This is a **WebRTC SIP phone PWA** built for Autocab365 taxi dispatch systems, p
 - **`src/`** - Active React/TypeScript application - **MAKE ALL CHANGES HERE**
 - **`pwa/`** - Legacy reference code only - **READ ONLY - NO MODIFICATIONS**
 
-The `pwa/` folder contains the original vanilla JavaScript implementation and serves as a reference for patterns, features, and implementation details. All new development and modifications must be done in the `src/` React application.
+The `pwa/` folder contains the original vanilla JavaScript implementation and serves as a reference ONLY for understanding how features work. **ALL changes, modifications, and fixes must be made in the `src/` React application.**
 
 ### Feature Implementation Reference Pattern
-**When the user mentions functionality of any element, button, or feature:**
-1. **ALWAYS check the `pwa/` folder first** to understand the original implementation
-2. Identify the corresponding files (e.g., UI in `pwa/index.html` or `pwa/css/phone.css`, logic in `pwa/js/` managers)
-3. Analyze the exact behavior, event handlers, state changes, and user flow
-4. Replicate the same functionality in the React version (`src/`) with equivalent behavior
-5. Ensure feature parity - the React implementation should match the original UX and logic
+**When the user requests changes, fixes, or new features:**
+1. **Assume they mean the React app in `src/`** - this is the active development codebase
+2. **ONLY reference `pwa/` folder** to understand how a feature was originally implemented (optional)
+3. **Implement all changes in React** (`src/`) using TypeScript, React hooks, and modern patterns
+4. **Never modify `pwa/` files** - they are frozen reference code from the legacy vanilla JS app
 
 **Example workflow:**
 - User says: "The mute button isn't working correctly"
-- Action: Check `pwa/index.html` for mute button markup, `pwa/js/sip-session-manager.js` for mute logic
-- Implement: Match the original behavior in React components and hooks in `src/`
+- Action: Fix the mute functionality in React components/services in `src/`
+- Optional: If unclear how it should work, reference `pwa/js/sip-session-manager.js` for the original logic
+- Implement: All fixes go in `src/` only
 
-This ensures consistency and maintains the proven functionality from the original PWA version.
+**Critical Rule: When user says "fix X" or "change Y", they mean fix/change it in the React app (`src/`), not the PWA reference code.**
 
 ## Architecture Fundamentals
 
