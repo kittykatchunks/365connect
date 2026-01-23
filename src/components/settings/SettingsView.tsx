@@ -547,11 +547,7 @@ export function SettingsView() {
                     label={t('settings.show_queue_monitor', 'Queue Monitor')}
                     checked={settings.interface.showQueueMonitorTab}
                     onChange={(checked) => setShowQueueMonitorTab(checked)}
-                    disabled={true}
                   />
-                  <p className="setting-help-text" style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                    {t('settings.feature_alpha_disabled', 'This feature is disabled in the alpha release.')}
-                  </p>
                 </div>
               </div>
             </AccordionContent>
@@ -774,11 +770,7 @@ export function SettingsView() {
                     label={t('settings.busylight_enabled', 'Enable Busylight')}
                     checked={settings.busylight.enabled}
                     onChange={(checked) => setBusylightEnabled(checked)}
-                    disabled={true}
                   />
-                  <p className="setting-help-text" style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                    {t('settings.feature_alpha_disabled', 'This feature is disabled in the alpha release.')}
-                  </p>
                 </div>
                 
                 {settings.busylight.enabled && (
