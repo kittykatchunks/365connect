@@ -199,6 +199,8 @@ class AgentButtonsManager {
             const deviceExtension = this.getCurrentDeviceExtension();
             if (!deviceExtension) {
                 console.warn('Device extension not available for post-login agent status check');
+                // API unavailable - assume login succeeded, keep current state
+                console.log('⚠️ Cannot verify agent status - assuming login succeeded');
                 return;
             }
 
@@ -216,7 +218,8 @@ class AgentButtonsManager {
                 const name = agentData.name;
                 
                 if (num !== null && num !== undefined && num !== '') {
-                    console.log(`✅ Agent found - Name: ${name}, Num: ${num}`);
+                    // Agent successfully logged in - verified by API
+                    console.log(`✅ Agent login verified - Name: ${name}, Num: ${num}`);
                     this.updateStateFromAPI(agentData);
                     
                     // Sync current CLIP with company numbers manager if available
@@ -224,15 +227,61 @@ class AgentButtonsManager {
                         App.managers.companyNumbers.syncCurrentClipFromAPI(agentData);
                     }
                 } else {
-                    console.warn('Agent num is null or empty:', agentData);
+                    // API returned successfully BUT agent num is null - login failed on PBX
+                    console.error('❌ Agent login failed - API shows agent not logged in (num is null)');
+                    
+                    // Revert to logged-out state
+                    this.isLoggedIn = false;
+                    this.isPaused = false;
+                    this.currentAgentNumber = null;
+                    this.currentAgentName = null;
+                    this.currentAgentPasscode = null;
+                    this.updateButtonState('login', 'idle');
+                    this.updateButtonState('pause', 'idle');
+                    this.updateAgentStatusDisplay('logged-out');
+                    this.saveAgentState();
+                    this.setAllButtonsEnabled(true);
+                    this.updateButtonEnabledStates();
+                    
+                    // Show error notification
+                    this.showNotification('error', t('agentLoginFailedVerification', 'Login failed - agent not registered on system'));
+                    
+                    // Notify busylight of logout
+                    if (window.App?.managers?.busylight) {
+                        window.App.managers.busylight.updateState();
+                    }
                 }
             } else {
                 console.warn('No agent data returned from API');
+                // API returned but no agent data - treat as login failed
+                console.error('❌ Agent login failed - no agent data from API');
+                
+                // Revert to logged-out state
+                this.isLoggedIn = false;
+                this.isPaused = false;
+                this.currentAgentNumber = null;
+                this.currentAgentName = null;
+                this.currentAgentPasscode = null;
+                this.updateButtonState('login', 'idle');
+                this.updateButtonState('pause', 'idle');
+                this.updateAgentStatusDisplay('logged-out');
+                this.saveAgentState();
+                this.setAllButtonsEnabled(true);
+                this.updateButtonEnabledStates();
+                
+                this.showNotification('error', t('agentLoginFailedVerification', 'Login failed - agent not registered on system'));
+                
+                if (window.App?.managers?.busylight) {
+                    window.App.managers.busylight.updateState();
+                }
             }
             
         } catch (error) {
-            console.error('Error querying agent status after login:', error);
-            // Don't throw - this is a non-critical check
+            // API call failed (network error, timeout, etc.) - assume login succeeded (optimistic)
+            console.error('⚠️ Error querying agent status after login:', error);
+            console.log('⚠️ API unavailable - assuming login succeeded, keeping logged-in state');
+            // Keep current logged-in state, using locally stored agent number
+            // Don't throw - API failure shouldn't prevent agent from working
         }
     }
 
@@ -1081,8 +1130,8 @@ class AgentButtonsManager {
                         return;
                     }
                     
-                    // Send the main DTMF sequence (includes 500ms initial delay + proper timing)
-                    await sipManager.sendDTMFSequence(sessionData.id, operation.dtmfToSend);
+                    // Send the main DTMF sequence (includes 1000ms initial delay + proper timing)
+                    await sipManager.sendDTMFSequence(sessionData.id, operation.dtmfToSend, 1000);
                     console.log(`Sent DTMF sequence for ${operation.type}: ${operation.dtmfToSend}`);
                     
                     // If there's a passcode, send it after a brief pause
