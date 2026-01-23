@@ -241,105 +241,107 @@ export function QueueModal({
             {!isEditing && !useTransferList && (
               <>
                 <div className="queue-multiselect-container" ref={dropdownRef}>
-              <button
-                type="button"
-                className="queue-multiselect-trigger"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                disabled={isEditing || loadingQueues}
-              >
-                <span className="trigger-text">
-                  {loadingQueues 
-                    ? t('queue_monitor.loading_queues', 'Loading queues...') 
-                    : selectedQueues.length === 0
-                      ? t('queue_monitor.select_queues_placeholder', 'Click to select queues')
-                      : t('queue_monitor.queues_selected', '{{count}} queue(s) selected', { count: selectedQueues.length })
-                  }
-                </span>
-                <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
-              </button>
-              
-              {/* Dropdown list */}
-              {isDropdownOpen && !isEditing && (
-                <div className="queue-multiselect-dropdown">
-                  {/* Select All / Clear All buttons */}
-                  {availableQueueOptions.length > 0 && (
-                    <div className="dropdown-actions">
-                      <button
-                        type="button"
-                        className="action-btn"
-                        onClick={selectAllQueues}
-                      >
-                        {t('queue_monitor.select_all', 'Select All')}
-                      </button>
-                      <button
-                        type="button"
-                        className="action-btn"
-                        onClick={clearAllQueues}
-                      >
-                        {t('queue_monitor.clear_all', 'Clear All')}
-                      </button>
+                  <button
+                    type="button"
+                    className="queue-multiselect-trigger"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    disabled={isEditing || loadingQueues}
+                  >
+                    <span className="trigger-text">
+                      {loadingQueues 
+                        ? t('queue_monitor.loading_queues', 'Loading queues...') 
+                        : selectedQueues.length === 0
+                          ? t('queue_monitor.select_queues_placeholder', 'Click to select queues')
+                          : t('queue_monitor.queues_selected', '{{count}} queue(s) selected', { count: selectedQueues.length })
+                      }
+                    </span>
+                    <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+                  </button>
+                  
+                  {/* Dropdown list */}
+                  {isDropdownOpen && !isEditing && (
+                    <div className="queue-multiselect-dropdown">
+                      {/* Select All / Clear All buttons */}
+                      {availableQueueOptions.length > 0 && (
+                        <div className="dropdown-actions">
+                          <button
+                            type="button"
+                            className="action-btn"
+                            onClick={selectAllQueues}
+                          >
+                            {t('queue_monitor.select_all', 'Select All')}
+                          </button>
+                          <button
+                            type="button"
+                            className="action-btn"
+                            onClick={clearAllQueues}
+                          >
+                            {t('queue_monitor.clear_all', 'Clear All')}
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Queue list with checkboxes */}
+                      <div className="dropdown-list">
+                        {availableQueueOptions.length === 0 ? (
+                          <div className="dropdown-empty">
+                            {t('queue_monitor.no_queues_available', 'No queues available or all queues are already configured')}
+                          </div>
+                        ) : (
+                          availableQueueOptions.map((queue) => (
+                            <label
+                              key={queue.queueNumber}
+                              className="dropdown-item"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedQueues.includes(queue.queueNumber)}
+                                onChange={() => toggleQueueSelection(queue.queueNumber)}
+                                className="queue-checkbox"
+                              />
+                              <span className="queue-label">
+                                {queue.queueName 
+                                  ? `${queue.queueNumber} - ${queue.queueName}` 
+                                  : queue.queueNumber
+                                }
+                              </span>
+                            </label>
+                          ))
+                        )}
+                      </div>
                     </div>
                   )}
-                  
-                  {/* Queue list with checkboxes */}
-                  <div className="dropdown-list">
-                    {availableQueueOptions.length === 0 ? (
-                      <div className="dropdown-empty">
-                        {t('queue_monitor.no_queues_available', 'No queues available or all queues are already configured')}
-                      </div>
-                    ) : (
-                      availableQueueOptions.map((queue) => (
-                        <label
-                          key={queue.queueNumber}
-                          className="dropdown-item"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedQueues.includes(queue.queueNumber)}
-                            onChange={() => toggleQueueSelection(queue.queueNumber)}
-                            className="queue-checkbox"
-                          />
-                          <span className="queue-label">
-                            {queue.queueName 
+                </div>
+                
+                {/* Selected queue badges (Method 1 only) */}
+                {selectedQueues.length > 0 && (
+                  <div className="selected-queues-badges">
+                    {selectedQueues.map(queueNumber => {
+                      const queue = availableQueues.find(q => q.queueNumber === queueNumber);
+                      return (
+                        <div key={queueNumber} className="queue-badge">
+                          <span className="badge-text">
+                            {queue?.queueName 
                               ? `${queue.queueNumber} - ${queue.queueName}` 
-                              : queue.queueNumber
+                              : queueNumber
                             }
                           </span>
-                        </label>
-                      ))
-                    )}
+                          {!isEditing && (
+                            <button
+                              type="button"
+                              className="badge-remove"
+                              onClick={() => removeQueueFromSelection(queueNumber)}
+                              aria-label={t('aria_label_remove', 'Remove')}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Selected queue badges (Method 1 only) */}
-            {!useTransferList && selectedQueues.length > 0 && (
-              <div className="selected-queues-badges">
-                {selectedQueues.map(queueNumber => {
-                  const queue = availableQueues.find(q => q.queueNumber === queueNumber);
-                  return (
-                    <div key={queueNumber} className="queue-badge">
-                      <span className="badge-text">
-                        {queue?.queueName 
-                          ? `${queue.queueNumber} - ${queue.queueName}` 
-                          : queueNumber
-                        }
-                      </span>
-                      {!isEditing && (
-                        <button
-                          type="button"
-                          className="badge-remove"
-                          onClick={() => removeQueueFromSelection(queueNumber)}
-                          aria-label={t('aria_label_remove', 'Remove')}
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                )}
+              </>
             )}
             
             {/* Edit mode - show single selected queue as badge */}
