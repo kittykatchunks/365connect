@@ -1,7 +1,28 @@
 @import "tailwindcss";
 
 /* ============================================
-   Autocab365Connect - Theme System
+   AUTOCAB365CONNECT - GLOBAL STYLES
+   
+   TABLE OF CONTENTS:
+   1. Theme System & CSS Variables
+   2. Base Styles & Resets
+   3. Layout Components (Main Container, Panels)
+   4. Navigation Tabs
+   5. UI Components (Buttons, Inputs, Modals, etc.)
+   6. TAB: Dial View & Components
+   7. TAB: Contacts View
+   8. TAB: Activity View  
+   9. TAB: Company Numbers View
+   10. TAB: Settings View
+   11. Modals & Overlays
+   12. PWA Components & Loading
+   13. Error Handling & Boundaries
+   14. Animations & Utilities
+   ============================================ */
+
+
+/* ============================================
+   1. THEME SYSTEM & CSS VARIABLES
    ============================================ */
 
 /* Base Theme Variables (Light Mode) */
@@ -131,6 +152,11 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
 
+
+/* ============================================
+   2. BASE STYLES & RESETS
+   ============================================ */
+
 /* Base Styles */
 * {
   box-sizing: border-box;
@@ -228,63 +254,9 @@ a {
   border: 0;
 }
 
-/* Animation Classes */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes pulse-dial {
-  0%, 100% { 
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% { 
-    transform: scale(1.05);
-    opacity: 0.85;
-  }
-}
-
-@keyframes ring {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(15deg); }
-  75% { transform: rotate(-15deg); }
-}
-
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal) ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp var(--transition-normal) ease-out;
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-.animate-ring {
-  animation: ring 0.5s ease-in-out infinite;
-}
 
 /* ============================================
-   Layout Components
+   3. LAYOUT COMPONENTS (Main Container, Panels)
    ============================================ */
 
 .main-container {
@@ -336,6 +308,11 @@ a {
   overflow-y: auto;
   padding: var(--spacing-md);
 }
+
+
+/* ============================================
+   4. NAVIGATION TABS
+   ============================================ */
 
 /* Navigation Tabs */
 .navigation-tabs {
@@ -552,8 +529,9 @@ a {
   color: var(--danger-color);
 }
 
+
 /* ============================================
-   UI Components
+   5. UI COMPONENTS (Buttons, Inputs, Modals, etc.)
    ============================================ */
 
 /* Button */
@@ -1146,10 +1124,12 @@ a {
 .spinner-md { width: 24px; height: 24px; }
 .spinner-lg { width: 40px; height: 40px; }
 
+
 /* ============================================
-   Dial Components
+   6. TAB: DIAL VIEW & COMPONENTS
    ============================================ */
 
+/* Dial View Layout */
 .dial-view {
   display: flex;
   flex-direction: column;
@@ -1198,7 +1178,9 @@ a {
   flex-shrink: 0;
 }
 
-/* Dial Input */
+
+/* --- Dial Input --- */
+
 .dial-input-container {
   display: flex;
   align-items: center;
@@ -1246,7 +1228,9 @@ a {
   border-radius: var(--radius-full);
 }
 
-/* Call Info Display */
+
+/* --- Call Info Display --- */
+
 .call-info-display {
   display: flex;
   flex-direction: column;
@@ -1318,7 +1302,9 @@ a {
   border: 1px solid var(--border-color);
 }
 
-/* Dialpad - Responsive sizing */
+
+/* --- Dialpad (Responsive) --- */
+
 .dialpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1367,7 +1353,9 @@ a {
   letter-spacing: 0.5px;
 }
 
-/* Line Keys */
+
+/* --- Line Keys --- */
+
 .line-keys {
   display: flex;
   gap: var(--spacing-sm);
@@ -1607,10 +1595,8 @@ a {
 }
 */
 
-/* ============================================
-   Call Controls Container
-   Parent container for dial-actions and call-actions
-   ============================================ */
+
+/* --- Call Control Buttons --- */
 
 /* Parent container - full width */
 .call-controls-container {
@@ -1882,9 +1868,8 @@ a {
   font-weight: 600;
 }
 
-/* ============================================
-   BLF Buttons
-   ============================================ */
+
+/* --- BLF (Busy Lamp Field) Buttons --- */
 
 .blf-grid {
   display: flex;
@@ -2147,9 +2132,8 @@ a {
   border-top: 1px solid var(--border-color);
 }
 
-/* ============================================
-   CLI Selector
-   ============================================ */
+
+/* --- CLI (Caller ID) Selector --- */
 
 .cli-selector {
   position: relative;
@@ -2517,8 +2501,9 @@ a {
   font-style: italic;
 }
 
+
 /* ============================================
-   Responsive Breakpoints for Dial Tab
+   Dial: Responsive Breakpoints
    ============================================ */
 
 /* Container Query Support for Modern Browsers */
@@ -2740,11 +2725,12 @@ a {
   opacity: 0.8;
 }
 
+
 /* ============================================
-   View Components
+   7. TAB: CONTACTS VIEW
    ============================================ */
 
-/* Empty State */
+/* Empty State (used across multiple views) */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -2859,16 +2845,6 @@ a {
   margin-bottom: var(--spacing-md);
   flex-wrap: wrap;
 }
-
-/* Utility Text Colors */
-.text-muted { color: var(--text-color-muted); }
-.text-success { color: var(--success-color); }
-.text-warning { color: var(--warning-color); }
-.text-error { color: var(--danger-color); }
-
-/* ============================================
-   Phase 6 - Secondary Views Styles
-   ============================================ */
 
 /* Contacts View */
 .contacts-view {
@@ -2985,6 +2961,11 @@ a {
   color: var(--danger-color);
 }
 
+
+/* ============================================
+   8. TAB: ACTIVITY VIEW
+   ============================================ */
+
 /* Activity View */
 .activity-view {
   display: flex;
@@ -3090,6 +3071,11 @@ a {
   display: flex;
   align-items: center;
 }
+
+
+/* ============================================
+   9. TAB: COMPANY NUMBERS VIEW
+   ============================================ */
 
 /* Company Numbers View */
 .company-numbers-view {
@@ -3367,8 +3353,9 @@ a {
   animation: pulse 1s ease-in-out infinite;
 }
 
+
 /* ============================================
-   Phase 7 - Settings View Styles
+   10. TAB: SETTINGS VIEW
    ============================================ */
 
 /* Settings Divider */
@@ -3566,8 +3553,9 @@ a {
   animation: spin 1s linear infinite;
 }
 
+
 /* ============================================
-   Phase 8 - Modals & Overlays Styles
+   11. MODALS & OVERLAYS
    ============================================ */
 
 /* Transfer Modal */
@@ -3884,8 +3872,9 @@ a {
   margin-top: var(--spacing-md);
 }
 
+
 /* ============================================
-   PWA Install Components
+   12. PWA COMPONENTS & LOADING
    ============================================ */
 
 /* PWA Install Button */
@@ -4075,8 +4064,9 @@ a {
   margin-top: var(--spacing-xs);
 }
 
+
 /* ============================================
-   Phase 9 - PWA & Polish Styles
+   13. ERROR HANDLING & BOUNDARIES
    ============================================ */
 
 /* Error Boundary */
@@ -4581,3 +4571,77 @@ a {
   color: var(--info-color);
 }
 
+
+/* ============================================
+   14. ANIMATIONS & UTILITIES
+   ============================================ */
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes pulse-dial {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
+}
+
+@keyframes ring {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Animation Utility Classes */
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal) ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp var(--transition-normal) ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-ring {
+  animation: ring 0.5s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Utility Text Colors */
+.text-muted { color: var(--text-color-muted); }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-error { color: var(--danger-color); }
