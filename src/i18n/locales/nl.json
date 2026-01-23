@@ -350,6 +350,8 @@
         "verbose_logging_desc": "Schakel gedetailleerde console logging in",
         "sip_messages_enabled": "SIP Berichten Console Logging Inschakelen",
         "sip_messages_enabled_desc": "Schakel SIP.js protocol berichten logging in de console in voor het debuggen van SIP communicatie",
+        "user_guide": "Gebruikershandleiding",
+        "user_guide_title": "Gebruikershandleiding Openen",
         "import_export": "Importeren/Exporteren",
         "import_data": "Gegevens Importeren",
         "import_description": "Importeer instellingen en gegevens",

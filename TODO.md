@@ -78,10 +78,10 @@ Thirdly, clarification of SIP call state and call-timer
 - What SLA(s) do we think are required and how to set the associated warning boundarys
 
 	- [x] UI requirements for both display of monitored queues and entry of Queue and SLA requirements
-	- [ ] I think a simple grid view will suffice, with common queue info and common SLA measures, similar to below grid format.  Suggest that titles may need to be in legend below active grid, with common abreviations used in title bar.  Each queue would stack below the title bar, the order would just be number queue order (lowest to highest) when no SLA triggers active.  If SLA trigger of Breach (RED) was reached for a queue that would be brought to top of stacked queues with any SLA trigger of Warn (AMBER) below any Breached queues
-	- [ ] Visual indications in the table shown in the queue monitor tab of BREACH and WARN as set by the range sliders defined later in this document would be background color of offending stat (e.g. if ABD goes above WARN % then the background of the displayed percentage would be amber) and it would move to top of list.  Only any queues that had a BREACH stat would be above the queue in the list.
-	- [ ] Also key to this will be the visual indication of the tab itself.  I will use the useTabAlert hook to indicate a WARN or BREACH queue in monitored queues the two indications will be a flashing Amber tab or a flashing Red tab.  Only the higher type will be alerted (e.g. if a few WARN and one BREACH in effect, only BREACH would alerted to the useTabAlert hook)
-	- [ ] Feel it would be likely that the two types of SLA failures should be stored in persistant localstorage per queue to allow for browser refreshes etc. The useTabAlert hook could be called for queue 602 WARN for one SLA this should switch 602 WARN localstorage from 0 to 1 for that SLA as well as initate the amber flashing of the tab.  Then if a BREACH for same queue 602 on the other SLA would switch to 1 and that would initiate Flashing Red of tab.  If the other then SLA reached BREACH and then dropped again to warn the useTabAlert would utilise the localstorage to determine on each request of cancel, warn or breach of the tab that it would compare all localstorage to see if the change to lower alert status should be completed as one or more of the queues may still have higher alert status
+	- [X] I think a simple grid view will suffice, with common queue info and common SLA measures, similar to below grid format.  Suggest that titles may need to be in legend below active grid, with common abreviations used in title bar.  Each queue would stack below the title bar, the order would just be number queue order (lowest to highest) when no SLA triggers active.  If SLA trigger of Breach (RED) was reached for a queue that would be brought to top of stacked queues with any SLA trigger of Warn (AMBER) below any Breached queues
+	- [X] Visual indications in the table shown in the queue monitor tab of BREACH and WARN as set by the range sliders defined later in this document would be background color of offending stat (e.g. if ABD goes above WARN % then the background of the displayed percentage would be amber) and it would move to top of list.  Only any queues that had a BREACH stat would be above the queue in the list.
+	- [X] Also key to this will be the visual indication of the tab itself.  I will use the useTabAlert hook to indicate a WARN or BREACH queue in monitored queues the two indications will be a flashing Amber tab or a flashing Red tab.  Only the higher type will be alerted (e.g. if a few WARN and one BREACH in effect, only BREACH would alerted to the useTabAlert hook)
+	- [X] Feel it would be likely that the two types of SLA failures should be stored in persistant localstorage per queue to allow for browser refreshes etc. The useTabAlert hook could be called for queue 602 WARN for one SLA this should switch 602 WARN localstorage from 0 to 1 for that SLA as well as initate the amber flashing of the tab.  Then if a BREACH for same queue 602 on the other SLA would switch to 1 and that would initiate Flashing Red of tab.  If the other then SLA reached BREACH and then dropped again to warn the useTabAlert would utilise the localstorage to determine on each request of cancel, warn or breach of the tab that it would compare all localstorage to see if the change to lower alert status should be completed as one or more of the queues may still have higher alert status
 	____________________________________________________________
 	| QUE | AGTS | FREE | BUSY | PAUSE | ANS | ABD | AWT | TOT | This now vertical as allows more info to be
 	| 600 | XXXX | XXXX | XXXX | XXXX  | XX% | XX% | XXs | XXXX| on screen
@@ -97,14 +97,14 @@ Thirdly, clarification of SIP call state and call-timer
 	- AWT Average Waiting Time in queue to be answered in seconds
 	- TOT Total calls delivered to queue since last stats reset
 
-	- [ ] Selection of queues and settings of SLA triggers would be done via modal with button to [add queue] button in top right of the display when tab is selcted (similar to add contact in contact tab)
-		- [ ] Selection of queue and the two SLA of ABD and AWT would need to be defined
-			- [ ] Queue would be some sort of dropdown box - preferable if queue names were available we should use them but at very least the queue numbers (e.g. 600,612 etc.).  The list of queues may be very long so a restricted dropdown box height with scrollbar may be best to allow selection.  The list of queues would have to be obtained from the Phantom via API call preferably obtained at the point of selecting the [Add Queue] button and storing them to local cache until [SAVE] or [CANCEL] button in modal selected
-			- [ ] Use two dual-handle range sliders with discrete colored zones (Green, Amber, Red)
+	- [X] Selection of queues and settings of SLA triggers would be done via modal with button to [add queue] button in top right of the display when tab is selcted (similar to add contact in contact tab)
+		- [X] Selection of queue and the two SLA of ABD and AWT would need to be defined
+			- [X] Queue would be some sort of dropdown box - preferable if queue names were available we should use them but at very least the queue numbers (e.g. 600,612 etc.).  The list of queues may be very long so a restricted dropdown box height with scrollbar may be best to allow selection.  The list of queues would have to be obtained from the Phantom via API call preferably obtained at the point of selecting the [Add Queue] button and storing them to local cache until [SAVE] or [CANCEL] button in modal selected
+			- [X] Use two dual-handle range sliders with discrete colored zones (Green, Amber, Red)
 				- First one for abandoned/missed is percentage so slider would be 0-100% first zone would be green, second zone amber and last zone would be red
 				- Second one for AWT would be in secs but to align the bars i would use 0-100secs first zone would be green, second amber and last zone would be red
-			- [ ] Final item would be when to reset the stats for the queue, at present I cannot see a reason why this would be more than once every 24hrs but it may be useful to define what time each 24hrs to reset, so a way of entering a time to complete reset, 00:00 being the default offered and only really offering hourly options of 01:00, 02:00 etc
-		- [ ] When created each queue should be added into localstorage to allow export and import of programmed information, I have already added queue monitoring option in import export facility so link the created storage name to the selectable option in the import/export function.
+			- [~] Final item would be when to reset the stats for the queue, at present I cannot see a reason why this would be more than once every 24hrs but it may be useful to define what time each 24hrs to reset, so a way of entering a time to complete reset, 00:00 being the default offered and only really offering hourly options of 01:00, 02:00 etc
+		- [X] When created each queue should be added into localstorage to allow export and import of programmed information, I have already added queue monitoring option in import export facility so link the created storage name to the selectable option in the import/export function.
 
 ### QUEUE GROUPS
 - Overview - To allow queues to be grouped together and selected to be queued in/out via single selection of button
@@ -161,7 +161,8 @@ Thirdly, clarification of SIP call state and call-timer
 
 
 #### Mobile Device Usage - Investigation Only
-- [ ] How can you integrate in mobile devices audio so you can use external ringer and normal audio speaker and microphone for call audio
-- [ ] Blutooth devices and how would they integrate
-- [ ] Push notifications for calls and how do they integrate into PWA
-- [ ] Methods to allow access to server without having to allow through firewall directly
+- [X] How can you integrate in mobile devices audio so you can use external ringer and normal audio speaker and microphone for call audio
+- [X] Blutooth devices and how would they integrate
+- [X] Push notifications for calls and how do they integrate into PWA
+- [X] Methods to allow access to server without having to allow through firewall directly
+- [X] Above completed and documented for later development

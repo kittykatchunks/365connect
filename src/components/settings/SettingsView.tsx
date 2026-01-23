@@ -20,7 +20,8 @@ import {
   Bell,
   Save,
   Check,
-  Users
+  Users,
+  BookOpen
 } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { 
@@ -379,6 +380,14 @@ export function SettingsView() {
         title={t('settings.title', 'Settings')}
         actions={
           <div className="header-actions">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => window.open('/userguide/index.html', '_blank', 'noopener,noreferrer')}
+              title={t('settings.user_guide_title', 'Open User Guide')}
+            >
+              <BookOpen className="w-4 h-4" />
+            </Button>
             <Button 
               variant="ghost" 
               size="sm"

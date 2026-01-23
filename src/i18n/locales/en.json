@@ -372,6 +372,8 @@
         "verbose_logging_desc": "Enable detailed console logging for debugging",
         "sip_messages_enabled": "Enable SIP Message Console Logging",
         "sip_messages_enabled_desc": "Enable SIP.js protocol message logging in the console for debugging SIP communication",
+        "user_guide": "User Guide",
+        "user_guide_title": "Open User Guide",
         "import_export": "Import/Export",
         "import_data": "Import Data",
         "import_description": "Import settings and data",

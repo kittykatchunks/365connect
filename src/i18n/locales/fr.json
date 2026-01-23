@@ -350,6 +350,8 @@
         "verbose_logging_desc": "Activer journal détaillé console",
         "sip_messages_enabled": "Activer Journal des Messages SIP dans la Console",
         "sip_messages_enabled_desc": "Activer la journalisation des messages du protocole SIP.js dans la console pour déboguer la communication SIP",
+        "user_guide": "Guide de l'Utilisateur",
+        "user_guide_title": "Ouvrir le Guide de l'Utilisateur",
         "import_export": "Importer/Exporter",
         "import_data": "Importer Données",
         "import_description": "Importer paramètres et données",

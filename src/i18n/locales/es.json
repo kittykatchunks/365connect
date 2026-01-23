@@ -348,6 +348,8 @@
         "verbose_logging_desc": "Habilitar registro detallado en consola para depuración",
         "sip_messages_enabled": "Habilitar Registro de Mensajes SIP en Consola",
         "sip_messages_enabled_desc": "Habilitar registro de mensajes del protocolo SIP.js en la consola para depurar comunicación SIP",
+        "user_guide": "Guía de Usuario",
+        "user_guide_title": "Abrir Guía de Usuario",
         "import_export": "Importar/Exportar",
         "import_data": "Importar Datos",
         "import_description": "Importar configuración y datos",
