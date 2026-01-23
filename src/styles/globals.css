@@ -1224,6 +1224,11 @@ a {
   padding: 0 var(--spacing-xs);
 }
 
+.dial-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .dial-input:focus {
   outline: none;
 }
@@ -1342,6 +1347,12 @@ a {
 .dialpad-key:active:not(:disabled) {
   background-color: var(--border-color);
   transform: scale(0.95);
+}
+
+.dialpad-key:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .dialpad-digit {

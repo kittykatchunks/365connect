@@ -228,6 +228,28 @@ export function DialView() {
     }
   }, [selectedLine, selectedLineSession?.id, verboseLogging]);
   
+  // Log input and dialpad disabled state
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      const dialInputDisabled = !isRegistered || isDialing;
+      const dialpadDisabled = !isRegistered;
+      
+      console.log('[DialView] 🔒 Input/Dialpad state:', {
+        isRegistered,
+        isDialing,
+        dialInputDisabled,
+        dialpadDisabled,
+        reason: !isRegistered 
+          ? 'Not registered to Phantom server' 
+          : isDialing 
+          ? 'Call in progress (dialing)' 
+          : 'Enabled'
+      });
+    }
+  }, [isRegistered, isDialing]);
+  
   // Reset isDialing when call becomes established or terminates
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -696,7 +718,7 @@ export function DialView() {
             <Dialpad
               onDigit={handleDigit}
               onLongPress={handleLongPress}
-              disabled={!isRegistered && !isSelectedLineInCall}
+              disabled={!isRegistered}
             />
           )}
           
