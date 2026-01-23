@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a202c" media="(prefers-color-scheme: dark)">
     <title>Connect365 - User Guide</title>
     <link rel="icon" type="image/svg+xml" href="/icons/icon-512x512.png">
     <style>
@@ -1188,10 +1190,22 @@
             if (currentTheme === 'dark') {
                 html.setAttribute('data-theme', 'light');
                 localStorage.setItem('userguide-theme', 'light');
+                updateThemeColor('#ffffff');
             } else {
                 html.setAttribute('data-theme', 'dark');
                 localStorage.setItem('userguide-theme', 'dark');
+                updateThemeColor('#1a202c');
             }
+        }
+
+        function updateThemeColor(color) {
+            let metaThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
+            if (!metaThemeColor) {
+                metaThemeColor = document.createElement('meta');
+                metaThemeColor.setAttribute('name', 'theme-color');
+                document.head.appendChild(metaThemeColor);
+            }
+            metaThemeColor.setAttribute('content', color);
         }
 
         // Initialize theme from localStorage or system preference
@@ -1199,8 +1213,12 @@
             const savedTheme = localStorage.getItem('userguide-theme');
             if (savedTheme) {
                 document.documentElement.setAttribute('data-theme', savedTheme);
+                updateThemeColor(savedTheme === 'dark' ? '#1a202c' : '#ffffff');
             } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.documentElement.setAttribute('data-theme', 'dark');
+                updateThemeColor('#1a202c');
+            } else {
+                updateThemeColor('#ffffff');
             }
         }
 
