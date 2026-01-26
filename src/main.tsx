@@ -64,18 +64,6 @@ function handleTelUrl() {
         // Use a short-lived sessionStorage flag that the app will pick up
         sessionStorage.setItem('autoDialNumber', telNumber);
         sessionStorage.setItem('autoDialTimestamp', Date.now().toString());
-        
-        // ALSO store in localStorage message queue for focus-existing mode (seamless, no reload)
-        const message = {
-          type: 'click-to-dial',
-          number: telNumber,
-          timestamp: Date.now()
-        };
-        localStorage.setItem('click-to-dial-message', JSON.stringify(message));
-        
-        if (verboseLogging) {
-          console.log('[main.tsx] 📨 Posted click-to-dial message to localStorage queue');
-        }
       } else {
         // Feature is disabled - store a flag to show notification
         if (verboseLogging) {

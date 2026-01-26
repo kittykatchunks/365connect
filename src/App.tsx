@@ -445,82 +445,6 @@ function App() {
       }
     }
     
-    // Listen for localStorage changes (for focus-existing mode - seamless, no reload)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'click-to-dial-message' && e.newValue) {
-        const verboseLogging = isVerboseLoggingEnabled();
-        try {
-          const message = JSON.parse(e.newValue);
-          if (message.type === 'click-to-dial' && message.number) {
-            if (verboseLogging) {
-              console.log('[App] 📨 Received click-to-dial message from localStorage:', message);
-            }
-            
-            // Check if message is recent (less than 5 seconds old)
-            const age = Date.now() - message.timestamp;
-            if (age < 5000) {
-              // Check if click-to-dial is enabled
-              const clickToDialEnabled = useSettingsStore.getState().settings.call.clickToDialEnabled;
-              
-              if (clickToDialEnabled) {
-                if (verboseLogging) {
-                  console.log('[App] 📞 Processing tel number from storage message:', message.number);
-                }
-                
-                // Set the number in app store
-                setAutoDialNumber(message.number);
-                
-                // Switch to dial view
-                setCurrentView('dial');
-                
-                if (verboseLogging) {
-                  console.log('[App] ✅ Processed click-to-dial message seamlessly (no reload)');
-                }
-              } else {
-                addNotification({
-                  type: 'warning',
-                  title: t('notifications.click_to_dial_disabled'),
-                  message: t('notifications.click_to_dial_disabled_desc'),
-                  duration: 5000
-                });
-              }
-              
-              // Clear the message
-              localStorage.removeItem('click-to-dial-message');
-            } else if (verboseLogging) {
-              console.log('[App] ⏰ Click-to-dial message too old, ignoring');
-            }
-          }
-        } catch (e) {
-          console.error('[App] Error parsing click-to-dial message:', e);
-        }
-      }
-    };
-    
-    // Check for existing message on mount (in case storage event was missed)
-    const existingMessage = localStorage.getItem('click-to-dial-message');
-    if (existingMessage) {
-      try {
-        const message = JSON.parse(existingMessage);
-        const age = Date.now() - message.timestamp;
-        if (age < 5000 && message.type === 'click-to-dial' && message.number) {
-          if (verboseLogging) {
-            console.log('[App] 📨 Found existing click-to-dial message on mount:', message);
-          }
-          
-          const clickToDialEnabled = useSettingsStore.getState().settings.call.clickToDialEnabled;
-          if (clickToDialEnabled) {
-            setAutoDialNumber(message.number);
-            setCurrentView('dial');
-          }
-          
-          localStorage.removeItem('click-to-dial-message');
-        }
-      } catch (e) {
-        console.error('[App] Error processing existing message:', e);
-      }
-    }
-    
     // Listen for window focus (when PWA window is focused from tel: link)
     const handleWindowFocus = () => {
       const verboseLogging = isVerboseLoggingEnabled();
@@ -550,7 +474,6 @@ function App() {
       checkForTelParameter();
     };
     
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleWindowFocus);
     window.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('popstate', handlePopState);
@@ -574,7 +497,6 @@ function App() {
     }, 1000);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('popstate', handlePopState);
