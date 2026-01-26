@@ -88,8 +88,8 @@ export function SettingsView() {
   const setIncomingCallNotifications = useSettingsStore((state) => state.setIncomingCallNotifications);
   const setAutoFocusOnNotificationAnswer = useSettingsStore((state) => state.setAutoFocusOnNotificationAnswer);
   const setPreferBlindTransfer = useSettingsStore((state) => state.setPreferBlindTransfer);
-  const setClickToDialEnabled = useSettingsStore((state) => state.setClickToDialEnabled);
-  const setClickToDialBehavior = useSettingsStore((state) => state.setClickToDialBehavior);
+  // const setClickToDialEnabled = useSettingsStore((state) => state.setClickToDialEnabled);
+  // const setClickToDialBehavior = useSettingsStore((state) => state.setClickToDialBehavior);
   const setSpeakerDevice = useSettingsStore((state) => state.setSpeakerDevice);
   const setMicrophoneDevice = useSettingsStore((state) => state.setMicrophoneDevice);
   const setRingerDevice = useSettingsStore((state) => state.setRingerDevice);
@@ -704,7 +704,7 @@ export function SettingsView() {
                   />
                 </div>
                 
-                {/* Click-to-Dial Section */}
+                {/* Click-to-Dial Section - Hidden
                 <div className="setting-item">
                   <Toggle
                     label={t('settings.click_to_dial_enabled', 'Enable Click-to-Dial')}
@@ -762,6 +762,7 @@ export function SettingsView() {
                     </div>
                   </div>
                 )}
+                */}
               </div>
             </AccordionContent>
           </AccordionItem>
