@@ -740,13 +740,42 @@ export class SIPService {
         });
       }
 
-      // Auto-answer if configured and no other active calls
+      // Check for Alert-Info header for auto-answer
+      let headerAutoAnswer = false;
+      try {
+        const alertInfoHeader = invitation.request.getHeader('Alert-Info');
+        if (verboseLogging) {
+          console.log('[SIPService] 🔍 Checking Alert-Info header:', {
+            headerValue: alertInfoHeader || 'Not present'
+          });
+        }
+        
+        if (alertInfoHeader && alertInfoHeader.toLowerCase().includes('autoanswer')) {
+          headerAutoAnswer = true;
+          if (verboseLogging) {
+            console.log('[SIPService] ✅ Alert-Info header contains autoanswer - will trigger auto-answer');
+          }
+        }
+      } catch (error) {
+        if (verboseLogging) {
+          console.warn('[SIPService] ⚠️ Error reading Alert-Info header:', error);
+        }
+      }
+
+      // Auto-answer if configured (via settings or SIP header) and no other active calls
       const activeSessions = this.getActiveSessions();
       const hasOtherActiveCalls = activeSessions.some(s => s.id !== sessionId);
       
-      if (this.config?.autoAnswer && !hasOtherActiveCalls) {
+      const shouldAutoAnswer = (this.config?.autoAnswer || headerAutoAnswer) && !hasOtherActiveCalls;
+      
+      if (shouldAutoAnswer) {
         if (verboseLogging) {
-          console.log('[SIPService] 🤖 Auto-answer enabled, answering in 1.5s');
+          console.log('[SIPService] 🤖 Auto-answer triggered:', {
+            viaSettings: this.config?.autoAnswer ?? false,
+            viaSipHeader: headerAutoAnswer,
+            hasOtherActiveCalls,
+            delay: '1.5s'
+          });
         }
         setTimeout(() => {
           this.answerCall(sessionId);
