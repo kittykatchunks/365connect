@@ -13,6 +13,7 @@ export * from './diagnostics';
 export * from './version';
 export * from './phantomApiClient';
 export * from './queueStorage';
+export * from './audioUtils';
 
 // Common utility functions
 import { clsx, type ClassValue } from 'clsx';

@@ -21,7 +21,9 @@ import {
   Save,
   Check,
   Users,
-  BookOpen
+  BookOpen,
+  Trash2,
+  FileAudio
 } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { 
@@ -39,7 +41,8 @@ import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
 import { useAudioDevices, useMediaQuery } from '@/hooks';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBusylightContext } from '@/contexts';
-import { isVerboseLoggingEnabled } from '@/utils';
+import { isVerboseLoggingEnabled, validateAndConvertAudioFile } from '@/utils';
+import audioService from '@/services/AudioService';
 
 // Helper component to display device info
 function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBusylightContext> }) {
@@ -121,6 +124,8 @@ export function SettingsView() {
   const [audioAccordionOpen, setAudioAccordionOpen] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [micMonitoring, setMicMonitoring] = useState(false);
+  const [uploadingRingtone, setUploadingRingtone] = useState(false);
+  const [hasCustomRingtone, setHasCustomRingtone] = useState(audioService.hasCustomRingtone());
   
   // Local state for connection settings (not auto-saved)
   const [localPhantomId, setLocalPhantomId] = useState(settings.connection.phantomId);
@@ -371,6 +376,83 @@ export function SettingsView() {
     } catch (err) {
       console.error('Failed to test ringer:', err);
       setTestingDevice(null);
+    }
+  };
+  
+  // Custom ringtone handlers
+  const handleCustomRingtoneUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const file = event.target.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] 📁 Custom ringtone file selected:', file.name);
+    }
+    
+    setUploadingRingtone(true);
+    
+    try {
+      // Validate and convert audio file (max 60 seconds)
+      const base64Data = await validateAndConvertAudioFile(file, 60);
+      
+      // Save to audio service
+      await audioService.setCustomRingtone(base64Data);
+      
+      // Update state
+      setHasCustomRingtone(true);
+      
+      // Automatically select custom ringtone
+      setRingtoneFile('custom');
+      audioService.setRingtone('custom');
+      
+      showNotification('success', t('settings.custom_ringtone_uploaded', 'Custom ringtone uploaded successfully!'));
+      
+      if (verboseLogging) {
+        console.log('[SettingsView] ✅ Custom ringtone uploaded and selected');
+      }
+    } catch (error) {
+      console.error('[SettingsView] ❌ Failed to upload custom ringtone:', error);
+      showNotification('error', error instanceof Error ? error.message : 'Failed to upload ringtone');
+    } finally {
+      setUploadingRingtone(false);
+      // Clear the file input so the same file can be selected again if needed
+      event.target.value = '';
+    }
+  };
+  
+  const handleClearCustomRingtone = () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] 🗑️ Clearing custom ringtone');
+    }
+    
+    // Clear from audio service
+    audioService.clearCustomRingtone();
+    
+    // Update state
+    setHasCustomRingtone(false);
+    
+    // If custom ringtone was selected, switch to default
+    if (settings.audio.ringtoneFile === 'custom') {
+      setRingtoneFile('Ringtone_1.mp3');
+      audioService.setRingtone('Ringtone_1.mp3');
+    }
+    
+    showNotification('success', t('settings.custom_ringtone_cleared', 'Custom ringtone removed'));
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] ✅ Custom ringtone cleared');
+    }
+  };
+  
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    // Simple notification implementation - can be enhanced with a toast system
+    if (type === 'error') {
+      alert(message);
     }
   };
   
@@ -749,6 +831,77 @@ export function SettingsView() {
                           <Play className={`w-4 h-4 ${testingDevice === 'ringtone' ? 'animate-pulse' : ''}`} />
                         </Button>
                       </div>
+                    </div>
+                    
+                    {/* Custom Ringtone Upload */}
+                    <div className="setting-item" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                      <label style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileAudio className="w-4 h-4" />
+                        {t('settings.custom_ringtone', 'Custom Ringtone')}
+                      </label>
+                      <p className="setting-help-text" style={{ marginBottom: '12px' }}>
+                        {t('settings.custom_ringtone_desc', 'Upload your own MP3 or WAV file (max 60 seconds, max 5MB)')}
+                      </p>
+                      
+                      {hasCustomRingtone ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ flex: 1, color: 'var(--text-color-secondary)' }}>
+                            ✓ {t('settings.custom_ringtone_uploaded_label', 'Custom ringtone available')}
+                          </span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={handleClearCustomRingtone}
+                            title={t('settings.clear_custom_ringtone', 'Clear custom ringtone')}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="audio-device-row">
+                          <label 
+                            htmlFor="customRingtoneInput" 
+                            style={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '8px 16px',
+                              backgroundColor: 'var(--bg-secondary)',
+                              border: '1px dashed var(--border-color)',
+                              borderRadius: '6px',
+                              cursor: uploadingRingtone ? 'wait' : 'pointer',
+                              transition: 'all 0.2s',
+                              gap: '8px'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!uploadingRingtone) {
+                                e.currentTarget.style.borderColor = 'var(--primary-color)';
+                                e.currentTarget.style.backgroundColor = 'var(--primary-color-alpha)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = 'var(--border-color)';
+                              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                            }}
+                          >
+                            <Upload className="w-4 h-4" />
+                            {uploadingRingtone ? (
+                              t('settings.uploading', 'Uploading...')
+                            ) : (
+                              t('settings.choose_file', 'Choose File')
+                            )}
+                          </label>
+                          <input
+                            id="customRingtoneInput"
+                            type="file"
+                            accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav"
+                            onChange={handleCustomRingtoneUpload}
+                            disabled={uploadingRingtone}
+                            style={{ display: 'none' }}
+                          />
+                        </div>
+                      )}
                     </div>
                     
                     <Button 

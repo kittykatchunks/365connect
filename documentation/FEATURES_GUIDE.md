@@ -834,9 +834,19 @@ The Settings tab uses an accordion layout with the following sections:
   - **Microphone Level Meter:** Visual feedback during mic testing
 
   **Ringtone:**
-  - **Custom Ringtone:** File upload for custom ringtone
-  - **Preview Button:** Play selected ringtone
-  - **Reset Button:** Revert to default ringtone
+  - **Ringtone Selection:** Dropdown with 6 built-in ringtones + custom option
+  - **Preview Button:** Play selected ringtone through ringer device
+  
+  **Custom Ringtone Upload:**
+  - **File Upload:** Choose MP3 or WAV file (max 60 seconds, max 5MB)
+  - **Automatic Validation:** 
+    - File type verification (MP3/WAV only)
+    - Duration check (maximum 60 seconds)
+    - File size check (maximum 5MB to prevent storage issues)
+    - Base64 conversion for localStorage storage
+  - **Preview Custom Ringtone:** Test uploaded ringtone before saving
+  - **Clear Custom Ringtone:** Remove uploaded ringtone and revert to built-in
+  - **Automatic Looping:** Custom ringtone repeats continuously during incoming calls
 
 - **Features:**
   - Real-time device enumeration
@@ -844,6 +854,8 @@ The Settings tab uses an accordion layout with the following sections:
   - Refresh devices button
   - Device changes apply immediately
   - Test audio before saving
+  - Custom ringtone persisted in localStorage
+  - Verbose logging for all audio operations
 - **Process:**
   - User opens Audio accordion
   - App requests media permissions if needed
@@ -851,7 +863,18 @@ The Settings tab uses an accordion layout with the following sections:
   - User selects devices from dropdowns
   - Selection auto-saves
   - User can test each device
-  - Custom ringtone uploaded and persisted
+  
+  **Uploading Custom Ringtone:**
+  1. User opens Audio section
+  2. User clicks "Choose File" under Custom Ringtone
+  3. File picker opens
+  4. User selects MP3/WAV file
+  5. File validated for type, duration (≤60s), and size (≤5MB)
+  6. File converted to base64 and saved to localStorage
+  7. "Custom Ringtone" option automatically selected
+  8. User clicks "Preview" button to test
+  9. Custom ringtone plays through selected ringer device
+  10. Next incoming call uses custom ringtone with continuous looping
 
 #### 5. **Notifications Settings**
 

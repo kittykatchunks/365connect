@@ -120,5 +120,6 @@ export const AVAILABLE_RINGTONES = [
   { value: 'Ringtone_3.mp3', label: 'Ringtone 3' },
   { value: 'Ringtone_4.mp3', label: 'Ringtone 4' },
   { value: 'Ringtone_5.mp3', label: 'Ringtone 5' },
-  { value: 'Ringtone_6.mp3', label: 'Ringtone 6' }
+  { value: 'Ringtone_6.mp3', label: 'Ringtone 6' },
+  { value: 'custom', label: 'Custom Ringtone' }
 ];

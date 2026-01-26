@@ -17,7 +17,8 @@ export const AVAILABLE_RINGTONES: RingtoneConfig[] = [
   { filename: 'Ringtone_3.mp3', label: 'Ringtone 3' },
   { filename: 'Ringtone_4.mp3', label: 'Ringtone 4' },
   { filename: 'Ringtone_5.mp3', label: 'Ringtone 5' },
-  { filename: 'Ringtone_6.mp3', label: 'Ringtone 6' }
+  { filename: 'Ringtone_6.mp3', label: 'Ringtone 6' },
+  { filename: 'custom', label: 'Custom Ringtone' }
 ];
 
 class AudioService {
@@ -29,6 +30,7 @@ class AudioService {
   
   private selectedRingtone: string = 'Ringtone_1.mp3';
   private selectedRingerDevice: string = 'default';
+  private customRingtoneData: string | null = null; // Base64 encoded custom ringtone
   
   constructor() {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -45,6 +47,85 @@ class AudioService {
           console.log('[AudioService] ✅ AudioContext initialized');
         }
       }
+      
+      // Load custom ringtone from localStorage if it exists
+      this.loadCustomRingtone();
+    }
+  }
+  
+  /**
+   * Load custom ringtone from localStorage
+   */
+  private loadCustomRingtone(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    try {
+      const storedRingtone = localStorage.getItem('customRingtone');
+      if (storedRingtone) {
+        this.customRingtoneData = storedRingtone;
+        if (verboseLogging) {
+          console.log('[AudioService] 🎵 Custom ringtone loaded from localStorage');
+        }
+      }
+    } catch (error) {
+      console.error('[AudioService] ❌ Failed to load custom ringtone:', error);
+    }
+  }
+  
+  /**
+   * Save custom ringtone to localStorage
+   */
+  async setCustomRingtone(base64Data: string): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    try {
+      if (verboseLogging) {
+        console.log('[AudioService] 💾 Saving custom ringtone to localStorage');
+      }
+      
+      localStorage.setItem('customRingtone', base64Data);
+      this.customRingtoneData = base64Data;
+      
+      if (verboseLogging) {
+        console.log('[AudioService] ✅ Custom ringtone saved successfully');
+      }
+    } catch (error) {
+      console.error('[AudioService] ❌ Failed to save custom ringtone:', error);
+      throw new Error('Failed to save custom ringtone. Storage may be full.');
+    }
+  }
+  
+  /**
+   * Check if custom ringtone is available
+   */
+  hasCustomRingtone(): boolean {
+    return this.customRingtoneData !== null;
+  }
+  
+  /**
+   * Clear custom ringtone
+   */
+  clearCustomRingtone(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[AudioService] 🗑️ Clearing custom ringtone');
+    }
+    
+    try {
+      localStorage.removeItem('customRingtone');
+      this.customRingtoneData = null;
+      
+      // If currently selected ringtone is custom, switch to default
+      if (this.selectedRingtone === 'custom') {
+        this.selectedRingtone = 'Ringtone_1.mp3';
+      }
+      
+      if (verboseLogging) {
+        console.log('[AudioService] ✅ Custom ringtone cleared');
+      }
+    } catch (error) {
+      console.error('[AudioService] ❌ Failed to clear custom ringtone:', error);
     }
   }
   
@@ -89,8 +170,19 @@ class AudioService {
         }
       }
       
-      // Create audio element
-      this.ringtoneAudio = new Audio(`/media/${audioFile}`);
+      // Create audio element with appropriate source
+      if (!useAlertTone && audioFile === 'custom' && this.customRingtoneData) {
+        // Use custom ringtone from base64 data
+        if (verboseLogging) {
+          console.log('[AudioService] 🎨 Using custom ringtone from localStorage');
+        }
+        this.ringtoneAudio = new Audio(this.customRingtoneData);
+      } else {
+        // Use built-in ringtone from media folder
+        const builtInFile = useAlertTone ? 'Alert.mp3' : audioFile;
+        this.ringtoneAudio = new Audio(`/media/${builtInFile}`);
+      }
+      
       this.ringtoneAudio.volume = useAlertTone ? 0.5 : 0.8;
       this.ringtoneAudio.preload = 'auto';
       
@@ -267,7 +359,16 @@ class AudioService {
     }
     
     try {
-      this.testAudio = new Audio(`/media/${this.selectedRingtone}`);
+      // Use custom ringtone if selected, otherwise use built-in
+      if (this.selectedRingtone === 'custom' && this.customRingtoneData) {
+        if (verboseLogging) {
+          console.log('[AudioService] 🎨 Playing custom ringtone test');
+        }
+        this.testAudio = new Audio(this.customRingtoneData);
+      } else {
+        this.testAudio = new Audio(`/media/${this.selectedRingtone}`);
+      }
+      
       this.testAudio.volume = 0.8;
       
       // Set output device if supported
