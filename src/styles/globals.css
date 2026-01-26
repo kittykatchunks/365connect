@@ -1656,25 +1656,6 @@ a {
   flex-shrink: 0;
 }
 
-/* Transfer button icon orientation fix */
-.transfer-btn .icon {
-  transform: rotate(-90deg);
-}
-
-/* Call control button default backgrounds - ensure consistent styling */
-.mute-btn,
-.hold-btn,
-.transfer-btn {
-  background-color: var(--surface-color-hover);
-  color: var(--text-color);
-}
-
-.mute-btn:hover:not(:disabled),
-.hold-btn:hover:not(:disabled),
-.transfer-btn:hover:not(:disabled) {
-  background-color: var(--border-color);
-}
-
 /* Button label sizing */
 .call-control-btn .btn-label,
 .call-button .btn-label,
