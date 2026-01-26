@@ -64,6 +64,13 @@ function handleTelUrl() {
         // Use a short-lived sessionStorage flag that the app will pick up
         sessionStorage.setItem('autoDialNumber', telNumber);
         sessionStorage.setItem('autoDialTimestamp', Date.now().toString());
+        
+        // Set flag to auto-reconnect SIP after reload (minimize disconnection time)
+        sessionStorage.setItem('autoReconnectSIP', 'true');
+        
+        if (verboseLogging) {
+          console.log('[main.tsx] 🔄 Auto-reconnect flag set for seamless SIP recovery');
+        }
       } else {
         // Feature is disabled - store a flag to show notification
         if (verboseLogging) {

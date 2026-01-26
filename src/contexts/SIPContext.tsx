@@ -140,6 +140,56 @@ export function SIPProvider({ children }: SIPProviderProps) {
     requestNotificationPerms();
   }, [settings.call.incomingCallNotifications, requestPermission]);
 
+  // Auto-reconnect after click-to-dial reload (minimize SIP disconnection time)
+  useEffect(() => {
+    const autoReconnect = sessionStorage.getItem('autoReconnectSIP');
+    
+    if (autoReconnect === 'true') {
+      const verboseLogging = isVerboseLoggingEnabled();
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔄 Click-to-dial reload detected - initiating fast auto-reconnect...');
+      }
+      
+      // Clear the flag immediately
+      sessionStorage.removeItem('autoReconnectSIP');
+      
+      // Check if we have valid config and are not already registered
+      const hasConfig = sipConfig && 
+                       settings.connection.phantomId && 
+                       settings.connection.username && 
+                       settings.connection.password;
+      
+      const isRegistered = serviceRef.current.isRegistered();
+      
+      if (hasConfig && !isRegistered) {
+        if (verboseLogging) {
+          console.log('[SIPContext] ✅ Valid config found, auto-reconnecting SIP');
+        }
+        
+        // Connect immediately (small delay to let React render)
+        const timer = setTimeout(async () => {
+          try {
+            await serviceRef.current.configure(sipConfig!);
+            if (verboseLogging) {
+              console.log('[SIPContext] ✅ Auto-reconnect successful');
+            }
+          } catch (error) {
+            console.error('[SIPContext] ❌ Auto-reconnect failed:', error);
+          }
+        }, 100);
+        
+        return () => clearTimeout(timer);
+      } else if (verboseLogging) {
+        console.log('[SIPContext] ⚠️ Skipping auto-reconnect:', { 
+          hasConfig: !!hasConfig, 
+          isRegistered,
+          reason: !hasConfig ? 'No valid config' : 'Already registered'
+        });
+      }
+    }
+  }, [settings.connection, sipConfig]);
+
   // Wire up SIP events to Zustand store
   useEffect(() => {
     const service = serviceRef.current;
