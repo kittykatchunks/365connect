@@ -295,14 +295,29 @@ function App() {
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
+    console.log('[App] 🚀 Click-to-dial monitoring useEffect initialized (verbose:', verboseLogging + ')');
+    
+    let lastProcessedTel = ''; // Track last processed tel to prevent duplicates
+    
     // Function to check for tel: parameter in current URL
     const checkForTelParameter = () => {
       const urlParams = new URLSearchParams(window.location.search);
       let telNumber = urlParams.get('tel');
       
       if (telNumber) {
+        // Prevent duplicate processing
+        if (telNumber === lastProcessedTel) {
+          if (verboseLogging) {
+            console.log('[App] 🔄 Tel parameter already processed, skipping:', telNumber);
+          }
+          return false;
+        }
+        
+        lastProcessedTel = telNumber;
+        
         if (verboseLogging) {
           console.log('[App] 📞 Detected tel: URL parameter in running app:', telNumber);
+          console.log('[App] 📞 Full URL:', window.location.href);
         }
         
         // Strip "tel:" prefix if present
@@ -414,18 +429,62 @@ function App() {
       }
     }
     
+    // Listen for window focus (when PWA window is focused from tel: link)
+    const handleWindowFocus = () => {
+      const verboseLogging = isVerboseLoggingEnabled();
+      if (verboseLogging) {
+        console.log('[App] 👁️ Window focus event detected, checking for tel: parameter');
+      }
+      checkForTelParameter();
+    };
+    
+    // Listen for visibility change (when tab/window becomes visible)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const verboseLogging = isVerboseLoggingEnabled();
+        if (verboseLogging) {
+          console.log('[App] 👁️ Visibility change event (visible), checking for tel: parameter');
+        }
+        checkForTelParameter();
+      }
+    };
+    
     // Listen for popstate events (browser navigation)
     const handlePopState = () => {
+      const verboseLogging = isVerboseLoggingEnabled();
       if (verboseLogging) {
         console.log('[App] 🔄 Popstate event detected, checking for tel: parameter');
       }
       checkForTelParameter();
     };
     
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('popstate', handlePopState);
     
+    if (verboseLogging) {
+      console.log('[App] 🔍 Tel: URL monitoring started - listening for focus, visibility, and popstate events');
+      console.log('[App] 🔍 Polling for URL changes every 1 second when window is focused');
+    }
+    
+    // Also poll URL every second when window is focused (fallback)
+    let pollCount = 0;
+    const pollInterval = setInterval(() => {
+      if (!document.hidden) {
+        pollCount++;
+        if (verboseLogging && pollCount % 10 === 0) {
+          // Log every 10 seconds to avoid spam
+          console.log('[App] 🔍 Polling for tel: parameter... (check #' + pollCount + ')');
+        }
+        checkForTelParameter();
+      }
+    }, 1000);
+    
     return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('popstate', handlePopState);
+      clearInterval(pollInterval);
     };
   }, [setAutoDialNumber, setCurrentView, addNotification, t]);
   
