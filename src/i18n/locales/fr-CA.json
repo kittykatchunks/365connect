@@ -312,6 +312,15 @@
         "auto_focus_notification_desc": "Mettre fenêtre au premier plan automatiquement",
         "prefer_blind_transfer": "Préférer Transfert Aveugle",
         "prefer_blind_transfer_desc": "Utiliser transfert aveugle par défaut",
+        "click_to_dial_section": "Clic pour Appeler depuis les Liens Web",
+        "click_to_dial_enabled": "Activer Clic pour Appeler",
+        "click_to_dial_enabled_desc": "Permettre aux numéros de téléphone dans les sites web d'ouvrir cette application",
+        "click_to_dial_behavior": "Comportement lors du clic sur un numéro de téléphone",
+        "click_to_dial_behavior_desc": "Choisissez comment l'application répond aux numéros de téléphone cliqués",
+        "click_to_dial_populate": "Remplir le numéro uniquement",
+        "click_to_dial_populate_desc": "Remplir le champ de numérotation et attendre que l'agent appuie sur Appeler",
+        "click_to_dial_auto": "Composer automatiquement",
+        "click_to_dial_auto_desc": "Passer l'appel automatiquement lors du clic sur les numéros de téléphone",
         "speaker": "Haut-parleur",
         "microphone": "Microphone",
         "mic_level": "Niveau d'entrée",
@@ -479,6 +488,13 @@
         "sip_reconnected_message": "Reconnecté avec succès au serveur Phantom. Réinscription en cours...",
         "incoming_call_with_name": "Appel Entrant : {{name}}",
         "incoming_call_with_number": "Appel Entrant : {{number}}",
-        "tap_to_answer": "Appuyez pour répondre"
+        "tap_to_answer": "Appuyez pour répondre",
+        "click_to_dial_disabled": "Clic pour Appeler est désactivé",
+        "click_to_dial_disabled_desc": "Activez-le dans Paramètres → Paramètres d'appel pour utiliser cette fonctionnalité",
+        "click_to_dial_received": "Numéro reçu depuis un lien web",
+        "click_to_dial_press_call": "Appuyez sur Appeler pour composer {{number}}",
+        "click_to_dial_auto_dialing": "Composition automatique depuis un lien web",
+        "line_busy": "Ligne Occupée",
+        "line_busy_desc": "Terminez ou changez de ligne pour composer {{number}}"
     }
 }

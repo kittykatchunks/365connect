@@ -272,8 +272,13 @@ function App() {
   const loadingMessage = useAppStore((state) => state.loadingMessage);
   const setInitialized = useAppStore((state) => state.setInitialized);
   const setLoading = useAppStore((state) => state.setLoading);
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
+  const setAutoDialNumber = useAppStore((state) => state.setAutoDialNumber);
+  const autoDialNumber = useAppStore((state) => state.autoDialNumber);
+  const addNotification = useUIStore((state) => state.addNotification);
   const effectiveTheme = useUIStore((state) => state.effectiveTheme);
   const settingsLanguage = useSettingsStore((state) => state.settings.interface.language);
+  const { t } = useTranslation();
   
   // Initialize network monitoring with automatic SIP disconnection
   useNetworkStatus();
@@ -285,6 +290,72 @@ function App() {
     currentVersion: string;
     changeType: 'upgrade' | 'downgrade' | 'unchanged';
   } | null>(null);
+  
+  // Handle click-to-dial from tel: URLs
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Check for autoDialNumber from sessionStorage (set by main.tsx)
+    const storedNumber = sessionStorage.getItem('autoDialNumber');
+    const timestamp = sessionStorage.getItem('autoDialTimestamp');
+    
+    if (storedNumber && timestamp) {
+      // Only process if less than 5 seconds old (prevent stale data)
+      const age = Date.now() - parseInt(timestamp, 10);
+      if (age < 5000) {
+        if (verboseLogging) {
+          console.log('[App] 📞 Processing click-to-dial number from sessionStorage:', storedNumber);
+        }
+        
+        // Set the number in app store
+        setAutoDialNumber(storedNumber);
+        
+        // Switch to dial view
+        setCurrentView('dial');
+        
+        if (verboseLogging) {
+          console.log('[App] 🔄 Switched to Dial tab for click-to-dial');
+        }
+      } else if (verboseLogging) {
+        console.log('[App] ⏰ Click-to-dial data too old, ignoring');
+      }
+      
+      // Clear sessionStorage after processing
+      sessionStorage.removeItem('autoDialNumber');
+      sessionStorage.removeItem('autoDialTimestamp');
+    }
+    
+    // Check if we should show disabled notification
+    const showDisabledNotify = sessionStorage.getItem('clickToDialDisabledNotify');
+    if (showDisabledNotify === 'true') {
+      if (verboseLogging) {
+        console.log('[App] ⚠️ Click-to-dial disabled, showing notification');
+      }
+      
+      addNotification({
+        type: 'warning',
+        title: t('notifications.click_to_dial_disabled', 'Click-to-Dial is disabled'),
+        message: t('notifications.click_to_dial_disabled_desc', 'Enable it in Settings → Call Settings to use this feature'),
+        duration: 5000
+      });
+      
+      sessionStorage.removeItem('clickToDialDisabledNotify');
+    }
+  }, [setAutoDialNumber, setCurrentView, addNotification, t]);
+  
+  // Auto-switch to Dial tab when autoDialNumber is set
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (autoDialNumber) {
+      if (verboseLogging) {
+        console.log('[App] 📞 autoDialNumber detected, ensuring Dial tab is active');
+      }
+      
+      // Ensure we're on the dial tab
+      setCurrentView('dial');
+    }
+  }, [autoDialNumber, setCurrentView]);
   
   // Initialize theme watcher
   useEffect(() => {

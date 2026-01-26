@@ -8,7 +8,7 @@ The following describes minimum requirements for deployment to Phantom servers. 
 
 ### HTTP server requirements for distribution and usage of PWA
 - HTTP server to allow secure websocket connections to Phantom - currently using the same websocket solution that the integrated webphone of Autocab365 platform (wss://server1-{phantomId}.phantomapi.net:8089/ws)
-- HTTP server to deploy and serve the PWA distribution - each Phantom server would have it's own deployment accessible via the current security of the Phantom UI.  If the distribution files were hosted at https://server1-{phantomId}.phantomapi.net/phantom/en/webphone meaning that Phantom username and password as well as IP whitelisting required before able to access distibution
+- HTTP server to deploy and serve the PWA distribution - each Phantom server would have it's own deployment accessible via the current security of the Phantom UI.  If the distribution files were hosted at https://server1-{phantomId}.phantomapi.net/webphone meaning that Phantom username and password as well as IP whitelisting required before able to access distibution
 
 ### Phantom UI and code development to allow connection of PWA
 

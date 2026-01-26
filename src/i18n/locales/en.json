@@ -334,6 +334,15 @@
         "auto_focus_notification_desc": "Automatically bring window to front when answering from notification",
         "prefer_blind_transfer": "Prefer Blind Transfer",
         "prefer_blind_transfer_desc": "Use blind transfer by default instead of attended",
+        "click_to_dial_section": "Click-to-Dial from Web Links",
+        "click_to_dial_enabled": "Enable Click-to-Dial",
+        "click_to_dial_enabled_desc": "Allow phone numbers in websites to open this application",
+        "click_to_dial_behavior": "Behavior when phone number clicked",
+        "click_to_dial_behavior_desc": "Choose how the application responds to clicked phone numbers",
+        "click_to_dial_populate": "Populate number only",
+        "click_to_dial_populate_desc": "Fill dial input and wait for agent to press Call button",
+        "click_to_dial_auto": "Auto-dial immediately",
+        "click_to_dial_auto_desc": "Automatically place call when clicking phone numbers",
         "speaker": "Speaker",
         "microphone": "Microphone",
         "mic_level": "Input Level",
@@ -503,6 +512,13 @@
         "sip_reconnected_message": "Successfully reconnected to Phantom server. Re-registering...",
         "incoming_call_with_name": "Incoming Call: {{name}}",
         "incoming_call_with_number": "Incoming Call: {{number}}",
-        "tap_to_answer": "Tap to answer"
+        "tap_to_answer": "Tap to answer",
+        "click_to_dial_disabled": "Click-to-Dial is disabled",
+        "click_to_dial_disabled_desc": "Enable it in Settings → Call Settings to use this feature",
+        "click_to_dial_received": "Number received from web link",
+        "click_to_dial_press_call": "Press Call to dial {{number}}",
+        "click_to_dial_auto_dialing": "Auto-dialing from web link",
+        "line_busy": "Line Busy",
+        "line_busy_desc": "Complete or switch lines to dial {{number}}"
     }
 }

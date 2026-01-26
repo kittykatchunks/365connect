@@ -29,6 +29,8 @@ export interface CallSettings {
   incomingCallNotifications: boolean;
   autoFocusOnNotificationAnswer: boolean;
   preferBlindTransfer: boolean;
+  clickToDialEnabled: boolean;
+  clickToDialBehavior: 'populate-only' | 'auto-dial';
 }
 
 export interface AudioSettings {
@@ -82,7 +84,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
     callWaiting: true,
     incomingCallNotifications: true,
     autoFocusOnNotificationAnswer: true,
-    preferBlindTransfer: false
+    preferBlindTransfer: false,
+    clickToDialEnabled: false,
+    clickToDialBehavior: 'populate-only'
   },
   audio: {
     speakerDevice: 'default',

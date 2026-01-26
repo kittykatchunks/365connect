@@ -310,6 +310,15 @@
         "auto_focus_notification_desc": "Trazer janela para frente automaticamente",
         "prefer_blind_transfer": "Preferir Transferência Cega",
         "prefer_blind_transfer_desc": "Usar transferência cega por padrão",
+        "click_to_dial_section": "Clique para Ligar de Links da Web",
+        "click_to_dial_enabled": "Ativar Clique para Ligar",
+        "click_to_dial_enabled_desc": "Permitir que números de telefone em sites abram este aplicativo",
+        "click_to_dial_behavior": "Comportamento ao clicar em um número de telefone",
+        "click_to_dial_behavior_desc": "Escolha como o aplicativo responde a números de telefone clicados",
+        "click_to_dial_populate": "Preencher número apenas",
+        "click_to_dial_populate_desc": "Preencher campo de discagem e aguardar que o agente pressione Ligar",
+        "click_to_dial_auto": "Discar automaticamente",
+        "click_to_dial_auto_desc": "Realizar a chamada automaticamente ao clicar em números de telefone",
         "speaker": "Alto-falante",
         "microphone": "Microfone",
         "mic_level": "Nível de Entrada",
@@ -474,6 +483,13 @@
         "sip_reconnected_message": "Reconectado com sucesso ao servidor Phantom. Registrando novamente...",
         "incoming_call_with_name": "Chamada Recebida: {{name}}",
         "incoming_call_with_number": "Chamada Recebida: {{number}}",
-        "tap_to_answer": "Toque para atender"
+        "tap_to_answer": "Toque para atender",
+        "click_to_dial_disabled": "Clique para Ligar está desativado",
+        "click_to_dial_disabled_desc": "Ative-o em Configurações → Configurações de Chamadas para usar este recurso",
+        "click_to_dial_received": "Número recebido de link da web",
+        "click_to_dial_press_call": "Pressione Ligar para discar {{number}}",
+        "click_to_dial_auto_dialing": "Discagem automática de link da web",
+        "line_busy": "Linha Ocupada",
+        "line_busy_desc": "Complete ou mude de linha para discar {{number}}"
     }
 }

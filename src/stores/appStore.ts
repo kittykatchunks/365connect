@@ -28,6 +28,7 @@ interface AppState {
   currentView: ViewType;
   openSettingsWithConnection: boolean; // Flag to open connection settings when navigating to settings
   pendingDialNumber: string | null; // Number to pre-populate in dial input when switching to dial tab
+  autoDialNumber: string | null; // Number from tel: URL for click-to-dial functionality
   
   // Agent state
   agentState: AgentState;
@@ -45,6 +46,7 @@ interface AppState {
   setCurrentView: (view: ViewType) => void;
   setOpenSettingsWithConnection: (value: boolean) => void;
   setPendingDialNumber: (number: string | null) => void;
+  setAutoDialNumber: (number: string | null) => void;
   switchToDialWithNumber: (number: string) => void;
   
   // Agent actions
@@ -72,6 +74,7 @@ export const useAppStore = create<AppState>()(
         currentView: 'dial',
         openSettingsWithConnection: false,
         pendingDialNumber: null,
+        autoDialNumber: null,
         
         // Agent initial state
         agentState: 'logged-out',
@@ -96,6 +99,8 @@ export const useAppStore = create<AppState>()(
         setOpenSettingsWithConnection: (value) => set({ openSettingsWithConnection: value }),
         
         setPendingDialNumber: (number) => set({ pendingDialNumber: number }),
+        
+        setAutoDialNumber: (number) => set({ autoDialNumber: number }),
         
         switchToDialWithNumber: (number) => {
           set({ 

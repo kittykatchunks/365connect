@@ -36,6 +36,8 @@ interface SettingsState {
   setIncomingCallNotifications: (enabled: boolean) => void;
   setAutoFocusOnNotificationAnswer: (enabled: boolean) => void;
   setPreferBlindTransfer: (enabled: boolean) => void;
+  setClickToDialEnabled: (enabled: boolean) => void;
+  setClickToDialBehavior: (behavior: 'populate-only' | 'auto-dial') => void;
   
   // Actions - Audio
   setSpeakerDevice: (deviceId: string) => void;
@@ -207,6 +209,24 @@ export const useSettingsStore = create<SettingsState>()(
         setPreferBlindTransfer: (preferBlindTransfer) => set((state) => ({
           settings: { ...state.settings, call: { ...state.settings.call, preferBlindTransfer } }
         })),
+        setClickToDialEnabled: (clickToDialEnabled) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting click-to-dial enabled:', clickToDialEnabled);
+          }
+          set((state) => ({
+            settings: { ...state.settings, call: { ...state.settings.call, clickToDialEnabled } }
+          }));
+        },
+        setClickToDialBehavior: (clickToDialBehavior) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting click-to-dial behavior:', clickToDialBehavior);
+          }
+          set((state) => ({
+            settings: { ...state.settings, call: { ...state.settings.call, clickToDialBehavior } }
+          }));
+        },
         
         // Audio actions
         setSpeakerDevice: (speakerDevice) => set((state) => ({

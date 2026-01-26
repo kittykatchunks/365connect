@@ -21,6 +21,12 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
+        protocol_handlers: [
+          {
+            protocol: 'tel',
+            url: '/?tel=%s'
+          }
+        ],
         icons: [
           {
             src: 'icons/pwa-192x192.png',

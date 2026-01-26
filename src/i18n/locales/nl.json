@@ -312,6 +312,15 @@
         "auto_focus_notification_desc": "Breng venster automatisch naar voren",
         "prefer_blind_transfer": "Voorkeur Blind Doorverbinden",
         "prefer_blind_transfer_desc": "Gebruik standaard blind doorverbinden",
+        "click_to_dial_section": "Klik om te Bellen vanuit Weblinks",
+        "click_to_dial_enabled": "Klik om te Bellen Inschakelen",
+        "click_to_dial_enabled_desc": "Sta telefoonnummers op websites toe om deze applicatie te openen",
+        "click_to_dial_behavior": "Gedrag bij klikken op een telefoonnummer",
+        "click_to_dial_behavior_desc": "Kies hoe de applicatie reageert op geklikte telefoonnummers",
+        "click_to_dial_populate": "Alleen nummer invullen",
+        "click_to_dial_populate_desc": "Vul kiesnummerveld in en wacht tot agent op Bellen drukt",
+        "click_to_dial_auto": "Automatisch bellen",
+        "click_to_dial_auto_desc": "Automatisch bellen bij klikken op telefoonnummers",
         "speaker": "Luidspreker",
         "microphone": "Microfoon",
         "mic_level": "Invoerniveau",
@@ -474,6 +483,13 @@
         "sip_reconnected_message": "Succesvol opnieuw verbonden met Phantom-server. Opnieuw registreren...",
         "incoming_call_with_name": "Inkomend Gesprek: {{name}}",
         "incoming_call_with_number": "Inkomend Gesprek: {{number}}",
-        "tap_to_answer": "Tik om te beantwoorden"
+        "tap_to_answer": "Tik om te beantwoorden",
+        "click_to_dial_disabled": "Klik om te Bellen is uitgeschakeld",
+        "click_to_dial_disabled_desc": "Schakel het in via Instellingen → Gespreksinstellingen om deze functie te gebruiken",
+        "click_to_dial_received": "Nummer ontvangen van weblink",
+        "click_to_dial_press_call": "Druk op Bellen om {{number}} te bellen",
+        "click_to_dial_auto_dialing": "Automatisch bellen vanuit weblink",
+        "line_busy": "Lijn Bezet",
+        "line_busy_desc": "Voltooi of wissel van lijn om {{number}} te bellen"
     }
 }
