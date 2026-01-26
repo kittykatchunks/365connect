@@ -462,13 +462,26 @@ export class SIPService {
       console.log('[SIPService] 📝 Unregistration occurred', {
         isIntentional: this.isIntentionalDisconnect,
         transportState: this.transportState,
-        registrationState: this.registrationState
+        registrationState: this.registrationState,
+        activeSessions: this.sessions.size
       });
     }
     
     // Update registration state to unregistered
     this.registrationState = 'unregistered';
     this.emit('registrationStateChanged', 'unregistered');
+    
+    // Terminate any active calls when unregistered
+    // This ensures calls are properly cleaned up when app is refreshed or connection is lost
+    if (this.sessions.size > 0) {
+      if (verboseLogging) {
+        console.log('[SIPService] 📞 Terminating', this.sessions.size, 'active session(s) due to unregistration');
+      }
+      
+      this.terminateAllSessions().catch(error => {
+        console.error('[SIPService] ❌ Error terminating sessions during unregistration:', error);
+      });
+    }
     
     // Only trigger full cleanup if this is an unexpected unregistration
     // Intentional disconnects already handle cleanup in stop() or unregister()
@@ -2342,7 +2355,12 @@ export class SIPService {
     
     if (verboseLogging) {
       console.log('[SIPService] ❌ SIP WebSocket transport disconnected', error?.message);
-      console.log('[SIPService] � Triggering full disconnect cleanup (same as manual disconnect)');
+      console.log('[SIPService] 🧹 Triggering full disconnect cleanup (same as manual disconnect)');
+      console.log('[SIPService] 📊 Current state:', {
+        activeSessions: this.sessions.size,
+        activeLines: this.activeLines.size,
+        blfSubscriptions: this.blfSubscriptions.size
+      });
     }
     
     this.transportState = 'disconnected';
@@ -2351,6 +2369,18 @@ export class SIPService {
     // When transport disconnects, we're also unregistered
     this.registrationState = 'unregistered';
     this.emit('registrationStateChanged', 'unregistered');
+
+    // Terminate any active calls immediately when transport is disconnected
+    // This is critical for handling app refreshes where the app starts in disconnected state
+    if (this.sessions.size > 0) {
+      if (verboseLogging) {
+        console.log('[SIPService] 📞 Terminating', this.sessions.size, 'active session(s) due to transport disconnect');
+      }
+      
+      this.terminateAllSessions().catch(error => {
+        console.error('[SIPService] ❌ Error terminating sessions during disconnect:', error);
+      });
+    }
 
     // Clear all BLF subscriptions when disconnected
     if (verboseLogging && this.blfSubscriptions.size > 0) {
