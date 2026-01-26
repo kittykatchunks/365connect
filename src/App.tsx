@@ -296,6 +296,22 @@ function App() {
     const verboseLogging = isVerboseLoggingEnabled();
     
     console.log('[App] 🚀 Click-to-dial monitoring useEffect initialized (verbose:', verboseLogging + ')');
+    console.log('[App] 📍 Current URL at startup:', window.location.href);
+    console.log('[App] 📍 URL search params:', window.location.search);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const allParams: Record<string, string> = {};
+    urlParams.forEach((value, key) => {
+      allParams[key] = value;
+    });
+    console.log('[App] 📍 All URL params:', allParams);
+    
+    // Check if PWA and protocol handlers are supported
+    if ('serviceWorker' in navigator && 'getInstalledRelatedApps' in navigator) {
+      console.log('[App] ✅ PWA features supported');
+    } else {
+      console.log('[App] ⚠️ PWA features may not be fully supported');
+    }
     
     let lastProcessedTel = ''; // Track last processed tel to prevent duplicates
     
