@@ -146,7 +146,7 @@
   padding: var(--spacing-sm) 0;
 }
 
-.transfer-btn {
+/* .transfer-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,7 +175,7 @@
   opacity: 0.4;
   cursor: not-allowed;
   color: var(--text-muted);
-}
+} */
 
 /* Hint Text */
 .transfer-hint {
@@ -192,10 +192,6 @@
 }
 
 [data-theme="dark"] .search-input {
-  background-color: var(--background-color);
-}
-
-[data-theme="dark"] .transfer-btn {
   background-color: var(--background-color);
 }
 
@@ -240,7 +236,7 @@
     order: 2;
   }
   
-  .transfer-btn {
+  /* .transfer-btn {
     transform: rotate(90deg);
   }
   
@@ -250,7 +246,7 @@
   
   .transfer-btn:active:not(:disabled) {
     transform: rotate(90deg) scale(0.95);
-  }
+  } */
   
   .queue-list {
     max-height: 200px;
