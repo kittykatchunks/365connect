@@ -23,7 +23,7 @@ export default defineConfig({
         scope: '/',
         start_url: '/?source=pwa',
         launch_handler: {
-          client_mode: ['focus-existing', 'auto']
+          client_mode: ['navigate-existing', 'auto']
         },
         protocol_handlers: [
           {
