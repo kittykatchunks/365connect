@@ -515,66 +515,48 @@ export function AgentKeys({ className }: AgentKeysProps) {
       return;
     }
     
-    // Agent is unpaused - check if on active call
-    const hasActiveCall = currentSession && currentSession.state !== 'terminated';
-    if (hasActiveCall) {
-      // On active call - pause directly via API without showing reasons
-      if (!sipUsername) {
-        console.error('[AgentKeys] ❌ No SIP username available for pause');
-        return;
-      }
-      
-      if (verboseLogging) {
-        console.log('[AgentKeys] 📞 Agent on active call - pausing directly via API');
-      }
-      
-      setIsLoading(true);
-      try {
-        const success = await pauseAgentViaAPI(sipUsername);
-        
-        if (success) {
-          setAgentState('paused');
-          if (verboseLogging) {
-            console.log('[AgentKeys] ✅ Agent paused successfully');
-          }
-        } else {
-          throw new Error('Pause API call failed');
-        }
-      } catch (error) {
-        console.error('[AgentKeys] ❌ Pause error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-    
-    // Phone is idle - fetch pause reasons
+    // Agent is unpaused - fetch pause reasons first (same logic whether on call or idle)
+    // The difference is: when on active call, DTMF will happen on a background line
     if (!sipUsername) {
       console.error('[AgentKeys] ❌ No SIP username available for pause reasons');
       return;
     }
     
+    const hasActiveCall = currentSession && currentSession.state !== 'terminated';
+    
     setIsLoading(true);
     try {
       if (verboseLogging) {
-        console.log('[AgentKeys] 📡 Fetching pause reasons');
+        console.log('[AgentKeys] 📡 Fetching pause reasons', {
+          hasActiveCall,
+          currentSessionId: currentSession?.id
+        });
       }
       
       const result = await fetchPauseReasons(sipUsername);
       
       if (!result.apiCallSucceeded) {
-        // WallBoardStats API failed - fallback to DTMF *63
-        if (verboseLogging) {
-          console.log('[AgentKeys] ⚠️ WallBoardStats API failed - falling back to DTMF *63');
-        }
-        
-        await makeCall(AGENT_CODES.pause);
-        
-        // Update state to paused immediately (DTMF call will disconnect automatically after reason entry)
-        setAgentState('paused');
-        
-        if (verboseLogging) {
-          console.log('[AgentKeys] 📞 Dialed *63 for DTMF pause input - state set to paused');
+        // WallBoardStats API failed
+        if (hasActiveCall) {
+          // On active call - do NOT attempt DTMF on background line
+          if (verboseLogging) {
+            console.log('[AgentKeys] ⚠️ WallBoardStats API failed while on active call - cannot pause');
+          }
+          throw new Error('Unable to fetch pause reasons while on active call');
+        } else {
+          // Idle - fallback to DTMF *63
+          if (verboseLogging) {
+            console.log('[AgentKeys] ⚠️ WallBoardStats API failed - falling back to DTMF *63');
+          }
+          
+          await makeCall(AGENT_CODES.pause);
+          
+          // Update state to paused immediately (DTMF call will disconnect automatically after reason entry)
+          setAgentState('paused');
+          
+          if (verboseLogging) {
+            console.log('[AgentKeys] 📞 Dialed *63 for DTMF pause input - state set to paused');
+          }
         }
       } else if (result.reasons.length === 0) {
         // WallBoardStats succeeded but no pause reasons - use AgentpausefromPhone API
@@ -588,14 +570,20 @@ export function AgentKeys({ className }: AgentKeysProps) {
           setAgentState('paused');
           if (verboseLogging) {
             console.log('[AgentKeys] ✅ Agent paused successfully via API');
+            if (hasActiveCall) {
+              console.log('[AgentKeys] ✅ Active call remains undisturbed (pause via API only)');
+            }
           }
         } else {
           throw new Error('Pause API call failed');
         }
       } else {
-        // Show pause reason modal
+        // Show pause reason modal (will allow selection and DTMF on background line if on call)
         if (verboseLogging) {
           console.log(`[AgentKeys] 📋 Showing pause reason modal with ${result.reasons.length} reasons`);
+          if (hasActiveCall) {
+            console.log('[AgentKeys] ℹ️ Agent on active call - DTMF selection will use background line');
+          }
         }
         
         setPauseReasons(result.reasons);
@@ -612,8 +600,15 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const handlePauseReasonSelect = useCallback(async (code: number, label: string) => {
     const verboseLogging = isVerboseLoggingEnabled();
     
+    // Check if there's an active call
+    const hasActiveCall = currentSession && currentSession.state !== 'terminated';
+    
     if (verboseLogging) {
-      console.log(`[AgentKeys] 📋 Pause reason selected: ${code} - ${label}`);
+      console.log(`[AgentKeys] 📋 Pause reason selected: ${code} - ${label}`, {
+        hasActiveCall,
+        currentSessionId: currentSession?.id,
+        currentSessionState: currentSession?.state
+      });
     }
     
     setShowPauseReasonModal(false);
@@ -624,23 +619,31 @@ export function AgentKeys({ className }: AgentKeysProps) {
       const dialCode = `${AGENT_CODES.pause}*${code}`;
       
       if (verboseLogging) {
-        console.log(`[AgentKeys] 📞 Dialing pause code: ${dialCode}`);
+        if (hasActiveCall) {
+          console.log(`[AgentKeys] 📞 Dialing pause code on background line: ${dialCode} (active call will not be disrupted)`);
+        } else {
+          console.log(`[AgentKeys] 📞 Dialing pause code: ${dialCode}`);
+        }
       }
       
+      // makeCall will automatically use an available line (different from active call if one exists)
       await makeCall(dialCode);
       
-      // Update state immediately (call will disconnect automatically)
+      // Update state immediately (DTMF call will disconnect automatically after sending the code)
       setAgentState('paused');
       
       if (verboseLogging) {
         console.log('[AgentKeys] ✅ Paused with reason:', label);
+        if (hasActiveCall) {
+          console.log('[AgentKeys] ✅ Active call remains undisturbed');
+        }
       }
     } catch (error) {
       console.error('[AgentKeys] ❌ Failed to pause with reason:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [makeCall, setAgentState]);
+  }, [makeCall, setAgentState, currentSession]);
   
   // Get button states
   const getLoginButtonVariant = () => {

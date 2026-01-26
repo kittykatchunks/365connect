@@ -140,6 +140,7 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] I wish to implement monitoring the internet connection with warning toast and reconnection info toast
 - [X] When creating BLF button and saving then the button should always try to subscribe to SIP initially, after that subscribition attempts upon selecting the dial tab (e.g. switching from other tab) should initiate attempt to subscribe to all BLF keys again (except ones starting 7) and again at three minute intervals (except ones starting 7) whilst displaying the dial tab.  When on any other tab no requirment to update subscriptions as refresh will be attempted once toggling back to dial tab
 - [ ] When the app is refreshed and is automatically put in disconnected mode, then any active call needs to be disconnected as well
+- [X] When on active call the current setup of pressing the Pause button puts the agent on pause using the noauth api call Pauseagentfromphone.  I wish it to try the api call first to find if there are pause reasons available on the system, if not then continue with the Pauseagentfromphone.  If pause reasons are found I wish them to be displayed as if not on a call so a reason can be selected.  The process of selecting the pause via dtmf should be completed on an available line in the background of the currently active call and in no way should disrupt the active call
 
 
 ### UI issues to be resolved before release
