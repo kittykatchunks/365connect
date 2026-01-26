@@ -21,7 +21,10 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
-        start_url: '/',
+        start_url: '/?source=pwa',
+        launch_handler: {
+          client_mode: ['focus-existing', 'auto']
+        },
         protocol_handlers: [
           {
             protocol: 'tel',
@@ -51,6 +54,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,mp3}'],
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.phantomapi\.net/,
@@ -61,6 +68,14 @@ export default defineConfig({
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 // 1 hour
               }
+            }
+          },
+          {
+            urlPattern: /^.*\?tel=.*/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'tel-handler',
+              networkTimeoutSeconds: 3
             }
           }
         ]
