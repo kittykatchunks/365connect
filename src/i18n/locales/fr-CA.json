@@ -112,8 +112,8 @@
         "confirm_change": "Changer CLI?"
     },    "voicemail": {
         "title": "Messagerie vocale",
-        "new_message": "Nouveau Message",
-        "new_messages": "Nouveaux Messages",
+        "new_message": "Nouveau VM",
+        "new_messages": "Nouveau VM",
         "title_with_count": "Messagerie vocale ({{count}} nouveau message)",
         "check_messages": "Vérifier {{count}} nouveau message vocal",
         "not_configured": "Code d'accès à la boîte vocale non configuré. Veuillez le définir dans les paramètres de connexion.",

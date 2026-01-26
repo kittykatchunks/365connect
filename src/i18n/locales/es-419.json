@@ -112,8 +112,8 @@
         "confirm_change": "¿Cambiar CLI?"
     },    "voicemail": {
         "title": "Correo de voz",
-        "new_message": "Mensaje Nuevo",
-        "new_messages": "Mensajes Nuevos",
+        "new_message": "Nuevo VM",
+        "new_messages": "Nuevo VM",
         "title_with_count": "Correo de voz ({{count}} mensaje nuevo)",
         "check_messages": "Revisar {{count}} mensaje nuevo de correo de voz",
         "not_configured": "Código de acceso al correo de voz no configurado. Por favor, configúrelo en Ajustes de Conexión.",

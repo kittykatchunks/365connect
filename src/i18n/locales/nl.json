@@ -112,8 +112,8 @@
         "confirm_change": "CLI wijzigen?"
     },    "voicemail": {
         "title": "Voicemail",
-        "new_message": "Nieuw Bericht",
-        "new_messages": "Nieuwe Berichten",
+        "new_message": "Nieuw VM",
+        "new_messages": "Nieuw VM",
         "title_with_count": "Voicemail ({{count}} nieuw bericht)",
         "check_messages": "Controleer {{count}} nieuw voicemailbericht",
         "not_configured": "Voicemail toegangscode niet geconfigureerd. Stel deze in bij Verbindingsinstellingen.",
