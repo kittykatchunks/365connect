@@ -13,13 +13,28 @@ import './i18n';
 function handleTelUrl() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const telNumber = urlParams.get('tel');
+    let telNumber = urlParams.get('tel');
     
     if (telNumber) {
       const verboseLogging = localStorage.getItem('VerboseLogging') === 'true';
       
       if (verboseLogging) {
         console.log('[main.tsx] 📞 Detected tel: URL parameter:', telNumber);
+      }
+      
+      // Strip "tel:" prefix if present (can happen with some browsers)
+      if (telNumber.toLowerCase().startsWith('tel:')) {
+        telNumber = telNumber.substring(4);
+        if (verboseLogging) {
+          console.log('[main.tsx] 🔧 Stripped tel: prefix, cleaned number:', telNumber);
+        }
+      }
+      
+      // URL decode the number (handles + and other special characters)
+      telNumber = decodeURIComponent(telNumber);
+      
+      if (verboseLogging) {
+        console.log('[main.tsx] 📞 Final cleaned number:', telNumber);
       }
       
       // Check if click-to-dial is enabled in settings
@@ -58,10 +73,16 @@ function handleTelUrl() {
         sessionStorage.setItem('clickToDialDisabledNotify', 'true');
       }
       
-      // Clear the URL parameter to clean up the address bar
-      const url = new URL(window.location.href);
-      url.searchParams.delete('tel');
-      window.history.replaceState({}, '', url.toString());
+      // Clear the URL parameter to clean up the address bar without reload
+      // Use replaceState with current URL to avoid navigation/reload
+      if (window.history.replaceState) {
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState(null, '', cleanUrl);
+        
+        if (verboseLogging) {
+          console.log('[main.tsx] 🧹 Cleaned URL parameter without reload');
+        }
+      }
     }
   } catch (error) {
     console.error('[main.tsx] Error handling tel: URL:', error);
