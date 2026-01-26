@@ -705,12 +705,7 @@ export function SettingsView() {
                 </div>
                 
                 {/* Click-to-Dial Section */}
-                <div className="setting-item" style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-                  <div style={{ marginBottom: '0.75rem' }}>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                      {t('settings.click_to_dial_section', 'Click-to-Dial from Web Links')}
-                    </h4>
-                  </div>
+                <div className="setting-item">
                   <Toggle
                     label={t('settings.click_to_dial_enabled', 'Enable Click-to-Dial')}
                     description={t('settings.click_to_dial_enabled_desc', 'Allow phone numbers in websites to open this application')}
