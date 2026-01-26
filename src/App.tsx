@@ -441,7 +441,7 @@ function App() {
           duration: 5000
         });
         
-        sessionStorage.removeEventListener('clickToDialDisabledNotify');
+        sessionStorage.removeItem('clickToDialDisabledNotify');
       }
     }
     
