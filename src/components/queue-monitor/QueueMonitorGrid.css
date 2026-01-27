@@ -38,6 +38,10 @@
   display: flex;
   align-items: center;
   border-right: 2px solid var(--border-color);
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Data Cells */
