@@ -50,7 +50,6 @@ export function QueueModal({
   const [abandonedBreach, setAbandonedBreach] = useState(20);
   const [awtWarn, setAwtWarn] = useState(30);
   const [awtBreach, setAwtBreach] = useState(60);
-  const [resetTime, setResetTime] = useState('00:00');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Initialize form with existing config when editing
@@ -61,7 +60,6 @@ export function QueueModal({
       setAbandonedBreach(existingConfig.abandonedThreshold.breach);
       setAwtWarn(existingConfig.avgWaitTimeThreshold.warn);
       setAwtBreach(existingConfig.avgWaitTimeThreshold.breach);
-      setResetTime(existingConfig.statsResetTime);
       
       if (verboseLogging) {
         console.log('[QueueModal] 📝 Initialized form with existing config:', existingConfig);
@@ -73,7 +71,6 @@ export function QueueModal({
       setAbandonedBreach(20);
       setAwtWarn(30);
       setAwtBreach(60);
-      setResetTime('00:00');
     }
   }, [existingConfig, verboseLogging]);
   
@@ -116,9 +113,7 @@ export function QueueModal({
         avgWaitTimeThreshold: {
           warn: awtWarn,
           breach: awtBreach
-        },
-        statsResetTime: resetTime,
-        lastResetTimestamp: Date.now()
+        }
       };
       
       if (verboseLogging) {
@@ -137,12 +132,6 @@ export function QueueModal({
     }
     onClose();
   };
-  
-  // Generate hourly time options (00:00 to 23:00)
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = i.toString().padStart(2, '0');
-    return `${hour}:00`;
-  });
   
   // Filter out already configured queues (except when editing current queue)
   const availableQueueOptions = availableQueues.filter(q => 
@@ -386,26 +375,6 @@ export function QueueModal({
               unit="s"
               aria-label={t('queue_monitor.awt_threshold', 'Average Wait Time Threshold')}
             />
-          </div>
-          
-          {/* Stats Reset Time */}
-          <div className="form-group">
-            <label htmlFor="reset-time" className="form-label">
-              {t('queue_monitor.stats_reset_time', 'Daily Stats Reset Time')}
-            </label>
-            <p className="form-help-text">
-              {t('queue_monitor.stats_reset_desc', 'Time each day when statistics will be reset (24-hour format)')}
-            </p>
-            <select
-              id="reset-time"
-              className="form-select"
-              value={resetTime}
-              onChange={(e) => setResetTime(e.target.value)}
-            >
-              {timeOptions.map((time) => (
-                <option key={time} value={time}>{time}</option>
-              ))}
-            </select>
           </div>
         </div>
         

@@ -25,10 +25,6 @@ export interface QueueConfig {
   abandonedThreshold: SLAThreshold;
   /** Average wait time thresholds (0-100 seconds) */
   avgWaitTimeThreshold: SLAThreshold;
-  /** Time to reset daily stats (24-hour format, e.g., "00:00", "14:00") */
-  statsResetTime: string;
-  /** Timestamp of last stats reset */
-  lastResetTimestamp?: number;
 }
 
 /**
