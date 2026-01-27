@@ -42,8 +42,6 @@ export function QueueMonitorSocketProvider({
   children, 
   enabled 
 }: QueueMonitorSocketProviderProps) {
-  const verboseLogging = isVerboseLoggingEnabled();
-  
   // State
   const [state, setState] = useState<QueueMonitorSocketState>({
     connectionState: 'disconnected',
@@ -66,6 +64,8 @@ export function QueueMonitorSocketProvider({
 
   // Fetch JWT and connect
   const fetchJWTAndConnect = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     if (!enabled) {
       if (verboseLogging) {
         console.log('[QueueMonitorSocketContext] ⚠️ Not connecting - Queue Monitor disabled');
@@ -128,7 +128,7 @@ export function QueueMonitorSocketProvider({
         error: error instanceof Error ? error.message : 'Connection failed'
       }));
     }
-  }, [enabled, verboseLogging]);
+  }, [enabled]);
 
   // Connect on mount if enabled
   useEffect(() => {
