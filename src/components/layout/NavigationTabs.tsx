@@ -3,6 +3,7 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 import { 
   Phone, 
   Users, 
@@ -11,7 +12,7 @@ import {
   BarChart3, 
   Settings 
 } from 'lucide-react';
-import { cn } from '@/utils';
+import { cn, isVerboseLoggingEnabled } from '@/utils';
 import { useAppStore } from '@/stores';
 import { useSettingsStore } from '@/stores';
 import { useTabNotification } from '@/hooks';
@@ -55,6 +56,36 @@ export function NavigationTabs() {
     // Check setting for visibility
     return settings.interface[tab.settingKey as keyof typeof settings.interface];
   });
+  
+  // Apply dynamic min-width based on visible tab count
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const tabCount = visibleTabs.length;
+    let minWidth: string;
+    
+    // Determine min-width based on tab count
+    if (tabCount >= 2 && tabCount <= 4) {
+      minWidth = '300px';
+    } else if (tabCount === 5) {
+      minWidth = '315px';
+    } else if (tabCount >= 6) {
+      minWidth = '365px';
+    } else {
+      minWidth = '300px'; // Default fallback
+    }
+    
+    if (verboseLogging) {
+      console.log(`[NavigationTabs] 📐 Setting app min-width to ${minWidth} for ${tabCount} visible tabs`);
+    }
+    
+    // Apply min-width to body element
+    document.body.style.minWidth = minWidth;
+    
+    // Cleanup function to reset if component unmounts
+    return () => {
+      document.body.style.minWidth = '';
+    };
+  }, [visibleTabs.length]);
   
   return (
     <nav className="navigation-tabs" role="tablist">
