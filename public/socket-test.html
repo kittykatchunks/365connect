@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Connection Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status.idle {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .status.idle .status-indicator {
+            background: #999;
+        }
+        
+        .status.connecting {
+            background: #fff4e5;
+            color: #e65100;
+        }
+        
+        .status.connecting .status-indicator {
+            background: #ff9800;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .status.connected {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status.connected .status-indicator {
+            background: #4caf50;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .status.error .status-indicator {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-connect {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-connect:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-disconnect {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-disconnect:hover:not(:disabled) {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            margin-bottom: 10px;
+            color: #d4d4d4;
+        }
+        
+        .log-time {
+            color: #858585;
+        }
+        
+        .log-event {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        
+        .log-data {
+            color: #ce9178;
+            margin-left: 20px;
+            white-space: pre-wrap;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .info-box p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .connection-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Socket.IO Connection Test</h1>
+        
+        <div class="input-group">
+            <label for="serverUrl">Server URL</label>
+            <input 
+                type="text" 
+                id="serverUrl" 
+                value="https://server1-833.phantomapi.net:3000"
+                placeholder="Enter server URL"
+            >
+        </div>
+        
+        <div class="status idle" id="status">
+            <div class="status-indicator"></div>
+            <span>Idle - Ready to connect</span>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn-connect" id="connectBtn">Connect</button>
+            <button class="btn-disconnect" id="disconnectBtn" disabled>Disconnect</button>
+        </div>
+        
+        <div id="connectionDetails" style="display: none;">
+            <div class="info-box">
+                <h3>✅ Connection Established</h3>
+                <div class="connection-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Socket ID</div>
+                        <div class="detail-value" id="socketId">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Transport</div>
+                        <div class="detail-value" id="transport">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Connected</div>
+                        <div class="detail-value" id="connected">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h2 style="color: #333; margin-bottom: 15px; font-size: 18px;">Event Log</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="log-time">[Ready]</span> Waiting for connection...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let jwtToken = null;
+        
+        const serverUrlInput = document.getElementById('serverUrl');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const statusDiv = document.getElementById('status');
+        const logContainer = document.getElementById('logContainer');
+        const connectionDetails = document.getElementById('connectionDetails');
+        
+        function updateStatus(status, message) {
+            statusDiv.className = `status ${status}`;
+            statusDiv.innerHTML = `
+                <div class="status-indicator"></div>
+                <span>${message}</span>
+            `;
+        }
+        
+        function addLog(event, data = null) {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            let logContent = `<span class="log-time">[${time}]</span> <span class="log-event">${event}</span>`;
+            
+            if (data) {
+                logContent += `<div class="log-data">${JSON.stringify(data, null, 2)}</div>`;
+            }
+            
+            logEntry.innerHTML = logContent;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function updateConnectionDetails() {
+            if (socket && socket.connected) {
+                document.getElementById('socketId').textContent = socket.id || '-';
+                document.getElementById('transport').textContent = socket.io.engine.transport.name || '-';
+                document.getElementById('connected').textContent = socket.connected ? 'Yes' : 'No';
+                connectionDetails.style.display = 'block';
+            } else {
+                connectionDetails.style.display = 'none';
+            }
+        }
+        
+        async function fetchJWTToken() {
+            // Extract PhantomID from URL (e.g., server1-833 -> 833)
+            const url = serverUrlInput.value.trim();
+            const match = url.match(/server1-(\d+)/);
+            const phantomId = match ? match[1] : '000';
+            
+            // Direct request to connect365.servehttp.com
+            const tokenUrl = `https://connect365.servehttp.com/api/phantom/JWTWebToken?phantomId=${phantomId}`;
+            
+            updateStatus('connecting', 'Fetching JWT token...');
+            addLog('JWT_REQUEST', { url: tokenUrl, phantomId });
+            
+            try {
+                const response = await fetch(tokenUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                addLog('JWT_RESPONSE_HEADERS', {
+                    status: response.status,
+                    contentType: contentType
+                });
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    addLog('JWT_ERROR_RESPONSE', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        body: text.substring(0, 500)
+                    });
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                // Get response as text first to debug
+                const responseText = await response.text();
+                addLog('JWT_RAW_RESPONSE', {
+                    text: responseText.substring(0, 200)
+                });
+                
+                const data = JSON.parse(responseText);
+                addLog('JWT_RESPONSE', { 
+                    status: response.status,
+                    data: data 
+                });
+                
+                if (data.token || data.webtoken || data.jwt || data.WBtoken) {
+                    jwtToken = data.token || data.webtoken || data.jwt || data.WBtoken;
+                    addLog('JWT_TOKEN_RECEIVED', { 
+                        token: jwtToken.substring(0, 20) + '...' 
+                    });
+                    return jwtToken;
+                } else {
+                    throw new Error('No token found in response');
+                }
+            } catch (error) {
+                addLog('JWT_ERROR', { 
+                    message: error.message,
+                    error: error.toString()
+                });
+                updateStatus('error', `Failed to fetch JWT: ${error.message}`);
+                throw error;
+            }
+        }
+        
+        connectBtn.addEventListener('click', async () => {
+            const url = serverUrlInput.value.trim();
+            
+            if (!url) {
+                alert('Please enter a server URL');
+                return;
+            }
+            
+            try {
+                // First, get the JWT token
+                const token = await fetchJWTToken();
+                
+                // Extract PhantomID from URL for later use
+                const match = url.match(/server1-(\d+)/);
+                const phantomId = match ? match[1] : '000';
+                
+                updateStatus('connecting', 'Connecting with JWT token...');
+                addLog('CONNECTION_ATTEMPT', { url, authenticated: true });
+                
+                socket = io(url, {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionAttempts: 5,
+                    reconnectionDelay: 1000,
+                    timeout: 10000,
+                    auth: {
+                        token: token
+                    },
+                    extraHeaders: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            } catch (error) {
+                return; // Stop if token fetch fails
+            }
+            
+            // Connection events
+            socket.on('connect', () => {
+                // Extract PhantomID again for use in this scope
+                const match = url.match(/server1-(\d+)/);
+                const phantomId = match ? match[1] : '000';
+                
+                updateStatus('connected', `Connected to ${url}`);
+                addLog('CONNECTED', { id: socket.id });
+                updateConnectionDetails();
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                serverUrlInput.disabled = true;
+                
+                // Send auth event with webtoken as seen in working connection
+                socket.emit('auth', jwtToken);
+                addLog('EMIT', { event: 'auth', data: jwtToken.substring(0, 30) + '...' });
+            });
+            
+            // Listen for common events
+            socket.on('pong', (...args) => {
+                addLog('PONG', args);
+            });
+            
+            socket.on('message', (...args) => {
+                addLog('MESSAGE', args);
+            });
+            
+            socket.on('welcome', (...args) => {
+                addLog('WELCOME', args);
+            });
+            
+            socket.on('init', (...args) => {
+                addLog('INIT', args);
+            });
+            
+            socket.on('authenticated', (...args) => {
+                addLog('AUTHENTICATED', args);
+            });
+            
+            socket.on('error', (...args) => {
+                addLog('ERROR', args);
+            });
+            
+            socket.on('unauthorized', (...args) => {
+                addLog('UNAUTHORIZED', args);
+            });
+            
+            socket.on('connect_error', (error) => {
+                updateStatus('error', `Connection Error: ${error.message}`);
+                addLog('CONNECT_ERROR', { 
+                    message: error.message,
+                    description: error.description 
+                });
+            });
+            
+            socket.on('connect_timeout', () => {
+                updateStatus('error', 'Connection Timeout');
+                addLog('CONNECT_TIMEOUT');
+            });
+            
+            socket.on('disconnect', (reason) => {
+                updateStatus('idle', `Disconnected: ${reason}`);
+                addLog('DISCONNECTED', { reason });
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                serverUrlInput.disabled = false;
+                updateConnectionDetails();
+            });
+            
+            socket.on('reconnect_attempt', (attempt) => {
+                updateStatus('connecting', `Reconnecting... (Attempt ${attempt})`);
+                addLog('RECONNECT_ATTEMPT', { attempt });
+            });
+            
+            socket.on('reconnect', (attempt) => {
+                updateStatus('connected', 'Reconnected');
+                addLog('RECONNECTED', { attempt });
+                updateConnectionDetails();
+            });
+            
+            socket.on('reconnect_failed', () => {
+                updateStatus('error', 'Reconnection Failed');
+                addLog('RECONNECT_FAILED');
+            });
+            
+            // Listen for all custom events
+            socket.onAny((eventName, ...args) => {
+                if (!['connect', 'disconnect', 'connect_error'].includes(eventName)) {
+                    addLog('RECEIVED', { event: eventName, data: args });
+                }
+            });
+        });
+        
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                addLog('DISCONNECT_REQUESTED');
+                socket.disconnect();
+                socket = null;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -4,13 +4,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Wifi, WifiOff } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { ConfirmModal } from '@/components/modals';
 import { QueueMonitorGrid } from './QueueMonitorGrid';
 import { QueueModal } from './QueueModal';
 import { useTabNotification } from '@/hooks';
+import { useQueueMonitorSocket } from '@/contexts';
 import type { QueueConfig, QueueStats, QueueAlertState, AvailableQueue } from '@/types/queue-monitor';
 import { 
   loadQueueConfigs, 
@@ -27,6 +28,10 @@ export function QueueMonitorView() {
   const { t } = useTranslation();
   const verboseLogging = isVerboseLoggingEnabled();
   const { setTabAlert } = useTabNotification();
+  
+  // Get Socket.IO data
+  const socketData = useQueueMonitorSocket();
+  const { connectionState, queues: socketQueues, counters: socketCounters } = socketData;
   
   // State
   const [queueConfigs, setQueueConfigs] = useState<QueueConfig[]>([]);
@@ -125,7 +130,134 @@ export function QueueMonitorView() {
     }
   }, [verboseLogging]);
   
-  // Fetch real-time queue stats from Phantom API
+  // Process Socket.IO data when it arrives (real-time updates)
+  useEffect(() => {
+    if (!socketQueues || !socketCounters || queueConfigs.length === 0) {
+      return;
+    }
+
+    if (connectionState !== 'connected') {
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ⚠️ Socket not connected, skipping stats update');
+      }
+      return;
+    }
+
+    if (verboseLogging) {
+      console.log('[QueueMonitorView] 📊 Processing Socket.IO data...');
+    }
+
+    // Helper to get counter value safely
+    const getCounterValue = (key: string): number => {
+      const counter = socketCounters[key];
+      return typeof counter === 'number' ? counter : 0;
+    };
+
+    // Helper to get agent counts for a queue
+    const getAgentCounts = (queueNum: string) => {
+      const queueData = socketQueues[queueNum];
+      if (!queueData) {
+        return { total: 0, free: 0, busy: 0, paused: 0 };
+      }
+
+      const total = queueData.agents || 0;
+      const paused = queueData.paused || 0;
+      const oncall = queueData.oncall || 0;
+      const free = Math.max(0, total - paused - oncall);
+
+      return { total, free, busy: oncall, paused };
+    };
+
+    // Parse stats for each configured queue
+    const stats: QueueStats[] = queueConfigs.map(config => {
+      const queueNum = config.queueNumber;
+      
+      // Extract metrics from counters
+      const operatorCalls = getCounterValue(`operator-${queueNum}`);
+      const abandonedCalls = getCounterValue(`abandoned-${queueNum}`);
+      const waitingCalls = getCounterValue(`waiting-${queueNum}`);
+      const avgWaitTime = getCounterValue(`avgrng-${queueNum}`);
+      
+      // Get agent counts from queue status
+      const agentCounts = getAgentCounts(queueNum);
+      
+      // Calculate totals
+      const totalCalls = operatorCalls + abandonedCalls;
+      
+      // Calculate percentages (avoid division by zero)
+      const abandonedPercent = totalCalls > 0 
+        ? Math.round((abandonedCalls / totalCalls) * 100) 
+        : 0;
+      const answeredPercent = totalCalls > 0
+        ? Math.round((operatorCalls / totalCalls) * 100)
+        : 0;
+      
+      // Determine alert states based on configured thresholds
+      let abandonedAlert: QueueAlertState = 'normal';
+      if (abandonedPercent >= config.abandonedThreshold.breach) {
+        abandonedAlert = 'breach';
+      } else if (abandonedPercent >= config.abandonedThreshold.warn) {
+        abandonedAlert = 'warn';
+      }
+      
+      let awtAlert: QueueAlertState = 'normal';
+      if (avgWaitTime >= config.avgWaitTimeThreshold.breach) {
+        awtAlert = 'breach';
+      } else if (avgWaitTime >= config.avgWaitTimeThreshold.warn) {
+        awtAlert = 'warn';
+      }
+      
+      // Overall alert is the highest of the two
+      const overallAlert: QueueAlertState = 
+        abandonedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
+        abandonedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
+        'normal';
+      
+      // Update alert status in localStorage
+      updateQueueAlertStatus({
+        queueNumber: config.queueNumber,
+        abandonedAlert,
+        avgWaitTimeAlert: awtAlert,
+        overallAlert
+      });
+      
+      if (verboseLogging) {
+        console.log(`[QueueMonitorView] 📈 Queue ${queueNum} stats (Socket.IO):`, {
+          operatorCalls,
+          abandonedCalls,
+          totalCalls,
+          abandonedPercent,
+          avgWaitTime,
+          waitingCalls,
+          agentCounts,
+          alertState: overallAlert
+        });
+      }
+      
+      return {
+        queueNumber: config.queueNumber,
+        queueName: config.queueName,
+        agentsTotal: agentCounts.total,
+        agentsFree: agentCounts.free,
+        agentsBusy: agentCounts.busy,
+        agentsPaused: agentCounts.paused,
+        waitingCalls,
+        answeredPercent,
+        abandonedPercent,
+        avgWaitTime,
+        totalCalls,
+        alertState: overallAlert
+      };
+    });
+    
+    setQueueStats(stats);
+    
+    if (verboseLogging) {
+      console.log('[QueueMonitorView] ✅ Updated queue stats from Socket.IO:', stats.length, 'queues');
+    }
+  }, [socketQueues, socketCounters, queueConfigs, connectionState, verboseLogging]);
+  
+  // Fetch real-time queue stats from Phantom API (FALLBACK - only used if Socket.IO not connected)
   const fetchQueueStats = useCallback(async () => {
     if (queueConfigs.length === 0) {
       setQueueStats([]);
@@ -254,9 +386,21 @@ export function QueueMonitorView() {
     }
   }, [queueConfigs, verboseLogging]);
   
-  // Poll queue stats every 60 seconds
+  // Poll queue stats every 60 seconds (FALLBACK - only when Socket.IO not connected)
   useEffect(() => {
+    // Skip API polling if Socket.IO is connected
+    if (connectionState === 'connected') {
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ⚡ Socket.IO connected - skipping API polling');
+      }
+      return;
+    }
+
     if (queueConfigs.length > 0) {
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ⚠️ Socket.IO not connected - using API fallback');
+      }
+
       // Fetch immediately on mount/config change
       fetchQueueStats();
       
@@ -264,7 +408,7 @@ export function QueueMonitorView() {
       const interval = setInterval(fetchQueueStats, 60000);
       
       if (verboseLogging) {
-        console.log('[QueueMonitorView] ⏱️ Started 60-second polling for', queueConfigs.length, 'queues');
+        console.log('[QueueMonitorView] ⏱️ Started 60-second API polling for', queueConfigs.length, 'queues');
       }
       
       return () => {
@@ -276,7 +420,7 @@ export function QueueMonitorView() {
     } else {
       setQueueStats([]);
     }
-  }, [queueConfigs, fetchQueueStats, verboseLogging]);
+  }, [queueConfigs, connectionState, fetchQueueStats, verboseLogging]);
   
   // Handlers
   const handleAddQueue = () => {
@@ -316,6 +460,29 @@ export function QueueMonitorView() {
   
   const configuredQueueNumbers = queueConfigs.map(c => c.queueNumber);
   
+  // Connection status indicator
+  const renderConnectionStatus = () => {
+    const isConnected = connectionState === 'connected';
+    const isConnecting = connectionState === 'connecting';
+    
+    return (
+      <div 
+        className={`connection-status ${connectionState}`}
+        title={
+          isConnected ? t('queue_monitor.realtime_connected', 'Real-time data connected') :
+          isConnecting ? t('queue_monitor.realtime_connecting', 'Connecting to real-time data...') :
+          t('queue_monitor.realtime_disconnected', 'Real-time data disconnected (using API fallback)')
+        }
+      >
+        {isConnected ? (
+          <Wifi className="w-4 h-4 text-success" />
+        ) : (
+          <WifiOff className="w-4 h-4 text-muted" />
+        )}
+      </div>
+    );
+  };
+  
   return (
     <div className="queue-monitor-view">
       <div className="queue-monitor-header">
@@ -323,7 +490,8 @@ export function QueueMonitorView() {
           title={t('queue_monitor.title', 'Queue Monitor')}
           subtitle={t('queue_monitor.subtitle', 'Monitor SLA breaches')}
         />
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+          {renderConnectionStatus()}
           {queueConfigs.length > 0 && (
             <Button
               variant="ghost"
