@@ -601,13 +601,13 @@ function App() {
     initializeApp();
   }, [setInitialized, setLoading]);
   
+  // Get queue monitor setting from store (must be called before any returns to maintain hook order)
+  const showQueueMonitorTab = useSettingsStore((state) => state.settings.interface.showQueueMonitorTab);
+  
   // Show loading screen while initializing
   if (loading || !initialized) {
     return <LoadingScreen message={loadingMessage} />;
   }
-  
-  // Get queue monitor setting from store
-  const showQueueMonitorTab = useSettingsStore((state) => state.settings.interface.showQueueMonitorTab);
   
   return (
     <PhantomAPIProvider pollInterval={5}>
