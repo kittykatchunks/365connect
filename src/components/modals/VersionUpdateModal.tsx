@@ -3,7 +3,7 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, Info, AlertTriangle, Sparkles } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 interface VersionUpdateModalProps {
@@ -26,14 +26,8 @@ export function VersionUpdateModal({
   if (!isOpen) return null;
   
   const getIcon = () => {
-    switch (changeType) {
-      case 'upgrade':
-        return <Sparkles className="modal-header-icon upgrade" />;
-      case 'downgrade':
-        return <AlertTriangle className="modal-header-icon warning" />;
-      default:
-        return <Info className="modal-header-icon info" />;
-    }
+    // Always show company icon
+    return <img src="/icons/pwa-192x192.png" alt="Autocab Connect365" className="modal-header-icon company-icon" style={{ width: '48px', height: '48px', borderRadius: '8px' }} />;
   };
   
   const getTitle = () => {
@@ -52,13 +46,13 @@ export function VersionUpdateModal({
       case 'upgrade':
         return t(
           'version.upgrade_message',
-          'Autocab365 Connect has been updated to version {{version}}. Enjoy the latest features and improvements!',
+          'Autocab Connect365 has been updated to version {{version}}. Enjoy the latest features and improvements!',
           { version: currentVersion }
         );
       case 'downgrade':
         return t(
           'version.downgrade_message',
-          'Autocab365 Connect version has changed from {{old}} to {{new}}.',
+          'Autocab Connect365 version has changed from {{old}} to {{new}}.',
           { old: lastVersion || 'unknown', new: currentVersion }
         );
       default:

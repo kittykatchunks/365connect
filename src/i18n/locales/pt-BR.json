@@ -23,7 +23,8 @@
         "optional": "Opcional",
         "configured": "Configurado",
         "future_development": "Desenvolvimento futuro",
-        "actions": "Ações"
+        "actions": "Ações",
+        "got_it": "Entendi"
     },
     "status": {
         "disconnected": "Desconectado",
@@ -491,5 +492,21 @@
         "click_to_dial_auto_dialing": "Discagem automática de link da web",
         "line_busy": "Linha Ocupada",
         "line_busy_desc": "Complete ou mude de linha para discar {{number}}"
+    },
+    "version": {
+        "update_available": "Aplicativo Atualizado!",
+        "downgrade_detected": "Versão Alterada",
+        "version_changed": "Versão Alterada",
+        "upgrade_message": "Autocab Connect365 foi atualizado para a versão {{version}}. Aproveite os recursos e melhorias mais recentes!",
+        "downgrade_message": "A versão do Autocab Connect365 mudou de {{old}} para {{new}}.",
+        "version_changed_message": "A versão do aplicativo mudou para {{version}}.",
+        "previous_version": "Versão anterior",
+        "whats_new": "Novidades",
+        "feature_1": "Correções de bugs e melhorias de desempenho",
+        "feature_2": "Maior estabilidade e confiabilidade",
+        "feature_3": "Melhorias de interface de usuário",
+        "downgrade_warning": "Você está executando uma versão mais antiga do aplicativo. Alguns recursos podem não funcionar como esperado.",
+        "current_version": "Versão Atual",
+        "previous_version": "Versão Anterior"
     }
 }

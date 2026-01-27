@@ -23,7 +23,8 @@
         "optional": "Optioneel",
         "configured": "Geconfigureerd",
         "future_development": "Toekomstige ontwikkeling",
-        "actions": "Acties"
+        "actions": "Acties",
+        "got_it": "Begrepen"
     },
     "status": {
         "disconnected": "Niet Verbonden",
@@ -491,5 +492,21 @@
         "click_to_dial_auto_dialing": "Automatisch bellen vanuit weblink",
         "line_busy": "Lijn Bezet",
         "line_busy_desc": "Voltooi of wissel van lijn om {{number}} te bellen"
+    },
+    "version": {
+        "update_available": "App Bijgewerkt!",
+        "downgrade_detected": "Versie Gewijzigd",
+        "version_changed": "Versie Gewijzigd",
+        "upgrade_message": "Autocab Connect365 is bijgewerkt naar versie {{version}}. Geniet van de nieuwste functies en verbeteringen!",
+        "downgrade_message": "Autocab Connect365 versie is gewijzigd van {{old}} naar {{new}}.",
+        "version_changed_message": "De app-versie is gewijzigd naar {{version}}.",
+        "previous_version": "Vorige versie",
+        "whats_new": "Wat is Nieuw",
+        "feature_1": "Bugfixes en prestatieverbeteringen",
+        "feature_2": "Verbeterde stabiliteit en betrouwbaarheid",
+        "feature_3": "UI/UX-verbeteringen",
+        "downgrade_warning": "U gebruikt een oudere versie van de app. Sommige functies werken mogelijk niet zoals verwacht.",
+        "current_version": "Huidige Versie",
+        "previous_version": "Vorige Versie"
     }
 }

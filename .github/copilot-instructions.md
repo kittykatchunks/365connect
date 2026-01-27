@@ -1,38 +1,21 @@
 # Autocab365 PWA - AI Development Guide
 
 ## Project Overview
-This is a **WebRTC SIP phone PWA** built for Autocab365 taxi dispatch systems, powered by Phantom PBX. It's based on the Browser Phone project with heavy customization for commercial deployment.
+This is a **WebRTC SIP phone PWA** built for Autocab365 taxi dispatch systems, powered by Phantom PBX. It's a modern React/TypeScript application with heavy customization for commercial deployment.
 
-## **CRITICAL: Active Development Folders**
-**⚠️ DO NOT MODIFY FILES IN THE `pwa/` FOLDER ⚠️**
+## Active Development
 
-- **`src/`** - Active React/TypeScript application - **MAKE ALL CHANGES HERE**
-- **`pwa/`** - Legacy reference code only - **READ ONLY - NO MODIFICATIONS**
+- **`src/`** - React/TypeScript application - **ALL development happens here**
 
-The `pwa/` folder contains the original vanilla JavaScript implementation and serves as a reference ONLY for understanding how features work. **ALL changes, modifications, and fixes must be made in the `src/` React application.**
-
-### Feature Implementation Reference Pattern
-**When the user requests changes, fixes, or new features:**
-1. **Assume they mean the React app in `src/`** - this is the active development codebase
-2. **ONLY reference `pwa/` folder** to understand how a feature was originally implemented (optional)
-3. **Implement all changes in React** (`src/`) using TypeScript, React hooks, and modern patterns
-4. **Never modify `pwa/` files** - they are frozen reference code from the legacy vanilla JS app
-
-**Example workflow:**
-- User says: "The mute button isn't working correctly"
-- Action: Fix the mute functionality in React components/services in `src/`
-- Optional: If unclear how it should work, reference `pwa/js/sip-session-manager.js` for the original logic
-- Implement: All fixes go in `src/` only
-
-**Critical Rule: When user says "fix X" or "change Y", they mean fix/change it in the React app (`src/`), not the PWA reference code.**
+All features are implemented using React, TypeScript, React hooks, and modern patterns.
 
 ## Architecture Fundamentals
 
-### Core Components
-- **SipSessionManager** (`js/sip-session-manager.js`): Central WebRTC/SIP logic using SIP.js library
-- **UIStateManager** (`js/ui-state-manager.js`): UI state and theme management
-- **BusylightManager** (`js/busylight-manager.js`): Hardware integration for status lights
-- **Phone.js** (`js/phone.js`): Main application orchestrator and legacy compatibility layer
+### Core Services
+- **SipService**: Central WebRTC/SIP logic using SIP.js library
+- **PhantomApiService**: API integration for server communication
+- **BusylightService**: Hardware integration for status lights
+- **React Context & Hooks**: State management and component communication
 
 ### Configuration System
 The app uses a **PhantomID-based configuration** where a 3-4 digit ID generates server URLs:
@@ -63,19 +46,6 @@ import { isVerboseLoggingEnabled } from '@/utils';
 
 // Check verbose logging at the start of functions
 const verboseLogging = isVerboseLoggingEnabled();
-
-// Add logging throughout your code
-if (verboseLogging) {
-    console.log('[ComponentName] Event occurred:', eventData);
-    console.warn('[ComponentName] Potential issue detected:', details);
-    console.error('[ComponentName] Error:', error);
-}
-```
-
-**PWA/Legacy JavaScript Implementation:**
-```javascript
-// Check verbose logging setting from localStorage
-const verboseLogging = window.localDB?.getItem('VerboseLogging', 'false') === 'true';
 
 // Add logging throughout your code
 if (verboseLogging) {
@@ -141,50 +111,53 @@ button.textContent = lang.call_now;
 2. Access via `lang.key_name` after language initialization
 3. Use snake_case for translation keys
 4. Provide context in translation keys: `button_call_start` not just `start`
-5. For dynamic content, use template strings: `lang.calls_count.replace('{count}', count)`
+5. typescript
+// WRONG - Hardcoded English
+<button>Call Now</button>
 
-**Language Files to Update:**
-- `pwa/lang/en.json` (English - primary reference)
-- `pwa/lang/es.json` (Spanish - Spain)
-- `pwa/lang/es-419.json` (Spanish - Latin America)
-- `pwa/lang/fr.json` (French - France)
-- `pwa/lang/fr-CA.json` (French - Canada)
-- `pwa/lang/nl.json` (Dutch)
-- `pwa/lang/pt.json` (Portuguese - Portugal)
-- `pwa/lang/pt-BR.json` (Portuguese - Brazil)
-
-## Key Development Patterns
-
-### Manager Pattern
-All major functionality is encapsulated in manager classes accessed via `App.managers`:
-```javascript
-App.managers.sip.makeCall(number);
-App.managers.ui.setTheme('dark');
-App.managers.busylight.setState('busy');
+// CORRECT - Using i18n hooks
+import { useTranslation } from 'react-i18next';
+const { t } = useTranslation();
+<button>{t('call_now')}</button>
 ```
 
-### Event-Driven Architecture
-Uses custom event system with WebHook compatibility:
-```javascript
-// Modern event handling
-App.managers.sip.on('sessionCreated', (session) => { ... });
+**i18n Implementation Pattern:**
+1. Add keys to all language files in `src/i18n/locales/` (en.json, es.json, fr.json, etc.)
+2. Access via `t('key_name')` using the useTranslation hook
+3. Use snake_case for translation keys
+4. PService Layer Pattern
+All major functionality is encapsulated in service modules:
+```typescript
+import { sipService } from '@/services/sip';
+import { busylightService } from '@/services/busylight';
 
-// Legacy WebHook support (for backward compatibility)
-window.web_hook_on_invite = function(sessionData) { ... };
+sipService.makeCall(number);
+busylightService.setState('busy');
+```
+
+### React Context & State Management
+Uses React Context for global state and Zustand stores:
+```typescript
+// Context usage
+const { theme, setTheme } = useTheme();
+
+// Store usage
+const calls = useCallStore((state) => state.calls);
 ```
 
 ### Progressive Web App (PWA)
-- Service Worker: `sw.js` with network-first strategy
-- Manifest: `manifest.json` for app installation
+- Service Worker with network-first strategy
+- Manifest for app installation
+- Offline capability with cached resources
+- Push notifications supportnstallation
 - Offline capability with cached resources
 - Push notifications for missed calls
+browser localStorage directly or through utility functions:
+```typescript
+import { getStorageItem, setStorageItem } from '@/utils';
 
-## Configuration Management
-
-### Local Storage Pattern
-Uses custom `localDB` wrapper for persistent settings:
-```javascript
-// Always check if localDB exists
+setStorageItem('SipUsername', username);
+const value = getStorageItem('SipUsername', defaultValue);/ Always check if localDB exists
 if (window.localDB) {
     window.localDB.setItem('SipUsername', username);
     const value = window.localDB.getItem('SipUsername', defaultValue);
@@ -211,12 +184,7 @@ if (window.localDB) {
 - Codec preference: Opus, uLaw, aLaw for audio
 - Media encryption: DTLS-SRTP mandatory
 
-## Development Workflows
-
-### Testing SIP Connection
-```javascript
-// Debug functions available in console
-debugSipConfiguration();        // Check stored config
+Use the built-in debug utilities and verbose logging in the Settings panel to diagnose connection issues.ugSipConfiguration();        // Check stored config
 diagnoseWebRTCConnection();     // Test WebSocket + WebRTC
 traceServerUrlFlow();          // Debug URL construction
 ```
@@ -232,9 +200,9 @@ CSS custom properties system with auto dark/light mode:
 ### Building/Deployment
 - **Docker**: `Dockerfile` creates complete Asterisk + app environment
 - **Static hosting**: All files in `Phone/` directory
-- **Dependencies**: CDN-first with local fallback in `lib/`
-
-## Critical Integration Points
+- **Build**: `npm run build` creates production bundle in `dist/`
+- **Development**: `npm run dev` starts Vite dev server
+- **Preview**: `npm run preview` previews production build locally
 
 ### Asterisk PBX Configuration
 - Requires `chan_pjsip` with WebSocket transport
@@ -247,20 +215,28 @@ CSS custom properties system with auto dark/light mode:
 - **jQuery 3.6.1**: DOM manipulation and UI
 - **Moment.js**: Time formatting and timezone handling
 - **Croppie**: Profile picture cropping
-
-## Common Pitfalls
-
-1. **Server Configuration**: Never use `localhost` - always use PhantomID-generated URLs
+1+**: Core WebRTC/SIP functionality
+- **React 18**: UI framework
+- **TypeScript**: Type safety and modern JavaScript features
+- **Vite**: Build tool and development server
+- **Zustand**: State management
+- **i18next**: Internationalization`localhost` - always use PhantomID-generated URLs
 2. **WebRTC Support**: Check `validateWebRTCSupport()` before SIP operations
 3. **Event Handling**: Both modern events AND legacy WebHooks must work
+4. **Theme System**: Respect browser WebRTC capabilities before SIP operations
+3. **React Hooks**: Follow React hooks rules (no conditional hooks, proper dependencies)
 4. **Theme System**: Respect user's system preference for auto theme
 5. **Session Cleanup**: Always cleanup timers and media streams on disconnect
 
 ## File Structure Guide
-- `Phone/js/`: Core application logic
-- `Phone/css/`: Styles with CSS custom properties
-- `config/`: Asterisk configuration templates
-- `Docker/config/`: Docker-specific Asterisk configs
-- `lib/`: External dependencies (CDN fallback)
+- `src/components/`: React UI components
+- `src/services/`: Core business logic and API integrations
+- `src/stores/`: Zustand state management stores
+- `src/contexts/`: React context providers
+- `src/hooks/`: Custom React hooks
+- `src/utils/`: Utility functions and helpers
+- `src/i18n/`: Internationalization configuration and translations
+- `src/types/`: TypeScript type definitions
+- `src/styles/`: Global CSS and style utilities
 
-When modifying this codebase, maintain the manager pattern, respect the PhantomID configuration system, and ensure both modern and legacy integration patterns continue to work.
+When modifying this codebase, follow React and TypeScript best practices, respect the PhantomID configuration system, and maintain proper component separation
