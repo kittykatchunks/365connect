@@ -268,21 +268,24 @@ export function SIPProvider({ children }: SIPProviderProps) {
                     }
                     
                     // Update agent state in appStore
-                    const { agentLogin, setQueueState } = useAppStore.getState();
-                    agentLogin(agentData.num || '', agentData.name);
+                    const { setAgentState, setAgentNumber, setAgentName, setQueueState } = useAppStore.getState();
                     
-                    // Update queue/pause state based on API response
-                    if (isPaused) {
-                      setQueueState('paused');
-                    } else {
-                      setQueueState('in-queue');
-                    }
+                    // Set agent number and name
+                    setAgentNumber(agentData.num || '');
+                    setAgentName(agentData.name);
+                    
+                    // Set agent state based on pause status
+                    setAgentState(isPaused ? 'paused' : 'available');
+                    
+                    // Set queue state (agent is in queue when logged in, regardless of pause)
+                    setQueueState('in-queue');
                     
                     if (verboseLogging) {
                       console.log('[SIPContext] 📝 Updated appStore agent state:', {
                         agentNumber: agentData.num,
                         agentName: agentData.name,
-                        queueState: isPaused ? 'paused' : 'in-queue'
+                        agentState: isPaused ? 'paused' : 'available',
+                        queueState: 'in-queue'
                       });
                     }
                     
