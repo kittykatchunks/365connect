@@ -46,8 +46,5 @@ export * from './settings';
 // Queue Monitor types
 export * from './queue-monitor';
 
-// Socket.IO types
-export * from './socketio';
-
 // Common types
 export type ViewType = 'dial' | 'contacts' | 'activity' | 'companyNumbers' | 'queueMonitor' | 'settings';

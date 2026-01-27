@@ -6,4 +6,3 @@ export { ThemeProvider, useTheme, type Theme, type ResolvedTheme, type ThemeProv
 export { SIPProvider, useSIPContext } from './SIPContext';
 export { PhantomAPIProvider, usePhantomAPI } from './PhantomAPIContext';
 export { BusylightProvider, useBusylightContext } from './BusylightContext';
-export { QueueMonitorSocketProvider, useQueueMonitorSocket } from './QueueMonitorSocketContext';

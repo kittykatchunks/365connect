@@ -21,4 +21,3 @@ export {
   type AccordionTriggerProps,
   type AccordionContentProps
 } from './Accordion';
-export { SocketIOTest } from './SocketIOTest';

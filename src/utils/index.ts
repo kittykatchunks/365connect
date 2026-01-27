@@ -14,7 +14,6 @@ export * from './version';
 export * from './phantomApiClient';
 export * from './queueStorage';
 export * from './audioUtils';
-export * from './socketTest';
 
 // Common utility functions
 import { clsx, type ClassValue } from 'clsx';
