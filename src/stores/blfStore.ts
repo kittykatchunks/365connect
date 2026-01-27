@@ -15,6 +15,7 @@ interface BLFState {
   setButton: (index: number, config: BLFButtonConfig) => void;
   clearButton: (index: number) => void;
   updateButtonState: (extension: string, state: BLFPresenceState) => void;
+  resetAllButtonStates: () => void;
   resetAllButtons: () => void;
   importButtons: (buttons: BLFButton[]) => void;
   
@@ -61,6 +62,15 @@ export const useBLFStore = create<BLFState>()(
               ? { ...button, state: newState }
               : button
           );
+          return { buttons: newButtons };
+        }),
+        
+        resetAllButtonStates: () => set((state) => {
+          // Reset all button states to 'inactive' without clearing configuration
+          const newButtons: BLFButton[] = state.buttons.map((button) => ({
+            ...button,
+            state: 'inactive' as const
+          }));
           return { buttons: newButtons };
         }),
         

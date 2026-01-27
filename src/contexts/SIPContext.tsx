@@ -7,10 +7,12 @@ import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode }
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { useSIPStore } from '../stores/sipStore';
+import { useBLFStore } from '../stores/blfStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useContactsStore } from '../stores/contactsStore';
 import { useUIStore } from '../stores/uiStore';
+import { useAppStore } from '../stores/appStore';
 import { useTabNotification } from '../hooks';
 import { useNotifications } from '../hooks/useNotifications';
 import { isVerboseLoggingEnabled, queryAgentStatus } from '../utils';
@@ -97,6 +99,8 @@ export function SIPProvider({ children }: SIPProviderProps) {
   const { showIncomingCallNotification, requestPermission } = useNotifications();
   const { contacts } = useContactsStore();
   const { addNotification } = useUIStore();
+  const { resetAllButtonStates } = useBLFStore();
+  const { agentLogout } = useAppStore();
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
@@ -424,17 +428,21 @@ export function SIPProvider({ children }: SIPProviderProps) {
     // Listen for unregistered event to clear BLF states
     const unsubUnregistered = service.on('unregistered', () => {
       if (verboseLogging) {
-        console.log('[SIPContext] 🔕 Unregistered event received - clearing all BLF button states');
+        console.log('[SIPContext] 🔕 Unregistered event received - clearing all BLF button states and resetting agent state');
       }
       clearAllBLFStates();
+      resetAllButtonStates();
+      agentLogout();
     });
     
     // Listen for transport disconnection to clear BLF states
     const unsubTransportDisconnected = service.on('transportDisconnected', (error: Error | null) => {
       if (verboseLogging) {
-        console.log('[SIPContext] 🔌 Transport disconnected event received - clearing all BLF button states', error?.message);
+        console.log('[SIPContext] 🔌 Transport disconnected event received - clearing all BLF button states and resetting agent state', error?.message);
       }
       clearAllBLFStates();
+      resetAllButtonStates();
+      agentLogout();
     });
     
     // Session events
