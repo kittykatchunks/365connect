@@ -267,6 +267,25 @@ export function SIPProvider({ children }: SIPProviderProps) {
                       });
                     }
                     
+                    // Update agent state in appStore
+                    const { agentLogin, setQueueState } = useAppStore.getState();
+                    agentLogin(agentData.num || '', agentData.name);
+                    
+                    // Update queue/pause state based on API response
+                    if (isPaused) {
+                      setQueueState('paused');
+                    } else {
+                      setQueueState('in-queue');
+                    }
+                    
+                    if (verboseLogging) {
+                      console.log('[SIPContext] 📝 Updated appStore agent state:', {
+                        agentNumber: agentData.num,
+                        agentName: agentData.name,
+                        queueState: isPaused ? 'paused' : 'in-queue'
+                      });
+                    }
+                    
                     // Show success notification
                     const agentIdentifier = agentData.num || sipConfig.username;
                     const pauseStatus = isPaused ? ' (Paused)' : '';
