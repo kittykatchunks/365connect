@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { ConfirmModal } from '@/components/modals';
@@ -16,6 +16,7 @@ import {
   loadQueueConfigs, 
   saveQueueConfig, 
   deleteQueueConfig,
+  deleteAllQueueConfigs,
   updateQueueAlertStatus
 } from '@/utils/queueStorage';
 import { isVerboseLoggingEnabled } from '@/utils';
@@ -36,6 +37,7 @@ export function QueueMonitorView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<QueueConfig | null>(null);
   const [deleteConfirmQueue, setDeleteConfirmQueue] = useState<string | null>(null);
+  const [isDeleteAllConfirmOpen, setIsDeleteAllConfirmOpen] = useState(false);
   
   // Load configs on mount
   useEffect(() => {
@@ -241,15 +243,27 @@ export function QueueMonitorView() {
           title={t('queue_monitor.title', 'Queue Monitor')}
           subtitle={t('queue_monitor.subtitle', 'Monitor SLA breaches')}
         />
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleAddQueue}
-          className="queue-monitor-add-btn"
-        >
-          <Plus className="w-4 h-4" />
-          {t('queue_monitor.add_queue', 'Add Queue')}
-        </Button>
+        <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+          {queueConfigs.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-error"
+              onClick={() => setIsDeleteAllConfirmOpen(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleAddQueue}
+            className="queue-monitor-add-btn"
+          >
+            <Plus className="w-4 h-4" />
+            {t('queue_monitor.add_queue', 'Add Queue')}
+          </Button>
+        </div>
       </div>
       
       <div className="queue-monitor-content">
@@ -280,6 +294,28 @@ export function QueueMonitorView() {
         title={t('queue_monitor.delete_title', 'Delete Queue Monitor')}
         message={t('queue_monitor.delete_message', 'Are you sure you want to stop monitoring this queue?')}
         confirmText={t('common.delete', 'Delete')}
+      />
+      
+      {/* Delete All Queues Confirm */}
+      <ConfirmModal
+        isOpen={isDeleteAllConfirmOpen}
+        onClose={() => setIsDeleteAllConfirmOpen(false)}
+        onConfirm={() => {
+          const cleared = deleteAllQueueConfigs();
+          setQueueConfigs(cleared);
+          setQueueStats([]);
+          setIsDeleteAllConfirmOpen(false);
+          
+          if (verboseLogging) {
+            console.log('[QueueMonitorView] 🗑️ All queue monitors deleted');
+          }
+        }}
+        title={t('queue_monitor.delete_all_title', 'Delete All Queue Monitors')}
+        message={t('queue_monitor.delete_all_message', 'Are you sure you want to delete all {{count}} queue monitors? This cannot be undone.', {
+          count: queueConfigs.length
+        })}
+        confirmText={t('queue_monitor.delete_all', 'Delete All')}
+        variant="danger"
       />
     </div>
   );

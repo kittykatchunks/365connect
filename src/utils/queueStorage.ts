@@ -210,8 +210,24 @@ export function clearAllQueueData(): void {
   localStorage.removeItem(STORAGE_KEY_ALERTS);
   
   if (verboseLogging) {
-    console.log('[QueueStorage] 🧹 Cleared all queue monitoring data');
+    console.log('[QueueStorage] 🗑️ Cleared all queue monitoring data');
   }
+}
+
+/**
+ * Delete all queue configurations
+ */
+export function deleteAllQueueConfigs(): QueueConfig[] {
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  if (verboseLogging) {
+    console.log('[QueueStorage] 🗑️ Deleting all queue configs');
+  }
+  
+  saveQueueConfigs([]);
+  saveQueueAlertStatuses([]);
+  
+  return [];
 }
 
 /**
