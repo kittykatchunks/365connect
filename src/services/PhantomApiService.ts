@@ -50,6 +50,41 @@ export interface PhantomApiRequest {
   useNoAuth?: boolean;
 }
 
+export interface QueueListItem {
+  /** Queue name/label */
+  label: string;
+  /** Queue number/extension */
+  name: string;
+  /** Additional queue information (not fully typed) */
+  [key: string]: unknown;
+}
+
+export interface QueueListResponse {
+  response: string;
+  aaData: QueueListItem[];
+}
+
+export interface WallBoardCounter {
+  name: string;
+  val: string | number;
+}
+
+export interface WallBoardCounters {
+  [key: string]: WallBoardCounter | number;
+}
+
+export interface WallBoardStatsResponse {
+  pausereasons?: Record<string, string>;
+  agents?: Record<string, unknown>;
+  agentstotal?: Record<string, number>;
+  calls?: unknown;
+  counters: WallBoardCounters;
+  block?: unknown;
+  version?: unknown;
+  refresh?: number;
+  alarms?: unknown;
+}
+
 type PhantomApiEventType = 
   | 'initialized'
   | 'request'
@@ -235,6 +270,67 @@ export class PhantomApiService {
       data,
       useNoAuth: true
     }, options);
+  }
+
+  // ==================== Queue Management Methods ====================
+
+  /**
+   * Fetch list of available queues from the QueueList API
+   * Endpoint: /api/QueueList
+   * Returns queue name (label) and queue number (name)
+   */
+  async fetchQueueList(): Promise<PhantomApiResponse<QueueListResponse>> {
+    if (this.verboseLogging) {
+      console.log('[PhantomApiService] 📋 Fetching queue list from API...');
+    }
+
+    try {
+      const response = await this.get<QueueListResponse>('QueueList');
+      
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] ✅ Queue list response:', response);
+        if (response.success && response.data) {
+          console.log('[PhantomApiService] 📊 Found queues:', response.data.aaData?.length || 0);
+        }
+      }
+
+      return response;
+    } catch (error) {
+      if (this.verboseLogging) {
+        console.error('[PhantomApiService] ❌ Failed to fetch queue list:', error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch wallboard statistics including queue metrics
+   * Endpoint: /api/WallBoardStats
+   * Returns counters with per-queue statistics
+   */
+  async fetchWallBoardStats(): Promise<PhantomApiResponse<WallBoardStatsResponse>> {
+    if (this.verboseLogging) {
+      console.log('[PhantomApiService] 📊 Fetching wallboard stats from API...');
+    }
+
+    try {
+      const response = await this.get<WallBoardStatsResponse>('WallBoardStats');
+      
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] ✅ Wallboard stats response:', response);
+        if (response.success && response.data?.counters) {
+          const counterCount = Object.keys(response.data.counters).length;
+          console.log('[PhantomApiService] 📈 Received counters:', counterCount);
+        }
+      }
+
+      return response;
+    } catch (error) {
+      if (this.verboseLogging) {
+        console.error('[PhantomApiService] ❌ Failed to fetch wallboard stats:', error);
+      }
+      throw error;
+    }
   }
 
   // ==================== Core Request Method ====================

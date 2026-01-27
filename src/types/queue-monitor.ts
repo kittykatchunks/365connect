@@ -43,6 +43,8 @@ export interface QueueStats {
   agentsBusy: number;
   /** Agents currently paused */
   agentsPaused: number;
+  /** Calls currently waiting in queue */
+  waitingCalls: number;
   /** Percentage of total calls answered */
   answeredPercent: number;
   /** Percentage of total calls missed/abandoned */
@@ -81,5 +83,7 @@ export interface AvailableQueue {
   /** Queue number */
   queueNumber: string;
   /** Queue name if available */
-  queueName?: string;
+  queueName: string;
+  /** Raw API data for reference (optional) */
+  rawData?: Record<string, unknown>;
 }

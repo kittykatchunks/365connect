@@ -145,6 +145,13 @@
   gap: var(--spacing-xs);
 }
 
+/* Total Cell */
+.total-cell {
+  font-weight: 600;
+  background-color: var(--background-elevated);
+  border-top: 2px solid var(--border-color);
+}
+
 .action-btn {
   padding: var(--spacing-xs);
   border: none;

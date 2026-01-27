@@ -20,6 +20,7 @@ import {
   updateQueueAlertStatus
 } from '@/utils/queueStorage';
 import { isVerboseLoggingEnabled } from '@/utils';
+import { phantomApiService } from '@/services';
 import './QueueMonitorView.css';
 
 export function QueueMonitorView() {
@@ -77,126 +78,205 @@ export function QueueMonitorView() {
     }
   }, [queueStats, updateTabAlerts]);
   
-  // Mock function to fetch available queues from API
-  // TODO: Replace with actual Phantom API call
+  // Fetch available queues from Phantom API
   const fetchAvailableQueues = useCallback(async () => {
     setLoadingQueues(true);
     
     if (verboseLogging) {
-      console.log('[QueueMonitorView] 📡 Fetching available queues from API...');
+      console.log('[QueueMonitorView] 📡 Fetching available queues from Phantom API...');
     }
     
     try {
-      // Simulated API call - replace with actual implementation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Mock data
-      const mockQueues: AvailableQueue[] = [
-        { queueNumber: '600', queueName: 'Main Support' },
-        { queueNumber: '601', queueName: 'Sales' },
-        { queueNumber: '602', queueName: 'Technical Support' },
-        { queueNumber: '603', queueName: 'Billing Department' },
-        { queueNumber: '604', queueName: 'Customer Service' },
-        { queueNumber: '605', queueName: 'VIP Support' },
-        { queueNumber: '606', queueName: 'Hardware Support' },
-        { queueNumber: '607', queueName: 'Software Support' },
-        { queueNumber: '608', queueName: 'Network Operations' },
-        { queueNumber: '609', queueName: 'Security Team' },
-        { queueNumber: '610', queueName: 'Account Management' },
-        { queueNumber: '611', queueName: 'New Customers' },
-        { queueNumber: '612', queueName: 'Premium Support' },
-        { queueNumber: '613', queueName: 'Product Support' },
-        { queueNumber: '614', queueName: 'Training Team' },
-        { queueNumber: '615', queueName: 'Escalation Team' },
-        { queueNumber: '616', queueName: 'International' },
-        { queueNumber: '617', queueName: 'Complaints' },
-        { queueNumber: '618', queueName: 'Renewals' },
-        { queueNumber: '619', queueName: 'Upgrades' },
-        { queueNumber: '620', queueName: 'Emergency Support' },
-        { queueNumber: '650', queueName: 'After Hours' }
-      ];
-      
-      setAvailableQueues(mockQueues);
+      // Call Phantom API to get queue list
+      const response = await phantomApiService.fetchQueueList();
       
       if (verboseLogging) {
-        console.log('[QueueMonitorView] ✅ Fetched queues:', mockQueues);
+        console.log('[QueueMonitorView] 📥 API Response:', response);
+      }
+      
+      if (!response.success || !response.data) {
+        throw new Error('Failed to fetch queue list from API');
+      }
+      
+      // Map API response to AvailableQueue format
+      const queues: AvailableQueue[] = response.data.aaData.map(item => ({
+        queueNumber: item.name,
+        queueName: item.label,
+        rawData: item
+      }));
+      
+      setAvailableQueues(queues);
+      
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ✅ Successfully fetched queues:', {
+          count: queues.length,
+          queues: queues.map(q => `${q.queueNumber} - ${q.queueName}`)
+        });
       }
     } catch (error) {
-      console.error('[QueueMonitorView] ❌ Error fetching queues:', error);
+      console.error('[QueueMonitorView] ❌ Error fetching queues from API:', error);
+      
+      // Set empty array on error
       setAvailableQueues([]);
+      
+      // TODO: Show user-facing error notification/toast
     } finally {
       setLoadingQueues(false);
     }
   }, [verboseLogging]);
   
-  // Mock function to fetch queue stats
-  // TODO: Replace with actual Phantom API polling
-  const fetchQueueStats = useCallback(() => {
+  // Fetch real-time queue stats from Phantom API
+  const fetchQueueStats = useCallback(async () => {
+    if (queueConfigs.length === 0) {
+      setQueueStats([]);
+      return;
+    }
+
     if (verboseLogging) {
-      console.log('[QueueMonitorView] 📊 Fetching queue stats...');
+      console.log('[QueueMonitorView] 📊 Fetching queue stats from Phantom API...');
     }
     
-    // Generate mock stats for configured queues
-    const stats: QueueStats[] = queueConfigs.map(config => {
-      // Simulate random stats
-      const abandonedPercent = Math.floor(Math.random() * 30);
-      const avgWaitTime = Math.floor(Math.random() * 100);
+    try {
+      // Call Phantom API to get wallboard stats
+      const response = await phantomApiService.fetchWallBoardStats();
       
-      // Determine alert states
-      let abandonedAlert: QueueAlertState = 'normal';
-      if (abandonedPercent >= config.abandonedThreshold.breach) {
-        abandonedAlert = 'breach';
-      } else if (abandonedPercent >= config.abandonedThreshold.warn) {
-        abandonedAlert = 'warn';
+      if (!response.success || !response.data || !response.data.counters) {
+        throw new Error('Failed to fetch wallboard stats from API');
+      }
+
+      const counters = response.data.counters;
+
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] 📥 Wallboard stats counters:', counters);
       }
       
-      let awtAlert: QueueAlertState = 'normal';
-      if (avgWaitTime >= config.avgWaitTimeThreshold.breach) {
-        awtAlert = 'breach';
-      } else if (avgWaitTime >= config.avgWaitTimeThreshold.warn) {
-        awtAlert = 'warn';
-      }
+      // Helper to get counter value safely
+      const getCounterValue = (key: string): number => {
+        const counter = counters[key];
+        if (typeof counter === 'object' && counter !== null && 'val' in counter) {
+          return Number(counter.val) || 0;
+        }
+        if (typeof counter === 'number') {
+          return counter;
+        }
+        return 0;
+      };
       
-      // Overall alert is the highest of the two
-      const overallAlert: QueueAlertState = 
-        abandonedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
-        abandonedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
-        'normal';
-      
-      // Update alert status in localStorage
-      updateQueueAlertStatus({
-        queueNumber: config.queueNumber,
-        abandonedAlert,
-        avgWaitTimeAlert: awtAlert,
-        overallAlert
+      // Parse stats for each configured queue
+      const stats: QueueStats[] = queueConfigs.map(config => {
+        const queueNum = config.queueNumber;
+        
+        // Extract metrics from counters
+        const operatorCalls = getCounterValue(`operator-${queueNum}`);
+        const abandonedCalls = getCounterValue(`abandoned-${queueNum}`);
+        const waitingCalls = getCounterValue(`waiting-${queueNum}`);
+        const avgWaitTime = getCounterValue(`avgrng-${queueNum}`);
+        
+        // Calculate totals
+        const totalCalls = operatorCalls + abandonedCalls;
+        
+        // Calculate percentages (avoid division by zero)
+        const abandonedPercent = totalCalls > 0 
+          ? Math.round((abandonedCalls / totalCalls) * 100) 
+          : 0;
+        const answeredPercent = totalCalls > 0
+          ? Math.round((operatorCalls / totalCalls) * 100)
+          : 0;
+        
+        // Determine alert states based on configured thresholds
+        let abandonedAlert: QueueAlertState = 'normal';
+        if (abandonedPercent >= config.abandonedThreshold.breach) {
+          abandonedAlert = 'breach';
+        } else if (abandonedPercent >= config.abandonedThreshold.warn) {
+          abandonedAlert = 'warn';
+        }
+        
+        let awtAlert: QueueAlertState = 'normal';
+        if (avgWaitTime >= config.avgWaitTimeThreshold.breach) {
+          awtAlert = 'breach';
+        } else if (avgWaitTime >= config.avgWaitTimeThreshold.warn) {
+          awtAlert = 'warn';
+        }
+        
+        // Overall alert is the highest of the two
+        const overallAlert: QueueAlertState = 
+          abandonedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
+          abandonedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
+          'normal';
+        
+        // Update alert status in localStorage
+        updateQueueAlertStatus({
+          queueNumber: config.queueNumber,
+          abandonedAlert,
+          avgWaitTimeAlert: awtAlert,
+          overallAlert
+        });
+        
+        if (verboseLogging) {
+          console.log(`[QueueMonitorView] 📈 Queue ${queueNum} stats:`, {
+            operatorCalls,
+            abandonedCalls,
+            totalCalls,
+            abandonedPercent,
+            avgWaitTime,
+            waitingCalls,
+            alertState: overallAlert
+          });
+        }
+        
+        return {
+          queueNumber: config.queueNumber,
+          queueName: config.queueName,
+          // Agent stats not implemented yet - use placeholder zeros
+          agentsTotal: 0,
+          agentsFree: 0,
+          agentsBusy: 0,
+          agentsPaused: 0,
+          // Calculated metrics
+          waitingCalls,
+          answeredPercent,
+          abandonedPercent,
+          avgWaitTime,
+          totalCalls,
+          alertState: overallAlert
+        };
       });
       
-      return {
-        queueNumber: config.queueNumber,
-        queueName: config.queueName,
-        agentsTotal: Math.floor(Math.random() * 20) + 1,
-        agentsFree: Math.floor(Math.random() * 10),
-        agentsBusy: Math.floor(Math.random() * 8),
-        agentsPaused: Math.floor(Math.random() * 5),
-        answeredPercent: 100 - abandonedPercent,
-        abandonedPercent,
-        avgWaitTime,
-        totalCalls: Math.floor(Math.random() * 500) + 100,
-        alertState: overallAlert
-      };
-    });
-    
-    setQueueStats(stats);
+      setQueueStats(stats);
+      
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ✅ Updated queue stats:', stats.length, 'queues');
+      }
+      
+    } catch (error) {
+      console.error('[QueueMonitorView] ❌ Error fetching queue stats:', error);
+      // Keep existing stats on error, don't clear them
+    }
   }, [queueConfigs, verboseLogging]);
   
-  // Poll queue stats every 5 seconds
+  // Poll queue stats every 60 seconds
   useEffect(() => {
     if (queueConfigs.length > 0) {
+      // Fetch immediately on mount/config change
       fetchQueueStats();
-      const interval = setInterval(fetchQueueStats, 5000);
-      return () => clearInterval(interval);
+      
+      // Then poll every 60 seconds
+      const interval = setInterval(fetchQueueStats, 60000);
+      
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] ⏱️ Started 60-second polling for', queueConfigs.length, 'queues');
+      }
+      
+      return () => {
+        clearInterval(interval);
+        if (verboseLogging) {
+          console.log('[QueueMonitorView] ⏱️ Stopped polling');
+        }
+      };
+    } else {
+      setQueueStats([]);
     }
-  }, [queueConfigs, fetchQueueStats]);
+  }, [queueConfigs, fetchQueueStats, verboseLogging]);
   
   // Handlers
   const handleAddQueue = () => {

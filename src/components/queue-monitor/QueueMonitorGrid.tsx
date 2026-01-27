@@ -83,8 +83,9 @@ export function QueueMonitorGrid({
     { key: 'free', label: 'FREE' },
     { key: 'busy', label: 'BUSY' },
     { key: 'pause', label: 'PAUSE' },
+    { key: 'wait', label: 'WAIT' },
     { key: 'ans', label: 'ANS' },
-    { key: 'abd', label: 'ABD' },
+    { key: 'miss', label: 'MISS' },
     { key: 'awt', label: 'AWT' },
     { key: 'tot', label: 'TOT' },
     { key: 'actions', label: t('common.actions', 'Actions') }
@@ -150,10 +151,13 @@ export function QueueMonitorGrid({
                 case 'pause':
                   cellContent = queue.agentsPaused;
                   break;
+                case 'wait':
+                  cellContent = queue.waitingCalls;
+                  break;
                 case 'ans':
                   cellContent = `${queue.answeredPercent}%`;
                   break;
-                case 'abd':
+                case 'miss':
                   cellClass = cn('grid-cell', abandonedClass);
                   cellContent = (
                     <>
@@ -242,12 +246,16 @@ export function QueueMonitorGrid({
             <span className="legend-desc">{t('queue_monitor.legend_pause', 'Agents currently paused in the queue')}</span>
           </div>
           <div className="legend-item">
+            <span className="legend-abbr">WAIT</span>
+            <span className="legend-desc">{t('queue_monitor.legend_wait', 'Calls currently waiting in queue')}</span>
+          </div>
+          <div className="legend-item">
             <span className="legend-abbr">ANS</span>
             <span className="legend-desc">{t('queue_monitor.legend_ans', '% of total incoming calls answered')}</span>
           </div>
           <div className="legend-item">
-            <span className="legend-abbr">ABD</span>
-            <span className="legend-desc">{t('queue_monitor.legend_abd', '% of total incoming calls missed/abandoned')}</span>
+            <span className="legend-abbr">MISS</span>
+            <span className="legend-desc">{t('queue_monitor.legend_miss', '% of total incoming calls missed/abandoned')}</span>
           </div>
           <div className="legend-item">
             <span className="legend-abbr">AWT</span>
