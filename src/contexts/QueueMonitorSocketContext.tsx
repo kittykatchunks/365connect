@@ -173,6 +173,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to agent status events
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('agentStatus', (agent: SocketAgentStatus) => {
+      // Validate agent data before processing
+      if (!agent || !agent.extension) {
+        console.warn('[QueueMonitorSocketContext] ⚠️ Invalid agent data received:', agent);
+        return;
+      }
+      
       setState(prev => {
         // Update or add agent to array
         const existingIndex = prev.agents.findIndex(a => a.extension === agent.extension);
