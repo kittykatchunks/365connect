@@ -35,7 +35,10 @@
         "unregistered": "Non Enregistré",
         "unregistering": "Désenregistrement...",
         "connect": "Connecter",
-        "disconnect": "Déconnecter"
+        "disconnect": "Déconnecter",
+        "disconnect_confirm_title": "Se déconnecter de Phantom ?",
+        "disconnect_confirm_message": "Si vous vous déconnectez, vous ne pourrez plus recevoir d'appels du système Phantom jusqu'à ce que vous vous reconnectiez.",
+        "disconnect_confirm_yes": "Oui, Déconnecter"
     },
     "aria_label_dial_digit": "Composer {{digit}}",
     "aria_label_dismiss": "Ignorer",

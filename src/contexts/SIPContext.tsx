@@ -10,9 +10,10 @@ import { useSIPStore } from '../stores/sipStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useContactsStore } from '../stores/contactsStore';
+import { useUIStore } from '../stores/uiStore';
 import { useTabNotification } from '../hooks';
 import { useNotifications } from '../hooks/useNotifications';
-import { isVerboseLoggingEnabled } from '../utils';
+import { isVerboseLoggingEnabled, queryAgentStatus } from '../utils';
 import type { 
   SessionData, 
   RegistrationState, 
@@ -95,6 +96,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
   const { addCallFromSession } = useCallHistoryStore();
   const { showIncomingCallNotification, requestPermission } = useNotifications();
   const { contacts } = useContactsStore();
+  const { addNotification } = useUIStore();
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
@@ -140,21 +142,223 @@ export function SIPProvider({ children }: SIPProviderProps) {
     requestNotificationPerms();
   }, [settings.call.incomingCallNotifications, requestPermission]);
 
-  // Auto-reconnect after click-to-dial reload (minimize SIP disconnection time)
+  // Store connection state before page unload/refresh
   useEffect(() => {
-    const autoReconnect = sessionStorage.getItem('autoReconnectSIP');
-    
-    if (autoReconnect === 'true') {
+    const handleBeforeUnload = () => {
       const verboseLogging = isVerboseLoggingEnabled();
+      const isRegistered = serviceRef.current.isRegistered();
+      const transportState = useSIPStore.getState().transportState;
       
       if (verboseLogging) {
-        console.log('[SIPContext] 🔄 Click-to-dial reload detected - initiating fast auto-reconnect...');
+        console.log('[SIPContext] 🔄 Page unload/refresh detected:', {
+          isRegistered,
+          transportState,
+          willPersistState: isRegistered
+        });
       }
       
-      // Clear the flag immediately
+      // Store connection state if registered to enable auto-reconnect
+      if (isRegistered) {
+        localStorage.setItem('sipWasConnectedBeforeRefresh', 'true');
+        localStorage.setItem('sipConnectionTimestamp', Date.now().toString());
+        
+        if (verboseLogging) {
+          console.log('[SIPContext] ✅ Connection state persisted to localStorage for auto-reconnect');
+        }
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Auto-reconnect after page refresh if previously connected
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Check for page refresh auto-reconnect flag
+    const wasConnected = localStorage.getItem('sipWasConnectedBeforeRefresh');
+    const connectionTimestamp = localStorage.getItem('sipConnectionTimestamp');
+    
+    if (wasConnected === 'true') {
+      // Verify timestamp is recent (within last 5 minutes to prevent stale reconnects)
+      const timestamp = parseInt(connectionTimestamp || '0', 10);
+      const ageMs = Date.now() - timestamp;
+      const maxAgeMs = 5 * 60 * 1000; // 5 minutes
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔄 Page refresh auto-reconnect check:', {
+          wasConnected,
+          connectionAge: `${Math.round(ageMs / 1000)}s`,
+          maxAge: `${Math.round(maxAgeMs / 1000)}s`,
+          isRecent: ageMs < maxAgeMs
+        });
+      }
+      
+      if (ageMs < maxAgeMs) {
+        // Clear the flags immediately
+        localStorage.removeItem('sipWasConnectedBeforeRefresh');
+        localStorage.removeItem('sipConnectionTimestamp');
+        
+        // Check if we have valid config and are not already registered
+        const hasConfig = sipConfig && 
+                         settings.connection.phantomId && 
+                         settings.connection.username && 
+                         settings.connection.password;
+        
+        const isRegistered = serviceRef.current.isRegistered();
+        
+        if (hasConfig && !isRegistered) {
+          if (verboseLogging) {
+            console.log('[SIPContext] ✅ Valid config found, initiating auto-reconnect after page refresh');
+          }
+          
+          // Connect after small delay to let React fully initialize
+          const timer = setTimeout(async () => {
+            try {
+              const config = buildSIPConfig({
+                phantomId: sipConfig.phantomId,
+                username: sipConfig.username,
+                password: sipConfig.password
+              });
+              
+              if (verboseLogging) {
+                console.log('[SIPContext] 📞 Creating UserAgent for auto-reconnect...');
+              }
+              
+              await serviceRef.current.createUserAgent(config);
+              
+              if (verboseLogging) {
+                console.log('[SIPContext] ✅ Auto-reconnect after page refresh successful');
+              }
+              
+              // Check agent login status after successful reconnect
+              if (verboseLogging) {
+                console.log('[SIPContext] 🔍 Checking agent login status via Phantom API...');
+              }
+              
+              // Wait a bit for registration to complete before checking agent status
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              try {
+                const agentData = await queryAgentStatus(sipConfig.username);
+                
+                if (verboseLogging) {
+                  console.log('[SIPContext] 📥 Agent status response:', agentData);
+                }
+                
+                if (agentData) {
+                  // AgentData has num field - if populated, agent is logged in
+                  const isLoggedIn = agentData.num !== null && agentData.num !== '';
+                  const isPaused = agentData.pause === true || agentData.pause === 1 || agentData.pause === '1';
+                  
+                  if (isLoggedIn) {
+                    if (verboseLogging) {
+                      console.log('[SIPContext] ✅ Agent is logged in:', {
+                        agentNumber: agentData.num,
+                        agentName: agentData.name,
+                        paused: isPaused,
+                        clip: agentData.clip,
+                        cid: agentData.cid
+                      });
+                    }
+                    
+                    // Show success notification
+                    const agentIdentifier = agentData.num || sipConfig.username;
+                    const pauseStatus = isPaused ? ' (Paused)' : '';
+                    
+                    addNotification({
+                      type: 'success',
+                      title: 'Auto-Reconnected',
+                      message: `Successfully reconnected. Agent ${agentIdentifier} is logged in${pauseStatus}.`,
+                      duration: 5000
+                    });
+                  } else {
+                    if (verboseLogging) {
+                      console.warn('[SIPContext] ⚠️ Agent not logged in:', {
+                        num: agentData.num,
+                        name: agentData.name
+                      });
+                    }
+                    
+                    // Show warning notification
+                    addNotification({
+                      type: 'warning',
+                      title: 'Reconnected - Login Required',
+                      message: 'SIP connection restored, but you are not logged into the queue. Please login to receive calls.',
+                      duration: 8000
+                    });
+                  }
+                } else {
+                  // No agent data returned from API
+                  if (verboseLogging) {
+                    console.warn('[SIPContext] ⚠️ No agent data returned from API');
+                  }
+                  
+                  // Show basic reconnection notification
+                  addNotification({
+                    type: 'info',
+                    title: 'Reconnected',
+                    message: 'SIP connection restored. Check your agent login status if needed.',
+                    duration: 5000
+                  });
+                }
+              } catch (agentCheckError) {
+                // Agent status check failed, but SIP is connected
+                console.error('[SIPContext] ⚠️ Agent status check failed:', agentCheckError);
+                
+                if (verboseLogging) {
+                  console.log('[SIPContext] ℹ️ Showing basic reconnection notification (agent check unavailable)');
+                }
+                
+                // Show basic reconnection notification
+                addNotification({
+                  type: 'info',
+                  title: 'Reconnected',
+                  message: 'SIP connection restored successfully.',
+                  duration: 4000
+                });
+              }
+            } catch (error) {
+              console.error('[SIPContext] ❌ Auto-reconnect after page refresh failed:', error);
+              
+              // Show error notification
+              addNotification({
+                type: 'error',
+                title: 'Auto-Reconnect Failed',
+                message: 'Failed to reconnect automatically. Please use the Connect button.',
+                duration: 6000
+              });
+            }
+          }, 500);
+          
+          return () => clearTimeout(timer);
+        } else if (verboseLogging) {
+          console.log('[SIPContext] ⚠️ Skipping auto-reconnect:', { 
+            hasConfig: !!hasConfig, 
+            isRegistered,
+            reason: !hasConfig ? 'No valid config' : 'Already registered'
+          });
+        }
+      } else {
+        // Stale connection state, clean it up
+        if (verboseLogging) {
+          console.log('[SIPContext] 🧹 Clearing stale connection state (too old)');
+        }
+        localStorage.removeItem('sipWasConnectedBeforeRefresh');
+        localStorage.removeItem('sipConnectionTimestamp');
+      }
+    }
+    
+    // Also handle legacy click-to-dial auto-reconnect
+    const clickToDialReconnect = sessionStorage.getItem('autoReconnectSIP');
+    if (clickToDialReconnect === 'true') {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔄 Legacy click-to-dial reload detected - initiating fast auto-reconnect...');
+      }
+      
       sessionStorage.removeItem('autoReconnectSIP');
       
-      // Check if we have valid config and are not already registered
       const hasConfig = sipConfig && 
                        settings.connection.phantomId && 
                        settings.connection.username && 
@@ -163,29 +367,23 @@ export function SIPProvider({ children }: SIPProviderProps) {
       const isRegistered = serviceRef.current.isRegistered();
       
       if (hasConfig && !isRegistered) {
-        if (verboseLogging) {
-          console.log('[SIPContext] ✅ Valid config found, auto-reconnecting SIP');
-        }
-        
-        // Connect immediately (small delay to let React render)
         const timer = setTimeout(async () => {
           try {
-            await serviceRef.current.configure(sipConfig!);
+            const config = buildSIPConfig({
+              phantomId: sipConfig.phantomId,
+              username: sipConfig.username,
+              password: sipConfig.password
+            });
+            await serviceRef.current.createUserAgent(config);
             if (verboseLogging) {
-              console.log('[SIPContext] ✅ Auto-reconnect successful');
+              console.log('[SIPContext] ✅ Click-to-dial auto-reconnect successful');
             }
           } catch (error) {
-            console.error('[SIPContext] ❌ Auto-reconnect failed:', error);
+            console.error('[SIPContext] ❌ Click-to-dial auto-reconnect failed:', error);
           }
         }, 100);
         
         return () => clearTimeout(timer);
-      } else if (verboseLogging) {
-        console.log('[SIPContext] ⚠️ Skipping auto-reconnect:', { 
-          hasConfig: !!hasConfig, 
-          isRegistered,
-          reason: !hasConfig ? 'No valid config' : 'Already registered'
-        });
       }
     }
   }, [settings.connection, sipConfig]);
@@ -687,7 +885,21 @@ export function SIPProvider({ children }: SIPProviderProps) {
     },
     
     disconnect: async () => {
+      const verboseLogging = isVerboseLoggingEnabled();
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔌 Manual disconnect initiated - clearing auto-reconnect flags');
+      }
+      
+      // Clear auto-reconnect flags on manual disconnect
+      localStorage.removeItem('sipWasConnectedBeforeRefresh');
+      localStorage.removeItem('sipConnectionTimestamp');
+      
       await serviceRef.current.stop();
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ Manual disconnect complete');
+      }
     },
     
     // Registration

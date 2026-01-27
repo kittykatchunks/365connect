@@ -9,10 +9,12 @@ import { cn } from '@/utils';
 import { useSIPStore, useSettingsStore } from '@/stores';
 import { useSIPContext } from '@/contexts';
 import { Button } from '@/components/ui';
+import { ConfirmModal } from '@/components/modals';
 
 export function SIPStatusDisplay() {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   // Error display removed per UI requirements - connection errors should not be shown
   // const [error, setError] = useState<string | null>(null);
   
@@ -93,6 +95,7 @@ export function SIPStatusDisplay() {
   
   const handleDisconnect = useCallback(async () => {
     setIsConnecting(true);
+    setShowDisconnectConfirm(false);
     
     try {
       if (isRegistered) {
@@ -105,6 +108,11 @@ export function SIPStatusDisplay() {
       setIsConnecting(false);
     }
   }, [disconnect, unregister, isRegistered]);
+  
+  const handleDisconnectClick = useCallback(() => {
+    // Show confirmation dialog
+    setShowDisconnectConfirm(true);
+  }, []);
   
   const status = getStatusConfig();
   const Icon = status.icon;
@@ -144,13 +152,24 @@ export function SIPStatusDisplay() {
           <Button
             size="sm"
             variant="danger"
-            onClick={handleDisconnect}
+            onClick={handleDisconnectClick}
             className="w-full"
           >
             {t('status.disconnect', 'Disconnect')}
           </Button>
         )}
       </div>
+      
+      <ConfirmModal
+        isOpen={showDisconnectConfirm}
+        onClose={() => setShowDisconnectConfirm(false)}
+        onConfirm={handleDisconnect}
+        title={t('status.disconnect_confirm_title', 'Disconnect from Phantom?')}
+        message={t('status.disconnect_confirm_message', 'If you disconnect, you will no longer be able to receive calls from the Phantom system until you reconnect.')}
+        confirmText={t('status.disconnect_confirm_yes', 'Yes, Disconnect')}
+        cancelText={t('common.cancel', 'Cancel')}
+        variant="warning"
+      />
     </div>
   );
 }

@@ -35,7 +35,10 @@
         "unregistered": "Niet Geregistreerd",
         "unregistering": "Uitschrijven...",
         "connect": "Verbinden",
-        "disconnect": "Verbreken"
+        "disconnect": "Verbreken",
+        "disconnect_confirm_title": "Verbinding met Phantom verbreken?",
+        "disconnect_confirm_message": "Als u de verbinding verbreekt, kunt u geen oproepen meer ontvangen van het Phantom-systeem totdat u opnieuw verbinding maakt.",
+        "disconnect_confirm_yes": "Ja, Verbreken"
     },
     "aria_label_dial_digit": "Kies {{digit}}",
     "aria_label_dismiss": "Negeren",
