@@ -5,6 +5,7 @@
 .queue-monitor-grid-container {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
 }
 
 .queue-monitor-grid {
@@ -51,10 +52,11 @@
   min-height: 48px;
 }
 
+/*
 .grid-cell:hover {
   background-color: var(--background-elevated);
 }
-
+*/
 /* Column Alert States (for queue header cells) */
 .col-warn {
   background: linear-gradient(180deg, var(--warning-color-light) 0%, var(--background-color) 100%);
@@ -214,7 +216,7 @@
 
 .legend-items {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-xs);
 }
 
