@@ -8,13 +8,9 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { DualRangeSlider } from './DualRangeSlider';
-import { QueueTransferList } from './QueueTransferList';
 import type { QueueConfig, AvailableQueue } from '@/types/queue-monitor';
 import { isVerboseLoggingEnabled } from '@/utils';
 import './QueueModal.css';
-
-// Threshold for switching between Method 1 (dropdown) and Method 2 (transfer list)
-const QUEUE_COUNT_THRESHOLD = 20;
 
 interface QueueModalProps {
   /** Whether modal is open */
