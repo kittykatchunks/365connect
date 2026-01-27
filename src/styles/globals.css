@@ -92,6 +92,14 @@
   --radius-xl: 0.75rem;
   --radius-full: 9999px;
   
+  /* Border Radius Aliases (for compatibility) */
+  --border-radius: var(--radius-md);
+  --border-radius-sm: var(--radius-sm);
+  --border-radius-lg: var(--radius-lg);
+  
+  /* Background Aliases (for compatibility) */
+  --background-elevated: var(--surface-color);
+  
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
