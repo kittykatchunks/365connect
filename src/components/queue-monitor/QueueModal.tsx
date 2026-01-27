@@ -52,8 +52,10 @@ export function QueueModal({
   const [awtBreach, setAwtBreach] = useState(60);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
-  // Initialize form with existing config when editing
+  // Initialize form with existing config when editing, or reset when opening for new entry
   useEffect(() => {
+    if (!isOpen) return; // Only run when modal is open
+    
     if (existingConfig) {
       setSelectedQueues([existingConfig.queueNumber]);
       setAbandonedWarn(existingConfig.abandonedThreshold.warn);
@@ -71,8 +73,12 @@ export function QueueModal({
       setAbandonedBreach(20);
       setAwtWarn(30);
       setAwtBreach(60);
+      
+      if (verboseLogging) {
+        console.log('[QueueModal] 🆕 Reset form for new queue entry');
+      }
     }
-  }, [existingConfig, verboseLogging]);
+  }, [isOpen, existingConfig, verboseLogging]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
