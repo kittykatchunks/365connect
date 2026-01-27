@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
-import { SIPProvider, PhantomAPIProvider, BusylightProvider, usePhantomAPI } from '@/contexts';
+import { SIPProvider, PhantomAPIProvider, BusylightProvider, QueueMonitorSocketProvider, usePhantomAPI } from '@/contexts';
 import { phantomApiService } from '@/services';
 import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback, isVerboseLoggingEnabled } from '@/utils';
 import { useNetworkStatus } from '@/hooks';
@@ -607,26 +607,31 @@ function App() {
   }
   
   // Get queue monitor setting from store
+  const showQueueMonitorTab = useSettingsStore((state) => state.settings.interface.showQueueMonitorTab);
+  
   return (
     <PhantomAPIProvider pollInterval={5}>
       <PhantomAPIInitializer>
         <SIPProvider>
           <BusylightProvider>
-            {/* PWA Update Banner - Shows when new version is available */}
-            <UpdatePrompt />
-            
-            <MainLayout />
-            
-            {/* Version Update Modal */}
-            {versionInfo && (
-              <VersionUpdateModal
-                isOpen={showVersionModal}
-                onClose={() => setShowVersionModal(false)}
-                lastVersion={versionInfo.lastVersion}
-                currentVersion={versionInfo.currentVersion}
-                changeType={versionInfo.changeType}
-              />
-            )}
+            {/* Queue Monitor Socket.IO - Only connects when enabled in settings */}
+            <QueueMonitorSocketProvider enabled={showQueueMonitorTab}>
+              {/* PWA Update Banner - Shows when new version is available */}
+              <UpdatePrompt />
+              
+              <MainLayout />
+              
+              {/* Version Update Modal */}
+              {versionInfo && (
+                <VersionUpdateModal
+                  isOpen={showVersionModal}
+                  onClose={() => setShowVersionModal(false)}
+                  lastVersion={versionInfo.lastVersion}
+                  currentVersion={versionInfo.currentVersion}
+                  changeType={versionInfo.changeType}
+                />
+              )}
+            </QueueMonitorSocketProvider>
           </BusylightProvider>
         </SIPProvider>
       </PhantomAPIInitializer>
