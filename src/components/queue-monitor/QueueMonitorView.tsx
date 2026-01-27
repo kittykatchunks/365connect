@@ -31,7 +31,7 @@ export function QueueMonitorView() {
   
   // Get Socket.IO data
   const socketData = useQueueMonitorSocket();
-  const { connectionState, queues: socketQueues, counters: socketCounters } = socketData;
+  const { connectionState, queues: socketQueues, counters: socketCounters, live: socketLive } = socketData;
   
   // State
   const [queueConfigs, setQueueConfigs] = useState<QueueConfig[]>([]);
@@ -132,7 +132,7 @@ export function QueueMonitorView() {
   
   // Process Socket.IO data when it arrives (real-time updates)
   useEffect(() => {
-    if (!socketQueues || !socketCounters || queueConfigs.length === 0) {
+    if (!socketQueues || !socketCounters || !socketLive || queueConfigs.length === 0) {
       return;
     }
 
@@ -168,14 +168,20 @@ export function QueueMonitorView() {
       return { total, free, busy: oncall, paused };
     };
 
+    // Helper to get waiting calls from live data
+    const getWaitingCalls = (queueNum: string): number => {
+      const liveData = socketLive[queueNum];
+      return liveData?.queue || 0;
+    };
+
     // Parse stats for each configured queue
     const stats: QueueStats[] = queueConfigs.map(config => {
       const queueNum = config.queueNumber;
       
       // Extract metrics from counters
       const operatorCalls = getCounterValue(`operator-${queueNum}`);
-      const missedCalls = getCounterValue(`missed-${queueNum}`);
-      const waitingCalls = getCounterValue(`waiting-${queueNum}`);
+      const missedCalls = getCounterValue(`waiting-${queueNum}`); // Missed calls from waiting counter
+      const waitingCalls = getWaitingCalls(queueNum); // Get from live data instead of counters
       const avgWaitTime = getCounterValue(`avgrng-${queueNum}`);
       
       // Get agent counts from queue status
@@ -255,7 +261,7 @@ export function QueueMonitorView() {
     if (verboseLogging) {
       console.log('[QueueMonitorView] ✅ Updated queue stats from Socket.IO:', stats.length, 'queues');
     }
-  }, [socketQueues, socketCounters, queueConfigs, connectionState, verboseLogging]);
+  }, [socketQueues, socketCounters, socketLive, queueConfigs, connectionState, verboseLogging]);
   
   // Fetch real-time queue stats from Phantom API (FALLBACK - only used if Socket.IO not connected)
   const fetchQueueStats = useCallback(async () => {
