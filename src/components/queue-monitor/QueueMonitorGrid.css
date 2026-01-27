@@ -4,8 +4,8 @@
 
 .queue-monitor-grid-container {
   width: 100%;
-/*  overflow-x: auto;
-  overflow-y: visible; */
+/*  overflow-x: auto; */
+  overflow-y: visible;
 }
 
 .queue-monitor-grid {
@@ -50,7 +50,7 @@
   justify-content: center;
   font-size: 0.875rem;
   transition: background-color 0.2s ease;
-  min-height: 48px;
+  min-height: 40px;
 }
 
 /*
@@ -262,11 +262,11 @@
 /* Responsive - Mobile */
 @media (max-width: 640px) {
   .queue-monitor-grid-container {
-    margin: 0 calc(var(--spacing-md) * -1);
+   /* margin: 0 calc(var(--spacing-md) * -1); */
   }
   
   .queue-monitor-grid {
-    min-width: 500px;
+    /* min-width: 500px; */
     border-radius: 0;
   }
   
