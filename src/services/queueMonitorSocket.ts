@@ -216,60 +216,60 @@ class QueueMonitorSocketService {
     });
 
     // Data events - forward to subscribers
-    this.socket.on('version', (data: number[]) => {
+    this.socket.on('version', (data: number) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 version:', data);
       }
-      this.notifyListeners('version', data[0]);
+      this.notifyListeners('version', data);
     });
 
-    this.socket.on('queue status', (data: SocketQueueStatus[]) => {
+    this.socket.on('queue status', (data: SocketQueueStatus) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 queue status:', data);
       }
-      this.notifyListeners('queueStatus', data[0]);
+      this.notifyListeners('queueStatus', data);
     });
 
-    this.socket.on('agent status', (data: SocketAgentStatus[]) => {
+    this.socket.on('agent status', (data: SocketAgentStatus) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 agent status:', data);
       }
-      this.notifyListeners('agentStatus', data[0]);
+      this.notifyListeners('agentStatus', data);
     });
 
-    this.socket.on('counters', (data: SocketCounters[]) => {
+    this.socket.on('counters', (data: SocketCounters) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 counters:', data);
       }
-      this.notifyListeners('counters', data[0]);
+      this.notifyListeners('counters', data);
     });
 
-    this.socket.on('live', (data: SocketLiveStatus[]) => {
+    this.socket.on('live', (data: SocketLiveStatus) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 live:', data);
       }
-      this.notifyListeners('live', data[0]);
+      this.notifyListeners('live', data);
     });
 
-    this.socket.on('channels', (data: SocketChannels[]) => {
+    this.socket.on('channels', (data: SocketChannels) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 channels:', data);
       }
-      this.notifyListeners('channels', data[0]);
+      this.notifyListeners('channels', data);
     });
 
-    this.socket.on('trunkStatus', (data: SocketTrunkStatus[]) => {
+    this.socket.on('trunkStatus', (data: SocketTrunkStatus) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 trunkStatus:', data);
       }
-      this.notifyListeners('trunkStatus', data[0]);
+      this.notifyListeners('trunkStatus', data);
     });
 
-    this.socket.on('block', (data: SocketBlockSettings[]) => {
+    this.socket.on('block', (data: SocketBlockSettings) => {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 block:', data);
       }
-      this.notifyListeners('block', data[0]);
+      this.notifyListeners('block', data);
     });
 
     // Catch-all for debugging
