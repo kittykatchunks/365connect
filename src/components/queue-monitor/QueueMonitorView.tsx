@@ -174,7 +174,7 @@ export function QueueMonitorView() {
       
       // Extract metrics from counters
       const operatorCalls = getCounterValue(`operator-${queueNum}`);
-      const abandonedCalls = getCounterValue(`abandoned-${queueNum}`);
+      const missedCalls = getCounterValue(`missed-${queueNum}`);
       const waitingCalls = getCounterValue(`waiting-${queueNum}`);
       const avgWaitTime = getCounterValue(`avgrng-${queueNum}`);
       
@@ -182,22 +182,22 @@ export function QueueMonitorView() {
       const agentCounts = getAgentCounts(queueNum);
       
       // Calculate totals
-      const totalCalls = operatorCalls + abandonedCalls;
+      const totalCalls = operatorCalls + missedCalls;
       
       // Calculate percentages (avoid division by zero)
-      const abandonedPercent = totalCalls > 0 
-        ? Math.round((abandonedCalls / totalCalls) * 100) 
+      const missedPercent = totalCalls > 0 
+        ? Math.round((missedCalls / totalCalls) * 100) 
         : 0;
       const answeredPercent = totalCalls > 0
         ? Math.round((operatorCalls / totalCalls) * 100)
         : 0;
       
       // Determine alert states based on configured thresholds
-      let abandonedAlert: QueueAlertState = 'normal';
-      if (abandonedPercent >= config.abandonedThreshold.breach) {
-        abandonedAlert = 'breach';
-      } else if (abandonedPercent >= config.abandonedThreshold.warn) {
-        abandonedAlert = 'warn';
+      let missedAlert: QueueAlertState = 'normal';
+      if (missedPercent >= config.abandonedThreshold.breach) {
+        missedAlert = 'breach';
+      } else if (missedPercent >= config.abandonedThreshold.warn) {
+        missedAlert = 'warn';
       }
       
       let awtAlert: QueueAlertState = 'normal';
@@ -209,14 +209,14 @@ export function QueueMonitorView() {
       
       // Overall alert is the highest of the two
       const overallAlert: QueueAlertState = 
-        abandonedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
-        abandonedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
+        missedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
+        missedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
         'normal';
       
       // Update alert status in localStorage
       updateQueueAlertStatus({
         queueNumber: config.queueNumber,
-        abandonedAlert,
+        abandonedAlert: missedAlert,
         avgWaitTimeAlert: awtAlert,
         overallAlert
       });
@@ -224,9 +224,9 @@ export function QueueMonitorView() {
       if (verboseLogging) {
         console.log(`[QueueMonitorView] 📈 Queue ${queueNum} stats (Socket.IO):`, {
           operatorCalls,
-          abandonedCalls,
+          missedCalls,
           totalCalls,
-          abandonedPercent,
+          missedPercent,
           avgWaitTime,
           waitingCalls,
           agentCounts,
@@ -243,7 +243,7 @@ export function QueueMonitorView() {
         agentsPaused: agentCounts.paused,
         waitingCalls,
         answeredPercent,
-        abandonedPercent,
+        abandonedPercent: missedPercent,
         avgWaitTime,
         totalCalls,
         alertState: overallAlert
@@ -300,27 +300,27 @@ export function QueueMonitorView() {
         
         // Extract metrics from counters
         const operatorCalls = getCounterValue(`operator-${queueNum}`);
-        const abandonedCalls = getCounterValue(`abandoned-${queueNum}`);
+        const missedCalls = getCounterValue(`missed-${queueNum}`);
         const waitingCalls = getCounterValue(`waiting-${queueNum}`);
         const avgWaitTime = getCounterValue(`avgrng-${queueNum}`);
         
         // Calculate totals
-        const totalCalls = operatorCalls + abandonedCalls;
+        const totalCalls = operatorCalls + missedCalls;
         
         // Calculate percentages (avoid division by zero)
-        const abandonedPercent = totalCalls > 0 
-          ? Math.round((abandonedCalls / totalCalls) * 100) 
+        const missedPercent = totalCalls > 0 
+          ? Math.round((missedCalls / totalCalls) * 100) 
           : 0;
         const answeredPercent = totalCalls > 0
           ? Math.round((operatorCalls / totalCalls) * 100)
           : 0;
         
         // Determine alert states based on configured thresholds
-        let abandonedAlert: QueueAlertState = 'normal';
-        if (abandonedPercent >= config.abandonedThreshold.breach) {
-          abandonedAlert = 'breach';
-        } else if (abandonedPercent >= config.abandonedThreshold.warn) {
-          abandonedAlert = 'warn';
+        let missedAlert: QueueAlertState = 'normal';
+        if (missedPercent >= config.abandonedThreshold.breach) {
+          missedAlert = 'breach';
+        } else if (missedPercent >= config.abandonedThreshold.warn) {
+          missedAlert = 'warn';
         }
         
         let awtAlert: QueueAlertState = 'normal';
@@ -332,14 +332,14 @@ export function QueueMonitorView() {
         
         // Overall alert is the highest of the two
         const overallAlert: QueueAlertState = 
-          abandonedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
-          abandonedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
+          missedAlert === 'breach' || awtAlert === 'breach' ? 'breach' :
+          missedAlert === 'warn' || awtAlert === 'warn' ? 'warn' :
           'normal';
         
         // Update alert status in localStorage
         updateQueueAlertStatus({
           queueNumber: config.queueNumber,
-          abandonedAlert,
+          abandonedAlert: missedAlert,
           avgWaitTimeAlert: awtAlert,
           overallAlert
         });
@@ -347,9 +347,9 @@ export function QueueMonitorView() {
         if (verboseLogging) {
           console.log(`[QueueMonitorView] 📈 Queue ${queueNum} stats:`, {
             operatorCalls,
-            abandonedCalls,
+            missedCalls,
             totalCalls,
-            abandonedPercent,
+            missedPercent,
             avgWaitTime,
             waitingCalls,
             alertState: overallAlert
@@ -367,7 +367,7 @@ export function QueueMonitorView() {
           // Calculated metrics
           waitingCalls,
           answeredPercent,
-          abandonedPercent,
+          abandonedPercent: missedPercent,
           avgWaitTime,
           totalCalls,
           alertState: overallAlert
