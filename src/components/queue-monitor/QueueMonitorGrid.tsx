@@ -92,7 +92,7 @@ export function QueueMonitorGrid({
   
   return (
     <div className="queue-monitor-grid-container">
-      <div className="queue-monitor-grid" style={{ gridTemplateColumns: `minmax(120px, 150px) repeat(${sortedQueues.length}, minmax(120px, 1fr))` }}>
+      <div className="queue-monitor-grid" style={{ gridTemplateColumns: `minmax(80px, 110px) repeat(${sortedQueues.length}, minmax(100px, 1fr))` }}>
         {/* Render each metric as a row */}
         {metrics.map((metric) => (
           <div key={metric.key} className="grid-row">

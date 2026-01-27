@@ -245,7 +245,7 @@
   }
   
   .header-cell {
-    font-size: 0.6875rem;
+    /* font-size: 0.6875rem; */
     padding: var(--spacing-xs);
   }
   
@@ -271,7 +271,7 @@
   }
   
   .queue-monitor-legend {
-    margin: var(--spacing-lg) var(--spacing-md) 0;
+    /* margin: var(--spacing-lg) var(--spacing-md) 0; */
   }
 }
 
