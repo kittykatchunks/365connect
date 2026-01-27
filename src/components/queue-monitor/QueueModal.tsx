@@ -46,8 +46,8 @@ export function QueueModal({
   
   // Form state - now supports multiple queue selection
   const [selectedQueues, setSelectedQueues] = useState<string[]>([]);
-  const [abandonedWarn, setAbandonedWarn] = useState(50);
-  const [abandonedBreach, setAbandonedBreach] = useState(75);
+  const [abandonedWarn, setAbandonedWarn] = useState(15);
+  const [abandonedBreach, setAbandonedBreach] = useState(20);
   const [awtWarn, setAwtWarn] = useState(30);
   const [awtBreach, setAwtBreach] = useState(60);
   const [resetTime, setResetTime] = useState('00:00');
@@ -69,8 +69,8 @@ export function QueueModal({
     } else {
       // Reset form for new entry
       setSelectedQueues([]);
-      setAbandonedWarn(50);
-      setAbandonedBreach(75);
+      setAbandonedWarn(15);
+      setAbandonedBreach(20);
       setAwtWarn(30);
       setAwtBreach(60);
       setResetTime('00:00');
@@ -354,7 +354,7 @@ export function QueueModal({
             </p>
             <DualRangeSlider
               min={0}
-              max={100}
+              max={30}
               warnValue={abandonedWarn}
               breachValue={abandonedBreach}
               onChange={(warn, breach) => {

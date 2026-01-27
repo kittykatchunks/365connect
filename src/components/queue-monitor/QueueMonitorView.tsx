@@ -137,7 +137,7 @@ export function QueueMonitorView() {
     // Generate mock stats for configured queues
     const stats: QueueStats[] = queueConfigs.map(config => {
       // Simulate random stats
-      const abandonedPercent = Math.floor(Math.random() * 100);
+      const abandonedPercent = Math.floor(Math.random() * 30);
       const avgWaitTime = Math.floor(Math.random() * 100);
       
       // Determine alert states
