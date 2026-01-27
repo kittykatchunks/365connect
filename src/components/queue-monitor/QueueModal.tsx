@@ -154,14 +154,10 @@ export function QueueModal({
     (isEditing && q.queueNumber === existingConfig.queueNumber)
   );
   
-  // Determine which selection method to use based on queue count
-  const useTransferList = availableQueueOptions.length > QUEUE_COUNT_THRESHOLD;
-  
   if (verboseLogging && isOpen) {
     console.log('[QueueModal] 📊 Queue selection method:', {
       totalQueues: availableQueueOptions.length,
-      method: useTransferList ? 'Transfer List (Method 2)' : 'Dropdown (Method 1)',
-      threshold: QUEUE_COUNT_THRESHOLD
+      method: 'Dropdown (Multi-select)'
     });
   }
   
@@ -221,24 +217,12 @@ export function QueueModal({
             <p className="form-help-text">
               {isEditing 
                 ? t('queue_monitor.edit_single_queue_desc', 'Editing settings for this queue')
-                : useTransferList
-                  ? t('queue_monitor.transfer_list_desc', 'Select queues using the transfer list - click to highlight, double-click to move')
-                  : t('queue_monitor.select_multiple_queues_desc', 'Select one or more queues to apply the same SLA settings')
+                : t('queue_monitor.select_multiple_queues_desc', 'Select one or more queues to apply the same SLA settings')
               }
             </p>
             
-            {/* Method 2: Transfer List (>20 queues) */}
-            {!isEditing && useTransferList && (
-              <QueueTransferList
-                availableQueues={availableQueueOptions}
-                selectedQueues={selectedQueues}
-                onSelectionChange={setSelectedQueues}
-                disabled={loadingQueues}
-              />
-            )}
-            
-            {/* Method 1: Multi-select dropdown (≤20 queues) */}
-            {!isEditing && !useTransferList && (
+            {/* Multi-select dropdown */}
+            {!isEditing && (
               <>
                 <div className="queue-multiselect-container" ref={dropdownRef}>
                   <button
