@@ -24,9 +24,7 @@ import type {
   SocketConnectionState
 } from '@/types/socketio';
 
-interface QueueMonitorSocketContextValue extends QueueMonitorSocketState {
-  // Additional methods can be added here in the future
-}
+type QueueMonitorSocketContextValue = QueueMonitorSocketState;
 
 const QueueMonitorSocketContext = createContext<QueueMonitorSocketContextValue | null>(null);
 
@@ -145,7 +143,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to connection state changes
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('connectionStateChange', (connectionState: SocketConnectionState) => {
+    const unsubscribe = queueMonitorSocket.on('connectionStateChange', (data) => {
+      const connectionState = data as SocketConnectionState;
       setState(prev => ({ ...prev, connectionState, error: null }));
     });
 
@@ -154,7 +153,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to version event
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('version', (version: number) => {
+    const unsubscribe = queueMonitorSocket.on('version', (data) => {
+      const version = data as number;
       setState(prev => ({ ...prev, version, lastUpdate: new Date() }));
     });
 
@@ -163,7 +163,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to queue status events
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('queueStatus', (queues: SocketQueueStatus) => {
+    const unsubscribe = queueMonitorSocket.on('queueStatus', (data) => {
+      const queues = data as SocketQueueStatus;
       setState(prev => ({ ...prev, queues, lastUpdate: new Date() }));
     });
 
@@ -172,7 +173,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to agent status events
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('agentStatus', (agent: SocketAgentStatus) => {
+    const unsubscribe = queueMonitorSocket.on('agentStatus', (data) => {
+      const agent = data as SocketAgentStatus;
       // Validate agent data before processing
       if (!agent || !agent.extension) {
         console.warn('[QueueMonitorSocketContext] ⚠️ Invalid agent data received:', agent);
@@ -199,7 +201,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to counters event
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('counters', (counters: SocketCounters) => {
+    const unsubscribe = queueMonitorSocket.on('counters', (data) => {
+      const counters = data as SocketCounters;
       setState(prev => ({ ...prev, counters, lastUpdate: new Date() }));
     });
 
@@ -208,7 +211,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to live event
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('live', (live: SocketLiveStatus) => {
+    const unsubscribe = queueMonitorSocket.on('live', (data) => {
+      const live = data as SocketLiveStatus;
       setState(prev => ({ ...prev, live, lastUpdate: new Date() }));
     });
 
@@ -217,7 +221,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to channels event
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('channels', (channels: SocketChannels) => {
+    const unsubscribe = queueMonitorSocket.on('channels', (data) => {
+      const channels = data as SocketChannels;
       setState(prev => ({ ...prev, channels, lastUpdate: new Date() }));
     });
 
@@ -226,7 +231,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to trunk status event
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('trunkStatus', (trunks: SocketTrunkStatus) => {
+    const unsubscribe = queueMonitorSocket.on('trunkStatus', (data) => {
+      const trunks = data as SocketTrunkStatus;
       setState(prev => ({ ...prev, trunks, lastUpdate: new Date() }));
     });
 
@@ -235,7 +241,8 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to block event
   useEffect(() => {
-    const unsubscribe = queueMonitorSocket.on('block', (blocks: SocketBlockSettings) => {
+    const unsubscribe = queueMonitorSocket.on('block', (data) => {
+      const blocks = data as SocketBlockSettings;
       setState(prev => ({ ...prev, blocks, lastUpdate: new Date() }));
     });
 

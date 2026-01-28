@@ -16,7 +16,7 @@ import type {
   SocketConnectionState
 } from '@/types/socketio';
 
-type EventCallback = (data: any) => void;
+type EventCallback = (data: unknown) => void;
 
 /**
  * Service to manage Socket.IO connection for Queue Monitor real-time data
@@ -164,7 +164,7 @@ class QueueMonitorSocketService {
   /**
    * Notify all listeners of an event
    */
-  private notifyListeners(event: string, data: any): void {
+  private notifyListeners(event: string, data: unknown): void {
     const callbacks = this.eventCallbacks.get(event);
     if (callbacks) {
       callbacks.forEach(callback => {

@@ -272,18 +272,7 @@
 
 /* Responsive - Mobile */
 @media (max-width: 640px) {
-  .queue-monitor-grid-container {
-   /* margin: 0 calc(var(--spacing-md) * -1); */
-  }
-  
-  .queue-monitor-grid {
-    /* min-width: 500px;
-    border-radius: 0; */
-  }
-  
-  .queue-monitor-legend {
-    /* margin: var(--spacing-lg) var(--spacing-md) 0; */
-  }
+  /* Future responsive styles */
 }
 
 /* Dark Mode */
