@@ -20,10 +20,12 @@ interface QueueGroupModalProps {
   onSave: (group: QueueGroup) => void;
   /** Existing group if editing, null if adding new */
   existingGroup?: QueueGroup | null;
-  /** List of available queues from storage */
+  /** List of available queues from API */
   availableQueues: AvailableQueue[];
   /** Auto-generated group ID (for new groups) */
   groupId: string;
+  /** Whether queues are being loaded from API */
+  loadingQueues?: boolean;
 }
 
 export function QueueGroupModal({
@@ -32,7 +34,8 @@ export function QueueGroupModal({
   onSave,
   existingGroup,
   availableQueues,
-  groupId
+  groupId,
+  loadingQueues = false
 }: QueueGroupModalProps) {
   const { t } = useTranslation();
   const verboseLogging = isVerboseLoggingEnabled();
@@ -205,11 +208,14 @@ export function QueueGroupModal({
                 type="button"
                 className="queue-multiselect-trigger"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                disabled={loadingQueues}
               >
                 <span className="trigger-text">
-                  {selectedQueues.length === 0
-                    ? t('settings.select_queues_placeholder', 'Click to select queues')
-                    : t('settings.queues_selected', '{{count}} queue(s) selected', { count: selectedQueues.length })
+                  {loadingQueues
+                    ? t('settings.loading_queues', 'Loading queues...')
+                    : selectedQueues.length === 0
+                      ? t('settings.select_queues_placeholder', 'Click to select queues')
+                      : t('settings.queues_selected', '{{count}} queue(s) selected', { count: selectedQueues.length })
                   }
                 </span>
                 <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>

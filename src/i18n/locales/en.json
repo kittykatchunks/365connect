@@ -399,6 +399,7 @@
         "select_queues": "Select Queues",
         "select_queues_desc": "Select one or more queues for this group",
         "select_queues_placeholder": "Click to select queues",
+        "loading_queues": "Loading queues...",
         "queues_selected": "{{count}} queue(s) selected",
         "select_all": "Select All",
         "clear_all": "Clear All",

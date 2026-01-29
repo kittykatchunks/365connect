@@ -51,8 +51,8 @@ import {
   deleteAllQueueGroups,
   getNextQueueGroupId 
 } from '@/utils/queueGroupStorage';
-import { loadQueueConfigs } from '@/utils/queueStorage';
-import type { QueueGroup } from '@/types/queue-monitor';
+import type { QueueGroup, AvailableQueue } from '@/types/queue-monitor';
+import { phantomApiService } from '@/services';
 import audioService from '@/services/AudioService';
 
 // Helper component to display device info
@@ -152,6 +152,8 @@ export function SettingsView() {
   const [editingQueueGroup, setEditingQueueGroup] = useState<QueueGroup | null>(null);
   const [deleteConfirmGroupId, setDeleteConfirmGroupId] = useState<string | null>(null);
   const [isDeleteAllGroupsConfirmOpen, setIsDeleteAllGroupsConfirmOpen] = useState(false);
+  const [availableQueuesForGroups, setAvailableQueuesForGroups] = useState<AvailableQueue[]>([]);
+  const [loadingQueuesForGroups, setLoadingQueuesForGroups] = useState(false);
   
   // Load queue groups on mount
   useEffect(() => {
@@ -325,12 +327,55 @@ export function SettingsView() {
     }
   }, [showIncomingCallNotification, notificationPermission]);
   
+  // Fetch available queues from Phantom API for queue groups
+  const fetchAvailableQueuesForGroups = async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    setLoadingQueuesForGroups(true);
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] 📡 Fetching available queues from Phantom API...');
+    }
+    
+    try {
+      const response = await phantomApiService.fetchQueueList();
+      
+      if (verboseLogging) {
+        console.log('[SettingsView] 📥 API Response:', response);
+      }
+      
+      if (!response.success || !response.data) {
+        throw new Error('Failed to fetch queue list from API');
+      }
+      
+      const queues: AvailableQueue[] = response.data.aaData.map(item => ({
+        queueNumber: item.name,
+        queueName: item.label,
+        rawData: item
+      }));
+      
+      setAvailableQueuesForGroups(queues);
+      
+      if (verboseLogging) {
+        console.log('[SettingsView] ✅ Successfully fetched queues:', {
+          count: queues.length,
+          queues: queues.map(q => `${q.queueNumber} - ${q.queueName}`)
+        });
+      }
+    } catch (error) {
+      console.error('[SettingsView] ❌ Error fetching queues from API:', error);
+      setAvailableQueuesForGroups([]);
+    } finally {
+      setLoadingQueuesForGroups(false);
+    }
+  };
+  
   // Queue Groups handlers
   const handleAddQueueGroup = () => {
     const verboseLogging = isVerboseLoggingEnabled();
     if (verboseLogging) {
       console.log('[SettingsView] 🆕 Opening add queue group modal');
     }
+    fetchAvailableQueuesForGroups();
     setEditingQueueGroup(null);
     setIsQueueGroupModalOpen(true);
   };
@@ -342,6 +387,7 @@ export function SettingsView() {
       if (verboseLogging) {
         console.log('[SettingsView] 📝 Editing queue group:', group);
       }
+      fetchAvailableQueuesForGroups();
       setEditingQueueGroup(group);
       setIsQueueGroupModalOpen(true);
     }
@@ -389,14 +435,7 @@ export function SettingsView() {
     }
   };
   
-  // Get available queues for queue group modal (from configured queues)
-  const getAvailableQueuesForGroups = () => {
-    const configs = loadQueueConfigs();
-    return configs.map(config => ({
-      queueNumber: config.queueNumber,
-      queueName: config.queueName || config.queueNumber
-    }));
-  };
+
   
   // Options
   const themeOptions = [
@@ -1360,8 +1399,9 @@ export function SettingsView() {
         onClose={() => setIsQueueGroupModalOpen(false)}
         onSave={handleSaveQueueGroup}
         existingGroup={editingQueueGroup}
-        availableQueues={getAvailableQueuesForGroups()}
+        availableQueues={availableQueuesForGroups}
         groupId={getNextQueueGroupId()}
+        loadingQueues={loadingQueuesForGroups}
       />
       
       {/* Delete Queue Group Confirmation */}
