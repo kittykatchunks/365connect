@@ -8,6 +8,16 @@ import { X, Upload, Download, FileJson, Check, AlertTriangle } from 'lucide-reac
 import { Button, Toggle } from '@/components/ui';
 import { useContactsStore, useCompanyNumbersStore, useBLFStore, useSettingsStore } from '@/stores';
 import { ConfirmModal } from '@/components/modals';
+import { 
+  exportQueueMonitoringData, 
+  importQueueMonitoringData,
+  loadQueueConfigs 
+} from '@/utils/queueStorage';
+import { 
+  exportQueueGroupsData, 
+  importQueueGroupsData,
+  loadQueueGroups 
+} from '@/utils/queueGroupStorage';
 
 interface ImportExportModalProps {
   isOpen: boolean;
@@ -43,6 +53,10 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
   const setBLFEnabled = useSettingsStore((state) => state.setBLFEnabled);
   const setShowCompanyNumbersTab = useSettingsStore((state) => state.setShowCompanyNumbersTab);
   
+  // Get queue monitoring and queue groups counts
+  const queueConfigs = loadQueueConfigs();
+  const queueGroups = loadQueueGroups();
+  
   // Local state
   const [mode, setMode] = useState<'export' | 'import'>('export');
   const [importMode, setImportMode] = useState<ImportMode>('select');
@@ -50,19 +64,19 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
   const [importError, setImportError] = useState<string | null>(null);
   const [showImportWarning, setShowImportWarning] = useState(false);
   
-  // Export options - default ON for Contacts, Company Numbers, BLF; Queue options OFF and disabled
+  // Export options - default ON for Contacts, Company Numbers, BLF; Queue options default ON too
   const [exportContacts, setExportContacts] = useState(true);
   const [exportCompanyNumbers, setExportCompanyNumbers] = useState(true);
   const [exportBLF, setExportBLF] = useState(true);
-  const [exportQueueMonitoring, setExportQueueMonitoring] = useState(false);
-  const [exportQueueGroups, setExportQueueGroups] = useState(false);
+  const [exportQueueMonitoring, setExportQueueMonitoring] = useState(true);
+  const [exportQueueGroups, setExportQueueGroups] = useState(true);
   
-  // Import options - default ON for available data; Queue options OFF and disabled
+  // Import options - default ON for available data
   const [includeContacts, setIncludeContacts] = useState(true);
   const [includeCompanyNumbers, setIncludeCompanyNumbers] = useState(true);
   const [includeBLF, setIncludeBLF] = useState(true);
-  const [includeQueueMonitoring, setIncludeQueueMonitoring] = useState(false);
-  const [includeQueueGroups, setIncludeQueueGroups] = useState(false);
+  const [includeQueueMonitoring, setIncludeQueueMonitoring] = useState(true);
+  const [includeQueueGroups, setIncludeQueueGroups] = useState(true);
   
   const handleExport = () => {
     const data: ExportData = {
@@ -82,12 +96,29 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
         data.blfButtons = blfButtons;
       }
     }
-    // Queue options for future development
+    // Queue monitoring data
     if (exportQueueMonitoring) {
-      data.queueMonitoring = {}; // Placeholder
+      try {
+        const queueData = exportQueueMonitoringData();
+        const parsedData = JSON.parse(queueData);
+        if (parsedData.configs && parsedData.configs.length > 0) {
+          data.queueMonitoring = parsedData;
+        }
+      } catch (error) {
+        console.error('[ImportExportModal] Error exporting queue monitoring data:', error);
+      }
     }
+    // Queue groups data
     if (exportQueueGroups) {
-      data.queueGroups = {}; // Placeholder
+      try {
+        const groupsData = exportQueueGroupsData();
+        const parsedData = JSON.parse(groupsData);
+        if (parsedData.groups && parsedData.groups.length > 0) {
+          data.queueGroups = parsedData;
+        }
+      } catch (error) {
+        console.error('[ImportExportModal] Error exporting queue groups data:', error);
+      }
     }
     
     // Create and download file
@@ -122,13 +153,12 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
         setImportMode('select');
         setImportError(null);
         
-        // Auto-select what's available (default ON for main 3 options)
+        // Auto-select what's available (default ON for all options)
         setIncludeContacts(!!data.contacts?.length);
         setIncludeCompanyNumbers(!!data.companyNumbers?.length);
         setIncludeBLF(!!data.blfButtons?.length);
-        // Queue options remain OFF and disabled
-        setIncludeQueueMonitoring(false);
-        setIncludeQueueGroups(false);
+        setIncludeQueueMonitoring(!!(data.queueMonitoring?.configs?.length));
+        setIncludeQueueGroups(!!(data.queueGroups?.groups?.length));
       } catch (err) {
         setImportError(err instanceof Error ? err.message : 'Failed to parse file');
         setImportMode('error');
@@ -167,12 +197,19 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
         // Automatically enable BLF buttons
         setBLFEnabled(true);
       }
-      // Queue options for future development
+      // Queue monitoring data
       if (includeQueueMonitoring && importData.queueMonitoring) {
-        // Future implementation
+        const result = importQueueMonitoringData(JSON.stringify(importData.queueMonitoring));
+        if (!result.success) {
+          throw new Error(`Queue monitoring import failed: ${result.error}`);
+        }
       }
+      // Queue groups data
       if (includeQueueGroups && importData.queueGroups) {
-        // Future implementation
+        const result = importQueueGroupsData(JSON.stringify(importData.queueGroups));
+        if (!result.success) {
+          throw new Error(`Queue groups import failed: ${result.error}`);
+        }
       }
       
       setImportMode('success');
@@ -274,17 +311,17 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
                 />
                 <Toggle
                   label={t('settings.export_queue_monitoring', 'Queue Monitoring')}
-                  description={t('common.future_development', 'Future development')}
+                  description={`${queueConfigs.length} ${t('common.configured', 'configured')}`}
                   checked={exportQueueMonitoring}
                   onChange={setExportQueueMonitoring}
-                  disabled={true}
+                  disabled={queueConfigs.length === 0}
                 />
                 <Toggle
                   label={t('settings.export_queue_groups', 'Queue Groups')}
-                  description={t('common.future_development', 'Future development')}
+                  description={`${queueGroups.length} ${t('common.configured', 'configured')}`}
                   checked={exportQueueGroups}
                   onChange={setExportQueueGroups}
-                  disabled={true}
+                  disabled={queueGroups.length === 0}
                 />
               </div>
             </div>
@@ -354,20 +391,22 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
                         onChange={setIncludeBLF}
                       />
                     )}
-                    <Toggle
-                      label={t('settings.import_queue_monitoring', 'Queue Monitoring')}
-                      description={t('common.future_development', 'Future development')}
-                      checked={includeQueueMonitoring}
-                      onChange={setIncludeQueueMonitoring}
-                      disabled={true}
-                    />
-                    <Toggle
-                      label={t('settings.import_queue_groups', 'Queue Groups')}
-                      description={t('common.future_development', 'Future development')}
-                      checked={includeQueueGroups}
-                      onChange={setIncludeQueueGroups}
-                      disabled={true}
-                    />
+                    {importData.queueMonitoring && (
+                      <Toggle
+                        label={t('settings.import_queue_monitoring', 'Queue Monitoring')}
+                        description={`${importData.queueMonitoring.configs?.length || 0} ${t('common.configured', 'configured')}`}
+                        checked={includeQueueMonitoring}
+                        onChange={setIncludeQueueMonitoring}
+                      />
+                    )}
+                    {importData.queueGroups && (
+                      <Toggle
+                        label={t('settings.import_queue_groups', 'Queue Groups')}
+                        description={`${importData.queueGroups.groups?.length || 0} ${t('common.configured', 'configured')}`}
+                        checked={includeQueueGroups}
+                        onChange={setIncludeQueueGroups}
+                      />
+                    )}
                   </div>
                 </>
               )}

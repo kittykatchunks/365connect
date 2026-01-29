@@ -23,7 +23,8 @@ import {
   Users,
   BookOpen,
   Trash2,
-  FileAudio
+  FileAudio,
+  Plus
 } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { 
@@ -37,11 +38,21 @@ import {
   Button
 } from '@/components/ui';
 import { ImportExportModal, ConfirmModal } from '@/components/modals';
+import { QueueGroupModal } from './QueueGroupModal';
 import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
 import { useAudioDevices, useMediaQuery } from '@/hooks';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBusylightContext } from '@/contexts';
 import { isVerboseLoggingEnabled, validateAndConvertAudioFile } from '@/utils';
+import { 
+  loadQueueGroups, 
+  saveQueueGroup, 
+  deleteQueueGroup,
+  deleteAllQueueGroups,
+  getNextQueueGroupId 
+} from '@/utils/queueGroupStorage';
+import { loadQueueConfigs } from '@/utils/queueStorage';
+import type { QueueGroup } from '@/types/queue-monitor';
 import audioService from '@/services/AudioService';
 
 // Helper component to display device info
@@ -134,6 +145,24 @@ export function SettingsView() {
   const [localUsername, setLocalUsername] = useState(settings.connection.username);
   const [localPassword, setLocalPassword] = useState(settings.connection.password);
   const [localVmAccess, setLocalVmAccess] = useState(settings.connection.vmAccess);
+  
+  // Queue Groups state
+  const [queueGroups, setQueueGroups] = useState<QueueGroup[]>([]);
+  const [isQueueGroupModalOpen, setIsQueueGroupModalOpen] = useState(false);
+  const [editingQueueGroup, setEditingQueueGroup] = useState<QueueGroup | null>(null);
+  const [deleteConfirmGroupId, setDeleteConfirmGroupId] = useState<string | null>(null);
+  const [isDeleteAllGroupsConfirmOpen, setIsDeleteAllGroupsConfirmOpen] = useState(false);
+  
+  // Load queue groups on mount
+  useEffect(() => {
+    const groups = loadQueueGroups();
+    setQueueGroups(groups);
+    
+    const verboseLogging = isVerboseLoggingEnabled();
+    if (verboseLogging) {
+      console.log('[SettingsView] 📋 Loaded queue groups:', groups);
+    }
+  }, []);
   
   // Sync local state with store on mount (for persisted values after refresh)
   useEffect(() => {
@@ -295,6 +324,79 @@ export function SettingsView() {
       });
     }
   }, [showIncomingCallNotification, notificationPermission]);
+  
+  // Queue Groups handlers
+  const handleAddQueueGroup = () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    if (verboseLogging) {
+      console.log('[SettingsView] 🆕 Opening add queue group modal');
+    }
+    setEditingQueueGroup(null);
+    setIsQueueGroupModalOpen(true);
+  };
+  
+  const handleEditQueueGroup = (groupId: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const group = queueGroups.find(g => g.id === groupId);
+    if (group) {
+      if (verboseLogging) {
+        console.log('[SettingsView] 📝 Editing queue group:', group);
+      }
+      setEditingQueueGroup(group);
+      setIsQueueGroupModalOpen(true);
+    }
+  };
+  
+  const handleDeleteQueueGroup = (groupId: string) => {
+    setDeleteConfirmGroupId(groupId);
+  };
+  
+  const confirmDeleteQueueGroup = () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    if (deleteConfirmGroupId) {
+      const updatedGroups = deleteQueueGroup(deleteConfirmGroupId);
+      setQueueGroups(updatedGroups);
+      setDeleteConfirmGroupId(null);
+      
+      if (verboseLogging) {
+        console.log('[SettingsView] 🗑️ Deleted queue group:', deleteConfirmGroupId);
+      }
+    }
+  };
+  
+  const handleDeleteAllQueueGroups = () => {
+    setIsDeleteAllGroupsConfirmOpen(true);
+  };
+  
+  const confirmDeleteAllQueueGroups = () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const updatedGroups = deleteAllQueueGroups();
+    setQueueGroups(updatedGroups);
+    setIsDeleteAllGroupsConfirmOpen(false);
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] 🗑️ Deleted all queue groups');
+    }
+  };
+  
+  const handleSaveQueueGroup = (group: QueueGroup) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const updatedGroups = saveQueueGroup(group);
+    setQueueGroups(updatedGroups);
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] 💾 Saved queue group:', group);
+    }
+  };
+  
+  // Get available queues for queue group modal (from configured queues)
+  const getAvailableQueuesForGroups = () => {
+    const configs = loadQueueConfigs();
+    return configs.map(config => ({
+      queueNumber: config.queueNumber,
+      queueName: config.queueName || config.queueNumber
+    }));
+  };
   
   // Options
   const themeOptions = [
@@ -775,11 +877,92 @@ export function SettingsView() {
             </AccordionTrigger>
             <AccordionContent value="queues">
               <div className="settings-group">
-                <div className="setting-item">
-                  <p className="text-muted">
-                    {t('settings.queues_future', 'This feature will be available in a future release.')}
-                  </p>
+                {/* Queue Groups List */}
+                {queueGroups.length > 0 && (
+                  <div className="queue-groups-list" style={{ marginBottom: '1rem' }}>
+                    {queueGroups.map(group => (
+                      <div key={group.id} className="queue-group-item" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem',
+                        marginBottom: '0.5rem',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '6px'
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <span style={{ fontWeight: 500, marginRight: '0.5rem' }}>{group.id}</span>
+                          <span>{group.name}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={() => handleEditQueueGroup(group.id)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              background: 'var(--bg-primary)',
+                              border: '1px solid var(--border-color)',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem'
+                            }}
+                            title={t('common.edit', 'Edit')}
+                          >
+                            {t('common.edit', 'Edit')}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQueueGroup(group.id)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              background: 'var(--bg-primary)',
+                              border: '1px solid var(--border-color)',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              color: 'var(--danger-color)'
+                            }}
+                            title={t('common.delete', 'Delete')}
+                          >
+                            {t('common.delete', 'Delete')}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: queueGroups.length > 0 ? 'space-between' : 'flex-end',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  {queueGroups.length > 0 && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={handleDeleteAllQueueGroups}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {t('settings.delete_all_groups', 'Delete All')}
+                    </Button>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleAddQueueGroup}
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t('settings.add_queue_group', 'Add Queue Group')}
+                  </Button>
                 </div>
+                
+                {queueGroups.length === 0 && (
+                  <p className="text-muted" style={{ marginTop: '1rem', textAlign: 'center' }}>
+                    {t('settings.no_queue_groups', 'No queue groups configured')}
+                  </p>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -1168,6 +1351,40 @@ export function SettingsView() {
       <ImportExportModal
         isOpen={isImportExportOpen}
         onClose={() => setIsImportExportOpen(false)}
+      />
+      
+      {/* Queue Group Modal */}
+      <QueueGroupModal
+        isOpen={isQueueGroupModalOpen}
+        onClose={() => setIsQueueGroupModalOpen(false)}
+        onSave={handleSaveQueueGroup}
+        existingGroup={editingQueueGroup}
+        availableQueues={getAvailableQueuesForGroups()}
+        groupId={getNextQueueGroupId()}
+      />
+      
+      {/* Delete Queue Group Confirmation */}
+      {deleteConfirmGroupId && (
+        <ConfirmModal
+          isOpen={true}
+          onClose={() => setDeleteConfirmGroupId(null)}
+          onConfirm={confirmDeleteQueueGroup}
+          title={t('settings.delete_queue_group_title', 'Delete Queue Group')}
+          message={t('settings.delete_queue_group_message', 'Are you sure you want to delete this queue group?')}
+          confirmText={t('common.delete', 'Delete')}
+          variant="danger"
+        />
+      )}
+      
+      {/* Delete All Queue Groups Confirmation */}
+      <ConfirmModal
+        isOpen={isDeleteAllGroupsConfirmOpen}
+        onClose={() => setIsDeleteAllGroupsConfirmOpen(false)}
+        onConfirm={confirmDeleteAllQueueGroups}
+        title={t('settings.delete_all_groups_title', 'Delete All Queue Groups')}
+        message={t('settings.delete_all_groups_message', 'Are you sure you want to delete all queue groups? This cannot be undone.')}
+        confirmText={t('settings.delete_all_groups', 'Delete All')}
+        variant="danger"
       />
       
       {/* Reset All Settings Confirmation */}

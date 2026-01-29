@@ -87,3 +87,16 @@ export interface AvailableQueue {
   /** Raw API data for reference (optional) */
   rawData?: Record<string, unknown>;
 }
+
+/**
+ * Queue Group configuration
+ * Groups multiple queues together for monitoring
+ */
+export interface QueueGroup {
+  /** Group identifier (QG01-QG99) */
+  id: string;
+  /** Group name/label */
+  name: string;
+  /** Array of queue numbers included in this group */
+  queueNumbers: string[];
+}
