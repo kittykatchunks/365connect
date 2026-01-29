@@ -134,6 +134,32 @@
   max-height: 250px;
 }
 
+/* Section Headers for Groups/Individual Queues */
+.dropdown-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  background-color: var(--background-muted);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-section-header .section-icon {
+  opacity: 0.7;
+}
+
+/* Divider between sections */
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: var(--spacing-xs) 0;
+}
+
 .dropdown-item {
   display: flex;
   align-items: center;
@@ -144,6 +170,36 @@
 
 .dropdown-item:hover {
   background-color: var(--background-muted);
+}
+
+/* Queue Group Item Styling */
+.dropdown-item-group {
+  background-color: var(--primary-color-alpha, rgba(59, 130, 246, 0.05));
+  border-left: 3px solid var(--primary-color);
+}
+
+.dropdown-item-group:hover {
+  background-color: var(--primary-color-alpha, rgba(59, 130, 246, 0.1));
+}
+
+.dropdown-item-group.partial {
+  border-left-color: var(--warning-color, #f59e0b);
+}
+
+.group-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.group-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.group-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .queue-checkbox {

@@ -5,11 +5,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X, Users } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { DualRangeSlider } from './DualRangeSlider';
-import type { QueueConfig, AvailableQueue } from '@/types/queue-monitor';
+import type { QueueConfig, AvailableQueue, QueueGroup } from '@/types/queue-monitor';
 import { isVerboseLoggingEnabled } from '@/utils';
+import { loadQueueGroups } from '@/utils/queueGroupStorage';
 import './QueueModal.css';
 
 interface QueueModalProps {
@@ -51,6 +52,21 @@ export function QueueModal({
   const [awtWarn, setAwtWarn] = useState(30);
   const [awtBreach, setAwtBreach] = useState(60);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Queue groups state
+  const [queueGroups, setQueueGroups] = useState<QueueGroup[]>([]);
+  
+  // Load queue groups when modal opens
+  useEffect(() => {
+    if (isOpen && !isEditing) {
+      const groups = loadQueueGroups();
+      setQueueGroups(groups);
+      
+      if (verboseLogging) {
+        console.log('[QueueModal] 📁 Loaded queue groups:', groups.length);
+      }
+    }
+  }, [isOpen, isEditing, verboseLogging]);
   
   // Initialize form with existing config when editing, or reset when opening for new entry
   useEffect(() => {
@@ -145,10 +161,19 @@ export function QueueModal({
     (isEditing && q.queueNumber === existingConfig.queueNumber)
   );
   
+  // Filter queue groups to only show groups that have at least one available queue
+  const availableQueueGroups = queueGroups.filter(group => {
+    const availableQueuesInGroup = group.queueNumbers.filter(qn => 
+      availableQueueOptions.some(q => q.queueNumber === qn)
+    );
+    return availableQueuesInGroup.length > 0;
+  });
+  
   if (verboseLogging && isOpen) {
     console.log('[QueueModal] 📊 Queue selection method:', {
       totalQueues: availableQueueOptions.length,
-      method: 'Dropdown (Multi-select)'
+      totalGroups: availableQueueGroups.length,
+      method: 'Dropdown (Multi-select with Groups)'
     });
   }
   
@@ -163,12 +188,64 @@ export function QueueModal({
     });
   };
   
+  // Toggle queue group selection - selects/deselects all available queues in the group
+  const toggleGroupSelection = (group: QueueGroup) => {
+    const availableQueuesInGroup = group.queueNumbers.filter(qn => 
+      availableQueueOptions.some(q => q.queueNumber === qn)
+    );
+    
+    // Check if all available queues in this group are already selected
+    const allSelected = availableQueuesInGroup.every(qn => selectedQueues.includes(qn));
+    
+    if (allSelected) {
+      // Deselect all queues from this group
+      setSelectedQueues(prev => prev.filter(q => !availableQueuesInGroup.includes(q)));
+      
+      if (verboseLogging) {
+        console.log('[QueueModal] 📤 Deselected group:', group.name, availableQueuesInGroup);
+      }
+    } else {
+      // Select all available queues from this group
+      setSelectedQueues(prev => {
+        const newSelection = [...prev];
+        availableQueuesInGroup.forEach(qn => {
+          if (!newSelection.includes(qn)) {
+            newSelection.push(qn);
+          }
+        });
+        return newSelection;
+      });
+      
+      if (verboseLogging) {
+        console.log('[QueueModal] 📥 Selected group:', group.name, availableQueuesInGroup);
+      }
+    }
+  };
+  
+  // Check if a group is fully selected (all its available queues are selected)
+  const isGroupFullySelected = (group: QueueGroup): boolean => {
+    const availableQueuesInGroup = group.queueNumbers.filter(qn => 
+      availableQueueOptions.some(q => q.queueNumber === qn)
+    );
+    return availableQueuesInGroup.length > 0 && 
+           availableQueuesInGroup.every(qn => selectedQueues.includes(qn));
+  };
+  
+  // Check if a group is partially selected
+  const isGroupPartiallySelected = (group: QueueGroup): boolean => {
+    const availableQueuesInGroup = group.queueNumbers.filter(qn => 
+      availableQueueOptions.some(q => q.queueNumber === qn)
+    );
+    const selectedCount = availableQueuesInGroup.filter(qn => selectedQueues.includes(qn)).length;
+    return selectedCount > 0 && selectedCount < availableQueuesInGroup.length;
+  };
+  
   // Remove queue from selection (used by badge chips)
   const removeQueueFromSelection = (queueNumber: string) => {
     setSelectedQueues(prev => prev.filter(q => q !== queueNumber));
   };
   
-  // Select all available queues
+  // Select all available queues (including from groups)
   const selectAllQueues = () => {
     setSelectedQueues(availableQueueOptions.map(q => q.queueNumber));
   };
@@ -258,30 +335,79 @@ export function QueueModal({
                       
                       {/* Queue list with checkboxes */}
                       <div className="dropdown-list">
-                        {availableQueueOptions.length === 0 ? (
+                        {availableQueueOptions.length === 0 && availableQueueGroups.length === 0 ? (
                           <div className="dropdown-empty">
                             {t('queue_monitor.no_queues_available', 'No queues available or all queues are already configured')}
                           </div>
                         ) : (
-                          availableQueueOptions.map((queue) => (
-                            <label
-                              key={queue.queueNumber}
-                              className="dropdown-item"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedQueues.includes(queue.queueNumber)}
-                                onChange={() => toggleQueueSelection(queue.queueNumber)}
-                                className="queue-checkbox"
-                              />
-                              <span className="queue-label">
-                                {queue.queueName 
-                                  ? `${queue.queueNumber} - ${queue.queueName}` 
-                                  : queue.queueNumber
-                                }
-                              </span>
-                            </label>
-                          ))
+                          <>
+                            {/* Queue Groups Section */}
+                            {availableQueueGroups.length > 0 && (
+                              <>
+                                <div className="dropdown-section-header">
+                                  <Users className="section-icon" size={14} />
+                                  {t('queue_monitor.queue_groups', 'Queue Groups')}
+                                </div>
+                                {availableQueueGroups.map((group) => {
+                                  const availableCount = group.queueNumbers.filter(qn => 
+                                    availableQueueOptions.some(q => q.queueNumber === qn)
+                                  ).length;
+                                  const isFullySelected = isGroupFullySelected(group);
+                                  const isPartiallySelected = isGroupPartiallySelected(group);
+                                  
+                                  return (
+                                    <label
+                                      key={group.id}
+                                      className={`dropdown-item dropdown-item-group ${isPartiallySelected ? 'partial' : ''}`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isFullySelected}
+                                        ref={(el) => {
+                                          if (el) el.indeterminate = isPartiallySelected;
+                                        }}
+                                        onChange={() => toggleGroupSelection(group)}
+                                        className="queue-checkbox"
+                                      />
+                                      <span className="queue-label group-label">
+                                        <span className="group-name">{group.name}</span>
+                                        <span className="group-meta">
+                                          {group.id} • {availableCount} {t('queue_monitor.queues', 'queues')}
+                                        </span>
+                                      </span>
+                                    </label>
+                                  );
+                                })}
+                                
+                                {/* Divider between groups and individual queues */}
+                                <div className="dropdown-divider"></div>
+                                <div className="dropdown-section-header">
+                                  {t('queue_monitor.individual_queues', 'Individual Queues')}
+                                </div>
+                              </>
+                            )}
+                            
+                            {/* Individual Queues */}
+                            {availableQueueOptions.map((queue) => (
+                              <label
+                                key={queue.queueNumber}
+                                className="dropdown-item"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedQueues.includes(queue.queueNumber)}
+                                  onChange={() => toggleQueueSelection(queue.queueNumber)}
+                                  className="queue-checkbox"
+                                />
+                                <span className="queue-label">
+                                  {queue.queueName 
+                                    ? `${queue.queueNumber} - ${queue.queueName}` 
+                                    : queue.queueNumber
+                                  }
+                                </span>
+                              </label>
+                            ))}
+                          </>
                         )}
                       </div>
                     </div>
