@@ -26,6 +26,8 @@ interface QueueGroupModalProps {
   groupId: string;
   /** Whether queues are being loaded from API */
   loadingQueues?: boolean;
+  /** Queue numbers already assigned to other groups (to prevent duplicates) */
+  configuredQueueNumbers?: string[];
 }
 
 export function QueueGroupModal({
@@ -35,7 +37,8 @@ export function QueueGroupModal({
   existingGroup,
   availableQueues,
   groupId,
-  loadingQueues = false
+  loadingQueues = false,
+  configuredQueueNumbers = []
 }: QueueGroupModalProps) {
   const { t } = useTranslation();
   const verboseLogging = isVerboseLoggingEnabled();
@@ -122,6 +125,21 @@ export function QueueGroupModal({
     onClose();
   };
   
+  // Filter out already configured queues (except when editing current group's queues)
+  const availableQueueOptions = availableQueues.filter(q => 
+    !configuredQueueNumbers.includes(q.queueNumber) || 
+    (isEditing && existingGroup?.queueNumbers.includes(q.queueNumber))
+  );
+  
+  if (verboseLogging && isOpen) {
+    console.log('[QueueGroupModal] 📋 Queue filtering:', {
+      totalAvailable: availableQueues.length,
+      configuredInOtherGroups: configuredQueueNumbers.length,
+      availableAfterFiltering: availableQueueOptions.length,
+      isEditing
+    });
+  }
+  
   // Toggle queue selection
   const toggleQueueSelection = (queueNumber: string) => {
     setSelectedQueues(prev => {
@@ -140,7 +158,7 @@ export function QueueGroupModal({
   
   // Select all available queues
   const selectAllQueues = () => {
-    setSelectedQueues(availableQueues.map(q => q.queueNumber));
+    setSelectedQueues(availableQueueOptions.map(q => q.queueNumber));
   };
   
   // Clear all selections
@@ -225,7 +243,7 @@ export function QueueGroupModal({
               {isDropdownOpen && (
                 <div className="queue-multiselect-dropdown">
                   {/* Select All / Clear All buttons */}
-                  {availableQueues.length > 0 && (
+                  {availableQueueOptions.length > 0 && (
                     <div className="dropdown-actions">
                       <button
                         type="button"
@@ -245,9 +263,9 @@ export function QueueGroupModal({
                   )}
                   
                   {/* Queue list */}
-                  {availableQueues.length > 0 ? (
+                  {availableQueueOptions.length > 0 ? (
                     <div className="queue-option-list">
-                      {availableQueues.map(queue => (
+                      {availableQueueOptions.map(queue => (
                         <label
                           key={queue.queueNumber}
                           className="queue-option"

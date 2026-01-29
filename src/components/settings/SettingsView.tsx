@@ -1402,6 +1402,12 @@ export function SettingsView() {
         availableQueues={availableQueuesForGroups}
         groupId={getNextQueueGroupId()}
         loadingQueues={loadingQueuesForGroups}
+        configuredQueueNumbers={
+          // Get all queue numbers from other groups (exclude current group if editing)
+          queueGroups
+            .filter(g => !editingQueueGroup || g.id !== editingQueueGroup.id)
+            .flatMap(g => g.queueNumbers)
+        }
       />
       
       {/* Delete Queue Group Confirmation */}
