@@ -877,9 +877,37 @@ export function SettingsView() {
             </AccordionTrigger>
             <AccordionContent value="queues">
               <div className="settings-group">
+                {/* Action Buttons */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: queueGroups.length > 0 ? '1rem' : '0'
+                }}>
+                  {queueGroups.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-error"
+                      onClick={handleDeleteAllQueueGroups}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleAddQueueGroup}
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t('settings.add_queue_group', 'Add Queue Group')}
+                  </Button>
+                </div>
+                
                 {/* Queue Groups List */}
                 {queueGroups.length > 0 && (
-                  <div className="queue-groups-list" style={{ marginBottom: '1rem' }}>
+                  <div className="queue-groups-list">
                     {queueGroups.map(group => (
                       <div key={group.id} className="queue-group-item" style={{
                         display: 'flex',
@@ -930,33 +958,6 @@ export function SettingsView() {
                     ))}
                   </div>
                 )}
-                
-                {/* Action Buttons */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: queueGroups.length > 0 ? 'space-between' : 'flex-end',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  {queueGroups.length > 0 && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={handleDeleteAllQueueGroups}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {t('settings.delete_all_groups', 'Delete All')}
-                    </Button>
-                  )}
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleAddQueueGroup}
-                  >
-                    <Plus className="w-4 h-4" />
-                    {t('settings.add_queue_group', 'Add Queue Group')}
-                  </Button>
-                </div>
                 
                 {queueGroups.length === 0 && (
                   <p className="text-muted" style={{ marginTop: '1rem', textAlign: 'center' }}>
