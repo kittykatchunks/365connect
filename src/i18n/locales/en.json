@@ -146,7 +146,11 @@
         "unpause": "Unpause",
         "select_pause_reason": "Select pause reason",
         "error_number_required": "Agent number is required",
-        "error_login_failed": "Login failed"
+        "error_login_failed": "Login failed",
+        "login_api_success": "Agent Login API Successful",
+        "login_api_failed": "Agent Login API Failed - Trying DTMF Login",
+        "logout_api_success": "Agent Logout API Successful",
+        "logout_api_failed": "Agent Logout API Failed - Trying DTMF logout"
     },
     "contacts": {
         "title": "Contacts",

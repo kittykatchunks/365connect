@@ -85,6 +85,47 @@ export interface WallBoardStatsResponse {
   alarms?: unknown;
 }
 
+// ==================== Agent Login/Logout Types ====================
+
+export interface AgentLoginRequest {
+  /** Agent number from login modal */
+  agent: string;
+  /** SIP username from connection settings */
+  phone: string;
+  /** Optional comma-separated list of queues to join */
+  queues?: string;
+}
+
+export interface AgentLogoffRequest {
+  /** Agent number to log off */
+  agent: string;
+}
+
+export type AgentApiResponse = 'success' | 'failure';
+
+export interface QueueMemberItem {
+  /** Queue number/extension */
+  queue: string;
+  /** Queue display name/label */
+  queuelabel: string;
+  /** Agent number */
+  agent: string;
+  /** Agent display name */
+  agentname: string;
+}
+
+export interface QueueMemberListRequest {
+  /** Agent number to query */
+  agent: string;
+}
+
+export interface QueueMemberListResponse {
+  /** Array of queue memberships */
+  aaData: QueueMemberItem[];
+  /** Response status */
+  response: 'success' | 'failure';
+}
+
 type PhantomApiEventType = 
   | 'initialized'
   | 'request'
@@ -330,6 +371,153 @@ export class PhantomApiService {
         console.error('[PhantomApiService] ❌ Failed to fetch wallboard stats:', error);
       }
       throw error;
+    }
+  }
+
+  // ==================== Agent Login/Logout Methods ====================
+
+  /**
+   * Login agent via API (Primary method)
+   * Endpoint: /api/AgentLogin (Basic Auth)
+   * @param agent - Agent number from login modal
+   * @param phone - SIP username from connection settings
+   * @param queues - Optional comma-separated list of queues to join
+   * @returns 'success' or 'failure'
+   */
+  async agentLogin(agent: string, phone: string, queues?: string): Promise<{ success: boolean; response: AgentApiResponse }> {
+    if (this.verboseLogging) {
+      console.log('[PhantomApiService] 🔐 Agent login via API...', {
+        agent,
+        phone,
+        queues: queues || '(none specified)'
+      });
+    }
+
+    try {
+      const requestData: AgentLoginRequest = {
+        agent,
+        phone,
+        queues: queues || ''
+      };
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📤 AgentLogin request:', requestData);
+      }
+
+      const response = await this.post<AgentApiResponse>('AgentLogin', requestData);
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📥 AgentLogin response:', response);
+      }
+
+      if (response.success && response.data === 'success') {
+        if (this.verboseLogging) {
+          console.log('[PhantomApiService] ✅ Agent login API successful');
+        }
+        return { success: true, response: 'success' };
+      } else {
+        if (this.verboseLogging) {
+          console.warn('[PhantomApiService] ⚠️ Agent login API returned failure or unexpected response:', response.data);
+        }
+        return { success: false, response: 'failure' };
+      }
+    } catch (error) {
+      if (this.verboseLogging) {
+        console.error('[PhantomApiService] ❌ Agent login API error:', error);
+      }
+      return { success: false, response: 'failure' };
+    }
+  }
+
+  /**
+   * Logout agent via API (Primary method)
+   * Endpoint: /api/AgentLogoff (Basic Auth)
+   * @param agent - Agent number to log off
+   * @returns 'success' or 'failure'
+   */
+  async agentLogoff(agent: string): Promise<{ success: boolean; response: AgentApiResponse }> {
+    if (this.verboseLogging) {
+      console.log('[PhantomApiService] 🚪 Agent logout via API...', { agent });
+    }
+
+    try {
+      const requestData: AgentLogoffRequest = { agent };
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📤 AgentLogoff request:', requestData);
+      }
+
+      const response = await this.post<AgentApiResponse>('AgentLogoff', requestData);
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📥 AgentLogoff response:', response);
+      }
+
+      if (response.success && response.data === 'success') {
+        if (this.verboseLogging) {
+          console.log('[PhantomApiService] ✅ Agent logout API successful');
+        }
+        return { success: true, response: 'success' };
+      } else {
+        if (this.verboseLogging) {
+          console.warn('[PhantomApiService] ⚠️ Agent logout API returned failure or unexpected response:', response.data);
+        }
+        return { success: false, response: 'failure' };
+      }
+    } catch (error) {
+      if (this.verboseLogging) {
+        console.error('[PhantomApiService] ❌ Agent logout API error:', error);
+      }
+      return { success: false, response: 'failure' };
+    }
+  }
+
+  /**
+   * Get list of queues that an agent is currently logged into
+   * Endpoint: /api/QueueMemberList (Basic Auth)
+   * @param agent - Agent number to query
+   * @returns Array of queue memberships or empty array on failure
+   */
+  async getQueueMemberList(agent: string): Promise<{ success: boolean; queues: QueueMemberItem[] }> {
+    if (this.verboseLogging) {
+      console.log('[PhantomApiService] 📋 Fetching queue member list for agent:', agent);
+    }
+
+    try {
+      const requestData: QueueMemberListRequest = { agent };
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📤 QueueMemberList request:', requestData);
+      }
+
+      const response = await this.post<QueueMemberListResponse>('QueueMemberList', requestData);
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📥 QueueMemberList response:', response);
+      }
+
+      if (response.success && response.data?.response === 'success' && response.data?.aaData) {
+        const queues = response.data.aaData;
+        
+        if (this.verboseLogging) {
+          console.log('[PhantomApiService] ✅ QueueMemberList successful, found queues:', queues.length);
+          queues.forEach((q) => {
+            console.log(`[PhantomApiService]   📌 Queue: ${q.queue} (${q.queuelabel}) - Agent: ${q.agent} (${q.agentname})`);
+          });
+        }
+        
+        return { success: true, queues };
+      } else {
+        if (this.verboseLogging) {
+          console.warn('[PhantomApiService] ⚠️ QueueMemberList returned failure or no data:', response.data);
+        }
+        return { success: false, queues: [] };
+      }
+    } catch (error) {
+      if (this.verboseLogging) {
+        console.error('[PhantomApiService] ❌ QueueMemberList API error:', error);
+      }
+      return { success: false, queues: [] };
     }
   }
 

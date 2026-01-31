@@ -2,7 +2,7 @@
 // Stores - Central Export
 // ============================================
 
-export { useAppStore } from './appStore';
+export { useAppStore, type LoggedInQueue } from './appStore';
 export { useSIPStore } from './sipStore';
 export { useUIStore, initializeThemeWatcher, type Theme, type AccentColor, type Notification, type Modal } from './uiStore';
 export { useSettingsStore } from './settingsStore';

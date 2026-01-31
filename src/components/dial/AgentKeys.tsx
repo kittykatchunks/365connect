@@ -5,10 +5,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
-import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus } from '@/utils';
+import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus, loginAgentViaAPI, logoffAgentViaAPI, fetchQueueMembership } from '@/utils';
 import { Button } from '@/components/ui';
 import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
-import { useAppStore, useSettingsStore, useCompanyNumbersStore } from '@/stores';
+import { useAppStore, useSettingsStore, useCompanyNumbersStore, useUIStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import type { PauseReason } from '@/types/agent';
 
@@ -28,6 +28,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const agentNumber = useAppStore((state) => state.agentNumber);
   const setAgentState = useAppStore((state) => state.setAgentState);
   const setQueueState = useAppStore((state) => state.setQueueState);
+  const setLoggedInQueues = useAppStore((state) => state.setLoggedInQueues);
+  
+  // Toast notifications
+  const addNotification = useUIStore((state) => state.addNotification);
   
   // Get SIP username for API calls
   const sipUsername = useSettingsStore((state) => state.settings.connection.username);
@@ -212,19 +216,21 @@ export function AgentKeys({ className }: AgentKeysProps) {
           });
         }
         
+        const loginAgentNumber = pendingLogin.agentNumber;
+        
         useAppStore.setState({
-          agentNumber: pendingLogin.agentNumber,
+          agentNumber: loginAgentNumber,
           agentState: 'available',
           queueState: 'in-queue' // Automatically join queue on login
         });
         
-        // Query API to get full agent info (name, cid, clip, etc.)
+        // Query API to get full agent info (name, cid, clip, etc.) AND fetch queue membership
         if (sipUsername) {
           setTimeout(async () => {
             const agentData = await queryAgentStatus(sipUsername);
             if (agentData && agentData.num) {
               if (verboseLogging) {
-                console.log('[AgentKeys] 📥 Retrieved agent details from API after login', {
+                console.log('[AgentKeys] 📥 Retrieved agent details from API after DTMF login', {
                   num: agentData.num,
                   name: agentData.name,
                   cid: agentData.cid,
@@ -241,18 +247,45 @@ export function AgentKeys({ className }: AgentKeysProps) {
               
               if (showCompanyNumbersTab && agentData.cid) {
                 if (verboseLogging) {
-                  console.log('[AgentKeys] 📞 Syncing CLI after login, CID:', agentData.cid);
+                  console.log('[AgentKeys] 📞 Syncing CLI after DTMF login, CID:', agentData.cid);
                 }
                 
                 const syncCurrentCliFromAgentData = useCompanyNumbersStore.getState().syncCurrentCliFromAgentData;
                 syncCurrentCliFromAgentData(agentData);
               }
             }
+            
+            // Fetch queue membership after DTMF login
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📋 Fetching queue membership after DTMF login...');
+            }
+            
+            try {
+              const queueResult = await fetchQueueMembership(loginAgentNumber);
+              
+              if (queueResult.success && queueResult.queues.length > 0) {
+                if (verboseLogging) {
+                  console.log('[AgentKeys] ✅ Queue membership fetched after DTMF login:', queueResult.queues);
+                }
+                
+                // Update store with logged-in queues
+                useAppStore.setState({
+                  loggedInQueues: queueResult.queues,
+                  queueState: 'in-queue'
+                });
+              } else {
+                if (verboseLogging) {
+                  console.log('[AgentKeys] ℹ️ No queues found after DTMF login or fetch failed');
+                }
+              }
+            } catch (queueError) {
+              console.error('[AgentKeys] ❌ Error fetching queue membership after DTMF login:', queueError);
+            }
           }, 1000); // Wait 1s for PBX to process login
         }
         
         if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Agent login process completed successfully');
+          console.log('[AgentKeys] ✅ Agent DTMF login process completed successfully');
         }
         
         // Clear pending login
@@ -260,7 +293,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
       } catch (error) {
         console.error('[AgentKeys] ❌ Failed to send DTMF during login:', error);
         if (verboseLogging) {
-          console.error('[AgentKeys] Login context:', {
+          console.error('[AgentKeys] DTMF Login context:', {
             agentNumber: pendingLogin.agentNumber,
             sessionId: session.id,
             sessionState: session.state
@@ -311,6 +344,47 @@ export function AgentKeys({ className }: AgentKeysProps) {
     }
   }, [pendingLogout, currentSession, agentState, queueState, agentNumber]);
   
+  // Helper function to fetch and update queue membership after login
+  const updateQueueMembership = useCallback(async (agentNum: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 📋 Fetching queue membership after login...', { agentNumber: agentNum });
+    }
+    
+    try {
+      const result = await fetchQueueMembership(agentNum);
+      
+      if (result.success && result.queues.length > 0) {
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Queue membership fetched successfully:', result.queues);
+        }
+        
+        // Update store with logged-in queues
+        setLoggedInQueues(result.queues);
+        
+        // Set queue state to 'in-queue' since agent is in at least one queue
+        setQueueState('in-queue');
+        
+        if (verboseLogging) {
+          console.log('[AgentKeys] 📊 Updated queue state to in-queue with', result.queues.length, 'queues');
+        }
+      } else {
+        if (verboseLogging) {
+          console.log('[AgentKeys] ℹ️ No queues found for agent or fetch failed');
+        }
+        // Keep empty queues list but still set in-queue (agent logged in but no queue list available)
+        setLoggedInQueues([]);
+        setQueueState('in-queue');
+      }
+    } catch (error) {
+      console.error('[AgentKeys] ❌ Error fetching queue membership:', error);
+      // Don't fail login if queue fetch fails, just set default state
+      setLoggedInQueues([]);
+      setQueueState('in-queue');
+    }
+  }, [setLoggedInQueues, setQueueState]);
+  
   // Agent login/logout
   const handleLogin = useCallback(async () => {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -326,33 +400,80 @@ export function AgentKeys({ className }: AgentKeysProps) {
     }
     
     if (isLoggedIn) {
-      // Logout - make call to *61
+      // Logout - try API first (primary), then DTMF (secondary)
       if (verboseLogging) {
-        console.log('[AgentKeys] 🚪 Initiating logout process', {
+        console.log('[AgentKeys] 🚪 Initiating logout process (Primary: API, Secondary: DTMF)', {
           agentNumber,
           logoutCode: AGENT_CODES.logout
         });
       }
       
       setIsLoading(true);
-      try {
-        setPendingLogout(true);
-        await makeCall(AGENT_CODES.logout);
+      
+      // Primary: Try API logout
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📡 Attempting primary logout via API...');
+      }
+      
+      const apiResult = await logoffAgentViaAPI(agentNumber);
+      
+      if (apiResult.success) {
+        // API logout successful
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Agent logout API successful');
+        }
+        
+        addNotification({
+          type: 'success',
+          title: t('agent.logout_api_success', 'Agent Logout API Successful'),
+          duration: 3000
+        });
+        
+        // Update state to logged out
+        useAppStore.setState({
+          agentNumber: '',
+          agentState: 'logged-out',
+          queueState: 'none',
+          agentName: null,
+          loggedInQueues: []
+        });
+        
+        setIsLoading(false);
         
         if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Logout call initiated successfully');
+          console.log('[AgentKeys] ✅ Agent logged out successfully via API');
         }
-      } catch (error) {
-        console.error('[AgentKeys] ❌ Agent logout error:', error);
+      } else {
+        // API logout failed - fallback to DTMF
         if (verboseLogging) {
-          console.error('[AgentKeys] Logout context:', {
-            agentNumber,
-            logoutCode: AGENT_CODES.logout,
-            error
-          });
+          console.warn('[AgentKeys] ⚠️ Agent logout API failed, falling back to DTMF logout');
         }
-        setPendingLogout(false);
-        setIsLoading(false);
+        
+        addNotification({
+          type: 'warning',
+          title: t('agent.logout_api_failed', 'Agent Logout API Failed - Trying DTMF logout'),
+          duration: 4000
+        });
+        
+        try {
+          setPendingLogout(true);
+          await makeCall(AGENT_CODES.logout);
+          
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ DTMF Logout call initiated successfully');
+          }
+        } catch (error) {
+          console.error('[AgentKeys] ❌ Agent DTMF logout error:', error);
+          if (verboseLogging) {
+            console.error('[AgentKeys] DTMF Logout context:', {
+              agentNumber,
+              logoutCode: AGENT_CODES.logout,
+              error
+            });
+          }
+          setPendingLogout(false);
+          setIsLoading(false);
+        }
       }
     } else {
       // Show login modal
@@ -361,43 +482,149 @@ export function AgentKeys({ className }: AgentKeysProps) {
       }
       setShowLoginModal(true);
     }
-  }, [isLoggedIn, makeCall, isRegistered, isLoading, agentState, agentNumber]);
+  }, [isLoggedIn, makeCall, isRegistered, isLoading, agentState, agentNumber, addNotification, t]);
+  
+  // DTMF-based login (secondary method)
+  const performDTMFLogin = useCallback(async (agentNum: string, passcode?: string) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 📞 Performing DTMF login (secondary method)', {
+        agentNumber: agentNum,
+        hasPasscode: !!passcode,
+        loginCode: AGENT_CODES.login
+      });
+    }
+    
+    // Store login info to send DTMF when call is answered
+    setPendingLogin({ agentNumber: agentNum, passcode });
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 📞 Initiating login call to:', AGENT_CODES.login);
+    }
+    
+    // Make call to *61
+    await makeCall(AGENT_CODES.login);
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] ✅ DTMF Login call initiated successfully', {
+        agentNumber: agentNum,
+        loginCode: AGENT_CODES.login
+      });
+    }
+  }, [makeCall]);
   
   // Handle agent login from modal
-  const handleAgentLogin = useCallback(async (agentNumber: string, passcode?: string) => {
+  const handleAgentLogin = useCallback(async (agentNum: string, passcode?: string) => {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
       console.log('[AgentKeys] 🔐 Agent login requested from modal', {
-        agentNumber,
+        agentNumber: agentNum,
         hasPasscode: !!passcode,
         loginCode: AGENT_CODES.login
       });
     }
     
     setIsLoading(true);
+    
     try {
-      // Store login info to send DTMF when call is answered
-      setPendingLogin({ agentNumber, passcode });
-      
-      if (verboseLogging) {
-        console.log('[AgentKeys] 📞 Initiating login call to:', AGENT_CODES.login);
+      // If passcode is provided, skip API and go straight to DTMF login
+      if (passcode && passcode.trim()) {
+        if (verboseLogging) {
+          console.log('[AgentKeys] 🔑 Passcode provided - using DTMF login directly (skipping API)');
+        }
+        
+        await performDTMFLogin(agentNum, passcode);
+        return;
       }
       
-      // Make call to *61
-      await makeCall(AGENT_CODES.login);
-      
+      // Primary: Try API login (no passcode)
       if (verboseLogging) {
-        console.log('[AgentKeys] ✅ Login call initiated successfully', {
-          agentNumber,
-          loginCode: AGENT_CODES.login
+        console.log('[AgentKeys] 📡 Attempting primary login via API (no passcode)...');
+      }
+      
+      // Get queues parameter (placeholder for future function - empty for now)
+      const queues = ''; // Will be populated by future function
+      
+      const apiResult = await loginAgentViaAPI(agentNum, sipUsername || '', queues);
+      
+      if (apiResult.success) {
+        // API login successful
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Agent login API successful');
+        }
+        
+        addNotification({
+          type: 'success',
+          title: t('agent.login_api_success', 'Agent Login API Successful'),
+          duration: 3000
         });
+        
+        // Update agent state
+        useAppStore.setState({
+          agentNumber: agentNum,
+          agentState: 'available',
+          queueState: 'in-queue'
+        });
+        
+        // Fetch queue membership after successful API login
+        await updateQueueMembership(agentNum);
+        
+        // Query API to get full agent info (name, cid, clip, etc.)
+        if (sipUsername) {
+          const agentData = await queryAgentStatus(sipUsername);
+          if (agentData && agentData.num) {
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📥 Retrieved agent details from API after login', {
+                num: agentData.num,
+                name: agentData.name,
+                cid: agentData.cid,
+                clip: agentData.clip
+              });
+            }
+            
+            useAppStore.setState({
+              agentName: agentData.name
+            });
+            
+            // Sync current CLI from agent data if Company Numbers tab is enabled
+            const showCompanyNumbersTab = useSettingsStore.getState().settings.interface.showCompanyNumbersTab;
+            
+            if (showCompanyNumbersTab && agentData.cid) {
+              if (verboseLogging) {
+                console.log('[AgentKeys] 📞 Syncing CLI after API login, CID:', agentData.cid);
+              }
+              
+              const syncCurrentCliFromAgentData = useCompanyNumbersStore.getState().syncCurrentCliFromAgentData;
+              syncCurrentCliFromAgentData(agentData);
+            }
+          }
+        }
+        
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Agent logged in successfully via API');
+        }
+      } else {
+        // API login failed - fallback to DTMF
+        if (verboseLogging) {
+          console.warn('[AgentKeys] ⚠️ Agent login API failed, falling back to DTMF login');
+        }
+        
+        addNotification({
+          type: 'warning',
+          title: t('agent.login_api_failed', 'Agent Login API Failed - Trying DTMF Login'),
+          duration: 4000
+        });
+        
+        // Perform DTMF login as fallback
+        await performDTMFLogin(agentNum, passcode);
       }
     } catch (error) {
       console.error('[AgentKeys] ❌ Agent login error:', error);
       if (verboseLogging) {
         console.error('[AgentKeys] Login error context:', {
-          agentNumber,
+          agentNumber: agentNum,
           loginCode: AGENT_CODES.login,
           hasPasscode: !!passcode,
           error
@@ -408,7 +635,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [makeCall]);
+  }, [makeCall, performDTMFLogin, sipUsername, addNotification, t, updateQueueMembership]);
   
   // Toggle queue
   const handleQueue = useCallback(async () => {

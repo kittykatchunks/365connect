@@ -10,6 +10,14 @@ import type { ViewType } from '@/types';
 type AgentState = 'logged-out' | 'available' | 'paused' | 'on-call';
 type QueueState = 'none' | 'in-queue' | 'paused';
 
+// Logged in queue membership type
+export interface LoggedInQueue {
+  /** Queue number/extension */
+  queue: string;
+  /** Queue display name/label */
+  queuelabel: string;
+}
+
 // Company number type
 interface CompanyNumber {
   id: string;
@@ -35,6 +43,7 @@ interface AppState {
   queueState: QueueState;
   agentNumber: string;
   agentName: string | null;
+  loggedInQueues: LoggedInQueue[]; // Queues the agent is currently logged into
   
   // Company numbers / CLI
   companyNumbers: CompanyNumber[];
@@ -54,6 +63,7 @@ interface AppState {
   setQueueState: (state: QueueState) => void;
   setAgentNumber: (number: string) => void;
   setAgentName: (name: string | null) => void;
+  setLoggedInQueues: (queues: LoggedInQueue[]) => void;
   agentLogin: (agentNumber: string, agentName?: string | null) => void;
   agentLogout: () => void;
   
@@ -81,6 +91,7 @@ export const useAppStore = create<AppState>()(
         queueState: 'none',
         agentNumber: '',
         agentName: null,
+        loggedInQueues: [],
         
         // Company numbers initial state
         companyNumbers: [],
@@ -114,6 +125,7 @@ export const useAppStore = create<AppState>()(
         setQueueState: (queueState) => set({ queueState }),
         setAgentNumber: (agentNumber) => set({ agentNumber }),
         setAgentName: (agentName) => set({ agentName }),
+        setLoggedInQueues: (loggedInQueues) => set({ loggedInQueues }),
         
         agentLogin: (agentNumber, agentName = null) => set({ 
           agentState: 'available', 
@@ -125,7 +137,8 @@ export const useAppStore = create<AppState>()(
           agentState: 'logged-out', 
           queueState: 'none', 
           agentNumber: '',
-          agentName: null
+          agentName: null,
+          loggedInQueues: []
         }),
         
         // Company number actions
