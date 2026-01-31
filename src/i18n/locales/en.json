@@ -152,6 +152,22 @@
         "logout_api_success": "Agent Logout API Successful",
         "logout_api_failed": "Agent Logout API Failed - Trying DTMF logout"
     },
+    "queue_login": {
+        "title": "Queue Selection",
+        "loading": "Loading queues...",
+        "select_all": "Select / Deselect All",
+        "select_all_aria": "Select all queues",
+        "deselect_all": "Deselect all queues",
+        "queue_groups": "Queue Groups",
+        "all_queues": "All Queues",
+        "queues": "queues",
+        "selected": "selected",
+        "no_queues": "No queues available on the system",
+        "select": "Select",
+        "deselect": "Deselect",
+        "login": "Login",
+        "logout": "Logout"
+    },
     "contacts": {
         "title": "Contacts",
         "add": "Add Contact",

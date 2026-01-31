@@ -73,9 +73,28 @@ export interface WallBoardCounters {
   [key: string]: WallBoardCounter | number;
 }
 
+export interface WallBoardAgent {
+  /** Agent number */
+  num: string;
+  /** Agent display name */
+  name: string;
+  /** CSV of queue numbers the agent is logged into */
+  queues: string;
+  /** Agent status (1 = available, etc.) */
+  status: string;
+  /** Number of calls answered */
+  answered: string;
+  /** Time logged in (seconds) */
+  time: number;
+  /** Number of missed calls */
+  missed: string;
+  /** Pause status (0 = not paused, 1 = paused) */
+  paused: string;
+}
+
 export interface WallBoardStatsResponse {
   pausereasons?: Record<string, string>;
-  agents?: Record<string, unknown>;
+  agents?: Record<string, WallBoardAgent>;
   agentstotal?: Record<string, number>;
   calls?: unknown;
   counters: WallBoardCounters;

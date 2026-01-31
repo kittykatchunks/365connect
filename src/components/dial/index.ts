@@ -14,3 +14,4 @@ export { CLISelector } from './CLISelector';
 export { AgentKeys } from './AgentKeys';
 export { CallInfoDisplay } from './CallInfoDisplay';
 export { VoicemailIndicator } from './VoicemailIndicator';
+export { QueueLoginModal } from './QueueLoginModal';

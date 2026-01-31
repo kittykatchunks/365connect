@@ -8,6 +8,7 @@ import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus, loginAgentViaAPI, logoffAgentViaAPI, fetchQueueMembership } from '@/utils';
 import { Button } from '@/components/ui';
 import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
+import { QueueLoginModal } from './QueueLoginModal';
 import { useAppStore, useSettingsStore, useCompanyNumbersStore, useUIStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import type { PauseReason } from '@/types/agent';
@@ -43,6 +44,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showQueueLoginModal, setShowQueueLoginModal] = useState(false);
   const [showPauseReasonModal, setShowPauseReasonModal] = useState(false);
   const [pauseReasons, setPauseReasons] = useState<PauseReason[]>([]);
   const [pendingLogin, setPendingLogin] = useState<{ agentNumber: string; passcode?: string } | null>(null);
@@ -637,7 +639,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
     }
   }, [makeCall, performDTMFLogin, sipUsername, addNotification, t, updateQueueMembership]);
   
-  // Toggle queue
+  // Toggle queue - shows modal when not in queue
   const handleQueue = useCallback(async () => {
     const verboseLogging = isVerboseLoggingEnabled();
     
@@ -649,47 +651,64 @@ export function AgentKeys({ className }: AgentKeysProps) {
     }
     
     if (verboseLogging) {
-      console.log('[AgentKeys] 📋 Queue toggle clicked', {
+      console.log('[AgentKeys] 📋 Queue button clicked', {
         currentQueueState: queueState,
         isInQueue,
         agentNumber
       });
     }
     
-    setIsLoading(true);
-    try {
-      // Make call to *62 queue code
-      await makeCall(AGENT_CODES.queue);
-      
-      // Toggle queue state
-      if (isInQueue) {
-        if (verboseLogging) {
-          console.log('[AgentKeys] 🚪 Queue operation: leave');
-        }
-        setQueueState('none');
-      } else {
-        if (verboseLogging) {
-          console.log('[AgentKeys] 🚶 Queue operation: join');
-        }
-        setQueueState('in-queue');
-      }
-      
+    // If not in any queue, show the queue selection modal
+    if (!isInQueue) {
       if (verboseLogging) {
-        console.log('[AgentKeys] ✅ Queue operation completed');
+        console.log('[AgentKeys] 📋 Opening queue selection modal');
       }
-    } catch (error) {
-      console.error('[AgentKeys] ❌ Queue toggle error:', error);
-      if (verboseLogging) {
-        console.error('[AgentKeys] Queue toggle context:', {
-          currentQueueState: queueState,
-          attemptedAction: isInQueue ? 'leave' : 'join',
-          error
-        });
-      }
-    } finally {
-      setIsLoading(false);
+      setShowQueueLoginModal(true);
+      return;
     }
-  }, [isLoggedIn, isInQueue, setQueueState, queueState, agentNumber, makeCall]);
+    
+    // If already in queue, also show the modal for queue management
+    if (verboseLogging) {
+      console.log('[AgentKeys] 📋 Opening queue selection modal (already in queue)');
+    }
+    setShowQueueLoginModal(true);
+  }, [isLoggedIn, isInQueue, queueState, agentNumber]);
+  
+  // Handle queue login from modal
+  const handleQueueLogin = useCallback((selectedQueues: string[]) => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 🔐 Queue login requested with queues:', selectedQueues);
+    }
+    
+    // TODO: Implement actual queue login API call
+    // For now, just update state
+    setQueueState('in-queue');
+    setLoggedInQueues(selectedQueues.map(q => ({ queue: q, queuelabel: q })));
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] ✅ Queue login completed (placeholder)');
+    }
+  }, [setQueueState, setLoggedInQueues]);
+  
+  // Handle queue logout from modal
+  const handleQueueLogout = useCallback(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 🚪 Queue logout requested');
+    }
+    
+    // TODO: Implement actual queue logout API call
+    // For now, just update state
+    setQueueState('none');
+    setLoggedInQueues([]);
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] ✅ Queue logout completed (placeholder)');
+    }
+  }, [setQueueState, setLoggedInQueues]);
   
   // Toggle pause
   const handlePause = useCallback(async () => {
@@ -959,6 +978,14 @@ export function AgentKeys({ className }: AgentKeysProps) {
         onClose={() => setShowLoginModal(false)}
         onLogin={handleAgentLogin}
         isLoading={isLoading}
+      />
+      
+      {/* Queue Login Modal */}
+      <QueueLoginModal
+        isOpen={showQueueLoginModal}
+        onClose={() => setShowQueueLoginModal(false)}
+        onLogin={handleQueueLogin}
+        onLogout={handleQueueLogout}
       />
       
       {/* Pause Reason Modal */}
