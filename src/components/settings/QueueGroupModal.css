@@ -1,10 +1,23 @@
 /* ============================================
    Queue Group Modal Styles
+   Matching QueueLoginModal toggle-based layout
    ============================================ */
 
 .queue-group-modal {
-  max-width: 550px;
+  max-width: 500px;
   width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.queue-group-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 /* Group ID Display */
@@ -21,7 +34,7 @@
 
 /* Form Group */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .form-label {
@@ -32,217 +45,228 @@
   color: var(--text-color);
 }
 
-.form-help-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
-}
-
-/* Multi-select Dropdown */
-.queue-multiselect-container {
-  position: relative;
-  width: 100%;
-}
-
-.queue-multiselect-trigger {
-  width: 100%;
+/* Section Header */
+.queue-group-modal .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.625rem 0.875rem;
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
 }
 
-.queue-multiselect-trigger:hover {
-  border-color: var(--primary-color);
-  background: var(--background-muted);
+.queue-group-modal .section-header .form-label {
+  margin-bottom: 0;
 }
 
-.queue-multiselect-trigger:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+.queue-selection-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
-.trigger-text {
+/* Queue Selection Group */
+.queue-selection-group {
   flex: 1;
-  text-align: left;
-}
-
-.dropdown-arrow {
-  margin-left: 0.5rem;
-  transition: transform 0.2s ease;
-  font-size: 0.75rem;
-}
-
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-/* Dropdown Content */
-.queue-multiselect-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: var(--background-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  max-height: 300px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
-/* Dropdown Actions */
-.dropdown-actions {
+/* Loading State */
+.queue-loading {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--background-muted);
-}
-
-.action-btn {
-  flex: 1;
-  padding: 0.375rem 0.625rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-}
-
-/* Queue Option List */
-.queue-option-list {
-  overflow-y: auto;
-  max-height: 250px;
-}
-
-.queue-option {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 0.625rem 0.875rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.queue-option:hover {
-  background: var(--background-muted);
-}
-
-.queue-option:last-child {
-  border-bottom: none;
-}
-
-.queue-option input[type="checkbox"] {
-  margin-right: 0.75rem;
-  cursor: pointer;
-}
-
-.queue-option-label {
-  flex: 1;
-  font-size: 0.9rem;
-  color: var(--text-color);
-}
-
-.queue-option-name {
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 1rem;
   color: var(--text-muted);
-  font-size: 0.85rem;
+}
+
+.queue-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* No Queues Message */
-.no-queues-message {
-  padding: 1.5rem;
+.queue-group-modal .no-queues-message {
+  padding: 2rem 1rem;
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
-/* Selected Queues Badges */
-.selected-queues-badges {
+/* Select All Row */
+.queue-group-modal .select-all-row {
+  background: var(--background-muted);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem !important;
+}
+
+.queue-group-modal .select-all-row .queue-toggle-info {
+  font-weight: 600;
+}
+
+/* Queue List */
+.queue-list {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 250px;
+  padding-right: 0.25rem;
 }
 
-.queue-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.625rem;
-  background: var(--primary-color);
-  color: white;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.badge-text {
-  line-height: 1;
-}
-
-.badge-remove {
+/* Queue Toggle Row (shared) */
+.queue-group-modal .queue-toggle-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: rgba(255, 255, 255, 0.25);
-  border: none;
-  border-radius: 50%;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
+  justify-content: space-between;
+  padding: 0.5rem 0.625rem;
   cursor: pointer;
   transition: background 0.2s ease;
-  line-height: 1;
-  padding: 0;
+  border-radius: 4px;
 }
 
-.badge-remove:hover {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-/* Dark mode adjustments */
-[data-theme="dark"] .group-id-display {
+.queue-group-modal .queue-toggle-row:hover {
   background: var(--background-muted);
 }
 
-[data-theme="dark"] .queue-multiselect-dropdown {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+.queue-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
+.queue-toggle-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.queue-number {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  min-width: 3.5rem;
+}
+
+.queue-name {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Toggle Switch */
+.queue-group-modal .toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--background-muted);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.queue-group-modal .toggle-switch:hover {
+  border-color: var(--text-muted);
+}
+
+.queue-group-modal .toggle-switch.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.queue-group-modal .toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.queue-group-modal .toggle-switch.active .toggle-slider {
+  transform: translateX(20px);
+}
+
+/* Modal Footer */
+.queue-group-modal .modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Scrollbar Styling */
+.queue-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.queue-list::-webkit-scrollbar-track {
+  background: var(--background-muted);
+  border-radius: 3px;
+}
+
+.queue-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.queue-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
   .queue-group-modal {
     width: 95%;
-    max-width: none;
+    max-height: 90vh;
   }
   
-  .dropdown-actions {
-    flex-direction: column;
+  .queue-group-modal .queue-toggle-row {
+    padding: 0.625rem 0.5rem;
   }
   
-  .action-btn {
-    width: 100%;
+  .queue-number {
+    min-width: 3rem;
+    font-size: 0.8rem;
+  }
+  
+  .queue-name {
+    font-size: 0.8rem;
+  }
+  
+  .queue-group-modal .toggle-switch {
+    width: 40px;
+    height: 22px;
+  }
+  
+  .queue-group-modal .toggle-slider {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .queue-group-modal .toggle-switch.active .toggle-slider {
+    transform: translateX(18px);
   }
 }
