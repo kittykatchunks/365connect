@@ -21,8 +21,8 @@ src/styles/globals.css
 │
 ├─── 📐 3. LAYOUT COMPONENTS (~150 lines)
 │    ├─ .main-container
-│    ├─ .left-panel
-│    ├─ .left-panel-header
+│    ├─ .main-panel
+│    ├─ .main-panel-header
 │    ├─ .app-brand
 │    ├─ .panel-header
 │    └─ .voicemail-item

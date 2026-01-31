@@ -14,9 +14,9 @@ import {
   LoadingSpinner,
   ToastContainer,
   MainContainer,
-  LeftPanel,
-  LeftPanelHeader,
-  LeftPanelContent,
+  MainPanel,
+  MainPanelHeader,
+  MainPanelContent,
   NavigationTabs,
   SIPStatusDisplay,
   WelcomeOverlay,
@@ -223,22 +223,22 @@ function MainLayout() {
   
   return (
     <MainContainer>
-      {/* Left Panel - Navigation and Content */}
-      <LeftPanel>
-        <LeftPanelHeader>
+      {/* Main Panel - Navigation and Content */}
+      <MainPanel>
+        <MainPanelHeader>
           <div className="app-brand">
             <img src="/icons/pwa-192x192.png" alt="" className="brand-logo" />
             <span className="brand-name">Connect365</span>
           </div>
           <SIPStatusDisplay />
-        </LeftPanelHeader>
+        </MainPanelHeader>
         
         <NavigationTabs />
         
-        <LeftPanelContent>
+        <MainPanelContent>
           <ViewRouter />
-        </LeftPanelContent>
-      </LeftPanel>
+        </MainPanelContent>
+      </MainPanel>
       
       {/* Toast Notifications */}
       <ToastContainer 

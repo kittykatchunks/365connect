@@ -3,7 +3,7 @@
 // ============================================
 
 export { MainContainer, MainContent } from './MainContainer';
-export { LeftPanel, LeftPanelHeader, LeftPanelContent } from './LeftPanel';
+export { MainPanel, MainPanelHeader, MainPanelContent } from './MainPanel';
 export { NavigationTabs } from './NavigationTabs';
 export { PanelHeader } from './PanelHeader';
 export { SIPStatusDisplay } from './SIPStatusDisplay';

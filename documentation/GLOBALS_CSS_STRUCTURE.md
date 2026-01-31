@@ -54,8 +54,8 @@ The CSS file is organized into 14 major sections:
 **Lines:** ~300-450  
 **Purpose:** Main application layout structure
 - `.main-container` - App wrapper
-- `.left-panel` - Sidebar container
-- `.left-panel-header` - Top header with logo
+- `.main-panel` - Sidebar container
+- `.main-panel-header` - Top header with logo
 - `.app-brand` - Logo and branding
 - `.panel-header` - Tab content headers
 - `.sip-status` - SIP connection indicator
