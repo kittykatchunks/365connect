@@ -253,11 +253,20 @@ export function DialView() {
     }
   }, [isRegistered, isDialing]);
   
-  // Reset isDialing when call becomes established or terminates
+  // Reset isDialing when call becomes established, terminates, or session is removed
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
-    if (isDialing && selectedLineSession) {
+    if (isDialing) {
+      // If session is removed (null/undefined), reset dialing state
+      if (!selectedLineSession) {
+        if (verboseLogging) {
+          console.log('[DialView] 🔄 Resetting isDialing state - session removed (call ended/declined)');
+        }
+        setIsDialing(false);
+        return;
+      }
+      
       const sessionState = selectedLineSession.state;
       
       // Reset dialing state when call is established/answered or terminated
