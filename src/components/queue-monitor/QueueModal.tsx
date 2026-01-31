@@ -429,9 +429,6 @@ export function QueueModal({
               <label className="form-label">
                 {t('queue_monitor.missed_threshold', 'Missed Calls Threshold')}
               </label>
-              <p className="form-help-text">
-                {t('queue_monitor.missed_threshold_desc', 'Set warning and breach thresholds for missed call percentage')}
-              </p>
               <DualRangeSlider
                 min={0}
                 max={30}
@@ -451,9 +448,6 @@ export function QueueModal({
               <label className="form-label">
                 {t('queue_monitor.awt_threshold', 'Average Wait Time Threshold')}
               </label>
-              <p className="form-help-text">
-                {t('queue_monitor.awt_threshold_desc', 'Set warning and breach thresholds for average wait time in seconds')}
-              </p>
               <DualRangeSlider
                 min={0}
                 max={100}

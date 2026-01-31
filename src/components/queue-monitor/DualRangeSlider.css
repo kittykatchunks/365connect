@@ -22,8 +22,9 @@
 
 .value-display {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 0.5em;
   padding: 4px var(--spacing-sm);
   border-radius: var(--border-radius);
   min-width: 80px;
@@ -51,7 +52,6 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-color);
-  margin-top: 0;
 }
 
 /* Slider Container */
