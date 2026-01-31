@@ -94,15 +94,11 @@ export interface AgentLogonRequest {
   phone: string;
   /** Optional comma-separated list of queues to join */
   queues?: string;
-  /** JWT web token for authentication */
-  webtoken?: string;
 }
 
 export interface AgentLogoffRequest {
   /** Agent number to log off */
   agent: string;
-  /** JWT web token for authentication */
-  webtoken?: string;
 }
 
 export type AgentApiResponse = 'success' | 'failure';
@@ -126,8 +122,6 @@ export interface QueueMemberItem {
 export interface QueueMemberListRequest {
   /** Agent number to query */
   agent: string;
-  /** JWT web token for authentication */
-  webtoken?: string;
 }
 
 export interface QueueMemberListResponse {
@@ -510,7 +504,7 @@ export class PhantomApiService {
 
   /**
    * Login agent via API (Primary method)
-   * Endpoint: /api/AgentLogon (Basic Auth)
+   * Endpoint: /api/GhostLogon (Basic Auth)
    * @param agent - Agent number from login modal
    * @param phone - SIP username from connection settings
    * @param queues - Optional comma-separated list of queues to join
@@ -526,34 +520,20 @@ export class PhantomApiService {
     }
 
     try {
-      // Fetch web token for authentication
-      const webtoken = await this.getWebToken();
-      
-      if (!webtoken) {
-        if (this.verboseLogging) {
-          console.warn('[PhantomApiService] ⚠️ No web token available for AgentLogon');
-        }
-        return { success: false, response: 'failure' };
-      }
-
       const requestData: AgentLogonRequest = {
         agent,
         phone,
-        queues: queues || '',
-        webtoken
+        queues: queues || ''
       };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 AgentLogon request:', {
-          ...requestData,
-          webtoken: `${webtoken.substring(0, 20)}...` // Truncate token in logs
-        });
+        console.log('[PhantomApiService] 📤 GhostLogon request:', requestData);
       }
 
-      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('AgentLogon', requestData);
+      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('GhostLogon', requestData);
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📥 AgentLogon response:', response);
+        console.log('[PhantomApiService] 📥 GhostLogon response:', response);
       }
 
       // Handle both formats: 'success' string or { response: 'success' } object
@@ -583,7 +563,7 @@ export class PhantomApiService {
 
   /**
    * Logout agent via API (Primary method)
-   * Endpoint: /api/AgentLogoff (Basic Auth)
+   * Endpoint: /api/GhostLogoff (Basic Auth)
    * @param agent - Agent number to log off
    * @returns 'success' or 'failure'
    */
@@ -593,29 +573,16 @@ export class PhantomApiService {
     }
 
     try {
-      // Fetch web token for authentication
-      const webtoken = await this.getWebToken();
-      
-      if (!webtoken) {
-        if (this.verboseLogging) {
-          console.warn('[PhantomApiService] ⚠️ No web token available for AgentLogoff');
-        }
-        return { success: false, response: 'failure' };
-      }
-
-      const requestData: AgentLogoffRequest = { agent, webtoken };
+      const requestData: AgentLogoffRequest = { agent };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 AgentLogoff request:', {
-          agent,
-          webtoken: `${webtoken.substring(0, 20)}...` // Truncate token in logs
-        });
+        console.log('[PhantomApiService] 📤 GhostLogoff request:', requestData);
       }
 
-      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('AgentLogoff', requestData);
+      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('GhostLogoff', requestData);
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📥 AgentLogoff response:', response);
+        console.log('[PhantomApiService] 📥 GhostLogoff response:', response);
       }
 
       // Handle both formats: 'success' string or { response: 'success' } object
@@ -655,23 +622,10 @@ export class PhantomApiService {
     }
 
     try {
-      // Fetch web token for authentication
-      const webtoken = await this.getWebToken();
-      
-      if (!webtoken) {
-        if (this.verboseLogging) {
-          console.warn('[PhantomApiService] ⚠️ No web token available for QueueMemberList');
-        }
-        return { success: false, queues: [] };
-      }
-
-      const requestData: QueueMemberListRequest = { agent, webtoken };
+      const requestData: QueueMemberListRequest = { agent };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 QueueMemberList request:', {
-          agent,
-          webtoken: `${webtoken.substring(0, 20)}...` // Truncate token in logs
-        });
+        console.log('[PhantomApiService] 📤 QueueMemberList request:', requestData);
       }
 
       const response = await this.post<QueueMemberListResponse>('QueueMemberList', requestData);
