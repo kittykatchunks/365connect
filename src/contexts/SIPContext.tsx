@@ -560,12 +560,15 @@ export function SIPProvider({ children }: SIPProviderProps) {
               // Stop tab flashing
               clearTabAlert('dial');
               
-              // Focus window if auto-focus is enabled
+              // Focus window and switch to dial tab if auto-focus is enabled
               if (settings.call.autoFocusOnNotificationAnswer) {
                 if (verboseLogging) {
-                  console.log('[SIPContext] 📱 Auto-focus enabled - bringing window to front');
+                  console.log('[SIPContext] 📱 Auto-focus enabled - bringing window to front and switching to dial tab');
                 }
                 window.focus();
+                
+                // Dispatch navigation event to switch to dial tab
+                window.dispatchEvent(new CustomEvent('navigateToView', { detail: { view: 'dial' } }));
               } else if (verboseLogging) {
                 console.log('[SIPContext] 📱 Auto-focus disabled - window will NOT be focused');
               }
