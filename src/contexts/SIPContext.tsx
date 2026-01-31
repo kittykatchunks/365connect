@@ -6,6 +6,7 @@
 import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
+import { callProgressToneService } from '../services/CallProgressToneService';
 import { useSIPStore } from '../stores/sipStore';
 import { useBLFStore } from '../stores/blfStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
@@ -621,12 +622,20 @@ export function SIPProvider({ children }: SIPProviderProps) {
       // Dispatch window event for components that need to listen
       window.dispatchEvent(new CustomEvent('sessionAnswered', { detail: session }));
       
-      // Stop ringtone when call is answered
+      // Stop ringtone when call is answered (incoming calls)
       if (audioService.getIsRinging()) {
         if (verboseLogging) {
           console.log('[SIPContext] 🔕 Stopping ringtone - call answered');
         }
         audioService.stopRinging();
+      }
+      
+      // Stop call progress tones when call is answered (outbound calls)
+      if (callProgressToneService.getIsPlaying()) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔇 Stopping call progress tone - call answered');
+        }
+        callProgressToneService.stopTone();
       }
       
       // Clear dial tab flash when call is answered
@@ -652,12 +661,37 @@ export function SIPProvider({ children }: SIPProviderProps) {
         console.log('[SIPContext] 📴 sessionTerminated event received:', session.id);
       }
       
-      // Stop ringtone if it's still playing
+      // Stop ringtone if it's still playing (incoming calls)
       if (audioService.getIsRinging()) {
         if (verboseLogging) {
           console.log('[SIPContext] 🔕 Stopping ringtone - call terminated');
         }
         audioService.stopRinging();
+      }
+      
+      // Handle call progress tones for outbound calls
+      if (session.direction === 'outgoing') {
+        // Stop ringback if playing
+        if (callProgressToneService.getIsPlaying()) {
+          if (verboseLogging) {
+            console.log('[SIPContext] 🔇 Stopping ringback tone - call terminated');
+          }
+          callProgressToneService.stopTone();
+        }
+        
+        // Play busy or error tone if call was not answered
+        // Only play if call wasn't established (no answerTime means never connected)
+        if (!session.answerTime && !session.locallyAnswered) {
+          // Determine tone type based on termination state
+          // Note: We could enhance this with actual SIP response codes from the session
+          // For now, if the call terminated without being answered, assume busy/unavailable
+          if (verboseLogging) {
+            console.log('[SIPContext] 📞 Outbound call failed - playing busy tone');
+          }
+          callProgressToneService.playBusy(3000).catch(error => {
+            console.error('[SIPContext] ❌ Failed to play busy tone:', error);
+          });
+        }
       }
       
       // Clear dial tab flash when call is terminated
@@ -744,6 +778,26 @@ export function SIPProvider({ children }: SIPProviderProps) {
         console.log('[SIPContext] 🔄 sessionStateChanged event received:', { sessionId, state });
       }
       updateSession(sessionId, { state: state as SessionData['state'] });
+      
+      // Handle call progress tones for outbound calls
+      const session = service.getSession(sessionId);
+      if (session && session.direction === 'outgoing') {
+        if (state === 'connecting') {
+          // Start ringback tone when outbound call is connecting (ringing at remote end)
+          if (verboseLogging) {
+            console.log('[SIPContext] 🎵 Starting ringback tone for outbound call:', sessionId);
+          }
+          callProgressToneService.playRingback().catch(error => {
+            console.error('[SIPContext] ❌ Failed to start ringback tone:', error);
+          });
+        } else if (state === 'established') {
+          // Stop ringback tone when call is answered
+          if (verboseLogging) {
+            console.log('[SIPContext] 🔇 Stopping ringback tone - call answered:', sessionId);
+          }
+          callProgressToneService.stopTone();
+        }
+      }
     });
     
     const unsubSessionMuted = service.on('sessionMuted', ({ sessionId, muted }) => {
