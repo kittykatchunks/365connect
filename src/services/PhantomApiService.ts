@@ -94,11 +94,15 @@ export interface AgentLogonRequest {
   phone: string;
   /** Optional comma-separated list of queues to join */
   queues?: string;
+  /** JWT web token for authentication */
+  webtoken?: string;
 }
 
 export interface AgentLogoffRequest {
   /** Agent number to log off */
   agent: string;
+  /** JWT web token for authentication */
+  webtoken?: string;
 }
 
 export type AgentApiResponse = 'success' | 'failure';
@@ -122,6 +126,8 @@ export interface QueueMemberItem {
 export interface QueueMemberListRequest {
   /** Agent number to query */
   agent: string;
+  /** JWT web token for authentication */
+  webtoken?: string;
 }
 
 export interface QueueMemberListResponse {
@@ -147,6 +153,10 @@ export class PhantomApiService {
   private config: PhantomApiConfig | null = null;
   private listeners: Map<PhantomApiEventType, Set<PhantomApiEventCallback>> = new Map();
   private verboseLogging: boolean = false;
+  
+  // JWT Token caching - stored for app session lifetime
+  private webToken: string | null = null;
+  private tokenFetchPromise: Promise<string | null> | null = null;
 
   constructor() {
     this.verboseLogging = isVerboseLoggingEnabled();
@@ -245,6 +255,123 @@ export class PhantomApiService {
    */
   getConfig(): PhantomApiConfig | null {
     return this.config ? { ...this.config } : null;
+  }
+
+  // ==================== JWT Token Management ====================
+
+  /**
+   * Get cached web token or fetch a new one
+   * Token is cached for the entire app session lifetime
+   * Handles concurrent requests by reusing the same fetch promise
+   */
+  async getWebToken(): Promise<string | null> {
+    // Return cached token if available (stored for app session lifetime)
+    if (this.webToken) {
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 🔑 Using cached web token (session-lifetime)');
+      }
+      return this.webToken;
+    }
+
+    // Prevent multiple simultaneous fetches - reuse existing promise
+    if (this.tokenFetchPromise) {
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 🔄 Token fetch already in progress, waiting...');
+      }
+      return this.tokenFetchPromise;
+    }
+
+    // Start new fetch
+    this.tokenFetchPromise = this.fetchWebToken();
+    
+    try {
+      const token = await this.tokenFetchPromise;
+      return token;
+    } finally {
+      this.tokenFetchPromise = null;
+    }
+  }
+
+  /**
+   * Fetch a fresh web token from the API
+   */
+  private async fetchWebToken(): Promise<string | null> {
+    try {
+      const phantomId = this.getPhantomId();
+      
+      if (!phantomId) {
+        console.error('[PhantomApiService] ❌ Cannot fetch web token - no PhantomID');
+        return null;
+      }
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 🔑 Fetching new web token for PhantomID:', phantomId);
+      }
+
+      // Use the proxy endpoint for JWT fetch
+      const isDevelopment = this.isDevelopmentMode();
+      const proxyUrl = isDevelopment 
+        ? (import.meta.env.VITE_DEV_CORS_PROXY_URL || 'https://connect365.servehttp.com')
+        : '';
+      
+      const jwtUrl = `${proxyUrl}/api/phantom/JWTWebToken?phantomId=${phantomId}`;
+      
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📤 JWT request URL:', jwtUrl);
+      }
+
+      const response = await fetch(jwtUrl);
+
+      if (!response.ok) {
+        throw new Error(`JWT fetch failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] 📥 JWT response:', {
+          hasWBtoken: !!data.WBtoken,
+          hasWebtoken: !!data.webtoken,
+          hasToken: !!data.token,
+          hasJwt: !!data.jwt
+        });
+      }
+
+      // Extract token from various possible field names
+      const token = data.WBtoken || data.webtoken || data.token || data.jwt;
+
+      if (!token) {
+        console.error('[PhantomApiService] ❌ No token found in JWT response');
+        return null;
+      }
+
+      // Cache the token for app session lifetime
+      this.webToken = token;
+
+      if (this.verboseLogging) {
+        console.log('[PhantomApiService] ✅ Web token cached for session lifetime', {
+          tokenLength: token.length
+        });
+      }
+
+      return token;
+
+    } catch (error) {
+      console.error('[PhantomApiService] ❌ Error fetching web token:', error);
+      // Clear any stale token on error
+      this.webToken = null;
+      return null;
+    }
+  }
+
+  /**
+   * Clear the cached web token (useful for logout or token invalidation)
+   */
+  clearWebToken(): void {
+    if (this.verboseLogging) {
+      console.log('[PhantomApiService] 🗑️ Clearing cached web token');
+    }
+    this.webToken = null;
   }
 
   // ==================== HTTP Request Methods ====================
@@ -399,14 +526,28 @@ export class PhantomApiService {
     }
 
     try {
+      // Fetch web token for authentication
+      const webtoken = await this.getWebToken();
+      
+      if (!webtoken) {
+        if (this.verboseLogging) {
+          console.warn('[PhantomApiService] ⚠️ No web token available for AgentLogon');
+        }
+        return { success: false, response: 'failure' };
+      }
+
       const requestData: AgentLogonRequest = {
         agent,
         phone,
-        queues: queues || ''
+        queues: queues || '',
+        webtoken
       };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 AgentLogon request:', requestData);
+        console.log('[PhantomApiService] 📤 AgentLogon request:', {
+          ...requestData,
+          webtoken: `${webtoken.substring(0, 20)}...` // Truncate token in logs
+        });
       }
 
       const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('AgentLogon', requestData);
@@ -452,10 +593,23 @@ export class PhantomApiService {
     }
 
     try {
-      const requestData: AgentLogoffRequest = { agent };
+      // Fetch web token for authentication
+      const webtoken = await this.getWebToken();
+      
+      if (!webtoken) {
+        if (this.verboseLogging) {
+          console.warn('[PhantomApiService] ⚠️ No web token available for AgentLogoff');
+        }
+        return { success: false, response: 'failure' };
+      }
+
+      const requestData: AgentLogoffRequest = { agent, webtoken };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 AgentLogoff request:', requestData);
+        console.log('[PhantomApiService] 📤 AgentLogoff request:', {
+          agent,
+          webtoken: `${webtoken.substring(0, 20)}...` // Truncate token in logs
+        });
       }
 
       const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('AgentLogoff', requestData);
@@ -501,10 +655,23 @@ export class PhantomApiService {
     }
 
     try {
-      const requestData: QueueMemberListRequest = { agent };
+      // Fetch web token for authentication
+      const webtoken = await this.getWebToken();
+      
+      if (!webtoken) {
+        if (this.verboseLogging) {
+          console.warn('[PhantomApiService] ⚠️ No web token available for QueueMemberList');
+        }
+        return { success: false, queues: [] };
+      }
+
+      const requestData: QueueMemberListRequest = { agent, webtoken };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 QueueMemberList request:', requestData);
+        console.log('[PhantomApiService] 📤 QueueMemberList request:', {
+          agent,
+          webtoken: `${webtoken.substring(0, 20)}...` // Truncate token in logs
+        });
       }
 
       const response = await this.post<QueueMemberListResponse>('QueueMemberList', requestData);
