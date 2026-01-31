@@ -226,21 +226,45 @@ export function QueueModal({
     return selectedCount > 0 && selectedCount < availableQueuesInGroup.length;
   };
   
-  // Select all available queues
-  const selectAll = () => {
-    setSelectedQueues(availableQueueOptions.map(q => q.queueNumber));
+  // Get queue numbers that are part of any group
+  const groupQueueNumbers = useMemo(() => {
+    const numbers = new Set<string>();
+    queueGroups.forEach(group => {
+      group.queueNumbers.forEach(qn => numbers.add(qn));
+    });
+    return numbers;
+  }, [queueGroups]);
+  
+  // Get individual queues (not part of any group)
+  const individualQueueOptions = useMemo(() => {
+    return availableQueueOptions.filter(q => !groupQueueNumbers.has(q.queueNumber));
+  }, [availableQueueOptions, groupQueueNumbers]);
+  
+  // Select all individual queues (preserves group selections)
+  const selectAllIndividual = () => {
+    setSelectedQueues(prev => {
+      const newSelection = [...prev];
+      individualQueueOptions.forEach(q => {
+        if (!newSelection.includes(q.queueNumber)) {
+          newSelection.push(q.queueNumber);
+        }
+      });
+      return newSelection;
+    });
   };
   
-  // Clear all selections
-  const deselectAll = () => {
-    setSelectedQueues([]);
+  // Deselect all individual queues (preserves group selections)
+  const deselectAllIndividual = () => {
+    setSelectedQueues(prev => 
+      prev.filter(qn => groupQueueNumbers.has(qn))
+    );
   };
   
-  // Check if all queues are selected
-  const allSelected = useMemo(() => {
-    return availableQueueOptions.length > 0 && 
-           availableQueueOptions.every(q => selectedQueues.includes(q.queueNumber));
-  }, [availableQueueOptions, selectedQueues]);
+  // Check if all individual queues are selected
+  const allIndividualSelected = useMemo(() => {
+    return individualQueueOptions.length > 0 && 
+           individualQueueOptions.every(q => selectedQueues.includes(q.queueNumber));
+  }, [individualQueueOptions, selectedQueues]);
   
   if (!isOpen) return null;
   
@@ -296,24 +320,6 @@ export function QueueModal({
               </div>
             ) : (
               <>
-                {/* Select All Toggle */}
-                <label className="queue-toggle-row select-all-row">
-                  <div className="queue-toggle-info">
-                    <ListChecks className="w-4 h-4" />
-                    <span className="queue-toggle-label">
-                      {t('queue_login.select_all', 'Select / Deselect All')}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className={`toggle-switch ${allSelected ? 'active' : ''}`}
-                    onClick={() => allSelected ? deselectAll() : selectAll()}
-                    aria-label={allSelected ? t('queue_login.deselect_all', 'Deselect all') : t('queue_login.select_all_aria', 'Select all')}
-                  >
-                    <span className="toggle-slider" />
-                  </button>
-                </label>
-                
                 {/* Queue List */}
                 <div className="queue-list">
                   {/* Queue Groups Section */}
@@ -359,8 +365,28 @@ export function QueueModal({
                     </>
                   )}
                   
+                  {/* Select All Individual Queues Toggle */}
+                  {individualQueueOptions.length > 0 && (
+                    <label className="queue-toggle-row select-all-row">
+                      <div className="queue-toggle-info">
+                        <ListChecks className="w-4 h-4" />
+                        <span className="queue-toggle-label">
+                          {t('queue_login.select_all', 'Select / Deselect All')}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className={`toggle-switch ${allIndividualSelected ? 'active' : ''}`}
+                        onClick={() => allIndividualSelected ? deselectAllIndividual() : selectAllIndividual()}
+                        aria-label={allIndividualSelected ? t('queue_login.deselect_all', 'Deselect all') : t('queue_login.select_all_aria', 'Select all')}
+                      >
+                        <span className="toggle-slider" />
+                      </button>
+                    </label>
+                  )}
+                  
                   {/* Individual Queues */}
-                  {availableQueueOptions.map(queue => {
+                  {individualQueueOptions.map(queue => {
                     const isSelected = selectedQueues.includes(queue.queueNumber);
                     
                     return (
@@ -398,13 +424,13 @@ export function QueueModal({
               </label>
             </div>
             
-            {/* Abandoned Calls Threshold */}
+            {/* Missed Calls Threshold */}
             <div className="form-group threshold-group">
               <label className="form-label">
-                {t('queue_monitor.abandoned_threshold', 'Abandoned Calls Threshold')}
+                {t('queue_monitor.missed_threshold', 'Missed Calls Threshold')}
               </label>
               <p className="form-help-text">
-                {t('queue_monitor.abandoned_threshold_desc', 'Set warning and breach thresholds for abandoned call percentage')}
+                {t('queue_monitor.missed_threshold_desc', 'Set warning and breach thresholds for missed call percentage')}
               </p>
               <DualRangeSlider
                 min={0}
@@ -416,7 +442,7 @@ export function QueueModal({
                   setAbandonedBreach(breach);
                 }}
                 unit="%"
-                aria-label={t('queue_monitor.abandoned_threshold', 'Abandoned Calls Threshold')}
+                aria-label={t('queue_monitor.missed_threshold', 'Missed Calls Threshold')}
               />
             </div>
             
