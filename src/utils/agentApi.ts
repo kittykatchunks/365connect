@@ -240,7 +240,7 @@ export async function loginAgentViaAPI(
       });
     }
     
-    const result = await phantomApiService.agentLogin(agentNumber, phone, queues);
+    const result = await phantomApiService.agentLogon(agentNumber, phone, queues);
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Agent login API result:', result);

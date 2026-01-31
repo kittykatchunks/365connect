@@ -87,7 +87,7 @@ export interface WallBoardStatsResponse {
 
 // ==================== Agent Login/Logout Types ====================
 
-export interface AgentLoginRequest {
+export interface AgentLogonRequest {
   /** Agent number from login modal */
   agent: string;
   /** SIP username from connection settings */
@@ -102,6 +102,11 @@ export interface AgentLogoffRequest {
 }
 
 export type AgentApiResponse = 'success' | 'failure';
+
+// Response wrapper type - Phantom API returns { response: 'success' } or { response: 'failure' }
+export interface AgentApiResponseWrapper {
+  response: AgentApiResponse;
+}
 
 export interface QueueMemberItem {
   /** Queue number/extension */
@@ -378,13 +383,13 @@ export class PhantomApiService {
 
   /**
    * Login agent via API (Primary method)
-   * Endpoint: /api/AgentLogin (Basic Auth)
+   * Endpoint: /api/AgentLogon (Basic Auth)
    * @param agent - Agent number from login modal
    * @param phone - SIP username from connection settings
    * @param queues - Optional comma-separated list of queues to join
    * @returns 'success' or 'failure'
    */
-  async agentLogin(agent: string, phone: string, queues?: string): Promise<{ success: boolean; response: AgentApiResponse }> {
+  async agentLogon(agent: string, phone: string, queues?: string): Promise<{ success: boolean; response: AgentApiResponse }> {
     if (this.verboseLogging) {
       console.log('[PhantomApiService] 🔐 Agent login via API...', {
         agent,
@@ -394,23 +399,29 @@ export class PhantomApiService {
     }
 
     try {
-      const requestData: AgentLoginRequest = {
+      const requestData: AgentLogonRequest = {
         agent,
         phone,
         queues: queues || ''
       };
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 AgentLogin request:', requestData);
+        console.log('[PhantomApiService] 📤 AgentLogon request:', requestData);
       }
 
-      const response = await this.post<AgentApiResponse>('AgentLogin', requestData);
+      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('AgentLogon', requestData);
 
       if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📥 AgentLogin response:', response);
+        console.log('[PhantomApiService] 📥 AgentLogon response:', response);
       }
 
-      if (response.success && response.data === 'success') {
+      // Handle both formats: 'success' string or { response: 'success' } object
+      const isSuccess = response.success && (
+        response.data === 'success' || 
+        (typeof response.data === 'object' && response.data !== null && (response.data as AgentApiResponseWrapper).response === 'success')
+      );
+
+      if (isSuccess) {
         if (this.verboseLogging) {
           console.log('[PhantomApiService] ✅ Agent login API successful');
         }
@@ -447,13 +458,19 @@ export class PhantomApiService {
         console.log('[PhantomApiService] 📤 AgentLogoff request:', requestData);
       }
 
-      const response = await this.post<AgentApiResponse>('AgentLogoff', requestData);
+      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('AgentLogoff', requestData);
 
       if (this.verboseLogging) {
         console.log('[PhantomApiService] 📥 AgentLogoff response:', response);
       }
 
-      if (response.success && response.data === 'success') {
+      // Handle both formats: 'success' string or { response: 'success' } object
+      const isSuccess = response.success && (
+        response.data === 'success' || 
+        (typeof response.data === 'object' && response.data !== null && (response.data as AgentApiResponseWrapper).response === 'success')
+      );
+
+      if (isSuccess) {
         if (this.verboseLogging) {
           console.log('[PhantomApiService] ✅ Agent logout API successful');
         }
