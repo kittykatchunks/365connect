@@ -43,6 +43,8 @@ export function QueueLoginModal({
   const [queueGroups, setQueueGroups] = useState<QueueGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Track if agent had queues when modal opened (for enabling/disabling logout)
+  const [hadInitialQueues, setHadInitialQueues] = useState(false);
   
   // Fetch queue data when modal opens
   useEffect(() => {
@@ -104,16 +106,19 @@ export function QueueLoginModal({
             // Parse CSV queues and pre-select them
             const agentQueues = agentData.queues.split(',').map(q => q.trim()).filter(q => q);
             setSelectedQueues(agentQueues);
+            setHadInitialQueues(agentQueues.length > 0);
             
             if (verboseLogging) {
               console.log('[QueueLoginModal] 🎯 Agent current queues:', {
                 agentNumber,
                 agentName: agentData.name,
-                queues: agentQueues
+                queues: agentQueues,
+                hadInitialQueues: agentQueues.length > 0
               });
             }
           } else {
             setSelectedQueues([]);
+            setHadInitialQueues(false);
             
             if (verboseLogging) {
               console.log('[QueueLoginModal] ℹ️ No queue data found for agent:', agentNumber);
@@ -390,7 +395,8 @@ export function QueueLoginModal({
           <Button 
             variant={isLoginAction ? 'primary' : 'danger'}
             onClick={handleAction}
-            disabled={isLoading}
+            disabled={isLoading || (!isLoginAction && !hadInitialQueues)}
+            title={!isLoginAction && !hadInitialQueues ? t('queue_login.logout_disabled_hint', 'No queues to logout from') : undefined}
           >
             {isLoginAction 
               ? t('queue_login.login', 'Login')

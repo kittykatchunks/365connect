@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus, loginAgentViaAPI, logoffAgentViaAPI, fetchQueueMembership } from '@/utils';
+import { phantomApiService } from '@/services/PhantomApiService';
 import { Button } from '@/components/ui';
 import { AgentLoginModal, PauseReasonModal } from '@/components/modals';
 import { QueueLoginModal } from './QueueLoginModal';
@@ -674,41 +675,117 @@ export function AgentKeys({ className }: AgentKeysProps) {
     setShowQueueLoginModal(true);
   }, [isLoggedIn, isInQueue, queueState, agentNumber]);
   
-  // Handle queue login from modal
-  const handleQueueLogin = useCallback((selectedQueues: string[]) => {
+  // Handle queue login from modal - calls GhostLogon API with selected queues
+  const handleQueueLogin = useCallback(async (selectedQueues: string[]) => {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
       console.log('[AgentKeys] 🔐 Queue login requested with queues:', selectedQueues);
     }
     
-    // TODO: Implement actual queue login API call
-    // For now, just update state
-    setQueueState('in-queue');
-    setLoggedInQueues(selectedQueues.map(q => ({ queue: q, queuelabel: q })));
+    if (!sipUsername || !agentNumber) {
+      if (verboseLogging) {
+        console.warn('[AgentKeys] ⚠️ Cannot login to queues - missing sipUsername or agentNumber');
+      }
+      return;
+    }
+    
+    // Join queues as comma-separated string
+    const queuesCSV = selectedQueues.join(',');
     
     if (verboseLogging) {
-      console.log('[AgentKeys] ✅ Queue login completed (placeholder)');
+      console.log('[AgentKeys] 📤 Calling GhostLogon API:', {
+        agent: agentNumber,
+        phone: sipUsername,
+        queues: queuesCSV
+      });
     }
-  }, [setQueueState, setLoggedInQueues]);
+    
+    try {
+      const result = await phantomApiService.agentLogon(agentNumber, sipUsername, queuesCSV);
+      
+      if (result.success) {
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Queue login API successful');
+        }
+        
+        // Update state to in-queue
+        setQueueState('in-queue');
+        setLoggedInQueues(selectedQueues.map(q => ({ queue: q, queuelabel: q })));
+        
+        addNotification({
+          type: 'success',
+          title: t('queue_login.login_success', 'Queue Login Successful'),
+          message: t('queue_login.logged_into_queues', 'Logged into {{count}} queues', { count: selectedQueues.length }),
+          duration: 3000
+        });
+      } else {
+        if (verboseLogging) {
+          console.warn('[AgentKeys] ⚠️ Queue login API failed');
+        }
+        
+        addNotification({
+          type: 'error',
+          title: t('queue_login.login_failed', 'Queue Login Failed'),
+          message: t('queue_login.login_error', 'Failed to login to selected queues'),
+          duration: 5000
+        });
+      }
+    } catch (error) {
+      console.error('[AgentKeys] ❌ Queue login error:', error);
+      
+      addNotification({
+        type: 'error',
+        title: t('queue_login.login_failed', 'Queue Login Failed'),
+        message: error instanceof Error ? error.message : t('queue_login.login_error', 'Failed to login to selected queues'),
+        duration: 5000
+      });
+    }
+  }, [sipUsername, agentNumber, setQueueState, setLoggedInQueues, addNotification, t]);
   
-  // Handle queue logout from modal
+  // Handle queue logout from modal - dials *62 for queue logout
   const handleQueueLogout = useCallback(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (verboseLogging) {
-      console.log('[AgentKeys] 🚪 Queue logout requested');
+      console.log('[AgentKeys] 🚪 Queue logout requested - dialing *62');
     }
     
-    // TODO: Implement actual queue logout API call
-    // For now, just update state
-    setQueueState('none');
-    setLoggedInQueues([]);
-    
-    if (verboseLogging) {
-      console.log('[AgentKeys] ✅ Queue logout completed (placeholder)');
+    // Dial *62 for queue logout (same as failover scenario)
+    if (makeCall) {
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📞 Initiating *62 call for queue logout');
+      }
+      
+      makeCall(AGENT_CODES.queue);
+      
+      // Update state immediately (call will confirm)
+      setQueueState('none');
+      setLoggedInQueues([]);
+      
+      addNotification({
+        type: 'info',
+        title: t('queue_login.logging_out', 'Logging Out'),
+        message: t('queue_login.logout_in_progress', 'Queue logout in progress...'),
+        duration: 3000
+      });
+      
+      if (verboseLogging) {
+        console.log('[AgentKeys] ✅ Queue logout call initiated');
+      }
+    } else {
+      if (verboseLogging) {
+        console.warn('[AgentKeys] ⚠️ Cannot logout from queues - makeCall not available');
+      }
+      
+      addNotification({
+        type: 'error',
+        title: t('queue_login.logout_failed', 'Queue Logout Failed'),
+        message: t('queue_login.call_unavailable', 'Unable to initiate logout call'),
+        duration: 5000
+      });
     }
-  }, [setQueueState, setLoggedInQueues]);
+  }, [makeCall, setQueueState, setLoggedInQueues, addNotification, t]);
   
   // Toggle pause
   const handlePause = useCallback(async () => {

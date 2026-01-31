@@ -468,11 +468,11 @@ export function SettingsView() {
   ];
   
   const ringtoneOptions = [
-    { value: 'Ringtone_1.mp3', label: 'Ringtone 1' },
-    { value: 'Ringtone_2.mp3', label: 'Ringtone 2' },
-    { value: 'Ringtone_3.mp3', label: 'Ringtone 3' },
-    { value: 'Ringtone_4.mp3', label: 'Ringtone 4' },
-    { value: 'Ringtone_5.mp3', label: 'Ringtone 5' },
+    { value: 'Ringtone_1.mp3', label: t('settings.ringtone_1', 'Ringtone 1') },
+    { value: 'Ringtone_2.mp3', label: t('settings.ringtone_2', 'Ringtone 2') },
+    { value: 'Ringtone_3.mp3', label: t('settings.ringtone_3', 'Ringtone 3') },
+    { value: 'Ringtone_4.mp3', label: t('settings.ringtone_4', 'Ringtone 4') },
+    { value: 'Ringtone_5.mp3', label: t('settings.ringtone_5', 'Ringtone 5') },
   ];
   
   // Convert devices to select options
