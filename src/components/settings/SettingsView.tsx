@@ -24,7 +24,9 @@ import {
   BookOpen,
   Trash2,
   FileAudio,
-  Plus
+  Plus,
+  MoreVertical,
+  Pencil
 } from 'lucide-react';
 import { PanelHeader } from '@/components/layout';
 import { 
@@ -154,6 +156,7 @@ export function SettingsView() {
   const [isDeleteAllGroupsConfirmOpen, setIsDeleteAllGroupsConfirmOpen] = useState(false);
   const [availableQueuesForGroups, setAvailableQueuesForGroups] = useState<AvailableQueue[]>([]);
   const [loadingQueuesForGroups, setLoadingQueuesForGroups] = useState(false);
+  const [activeQueueGroupMenu, setActiveQueueGroupMenu] = useState<string | null>(null);
   
   // Load queue groups on mount
   useEffect(() => {
@@ -196,6 +199,15 @@ export function SettingsView() {
       });
     }
   }, [isBLFHidden]);
+  
+  // Close queue group menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveQueueGroupMenu(null);
+    if (activeQueueGroupMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [activeQueueGroupMenu]);
   
   // Microphone level monitoring
   useEffect(() => {
@@ -944,54 +956,58 @@ export function SettingsView() {
                   </Button>
                 </div>
                 
-                {/* Queue Groups List */}
+                {/* Queue Groups List - Contact style layout */}
                 {queueGroups.length > 0 && (
-                  <div className="queue-groups-list">
+                  <div className="queue-groups-items">
                     {queueGroups.map(group => (
-                      <div key={group.id} className="queue-group-item" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.75rem',
-                        marginBottom: '0.5rem',
-                        background: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '6px'
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontWeight: 500, marginRight: '0.5rem' }}>{group.id}</span>
-                          <span>{group.name}</span>
+                      <div key={group.id} className="queue-group-item">
+                        <div className="queue-group-avatar">
+                          <Users className="w-5 h-5" />
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button
-                            onClick={() => handleEditQueueGroup(group.id)}
-                            style={{
-                              padding: '0.25rem 0.5rem',
-                              background: 'var(--bg-primary)',
-                              border: '1px solid var(--border-color)',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem'
-                            }}
-                            title={t('common.edit', 'Edit')}
-                          >
-                            {t('common.edit', 'Edit')}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteQueueGroup(group.id)}
-                            style={{
-                              padding: '0.25rem 0.5rem',
-                              background: 'var(--bg-primary)',
-                              border: '1px solid var(--border-color)',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              color: 'var(--danger-color)'
-                            }}
-                            title={t('common.delete', 'Delete')}
-                          >
-                            {t('common.delete', 'Delete')}
-                          </button>
+                        
+                        <div className="queue-group-info">
+                          <div className="queue-group-id">{group.id}</div>
+                          <div className="queue-group-name">{group.name}</div>
+                          <div className="queue-group-count">
+                            {group.queueNumbers.length} {t('queue_login.queues', 'queues')}
+                          </div>
+                        </div>
+                        
+                        <div className="queue-group-actions">
+                          <div className="queue-group-menu-container">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveQueueGroupMenu(activeQueueGroupMenu === group.id ? null : group.id);
+                              }}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                            
+                            {activeQueueGroupMenu === group.id && (
+                              <div className="queue-group-menu" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => {
+                                  handleEditQueueGroup(group.id);
+                                  setActiveQueueGroupMenu(null);
+                                }}>
+                                  <Pencil className="w-4 h-4" />
+                                  {t('common.edit', 'Edit')}
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    handleDeleteQueueGroup(group.id);
+                                    setActiveQueueGroupMenu(null);
+                                  }} 
+                                  className="text-error"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  {t('common.delete', 'Delete')}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

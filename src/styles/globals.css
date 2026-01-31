@@ -3575,6 +3575,111 @@ a {
   animation: spin 1s linear infinite;
 }
 
+/* Queue Groups List - Contact-style Layout */
+.queue-groups-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.queue-group-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color-light);
+  transition: background-color var(--transition-fast);
+}
+
+.queue-group-item:hover {
+  background-color: var(--surface-color-hover);
+}
+
+.queue-group-item:last-child {
+  border-bottom: none;
+}
+
+.queue-group-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.queue-group-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-group-id {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+}
+
+.queue-group-name {
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-group-count {
+  font-size: 0.813rem;
+  color: var(--text-color-muted);
+}
+
+.queue-group-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.queue-group-menu-container {
+  position: relative;
+}
+
+.queue-group-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 140px;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.queue-group-menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.queue-group-menu button:hover {
+  background-color: var(--surface-color-hover);
+}
+
+.queue-group-menu button.text-error {
+  color: var(--danger-color);
+}
+
 
 /* ============================================
    11. MODALS & OVERLAYS
