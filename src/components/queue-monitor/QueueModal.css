@@ -1,320 +1,370 @@
-/* ============================================ */
-/* Queue Modal Styles */
-/* ============================================ */
+/* ============================================
+   Queue Modal Styles
+   Matching QueueGroupModal toggle-based layout
+   ============================================ */
 
 .queue-modal {
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.queue-modal .modal-body {
-  padding: var(--spacing-lg);
-}
-
-.queue-modal .form-group {
-  margin-bottom: var(--spacing-lg);
-}
-
-.queue-modal .form-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-  color: var(--text-color);
-}
-
-.queue-modal .form-help-text {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  margin-top: var(--spacing-xs);
-  margin-bottom: var(--spacing-sm);
-}
-
-/* Multi-select Queue Dropdown */
-.queue-multiselect-container {
-  position: relative;
-  width: 100%;
-}
-
-.queue-multiselect-trigger {
-  width: 100%;
-  padding: var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-size: 1rem;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: border-color 0.2s ease;
-}
-
-.queue-multiselect-trigger:hover:not(:disabled) {
-  border-color: var(--primary-color);
-}
-
-.queue-multiselect-trigger:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-color-alpha);
-}
-
-.queue-multiselect-trigger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: var(--background-muted);
-}
-
-.trigger-text {
-  flex: 1;
-}
-
-.dropdown-arrow {
-  margin-left: var(--spacing-sm);
-  transition: transform 0.2s ease;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.queue-multiselect-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 4px;
-  background-color: var(--background-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  max-height: 300px;
-  overflow: hidden;
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
 }
 
-.dropdown-actions {
-  display: flex;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs);
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--background-muted);
-}
-
-.action-btn {
+.queue-modal-body {
   flex: 1;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  border-radius: calc(var(--border-radius) / 2);
-  background-color: var(--background-color);
-  color: var(--text-color);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.dropdown-list {
-  padding: var(--spacing-xs) 0;
   overflow-y: auto;
-  max-height: 250px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Section Headers for Groups/Individual Queues */
-.dropdown-section-header {
+/* Section Header */
+.queue-modal .section-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.queue-modal .section-header .form-label {
+  margin-bottom: 0;
+}
+
+.queue-selection-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Form Group */
+.queue-modal .form-group {
+  margin-bottom: 0;
+}
+
+.queue-modal .form-label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.queue-modal .form-help-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+/* Queue Selection Group */
+.queue-selection-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Edit Queue Display */
+.edit-queue-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--background-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.edit-queue-display .queue-number {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.edit-queue-display .queue-name {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Loading State */
+.queue-modal .queue-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.queue-modal .queue-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: qm-spin 0.8s linear infinite;
+}
+
+@keyframes qm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* No Queues Message */
+.queue-modal .no-queues-message {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Select All Row */
+.queue-modal .select-all-row {
+  background: var(--background-muted);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem !important;
+}
+
+.queue-modal .select-all-row .queue-toggle-info {
+  font-weight: 600;
+}
+
+/* Queue List */
+.queue-modal .queue-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 200px;
+  padding-right: 0.25rem;
+}
+
+/* Queue Section Header */
+.queue-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  background-color: var(--background-muted);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--background-muted);
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
-.dropdown-section-header .section-icon {
-  opacity: 0.7;
-}
-
-/* Divider between sections */
-.dropdown-divider {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: var(--spacing-xs) 0;
-}
-
-.dropdown-item {
+/* Queue Toggle Row (shared) */
+.queue-modal .queue-toggle-row {
   display: flex;
   align-items: center;
-  padding: var(--spacing-sm);
+  justify-content: space-between;
+  padding: 0.5rem 0.625rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background 0.2s ease;
+  border-radius: 4px;
 }
 
-.dropdown-item:hover {
-  background-color: var(--background-muted);
+.queue-modal .queue-toggle-row:hover {
+  background: var(--background-muted);
 }
 
-/* Queue Group Item Styling */
-.dropdown-item-group {
-  background-color: var(--primary-color-alpha, rgba(59, 130, 246, 0.05));
+/* Group Row Styling */
+.queue-modal .group-row {
+  background: var(--primary-color-alpha, rgba(59, 130, 246, 0.05));
   border-left: 3px solid var(--primary-color);
+  margin-left: 0;
 }
 
-.dropdown-item-group:hover {
-  background-color: var(--primary-color-alpha, rgba(59, 130, 246, 0.1));
+.queue-modal .group-row:hover {
+  background: var(--primary-color-alpha, rgba(59, 130, 246, 0.1));
 }
 
-.dropdown-item-group.partial {
+.queue-modal .group-row.partial {
   border-left-color: var(--warning-color, #f59e0b);
 }
 
-.group-label {
+.queue-toggle-info {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-toggle-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.queue-number {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  min-width: 3.5rem;
+}
+
+.queue-name {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .group-name {
   font-weight: 500;
   color: var(--text-color);
+  font-size: 0.9rem;
 }
 
 .group-meta {
   font-size: 0.75rem;
   color: var(--text-muted);
+  margin-left: 0.5rem;
 }
 
-.queue-checkbox {
-  width: 18px;
-  height: 18px;
-  margin-right: var(--spacing-sm);
+/* Toggle Switch */
+.queue-modal .toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--background-muted);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
   cursor: pointer;
-  accent-color: var(--primary-color);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.queue-label {
-  flex: 1;
-  font-size: 0.95rem;
+.queue-modal .toggle-switch:hover {
+  border-color: var(--text-muted);
 }
 
-.dropdown-empty {
-  padding: var(--spacing-md);
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
-/* Selected Queue Badges */
-.selected-queues-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-sm);
-}
-
-.queue-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: 4px 8px;
-  background-color: var(--primary-color-light);
-  border: 1px solid var(--primary-color);
-  border-radius: calc(var(--border-radius) / 2);
-  font-size: 0.875rem;
-  color: var(--primary-color-dark);
-}
-
-.badge-text {
-  font-weight: 500;
-}
-
-.badge-remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: none;
-  background-color: transparent;
-  color: var(--primary-color-dark);
-  font-size: 1.25rem;
-  font-weight: bold;
-  line-height: 1;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-.badge-remove:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Original form-select kept for compatibility */
-.queue-modal .form-select {
-  width: 100%;
-  padding: var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.queue-modal .form-select:focus {
-  outline: none;
+.queue-modal .toggle-switch.active {
+  background: var(--primary-color);
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
-.queue-modal .form-select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: var(--background-muted);
+.queue-modal .toggle-switch.partial {
+  background: var(--warning-color, #f59e0b);
+  border-color: var(--warning-color, #f59e0b);
 }
 
-.queue-modal .form-select option {
-  padding: var(--spacing-xs);
+.queue-modal .toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+.queue-modal .toggle-switch.active .toggle-slider,
+.queue-modal .toggle-switch.partial .toggle-slider {
+  transform: translateX(20px);
+}
+
+/* SLA Section */
+.sla-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.sla-section .section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.threshold-group {
+  padding: 0.75rem;
+  background: var(--background-muted);
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+.threshold-group .form-label {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.threshold-group .form-help-text {
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Modal Footer */
 .queue-modal .modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1rem;
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
+  gap: 0.75rem;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* Scrollbar Styling */
+.queue-modal .queue-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.queue-modal .queue-list::-webkit-scrollbar-track {
+  background: var(--background-muted);
+  border-radius: 3px;
+}
+
+.queue-modal .queue-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.queue-modal .queue-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
   .queue-modal {
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
+    width: 95%;
+    max-height: 90vh;
   }
   
-  .queue-modal .modal-body {
-    padding: var(--spacing-md);
+  .queue-modal .queue-toggle-row {
+    padding: 0.625rem 0.5rem;
+  }
+  
+  .queue-number {
+    min-width: 3rem;
+    font-size: 0.8rem;
+  }
+  
+  .queue-name {
+    font-size: 0.8rem;
+  }
+  
+  .queue-modal .toggle-switch {
+    width: 40px;
+    height: 22px;
+  }
+  
+  .queue-modal .toggle-slider {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .queue-modal .toggle-switch.active .toggle-slider,
+  .queue-modal .toggle-switch.partial .toggle-slider {
+    transform: translateX(18px);
   }
   
   .queue-modal .modal-footer {

@@ -1,11 +1,12 @@
 // ============================================
 // Add/Edit Queue Modal Component
 // Configure queue monitoring and SLA thresholds
+// Uses toggle-switch UI matching Settings modals
 // ============================================
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Users } from 'lucide-react';
+import { X, ListChecks, Users } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { DualRangeSlider } from './DualRangeSlider';
 import type { QueueConfig, AvailableQueue, QueueGroup } from '@/types/queue-monitor';
@@ -41,7 +42,6 @@ export function QueueModal({
 }: QueueModalProps) {
   const { t } = useTranslation();
   const verboseLogging = isVerboseLoggingEnabled();
-  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const isEditing = !!existingConfig;
   
@@ -51,7 +51,6 @@ export function QueueModal({
   const [abandonedBreach, setAbandonedBreach] = useState(20);
   const [awtWarn, setAwtWarn] = useState(30);
   const [awtBreach, setAwtBreach] = useState(60);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Queue groups state
   const [queueGroups, setQueueGroups] = useState<QueueGroup[]>([]);
@@ -95,22 +94,6 @@ export function QueueModal({
       }
     }
   }, [isOpen, existingConfig, verboseLogging]);
-  
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isDropdownOpen]);
   
   const handleSave = () => {
     if (selectedQueues.length === 0) {
@@ -170,15 +153,16 @@ export function QueueModal({
   });
   
   if (verboseLogging && isOpen) {
-    console.log('[QueueModal] 📊 Queue selection method:', {
+    console.log('[QueueModal] 📊 Available queues:', {
       totalQueues: availableQueueOptions.length,
-      totalGroups: availableQueueGroups.length,
-      method: 'Dropdown (Multi-select with Groups)'
+      totalGroups: availableQueueGroups.length
     });
   }
   
   // Toggle queue selection
-  const toggleQueueSelection = (queueNumber: string) => {
+  const toggleQueue = (queueNumber: string) => {
+    if (isEditing) return; // Don't allow changes in edit mode
+    
     setSelectedQueues(prev => {
       if (prev.includes(queueNumber)) {
         return prev.filter(q => q !== queueNumber);
@@ -190,6 +174,8 @@ export function QueueModal({
   
   // Toggle queue group selection - selects/deselects all available queues in the group
   const toggleGroupSelection = (group: QueueGroup) => {
+    if (isEditing) return;
+    
     const availableQueuesInGroup = group.queueNumbers.filter(qn => 
       availableQueueOptions.some(q => q.queueNumber === qn)
     );
@@ -240,20 +226,21 @@ export function QueueModal({
     return selectedCount > 0 && selectedCount < availableQueuesInGroup.length;
   };
   
-  // Remove queue from selection (used by badge chips)
-  const removeQueueFromSelection = (queueNumber: string) => {
-    setSelectedQueues(prev => prev.filter(q => q !== queueNumber));
-  };
-  
-  // Select all available queues (including from groups)
-  const selectAllQueues = () => {
+  // Select all available queues
+  const selectAll = () => {
     setSelectedQueues(availableQueueOptions.map(q => q.queueNumber));
   };
   
   // Clear all selections
-  const clearAllQueues = () => {
+  const deselectAll = () => {
     setSelectedQueues([]);
   };
+  
+  // Check if all queues are selected
+  const allSelected = useMemo(() => {
+    return availableQueueOptions.length > 0 && 
+           availableQueueOptions.every(q => selectedQueues.includes(q.queueNumber));
+  }, [availableQueueOptions, selectedQueues]);
   
   if (!isOpen) return null;
   
@@ -276,237 +263,184 @@ export function QueueModal({
           </button>
         </div>
         
-        <div className="modal-body">
-          {/* Queue Selection - Dynamic based on queue count */}
-          <div className="form-group">
-            <label className="form-label">
-              {t('queue_monitor.select_queues', 'Select Queue(s)')}
-            </label>
-            <p className="form-help-text">
-              {isEditing 
-                ? t('queue_monitor.edit_single_queue_desc', 'Editing settings for this queue')
-                : t('queue_monitor.select_multiple_queues_desc', 'Select one or more queues to apply the same SLA settings')
-              }
-            </p>
+        <div className="modal-body queue-modal-body">
+          {/* Queue Selection Section */}
+          <div className="form-group queue-selection-group">
+            <div className="section-header">
+              <label className="form-label">
+                {t('queue_monitor.select_queues', 'Select Queue(s)')}
+              </label>
+              {!isEditing && (
+                <span className="queue-selection-count">
+                  {selectedQueues.length} / {availableQueueOptions.length} {t('queue_login.selected', 'selected')}
+                </span>
+              )}
+            </div>
             
-            {/* Multi-select dropdown */}
-            {!isEditing && (
+            {isEditing ? (
+              // Edit mode - show single queue info
+              <div className="edit-queue-display">
+                <span className="queue-number">{existingConfig.queueNumber}</span>
+                {existingConfig.queueName && (
+                  <span className="queue-name">{existingConfig.queueName}</span>
+                )}
+              </div>
+            ) : loadingQueues ? (
+              <div className="queue-loading">
+                <div className="loading-spinner" />
+                <span>{t('settings.loading_queues', 'Loading queues...')}</span>
+              </div>
+            ) : availableQueueOptions.length === 0 ? (
+              <div className="no-queues-message">
+                {t('queue_monitor.no_queues_available', 'No queues available or all queues are already configured')}
+              </div>
+            ) : (
               <>
-                <div className="queue-multiselect-container" ref={dropdownRef}>
+                {/* Select All Toggle */}
+                <label className="queue-toggle-row select-all-row">
+                  <div className="queue-toggle-info">
+                    <ListChecks className="w-4 h-4" />
+                    <span className="queue-toggle-label">
+                      {t('queue_login.select_all', 'Select / Deselect All')}
+                    </span>
+                  </div>
                   <button
                     type="button"
-                    className="queue-multiselect-trigger"
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    disabled={isEditing || loadingQueues}
+                    className={`toggle-switch ${allSelected ? 'active' : ''}`}
+                    onClick={() => allSelected ? deselectAll() : selectAll()}
+                    aria-label={allSelected ? t('queue_login.deselect_all', 'Deselect all') : t('queue_login.select_all_aria', 'Select all')}
                   >
-                    <span className="trigger-text">
-                      {loadingQueues 
-                        ? t('queue_monitor.loading_queues', 'Loading queues...') 
-                        : selectedQueues.length === 0
-                          ? t('queue_monitor.select_queues_placeholder', 'Click to select queues')
-                          : t('queue_monitor.queues_selected', '{{count}} queue(s) selected', { count: selectedQueues.length })
-                      }
-                    </span>
-                    <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+                    <span className="toggle-slider" />
                   </button>
-                  
-                  {/* Dropdown list */}
-                  {isDropdownOpen && !isEditing && (
-                    <div className="queue-multiselect-dropdown">
-                      {/* Select All / Clear All buttons */}
-                      {availableQueueOptions.length > 0 && (
-                        <div className="dropdown-actions">
-                          <button
-                            type="button"
-                            className="action-btn"
-                            onClick={selectAllQueues}
-                          >
-                            {t('queue_monitor.select_all', 'Select All')}
-                          </button>
-                          <button
-                            type="button"
-                            className="action-btn"
-                            onClick={clearAllQueues}
-                          >
-                            {t('queue_monitor.clear_all', 'Clear All')}
-                          </button>
-                        </div>
-                      )}
-                      
-                      {/* Queue list with checkboxes */}
-                      <div className="dropdown-list">
-                        {availableQueueOptions.length === 0 && availableQueueGroups.length === 0 ? (
-                          <div className="dropdown-empty">
-                            {t('queue_monitor.no_queues_available', 'No queues available or all queues are already configured')}
-                          </div>
-                        ) : (
-                          <>
-                            {/* Queue Groups Section */}
-                            {availableQueueGroups.length > 0 && (
-                              <>
-                                <div className="dropdown-section-header">
-                                  <Users className="section-icon" size={14} />
-                                  {t('queue_monitor.queue_groups', 'Queue Groups')}
-                                </div>
-                                {availableQueueGroups.map((group) => {
-                                  const availableCount = group.queueNumbers.filter(qn => 
-                                    availableQueueOptions.some(q => q.queueNumber === qn)
-                                  ).length;
-                                  const isFullySelected = isGroupFullySelected(group);
-                                  const isPartiallySelected = isGroupPartiallySelected(group);
-                                  
-                                  return (
-                                    <label
-                                      key={group.id}
-                                      className={`dropdown-item dropdown-item-group ${isPartiallySelected ? 'partial' : ''}`}
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={isFullySelected}
-                                        ref={(el) => {
-                                          if (el) el.indeterminate = isPartiallySelected;
-                                        }}
-                                        onChange={() => toggleGroupSelection(group)}
-                                        className="queue-checkbox"
-                                      />
-                                      <span className="queue-label group-label">
-                                        <span className="group-name">{group.name}</span>
-                                        <span className="group-meta">
-                                          {group.id} • {availableCount} {t('queue_monitor.queues', 'queues')}
-                                        </span>
-                                      </span>
-                                    </label>
-                                  );
-                                })}
-                                
-                                {/* Divider between groups and individual queues */}
-                                <div className="dropdown-divider"></div>
-                                <div className="dropdown-section-header">
-                                  {t('queue_monitor.individual_queues', 'Individual Queues')}
-                                </div>
-                              </>
-                            )}
-                            
-                            {/* Individual Queues */}
-                            {availableQueueOptions.map((queue) => (
-                              <label
-                                key={queue.queueNumber}
-                                className="dropdown-item"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedQueues.includes(queue.queueNumber)}
-                                  onChange={() => toggleQueueSelection(queue.queueNumber)}
-                                  className="queue-checkbox"
-                                />
-                                <span className="queue-label">
-                                  {queue.queueName 
-                                    ? `${queue.queueNumber} - ${queue.queueName}` 
-                                    : queue.queueNumber
-                                  }
-                                </span>
-                              </label>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </label>
                 
-                {/* Selected queue badges (Method 1 only) */}
-                {selectedQueues.length > 0 && (
-                  <div className="selected-queues-badges">
-                    {selectedQueues.map(queueNumber => {
-                      const queue = availableQueues.find(q => q.queueNumber === queueNumber);
-                      return (
-                        <div key={queueNumber} className="queue-badge">
-                          <span className="badge-text">
-                            {queue?.queueName 
-                              ? `${queue.queueNumber} - ${queue.queueName}` 
-                              : queueNumber
-                            }
-                          </span>
-                          {!isEditing && (
+                {/* Queue List */}
+                <div className="queue-list">
+                  {/* Queue Groups Section */}
+                  {availableQueueGroups.length > 0 && (
+                    <>
+                      <div className="queue-section-header">
+                        <Users className="w-4 h-4" />
+                        <span>{t('queue_monitor.queue_groups', 'Queue Groups')}</span>
+                      </div>
+                      {availableQueueGroups.map((group) => {
+                        const availableCount = group.queueNumbers.filter(qn => 
+                          availableQueueOptions.some(q => q.queueNumber === qn)
+                        ).length;
+                        const isFullySelected = isGroupFullySelected(group);
+                        const isPartiallySelected = isGroupPartiallySelected(group);
+                        
+                        return (
+                          <label
+                            key={group.id}
+                            className={`queue-toggle-row group-row ${isPartiallySelected ? 'partial' : ''}`}
+                          >
+                            <div className="queue-toggle-info">
+                              <span className="group-name">{group.name}</span>
+                              <span className="group-meta">
+                                {group.id} • {availableCount} {t('queue_monitor.queues', 'queues')}
+                              </span>
+                            </div>
                             <button
                               type="button"
-                              className="badge-remove"
-                              onClick={() => removeQueueFromSelection(queueNumber)}
-                              aria-label={t('aria_label_remove', 'Remove')}
+                              className={`toggle-switch ${isFullySelected ? 'active' : ''} ${isPartiallySelected ? 'partial' : ''}`}
+                              onClick={() => toggleGroupSelection(group)}
+                              aria-label={`${isFullySelected ? t('queue_login.deselect', 'Deselect') : t('queue_login.select', 'Select')} ${group.name}`}
                             >
-                              ×
+                              <span className="toggle-slider" />
                             </button>
+                          </label>
+                        );
+                      })}
+                      
+                      <div className="queue-section-header">
+                        <span>{t('queue_monitor.individual_queues', 'Individual Queues')}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Individual Queues */}
+                  {availableQueueOptions.map(queue => {
+                    const isSelected = selectedQueues.includes(queue.queueNumber);
+                    
+                    return (
+                      <label 
+                        key={queue.queueNumber} 
+                        className="queue-toggle-row queue-row"
+                      >
+                        <div className="queue-toggle-info">
+                          <span className="queue-number">{queue.queueNumber}</span>
+                          {queue.queueName && (
+                            <span className="queue-name">{queue.queueName}</span>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        <button
+                          type="button"
+                          className={`toggle-switch ${isSelected ? 'active' : ''}`}
+                          onClick={() => toggleQueue(queue.queueNumber)}
+                          aria-label={`${isSelected ? t('queue_login.deselect', 'Deselect') : t('queue_login.select', 'Select')} ${queue.queueName || queue.queueNumber}`}
+                        >
+                          <span className="toggle-slider" />
+                        </button>
+                      </label>
+                    );
+                  })}
+                </div>
               </>
             )}
+          </div>
+          
+          {/* SLA Thresholds Section */}
+          <div className="sla-section">
+            <div className="section-header">
+              <label className="form-label section-title">
+                {t('queue_monitor.sla_thresholds', 'SLA Thresholds')}
+              </label>
+            </div>
             
-            {/* Edit mode - show single selected queue as badge */}
-            {isEditing && selectedQueues.length > 0 && (
-              <div className="selected-queues-badges">
-                {selectedQueues.map(queueNumber => {
-                  const queue = availableQueues.find(q => q.queueNumber === queueNumber);
-                  return (
-                    <div key={queueNumber} className="queue-badge">
-                      <span className="badge-text">
-                        {queue?.queueName 
-                          ? `${queue.queueNumber} - ${queue.queueName}` 
-                          : queueNumber
-                        }
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          
-          {/* Abandoned Calls Threshold */}
-          <div className="form-group">
-            <label className="form-label">
-              {t('queue_monitor.abandoned_threshold', 'Abandoned Calls Threshold')}
-            </label>
-            <p className="form-help-text">
-              {t('queue_monitor.abandoned_threshold_desc', 'Set warning and breach thresholds for abandoned call percentage')}
-            </p>
-            <DualRangeSlider
-              min={0}
-              max={30}
-              warnValue={abandonedWarn}
-              breachValue={abandonedBreach}
-              onChange={(warn, breach) => {
-                setAbandonedWarn(warn);
-                setAbandonedBreach(breach);
-              }}
-              unit="%"
-              aria-label={t('queue_monitor.abandoned_threshold', 'Abandoned Calls Threshold')}
-            />
-          </div>
-          
-          {/* Average Wait Time Threshold */}
-          <div className="form-group">
-            <label className="form-label">
-              {t('queue_monitor.awt_threshold', 'Average Wait Time Threshold')}
-            </label>
-            <p className="form-help-text">
-              {t('queue_monitor.awt_threshold_desc', 'Set warning and breach thresholds for average wait time in seconds')}
-            </p>
-            <DualRangeSlider
-              min={0}
-              max={100}
-              warnValue={awtWarn}
-              breachValue={awtBreach}
-              onChange={(warn, breach) => {
-                setAwtWarn(warn);
-                setAwtBreach(breach);
-              }}
-              unit="s"
-              aria-label={t('queue_monitor.awt_threshold', 'Average Wait Time Threshold')}
-            />
+            {/* Abandoned Calls Threshold */}
+            <div className="form-group threshold-group">
+              <label className="form-label">
+                {t('queue_monitor.abandoned_threshold', 'Abandoned Calls Threshold')}
+              </label>
+              <p className="form-help-text">
+                {t('queue_monitor.abandoned_threshold_desc', 'Set warning and breach thresholds for abandoned call percentage')}
+              </p>
+              <DualRangeSlider
+                min={0}
+                max={30}
+                warnValue={abandonedWarn}
+                breachValue={abandonedBreach}
+                onChange={(warn, breach) => {
+                  setAbandonedWarn(warn);
+                  setAbandonedBreach(breach);
+                }}
+                unit="%"
+                aria-label={t('queue_monitor.abandoned_threshold', 'Abandoned Calls Threshold')}
+              />
+            </div>
+            
+            {/* Average Wait Time Threshold */}
+            <div className="form-group threshold-group">
+              <label className="form-label">
+                {t('queue_monitor.awt_threshold', 'Average Wait Time Threshold')}
+              </label>
+              <p className="form-help-text">
+                {t('queue_monitor.awt_threshold_desc', 'Set warning and breach thresholds for average wait time in seconds')}
+              </p>
+              <DualRangeSlider
+                min={0}
+                max={100}
+                warnValue={awtWarn}
+                breachValue={awtBreach}
+                onChange={(warn, breach) => {
+                  setAwtWarn(warn);
+                  setAwtBreach(breach);
+                }}
+                unit="s"
+                aria-label={t('queue_monitor.awt_threshold', 'Average Wait Time Threshold')}
+              />
+            </div>
           </div>
         </div>
         
@@ -523,8 +457,8 @@ export function QueueModal({
             disabled={selectedQueues.length === 0 || loadingQueues}
           >
             {isEditing 
-              ? t('queue_monitor.update', 'Update') 
-              : t('common.save', 'Save')
+              ? t('common.save', 'Save') 
+              : t('common.add', 'Add')
             }
           </Button>
         </div>
