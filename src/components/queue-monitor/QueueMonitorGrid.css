@@ -96,6 +96,8 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  width: 100%;
+  overflow: hidden;
 }
 
 .queue-number {
@@ -108,6 +110,47 @@
   font-size: 0.7rem;
   color: var(--text-muted);
   text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Scrolling marquee for queue names that overflow */
+.queue-name-marquee {
+  display: inline-block;
+  padding-left: 0;
+  animation: marquee-scroll 8s linear infinite;
+  animation-play-state: paused;
+}
+
+.queue-name:hover .queue-name-marquee {
+  animation-play-state: running;
+}
+
+/* Auto-scroll when content overflows - activated by JS adding .overflow class */
+.queue-name.overflow .queue-name-marquee {
+  animation-play-state: running;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  10% {
+    transform: translateX(0%);
+  }
+  45% {
+    transform: translateX(calc(-100% + 80px));
+  }
+  55% {
+    transform: translateX(calc(-100% + 80px));
+  }
+  90% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
 }
 
 /* Cell Alert States */

@@ -3,12 +3,67 @@
 // Displays monitored queues with real-time stats and SLA indicators
 // ============================================
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pencil, Trash2, TrendingUp } from 'lucide-react';
 import type { QueueStats, QueueConfig } from '@/types/queue-monitor';
-import { cn } from '@/utils';
+import { cn, isVerboseLoggingEnabled } from '@/utils';
 import './QueueMonitorGrid.css';
+
+// ============================================
+// Queue Name Display Component
+// Handles text overflow with scrolling marquee effect
+// ============================================
+interface QueueNameDisplayProps {
+  name: string;
+}
+
+function QueueNameDisplay({ name }: QueueNameDisplayProps) {
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  
+  // Check if text overflows container
+  const checkOverflow = useCallback(() => {
+    if (containerRef.current && textRef.current) {
+      const containerWidth = containerRef.current.offsetWidth;
+      const textWidth = textRef.current.scrollWidth;
+      const overflows = textWidth > containerWidth;
+      
+      if (isVerboseLoggingEnabled()) {
+        console.log('[QueueNameDisplay] Overflow check:', {
+          name,
+          containerWidth,
+          textWidth,
+          overflows
+        });
+      }
+      
+      setIsOverflowing(overflows);
+    }
+  }, [name]);
+  
+  // Check overflow on mount and when name changes
+  useEffect(() => {
+    checkOverflow();
+    
+    // Also check on window resize
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [checkOverflow]);
+  
+  return (
+    <span 
+      ref={containerRef}
+      className={cn('queue-name', { overflow: isOverflowing })}
+      title={name}
+    >
+      <span ref={textRef} className="queue-name-marquee">
+        {name}
+      </span>
+    </span>
+  );
+}
 
 interface QueueMonitorGridProps {
   /** Array of queue statistics */
@@ -134,7 +189,7 @@ export function QueueMonitorGrid({
                     <div className="queue-info">
                       <span className="queue-number">{queue.queueNumber}</span>
                       {queue.queueName && (
-                        <span className="queue-name">{queue.queueName}</span>
+                        <QueueNameDisplay name={queue.queueName} />
                       )}
                     </div>
                   );
