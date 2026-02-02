@@ -473,6 +473,8 @@ export function SettingsView() {
     { value: 'Ringtone_3.mp3', label: t('settings.ringtone_3', 'Ringtone 3') },
     { value: 'Ringtone_4.mp3', label: t('settings.ringtone_4', 'Ringtone 4') },
     { value: 'Ringtone_5.mp3', label: t('settings.ringtone_5', 'Ringtone 5') },
+    // Show custom ringtone option when a custom ringtone has been uploaded
+    ...(hasCustomRingtone ? [{ value: 'custom', label: t('settings.custom_ringtone', 'Custom Ringtone') }] : []),
   ];
   
   // Convert devices to select options
@@ -505,13 +507,10 @@ export function SettingsView() {
   const testRingtone = async () => {
     setTestingDevice('ringtone');
     try {
-      const audio = new Audio(`/media/${settings.audio.ringtoneFile}`);
-      const ringerDevice = settings.audio.ringerDevice;
-      if ('setSinkId' in audio && ringerDevice) {
-        await (audio as HTMLAudioElement & { setSinkId: (id: string) => Promise<void> }).setSinkId(ringerDevice);
-      }
-      await audio.play();
-      audio.onended = () => setTestingDevice(null);
+      // Use AudioService for proper custom ringtone support
+      await audioService.playTestRingtone();
+      // Set a timeout to reset the testing state since AudioService handles playback
+      setTimeout(() => setTestingDevice(null), 3000);
     } catch (err) {
       console.error('Failed to test ringtone:', err);
       setTestingDevice(null);
@@ -521,13 +520,10 @@ export function SettingsView() {
   const testRinger = async () => {
     setTestingDevice('ringer');
     try {
-      const audio = new Audio(`/media/${settings.audio.ringtoneFile}`);
-      const ringerDevice = settings.audio.ringerDevice;
-      if ('setSinkId' in audio && ringerDevice) {
-        await (audio as HTMLAudioElement & { setSinkId: (id: string) => Promise<void> }).setSinkId(ringerDevice);
-      }
-      await audio.play();
-      audio.onended = () => setTestingDevice(null);
+      // Use AudioService for proper custom ringtone support
+      await audioService.playTestRingtone();
+      // Set a timeout to reset the testing state since AudioService handles playback
+      setTimeout(() => setTestingDevice(null), 3000);
     } catch (err) {
       console.error('Failed to test ringer:', err);
       setTestingDevice(null);
