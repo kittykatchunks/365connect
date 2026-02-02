@@ -529,6 +529,52 @@
             width: 24px;
             height: 24px;
         }
+
+        /* Agent Button Visual Styles */
+        .agent-btn-demo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        
+        .agent-btn-demo svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+        
+        .agent-btn-demo.btn-secondary {
+            background: var(--bg-color);
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+        
+        .agent-btn-demo.btn-success {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white;
+        }
+        
+        .agent-btn-demo.btn-warning {
+            background: #eab308;
+            border-color: #eab308;
+            color: white;
+        }
+        
+        .agent-btn-demo.btn-disabled {
+            background: var(--bg-color);
+            border-color: var(--border-color);
+            color: var(--text-color);
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -581,6 +627,15 @@
                 <div class="sidebar-title">Core Features</div>
                 <ul class="sidebar-nav">
                     <li>
+                        <a href="#agent-controls" class="sidebar-link">Agent Controls</a>
+                        <ul class="sidebar-subsection">
+                            <li><a href="#agent-status" class="sidebar-link">Agent Status Display</a></li>
+                            <li><a href="#agent-login-button" class="sidebar-link">Login Button</a></li>
+                            <li><a href="#agent-queue-button" class="sidebar-link">Queue Button</a></li>
+                            <li><a href="#agent-pause-button" class="sidebar-link">Pause Button</a></li>
+                        </ul>
+                    </li>
+                    <li>
                         <a href="#making-calls" class="sidebar-link">Making Calls</a>
                         <ul class="sidebar-subsection">
                             <li><a href="#outbound-calls" class="sidebar-link">Outbound Calls</a></li>
@@ -602,8 +657,9 @@
                 <ul class="sidebar-nav">
                     <li><a href="#connection-settings" class="sidebar-link">Connection Settings</a></li>
                     <li><a href="#interface-settings" class="sidebar-link">Interface Settings</a></li>
-                    <li><a href="#audio-settings" class="sidebar-link">Audio Settings</a></li>
                     <li><a href="#call-settings" class="sidebar-link">Call Settings</a></li>
+                    <li><a href="#queues-settings" class="sidebar-link">Queues Settings</a></li>
+                    <li><a href="#audio-settings" class="sidebar-link">Audio Settings</a></li>
                     <li><a href="#busylight-settings" class="sidebar-link">Busylight Settings</a></li>
                     <li><a href="#advanced-settings" class="sidebar-link">Advanced Settings</a></li>
                 </ul>
@@ -702,9 +758,23 @@
                     <h2>First Time Setup</h2>
                     <p>Before you can make calls, you need to configure your connection settings with your Phantom ID and SIP credentials.</p>
 
+                    <h3>Welcome Screen</h3>
+                    <p>When you first launch Connect365, you'll see a welcome screen prompting you to configure your connection settings. Click the <strong>Go to Settings</strong> button to begin the setup process.</p>
+
+                    <div class="screenshot">
+                        <img src="images/welcome-screen.png" alt="Welcome screen showing Go to Settings button" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="screenshot-placeholder" style="display: none;">
+                            <svg class="screenshot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="screenshot-label">Screenshot: Welcome screen with Go to Settings button</div>
+                        </div>
+                    </div>
+
                     <h3>Step 1: Open Settings</h3>
+                    <p>If you've dismissed the welcome screen, you can access settings manually:</p>
                     <ol>
-                        <li>Click the <strong>Settings</strong> tab in the bottom navigation</li>
+                        <li>Click the <strong>Settings</strong> tab in the tab navigation bar</li>
                         <li>The Connection settings section should open automatically</li>
                     </ol>
 
@@ -732,16 +802,22 @@
                         <div class="screenshot-label">Screenshot: Connection settings form</div>
                     </div>
 
-                    <h3>Step 3: Save and Register</h3>
+                    <h3>Step 3: Save and Connect</h3>
                     <ol>
                         <li>Enter all required information</li>
                         <li>Click the <strong>Save Connection Settings</strong> button</li>
+                        <li>Click the <strong>Connect</strong> button at the top of the app to connect to Phantom</li>
                         <li>Wait for the registration status to show "Registered"</li>
                     </ol>
 
                     <div class="info-box">
                         <div class="info-box-title">💡 About Phantom ID</div>
                         <p>The Phantom ID automatically generates the correct server URLs for your connection. You don't need to manually enter server addresses.</p>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Connect Button</div>
+                        <p>Saving your settings does not automatically connect you to Phantom. You must press the <strong>Connect</strong> button in the header to initiate the connection and register with the server.</p>
                     </div>
 
                     <div class="warning-box">
@@ -758,6 +834,7 @@
                     <h3>Making Your First Call</h3>
                     <ol>
                         <li>Click the <strong>Phone</strong> tab</li>
+                        <li>Ensure you are logged in with your agent details (see <a href="#agent-controls">Agent Controls</a>)</li>
                         <li>Enter a phone number using the dialpad</li>
                         <li>Click the green <strong>Call</strong> button</li>
                         <li>Use the call controls during the call (mute, hold, transfer, etc.)</li>
@@ -768,7 +845,7 @@
                     <ol>
                         <li>Click the <strong>Contacts</strong> tab</li>
                         <li>Click the <strong>Add Contact</strong> button</li>
-                        <li>Enter contact details (name, number, email, etc.)</li>
+                        <li>Enter contact details (name, number, company)</li>
                         <li>Click <strong>Save</strong></li>
                     </ol>
 
@@ -776,8 +853,144 @@
                     <ol>
                         <li>Click the <strong>Activity</strong> tab</li>
                         <li>Browse your recent calls</li>
-                        <li>Click on any entry to see details or call back</li>
+                        <li>Click the callback icon to return to the Phone tab with the number pre-filled</li>
                     </ol>
+                </section>
+
+                <!-- Agent Controls Section -->
+                <section id="agent-controls">
+                    <h2>Agent Controls</h2>
+                    <p>Connect365 provides dedicated agent controls for call center operations. The agent control buttons are located at the top of the dialpad and allow you to manage your agent status within the Phantom PBX system.</p>
+
+                    <h3 id="agent-status">Agent Status Display</h3>
+                    <p>The status bar below the header shows your current connection and agent state:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status Display</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>No connection to server</strong></td>
+                                <td>Your phone is not registered to the SIP server. Press the <strong>Connect</strong> button at the top of the screen to register.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Agent: Not Logged In</strong></td>
+                                <td>You are connected to the server but not logged in as an agent. Press the Login button to sign in.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Agent: 123 - Name</strong></td>
+                                <td>You are logged in as an agent. Your agent number and name are displayed.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Agent: [PAUSED] 123 - Name</strong></td>
+                                <td>You are logged in but currently paused (unavailable to receive queue calls).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 id="agent-login-button">Login Button</h3>
+                    <p>The Login button controls your agent session with the Phantom PBX.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Button</th>
+                                <th>State</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Login</span></td>
+                                <td>Not logged in</td>
+                                <td>Click to open the agent login dialog. Enter your agent number and optional passcode to log in.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</span></td>
+                                <td>Logged in</td>
+                                <td>Click to log out of your agent session. Your agent number will be cleared and you will no longer receive queue calls.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Agent Login</div>
+                        <p>When you log in, Connect365 first attempts to use the API method. If that fails, it automatically falls back to DTMF-based login by dialing the agent login code.</p>
+                    </div>
+
+                    <h3 id="agent-queue-button">Queue Button</h3>
+                    <p>The Queue button manages your membership in call queues.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Button</th>
+                                <th>State</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Queue</span></td>
+                                <td>Not in queue</td>
+                                <td>You are not currently in any queue. Click to open the queue selection dialog and join queues.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-success"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>In Queue</span></td>
+                                <td>In queue</td>
+                                <td>You are logged into one or more queues. Click to manage your queue membership or log out of queues.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-disabled"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Queue</span></td>
+                                <td>Disabled</td>
+                                <td>You must be logged in as an agent before you can join queues.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 id="agent-pause-button">Pause Button</h3>
+                    <p>The Pause button allows you to temporarily make yourself unavailable for queue calls without logging out.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Button</th>
+                                <th>State</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Pause</span></td>
+                                <td>Available</td>
+                                <td>You are available to receive queue calls. Click to pause - you may be prompted to select a pause reason.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-warning"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Paused</span></td>
+                                <td>Paused</td>
+                                <td>You are currently paused. Click to resume and become available for queue calls again.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="agent-btn-demo btn-disabled"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Pause</span></td>
+                                <td>Disabled</td>
+                                <td>You must be logged in as an agent before you can pause.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-box">
+                        <div class="warning-box-title">⚠️ Important</div>
+                        <p>While paused, you will not receive any calls from queues. Direct calls to your extension will still ring through. Remember to unpause when you are ready to take calls again.</p>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Pause on Active Call</div>
+                        <p>You can pause while on an active call. The pause will take effect immediately without interrupting your current conversation.</p>
+                    </div>
                 </section>
 
                 <!-- Making Calls Section -->
@@ -816,17 +1029,11 @@
                         <li>Click the phone icon to call back</li>
                     </ol>
 
-                    <h4>Method 4: From Company Numbers</h4>
-                    <ol>
-                        <li>Go to the <strong>Company Numbers</strong> tab</li>
-                        <li>Click the call icon next to any number</li>
-                    </ol>
-
                     <h3 id="receiving-calls">Receiving Calls</h3>
                     <p>When someone calls you:</p>
                     <ol>
                         <li>You'll see an incoming call notification</li>
-                        <li>The caller's information will be displayed (if available)</li>
+                        <li>The caller's number will be displayed. If the number matches a saved contact, the contact name will be shown instead</li>
                         <li>Click <strong>Answer</strong> to accept the call</li>
                         <li>Or click <strong>Reject</strong> to decline</li>
                     </ol>
@@ -839,8 +1046,22 @@
                     </div>
 
                     <div class="info-box">
-                        <div class="info-box-title">💡 Auto Answer</div>
-                        <p>You can enable auto-answer in Settings > Call Settings to automatically accept incoming calls.</p>
+                        <div class="info-box-title">💡 Desktop Notifications</div>
+                        <p>If enabled in Settings > Call Settings, incoming calls will show a desktop notification in your taskbar. You can click the notification to answer the call directly.</p>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Auto Focus</div>
+                        <p>When enabled in Settings > Call Settings, incoming calls will automatically bring the app to the foreground and switch to the Phone tab.</p>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Auto Answer Options</div>
+                        <p>There are two ways to enable auto-answer:</p>
+                        <ul>
+                            <li><strong>App Auto Answer</strong> (Settings > Call Settings): Automatically answers <em>all</em> incoming calls</li>
+                            <li><strong>Phantom *11</strong>: When enabled on the PBX, automatically answers queue and group calls only. DDI and internal calls will ring as normal.</li>
+                        </ul>
                     </div>
 
                     <h3 id="call-controls">Call Controls</h3>
@@ -867,10 +1088,6 @@
                                 <td>Transfer the call to another extension</td>
                             </tr>
                             <tr>
-                                <td><strong>DTMF</strong></td>
-                                <td>Send dial tones (for IVR navigation)</td>
-                            </tr>
-                            <tr>
                                 <td><strong>Hang Up</strong></td>
                                 <td>End the call</td>
                             </tr>
@@ -891,6 +1108,16 @@
                         <li><strong>Attended Transfer</strong>: Speak with the recipient before completing the transfer</li>
                     </ul>
 
+                    <div class="screenshot">
+                        <img src="images/call-transfer.png" alt="Call transfer options" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="screenshot-placeholder" style="display: none;">
+                            <svg class="screenshot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="screenshot-label">Screenshot: Call transfer options</div>
+                        </div>
+                    </div>
+
                     <p>To transfer a call:</p>
                     <ol>
                         <li>Click the <strong>Transfer</strong> button during a call</li>
@@ -898,6 +1125,11 @@
                         <li>Choose blind or attended transfer</li>
                         <li>Complete the transfer</li>
                     </ol>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Default Transfer Method</div>
+                        <p>You can set your preferred default transfer method in Settings > Call Settings. This default is used when pressing Enter in the transfer dialog or when transferring via BLF buttons.</p>
+                    </div>
                 </section>
 
                 <!-- Contacts Section -->
@@ -911,13 +1143,13 @@
                         <li>Click <strong>Add Contact</strong></li>
                         <li>Fill in the contact information:
                             <ul>
-                                <li>Contact Name (required)</li>
+                                <li>First Name</li>
+                                <li>Last Name</li>
+                                <li>Company Name</li>
                                 <li>Contact Number (required)</li>
-                                <li>Email</li>
-                                <li>Notes</li>
                             </ul>
+                            <em>Note: At least one of First Name, Last Name, or Company Name is required.</em>
                         </li>
-                        <li>Optionally add a profile picture</li>
                         <li>Click <strong>Save</strong></li>
                     </ol>
 
@@ -931,7 +1163,8 @@
                     <h3>Editing Contacts</h3>
                     <ol>
                         <li>Find the contact in your contacts list</li>
-                        <li>Click the <strong>Edit</strong> icon</li>
+                        <li>Click the <strong>three dots</strong> menu icon on the contact</li>
+                        <li>Select <strong>Edit</strong></li>
                         <li>Update the information</li>
                         <li>Click <strong>Save</strong></li>
                     </ol>
@@ -939,7 +1172,8 @@
                     <h3>Deleting Contacts</h3>
                     <ol>
                         <li>Find the contact you want to delete</li>
-                        <li>Click the <strong>Delete</strong> icon</li>
+                        <li>Click the <strong>three dots</strong> menu icon on the contact</li>
+                        <li>Select <strong>Delete</strong></li>
                         <li>Confirm the deletion</li>
                     </ol>
 
@@ -948,7 +1182,7 @@
 
                     <div class="info-box">
                         <div class="info-box-title">💡 Quick Call</div>
-                        <p>Click the phone icon next to any contact to instantly call them.</p>
+                        <p>Click the phone icon next to any contact to return to the Phone tab with the number pre-filled.</p>
                     </div>
                 </section>
 
@@ -961,7 +1195,7 @@
                     <p>The Activity tab shows all your recent calls with the following information:</p>
                     <ul>
                         <li>Call direction (inbound, outbound, missed)</li>
-                        <li>Contact name or phone number</li>
+                        <li>Contact name and/or phone number</li>
                         <li>Date and time</li>
                         <li>Call duration</li>
                     </ul>
@@ -977,8 +1211,6 @@
                     <p>For each call history entry, you can:</p>
                     <ul>
                         <li><strong>Call Back</strong>: Click the phone icon to return the call</li>
-                        <li><strong>Add to Contacts</strong>: Save the number as a new contact</li>
-                        <li><strong>View Details</strong>: Click the entry to see full call information</li>
                     </ul>
 
                     <h3>Filtering Call History</h3>
@@ -991,20 +1223,815 @@
                     </ul>
                 </section>
 
+                <!-- BLF Monitoring Section -->
+                <section id="blf-monitoring">
+                    <h2>BLF Monitoring</h2>
+                    <p>Busy Lamp Field (BLF) buttons allow you to monitor the status of other extensions and quickly dial or transfer calls to them.</p>
+
+                    <h3>Enabling BLF</h3>
+                    <p>BLF buttons must be enabled before they appear on the Phone tab:</p>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> > <strong>Interface Settings</strong></li>
+                        <li>Enable the <strong>Show BLF Buttons</strong> option</li>
+                        <li>Return to the <strong>Phone</strong> tab to see the BLF button panels</li>
+                    </ol>
+
+                    <h3>Configuring BLF Buttons</h3>
+                    <p>To configure a BLF button:</p>
+                    <ol>
+                        <li>Right-click on any BLF button slot to open the configuration modal</li>
+                        <li>Select the button type:
+                            <ul>
+                                <li><strong>BLF</strong>: Monitor an extension's presence status</li>
+                                <li><strong>Speed Dial</strong>: Quick dial button without presence monitoring</li>
+                            </ul>
+                        </li>
+                        <li>Enter the extension number (3-5 digits for BLF) or phone number (for Speed Dial)</li>
+                        <li>Optionally enter a display name</li>
+                        <li>Click <strong>Save</strong></li>
+                    </ol>
+
+                    <div class="screenshot">
+                        <img src="images/blf-config-modal.png" alt="BLF configuration modal" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="screenshot-placeholder" style="display: none;">
+                            <svg class="screenshot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="screenshot-label">Screenshot: BLF button configuration modal</div>
+                        </div>
+                    </div>
+
+                    <h3>BLF Button States</h3>
+                    <p>BLF buttons display different colours to indicate the monitored extension's status:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>State</th>
+                                <th>Colour</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Available</strong></td>
+                                <td>Green</td>
+                                <td>The extension is idle and available to receive calls</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Busy</strong></td>
+                                <td>Red</td>
+                                <td>The extension is currently on a call</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ringing</strong></td>
+                                <td>Red (flashing)</td>
+                                <td>The extension has an incoming call</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hold</strong></td>
+                                <td>Yellow</td>
+                                <td>The extension has a call on hold</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Inactive</strong></td>
+                                <td>Grey</td>
+                                <td>The extension status is unknown or not registered</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Hold State</div>
+                        <p>The Hold state requires additional PBX configuration. If you need to monitor hold states, please <a href="#support">contact support</a> to raise a ticket with the Phantom support team.</p>
+                    </div>
+
+                    <h3>Using BLF Buttons</h3>
+                    <p>BLF buttons provide quick access to common actions:</p>
+                    <ul>
+                        <li><strong>Click (not on call)</strong>: Dial the extension</li>
+                        <li><strong>Click (during call)</strong>: Transfer the current call to that extension</li>
+                        <li><strong>Right-click</strong>: Open configuration to edit or clear the button</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Transfer Override</div>
+                        <p>When configuring a BLF button, you can set a transfer method override (blind or attended) that will be used instead of your default transfer setting when transferring via that button.</p>
+                    </div>
+                </section>
+
+                <!-- Voicemail Section -->
+                <section id="voicemail">
+                    <h2>Voicemail</h2>
+                    <p>Connect365 provides a voicemail indicator that displays new message notifications and provides quick access to your voicemail.</p>
+
+                    <h3>Voicemail Indicator</h3>
+                    <p>The voicemail indicator appears in the status bar on the Phone tab. It shows:</p>
+                    <ul>
+                        <li>A voicemail icon that is always visible</li>
+                        <li>When new messages are waiting, the icon will flash and display the number of new messages</li>
+                    </ul>
+
+                    <h3>Accessing Voicemail</h3>
+                    <p>Click the voicemail icon to automatically dial your voicemail access code. The access code is configured in your Connection Settings (default is *97).</p>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Voicemail Access Code</div>
+                        <p>The voicemail access code can be set in Settings > Connection Settings under "VM Access". If not configured, clicking the voicemail icon will display a reminder to set it up.</p>
+                    </div>
+
+                    <h3>New Message Indicator</h3>
+                    <p>When you have new voicemail messages:</p>
+                    <ul>
+                        <li>The voicemail icon will flash to draw your attention</li>
+                        <li>The number of new messages will be displayed (e.g. "5 New")</li>
+                    </ul>
+                </section>
+
+                <!-- Company Numbers Section -->
+                <section id="company-numbers">
+                    <h2>Company Numbers</h2>
+                    <p>Company Numbers allows you to manage multiple outbound caller IDs (CLI) and quickly switch between them when making calls.</p>
+
+                    <h3>Enabling Company Numbers</h3>
+                    <p>To use Company Numbers:</p>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> > <strong>Interface Settings</strong></li>
+                        <li>Enable the <strong>Company Numbers</strong> tab in the Visible Tabs section</li>
+                        <li>Navigate to the <strong>Company Numbers</strong> tab</li>
+                        <li>Add at least one company number</li>
+                    </ol>
+
+                    <h3>CLI Selector</h3>
+                    <p>Once Company Numbers is enabled and at least one number has been added, a CLI selector will appear on the Phone tab above the dialpad. This selector allows you to:</p>
+                    <ul>
+                        <li>View your currently active outbound number</li>
+                        <li>Click to open a dropdown of all available company numbers</li>
+                        <li>Select a different number to use for outgoing calls</li>
+                    </ul>
+
+                    <h3>Switching Company Numbers</h3>
+                    <p>To change your outbound caller ID:</p>
+                    <ol>
+                        <li>Click the CLI selector dropdown on the Phone tab</li>
+                        <li>Select the company number you wish to use</li>
+                        <li>Click <strong>Confirm</strong> to apply the change</li>
+                        <li>The system will dial a code to update your CLI on the PBX</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 CLI Changes</div>
+                        <p>When you confirm a CLI change, Connect365 automatically dials the appropriate code to update your outbound caller ID on the Phantom PBX. Your selected number will be used for all subsequent outgoing calls until changed.</p>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Agent Login Sync</div>
+                        <p>When you log in as an agent, the CLI selector will automatically sync to display the current CLI associated with your agent session.</p>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-title">⚠️ Additional Setup Required</div>
+                        <p>This feature requires additional programming on the Phantom PBX. Please <a href="#support">contact support</a> to raise a ticket with the Phantom team to enable Company Numbers for your system.</p>
+                    </div>
+                </section>
+
+                <section id="queue-monitor">
+                    <h2>Queue Monitor</h2>
+                    <p>The Queue Monitor provides real-time visibility into call queue performance, helping supervisors and agents track SLA (Service Level Agreement) compliance and manage workload effectively.</p>
+
+                    <h3>Enabling Queue Monitor</h3>
+                    <p>To use Queue Monitor:</p>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> > <strong>Interface Settings</strong></li>
+                        <li>Enable the <strong>Queue Monitor</strong> tab in the Visible Tabs section</li>
+                        <li>Navigate to the <strong>Queue Monitor</strong> tab</li>
+                    </ol>
+
+                    <h3>Adding Queues to Monitor</h3>
+                    <ol>
+                        <li>Click the <strong>Add Queue</strong> button</li>
+                        <li>Select a queue from the available list (or select a queue group)</li>
+                        <li>Configure SLA thresholds for:
+                            <ul>
+                                <li><strong>Missed % Warning</strong> - Percentage at which yellow warning appears</li>
+                                <li><strong>Missed % Breach</strong> - Percentage at which red breach alert appears</li>
+                                <li><strong>Avg Wait Time Warning</strong> - Seconds at which yellow warning appears</li>
+                                <li><strong>Avg Wait Time Breach</strong> - Seconds at which red breach alert appears</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>Save</strong></li>
+                    </ol>
+
+                    <h3>Queue Statistics Display</h3>
+                    <p>Each monitored queue displays the following metrics in a grid format:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Label</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Queue</strong></td>
+                                <td>QUE</td>
+                                <td>Queue number and name. Column header shows alert status colour.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Agents</strong></td>
+                                <td>AGTS</td>
+                                <td>Total number of agents assigned to the queue</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Free</strong></td>
+                                <td>FREE</td>
+                                <td>Number of agents available to take calls</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Busy</strong></td>
+                                <td>BUSY</td>
+                                <td>Number of agents currently on calls</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Paused</strong></td>
+                                <td>PAUSE</td>
+                                <td>Number of agents in paused state</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Waiting</strong></td>
+                                <td>WAIT</td>
+                                <td>Number of calls currently waiting in queue</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Answered</strong></td>
+                                <td>ANS</td>
+                                <td>Percentage of calls answered</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Missed</strong></td>
+                                <td>MISS</td>
+                                <td>Percentage of calls missed/abandoned (SLA tracked)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Avg Wait Time</strong></td>
+                                <td>AWT</td>
+                                <td>Average wait time in seconds (SLA tracked)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td>TOT</td>
+                                <td>Total number of calls received</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>SLA Alert Indicators</h3>
+                    <p>The Queue Monitor uses colour-coded alerts to indicate SLA status:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Colour</th>
+                                <th>State</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="background: #22c55e; color: white; text-align: center; font-weight: bold;">Green</td>
+                                <td>Normal</td>
+                                <td>All metrics within acceptable thresholds</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #eab308; color: white; text-align: center; font-weight: bold;">Yellow</td>
+                                <td>Warning</td>
+                                <td>Metric has reached warning threshold - attention needed</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #ef4444; color: white; text-align: center; font-weight: bold;">Red</td>
+                                <td>Breach</td>
+                                <td>Metric has exceeded breach threshold - immediate action required</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Tab Alert Notifications</h3>
+                    <p>Even when you're not viewing the Queue Monitor tab, the tab icon will flash to alert you of SLA issues:</p>
+                    <ul>
+                        <li><strong>Slow yellow flash</strong> - One or more queues have reached warning threshold</li>
+                        <li><strong>Fast red flash</strong> - One or more queues are in breach status</li>
+                        <li><strong>No flash</strong> - All queues operating normally</li>
+                    </ul>
+                    <p>This allows you to continue working in other tabs while still being alerted to queue performance issues.</p>
+
+                    <h3>Queue Sorting</h3>
+                    <p>Queues in the monitor are automatically sorted by alert priority:</p>
+                    <ol>
+                        <li><strong>Breach</strong> queues appear first (most critical)</li>
+                        <li><strong>Warning</strong> queues appear next</li>
+                        <li><strong>Normal</strong> queues appear last, sorted by queue number</li>
+                    </ol>
+
+                    <h3>Managing Monitored Queues</h3>
+                    <p>Each queue in the monitor has action buttons:</p>
+                    <ul>
+                        <li><strong>Edit</strong> (pencil icon) - Modify SLA thresholds for the queue</li>
+                        <li><strong>Delete</strong> (trash icon) - Remove the queue from monitoring</li>
+                    </ul>
+                    <p>Use the <strong>Delete All</strong> button in the header to remove all monitored queues at once.</p>
+
+                    <h3>Connection Status</h3>
+                    <p>The Queue Monitor header displays the current connection status:</p>
+                    <ul>
+                        <li><strong>Connected</strong> (green wifi icon) - Real-time data streaming active</li>
+                        <li><strong>Disconnected</strong> (red wifi icon) - No live data connection</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <strong>Real-time Updates:</strong> Queue statistics update in real-time via Socket.IO when connected. If the socket connection is lost, the display will show the last known values until reconnection.
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Using Queue Groups:</strong> When adding queues, you can select a queue group (configured in Settings > Queues) to quickly add multiple queues with the same SLA thresholds.
+                    </div>
+                </section>
+
                 <!-- Continue with more sections... -->
                 <!-- Due to length, I'll create a comprehensive structure -->
                 
                 <!-- Settings Sections -->
                 <section id="connection-settings">
                     <h2>Connection Settings</h2>
-                    <p>Configure your SIP connection and server details.</p>
-                    <!-- Content continues... -->
+                    <p>Configure your SIP connection credentials in <strong>Settings</strong> > <strong>Connection</strong>. These settings determine which Phantom PBX server you connect to and your agent identity.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Phantom ID</strong></td>
+                                <td>A 3-4 digit identifier that specifies which Phantom PBX server to connect to. This is provided by your administrator. The Phantom ID automatically generates the correct WebSocket server URL.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Username</strong></td>
+                                <td>Your SIP username (device number). This is the identity used when registering with the PBX.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Password</strong></td>
+                                <td>Your SIP password for authentication. This is provided by your administrator and is securely stored locally.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Voicemail Access</strong></td>
+                                <td>The number to dial to access your voicemail. Default is <code>*97</code>. When you click the voicemail button, this number is dialled automatically.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Saving Connection Settings</h3>
+                    <p>After entering or modifying your connection details:</p>
+                    <ol>
+                        <li>Click the <strong>Save Connection Settings</strong> button</li>
+                        <li>The button will show "Saved!" when successful</li>
+                        <li>Return to the Phone tab and click <strong>Connect</strong> to register with the server</li>
+                    </ol>
+
+                    <div class="warning-box">
+                        <strong>Important:</strong> Saving connection settings does not automatically connect you. After saving, you must click the Connect button on the Phone tab to establish a connection with the PBX server.
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Tip:</strong> If you don't have your connection credentials, contact your system administrator or the Phantom team at <a href="mailto:support@autocab.com">support@autocab.com</a>.
+                    </div>
+                </section>
+
+                <section id="interface-settings">
+                    <h2>Interface Settings</h2>
+                    <p>Customise the appearance and visible features of Connect365.</p>
+
+                    <h3>Appearance</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Theme</strong></td>
+                                <td>Choose between Auto (follows system preference), Light, or Dark mode</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Language</strong></td>
+                                <td>Select the interface language</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Features</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Enable BLF Panels</strong></td>
+                                <td>Show or hide the Busy Lamp Field button panels on the Phone tab</td>
+                            </tr>
+                            <tr>
+                                <td><strong>On-screen Notifications</strong></td>
+                                <td>Enable or disable toast notifications for events within the app</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Visible Tabs</h3>
+                    <p>Control which tabs appear in the tab navigation bar:</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Contacts</strong></td>
+                                <td>Show or hide the Contacts tab for managing your contact list</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Activity</strong></td>
+                                <td>Show or hide the Activity tab for viewing call history</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Company Numbers</strong></td>
+                                <td>Show or hide the Company Numbers tab for accessing the company directory</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Queue Monitor</strong></td>
+                                <td>Show or hide the Queue Monitor tab for viewing call queue statistics</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="call-settings">
+                    <h2>Call Settings</h2>
+                    <p>Configure call behaviour and notifications in <strong>Settings</strong> > <strong>Call</strong>.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Auto Answer</strong></td>
+                                <td>When enabled, incoming calls are automatically answered without requiring you to click the Answer button. Useful for high-volume call centres where agents need to handle calls immediately.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Incoming Call Notifications</strong></td>
+                                <td>Show browser notifications when calls arrive. This allows you to see incoming calls even when the application is minimised or in a background tab. Requires browser notification permission.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Auto-focus on Notification Answer</strong></td>
+                                <td>When you answer a call from a browser notification, automatically bring the Connect365 window to the front. Only appears when Incoming Call Notifications is enabled.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Prefer Blind Transfer</strong></td>
+                                <td>When enabled, the Transfer button defaults to blind transfer (immediate transfer without consultation). When disabled, defaults to attended transfer (speak to recipient first).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Testing Notifications</h3>
+                    <p>When Incoming Call Notifications is enabled, you can test that notifications are working correctly:</p>
+                    <ol>
+                        <li>Click the <strong>Test Notification</strong> button</li>
+                        <li>A sample notification should appear from your browser</li>
+                        <li>The current permission status is displayed next to the button</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <strong>Browser Permission Required:</strong> If notifications don't appear, check that you have granted notification permission to Connect365 in your browser settings. The permission status shows as "granted", "denied", or "default" (not yet requested).
+                    </div>
+                </section>
+
+                <section id="queues-settings">
+                    <h2>Queues Settings</h2>
+                    <p>Create and manage queue groups for faster queue login.</p>
+
+                    <h3>What are Queue Groups?</h3>
+                    <p>Queue groups allow you to save collections of queues that you frequently join together. Instead of selecting individual queues each time you log in, you can select a pre-configured group to quickly join multiple queues at once.</p>
+
+                    <h3>Where Queue Groups are Used</h3>
+                    <p>Queue groups can be used in two places:</p>
+                    
+                    <h4>1. Queue Login</h4>
+                    <p>In the <strong>Queue Login</strong> modal (accessed via the Queue button on the Phone tab), you can:</p>
+                    <ul>
+                        <li>Select individual queues from the available list</li>
+                        <li>Click a queue group to instantly select all queues in that group</li>
+                    </ul>
+
+                    <h4>2. Queue Monitor</h4>
+                    <p>In the <strong>Queue Monitor</strong> tab, queue groups allow you to quickly select multiple queues when configuring SLA settings. Instead of adding SLA thresholds to each queue individually, select a queue group to apply the same SLA settings to all queues in that group at once.</p>
+
+                    <h3>Creating a Queue Group</h3>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> > <strong>Queues</strong></li>
+                        <li>Click the <strong>Add Queue Group</strong> button</li>
+                        <li>Enter a name for the group (e.g. "Morning Shift" or "Sales Queues")</li>
+                        <li>Select the queues to include in the group from the available list</li>
+                        <li>Click <strong>Save</strong></li>
+                    </ol>
+
+                    <div class="screenshot">
+                        <img src="images/queue-group-modal.png" alt="Queue group configuration modal" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="screenshot-placeholder" style="display: none;">
+                            <svg class="screenshot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="screenshot-label">Screenshot: Queue group configuration modal</div>
+                        </div>
+                    </div>
+
+                    <h3>Queue Group Rules</h3>
+                    <ul>
+                        <li>Each queue group must have a unique name</li>
+                        <li>A queue group must contain at least one queue</li>
+                        <li>Each queue can only belong to one queue group - once a queue is added to a group, it cannot be added to another group</li>
+                        <li>Queue groups are stored locally on your device</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-title">💡 Tip</div>
+                        <p>When editing a queue group, the queues already assigned to that group will remain available for selection, but queues assigned to other groups will be greyed out.</p>
+                    </div>
+
+                    <h3>Managing Queue Groups</h3>
+                    <p>Each queue group in the list shows:</p>
+                    <ul>
+                        <li>The group ID (auto-generated)</li>
+                        <li>The group name</li>
+                        <li>The number of queues in the group</li>
+                    </ul>
+                    <p>Click the three dots menu on any group to:</p>
+                    <ul>
+                        <li><strong>Edit</strong>: Modify the group name or change the selected queues</li>
+                        <li><strong>Delete</strong>: Remove the queue group</li>
+                    </ul>
+                    <p>Use the delete all button (trash icon) to remove all queue groups at once.</p>
                 </section>
 
                 <section id="audio-settings">
                     <h2>Audio Settings</h2>
-                    <p>Configure your microphone, speaker, and ringtone devices.</p>
-                    <!-- Content continues... -->
+                    <p>Configure your microphone, speaker, and ringtone devices in <strong>Settings</strong> > <strong>Audio</strong>.</p>
+
+                    <div class="info-box">
+                        <strong>Permission Required:</strong> Before you can select audio devices, you must grant microphone permission. Click the <strong>Grant Permission</strong> button if prompted.
+                    </div>
+
+                    <h3>Audio Devices</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Device</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Speaker</strong></td>
+                                <td>The output device for call audio (hearing the other party). Click the play button to test that audio plays correctly through the selected speaker.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Microphone</strong></td>
+                                <td>The input device for your voice. When the Audio settings panel is open, a level meter shows your current microphone input in real-time.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ringer</strong></td>
+                                <td>The output device for the ringtone when calls arrive. This can be different from your speaker - for example, use your computer speakers for ringing while using a headset for calls. Click the play button to test.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Ringtone Selection</h3>
+                    <p>Choose from several built-in ringtones:</p>
+                    <ul>
+                        <li><strong>Ringtone 1-5</strong> - Default ringtone options</li>
+                        <li><strong>Custom</strong> - Your uploaded custom ringtone (if available)</li>
+                    </ul>
+                    <p>Click the play button next to the ringtone selector to preview the selected ringtone.</p>
+
+                    <h3>Custom Ringtone</h3>
+                    <p>Upload your own ringtone file for a personalised experience:</p>
+                    
+                    <h4>Requirements</h4>
+                    <ul>
+                        <li><strong>File formats:</strong> MP3 or WAV</li>
+                        <li><strong>Maximum duration:</strong> 60 seconds</li>
+                        <li><strong>Maximum file size:</strong> 5MB</li>
+                    </ul>
+
+                    <h4>Uploading a Custom Ringtone</h4>
+                    <ol>
+                        <li>In the <strong>Custom Ringtone</strong> section, click <strong>Choose File</strong></li>
+                        <li>Select your MP3 or WAV file from your computer</li>
+                        <li>The file will be validated and converted if necessary</li>
+                        <li>Once uploaded, "Custom ringtone available" will be displayed</li>
+                        <li>Select <strong>Custom</strong> from the Ringtone dropdown to use it</li>
+                    </ol>
+
+                    <h4>Removing a Custom Ringtone</h4>
+                    <p>Click the trash icon next to "Custom ringtone available" to remove your uploaded ringtone. The ringtone selection will revert to the default.</p>
+
+                    <h3>Refresh Devices</h3>
+                    <p>If you connect or disconnect audio devices (headphones, microphones, etc.), click the <strong>Refresh Devices</strong> button to update the available device lists.</p>
+
+                    <div class="info-box">
+                        <strong>Tip:</strong> Test all your audio devices before taking calls. Use the play buttons to verify speakers and ringer output, and watch the microphone level meter to confirm your microphone is working.
+                    </div>
+                </section>
+
+                <section id="busylight-settings">
+                    <h2>Busylight Settings</h2>
+                    <p>Connect365 supports Kuando Busylight hardware devices, providing a visual indicator of your call status that colleagues can see from a distance.</p>
+
+                    <div class="warning-box">
+                        <strong>Additional Software Required:</strong> To use Busylight with Connect365, you must have the Busylight Bridge Client software installed and running on your PC. This bridge software enables communication between the web application and your USB Busylight device. Contact your administrator for installation instructions.
+                    </div>
+
+                    <h3>How Busylight Works</h3>
+                    <p>When enabled, the Busylight automatically changes colour based on your current call status:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Colour</th>
+                                <th>State</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="background: #666; color: white; text-align: center; font-weight: bold;">Off</td>
+                                <td>Disconnected</td>
+                                <td>Not registered to SIP server</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #999; color: white; text-align: center; font-weight: bold;">White</td>
+                                <td>Connected</td>
+                                <td>Registered but no agent logged in</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #22c55e; color: white; text-align: center; font-weight: bold;">Green</td>
+                                <td>Idle</td>
+                                <td>Available and ready to take calls</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #22c55e; color: white; text-align: center; font-weight: bold;">Green (flashing)</td>
+                                <td>Idle + Voicemail</td>
+                                <td>Available with new voicemail messages (when voicemail notify enabled)</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #ef4444; color: white; text-align: center; font-weight: bold;">Red</td>
+                                <td>Busy</td>
+                                <td>On an active call</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #ef4444; color: white; text-align: center; font-weight: bold;">Red (flashing) + Sound</td>
+                                <td>Ringing</td>
+                                <td>Incoming call ringing</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #ef4444; color: white; text-align: center; font-weight: bold;">Red (flashing)</td>
+                                <td>Ring Waiting</td>
+                                <td>On a call with another call waiting</td>
+                            </tr>
+                            <tr>
+                                <td style="background: #eab308; color: white; text-align: center; font-weight: bold;">Yellow</td>
+                                <td>Hold</td>
+                                <td>Call on hold</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Multiple Line Support</h3>
+                    <p>When handling multiple calls on different lines, the Busylight reflects the status of the currently selected line. If the selected line has a call on hold, the light shows yellow. If there's an active call on any line, it shows red.</p>
+
+                    <h3>Configuration Options</h3>
+                    <p>Configure Busylight in <strong>Settings</strong> > <strong>Busylight</strong>:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Enable Busylight</strong></td>
+                                <td>Turn Busylight integration on or off</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ring Sound</strong></td>
+                                <td>Select the sound the Busylight plays for incoming calls. Options include: OpenOffice, Quiet, Funky, Fairy Tale, Kuando Train, Telephone Nordic, Telephone Original, and Telephone Pick Me Up. Note: Some Busylight models do not support sound.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ring Volume</strong></td>
+                                <td>Adjust the volume of the Busylight ring sound (0-100%)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Voicemail Notification</strong></td>
+                                <td>When enabled, the Busylight will flash green slowly when you have unread voicemail messages</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Testing Connection</h3>
+                    <p>Once the bridge software is running and Busylight is enabled:</p>
+                    <ol>
+                        <li>The settings will show your connected Busylight device information</li>
+                        <li>Click <strong>Test Connection</strong> to verify the connection is working</li>
+                        <li>The Busylight should briefly flash to confirm communication</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <strong>Bridge Not Connected:</strong> If you see "Bridge not connected - ensure bridge client is running", verify that the Busylight Bridge Client software is installed and currently running on your PC.
+                    </div>
+                </section>
+
+                <section id="advanced-settings">
+                    <h2>Advanced Settings</h2>
+                    <p>Access debugging tools and data management options in <strong>Settings</strong> > <strong>Advanced</strong>.</p>
+
+                    <h3>Debugging Options</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Verbose Logging</strong></td>
+                                <td>Enable detailed console logging for debugging. When enabled, Connect365 outputs extensive information about its operations to the browser's developer console (F12). Useful for troubleshooting issues.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SIP Message Console Logging</strong></td>
+                                <td>Enable SIP.js protocol message logging. This outputs raw SIP signalling messages to the console, helpful for diagnosing call setup and registration issues.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Data Management</h3>
+
+                    <h4>Import Data</h4>
+                    <p>Restore previously exported settings and data:</p>
+                    <ol>
+                        <li>Click <strong>Import Data</strong></li>
+                        <li>Select your backup JSON file</li>
+                        <li>Choose which data to import (settings, contacts, call history, etc.)</li>
+                        <li>Click <strong>Import</strong> to restore the data</li>
+                    </ol>
+
+                    <h4>Export Data</h4>
+                    <p>Create a backup of your settings and data:</p>
+                    <ol>
+                        <li>Click <strong>Export Data</strong></li>
+                        <li>Choose which data to include in the export</li>
+                        <li>Click <strong>Export</strong> to download a JSON backup file</li>
+                    </ol>
+                    <p>The exported file can be used to restore your settings on another device or after reinstalling.</p>
+
+                    <h4>Reset All Settings</h4>
+                    <p>Restore Connect365 to its default state:</p>
+                    <ul>
+                        <li>Click <strong>Reset All Settings</strong></li>
+                        <li>Confirm the action when prompted</li>
+                    </ul>
+
+                    <div class="warning-box">
+                        <strong>Warning:</strong> Reset All Settings will permanently delete ALL your data including connection credentials, contacts, call history, queue groups, and preferences. This action cannot be undone. Consider exporting your data first as a backup.
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Tip:</strong> Use Export Data before making major changes or switching devices. This allows you to quickly restore your configuration if needed.
+                    </div>
                 </section>
 
                 <!-- Troubleshooting -->
@@ -1079,9 +2106,34 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>Agent Controls</td>
+                                <td>Phone Tab</td>
+                                <td>Login, Queue, and Pause buttons with status display</td>
+                            </tr>
+                            <tr>
                                 <td>Make Calls</td>
                                 <td>Phone Tab</td>
                                 <td>Dial numbers and place outbound calls</td>
+                            </tr>
+                            <tr>
+                                <td>Call Transfer</td>
+                                <td>Active Call Screen</td>
+                                <td>Blind or attended transfer to another extension</td>
+                            </tr>
+                            <tr>
+                                <td>CLI Selector</td>
+                                <td>Phone Tab</td>
+                                <td>Choose which company number displays to called party</td>
+                            </tr>
+                            <tr>
+                                <td>BLF Monitoring</td>
+                                <td>Phone Tab (Line Keys)</td>
+                                <td>Monitor extension status and one-click dialling</td>
+                            </tr>
+                            <tr>
+                                <td>Voicemail</td>
+                                <td>Phone Tab (VM Button)</td>
+                                <td>Access voicemail with new message indicator</td>
                             </tr>
                             <tr>
                                 <td>Contacts</td>
@@ -1094,11 +2146,6 @@
                                 <td>View recent calls and call back</td>
                             </tr>
                             <tr>
-                                <td>BLF Monitoring</td>
-                                <td>Phone Tab (Line Keys)</td>
-                                <td>Monitor extension status</td>
-                            </tr>
-                            <tr>
                                 <td>Company Numbers</td>
                                 <td>Company Numbers Tab</td>
                                 <td>Quick access to company directory</td>
@@ -1106,12 +2153,7 @@
                             <tr>
                                 <td>Queue Monitor</td>
                                 <td>Queue Monitor Tab</td>
-                                <td>Monitor call queue status</td>
-                            </tr>
-                            <tr>
-                                <td>Voicemail</td>
-                                <td>Phone Tab (VM Button)</td>
-                                <td>Access voicemail messages</td>
+                                <td>Real-time call queue status and statistics</td>
                             </tr>
                             <tr>
                                 <td>Connection Setup</td>
@@ -1119,29 +2161,44 @@
                                 <td>Configure Phantom ID and credentials</td>
                             </tr>
                             <tr>
+                                <td>Interface Options</td>
+                                <td>Settings > Interface</td>
+                                <td>Theme, language, BLF, and visible tabs</td>
+                            </tr>
+                            <tr>
+                                <td>Call Settings</td>
+                                <td>Settings > Call</td>
+                                <td>Auto-answer, transfer method, call behaviour</td>
+                            </tr>
+                            <tr>
+                                <td>Queue Groups</td>
+                                <td>Settings > Queues</td>
+                                <td>Create named groups for queue login management</td>
+                            </tr>
+                            <tr>
                                 <td>Audio Devices</td>
                                 <td>Settings > Audio</td>
-                                <td>Select microphone, speaker, ringtone</td>
+                                <td>Select microphone, speaker, ringtone device</td>
                             </tr>
                             <tr>
-                                <td>Theme</td>
-                                <td>Settings > Interface</td>
-                                <td>Choose light, dark, or auto theme</td>
-                            </tr>
-                            <tr>
-                                <td>Language</td>
-                                <td>Settings > Interface</td>
-                                <td>Change display language</td>
-                            </tr>
-                            <tr>
-                                <td>Import/Export</td>
-                                <td>Settings > Advanced</td>
-                                <td>Backup and restore settings</td>
+                                <td>Custom Ringtones</td>
+                                <td>Settings > Audio</td>
+                                <td>Upload and select custom ringtone files</td>
                             </tr>
                             <tr>
                                 <td>Busylight</td>
                                 <td>Settings > Busylight</td>
                                 <td>Configure hardware status light</td>
+                            </tr>
+                            <tr>
+                                <td>Import/Export</td>
+                                <td>Settings > Advanced</td>
+                                <td>Backup and restore all settings</td>
+                            </tr>
+                            <tr>
+                                <td>Verbose Logging</td>
+                                <td>Settings > Advanced</td>
+                                <td>Enable detailed console logging for debugging</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1154,7 +2211,7 @@
 
                     <div class="info-box">
                         <div class="info-box-title">📧 Contact Support</div>
-                        <p>For technical support, please contact your system administrator or Phantom PBX support team.</p>
+                        <p>For technical support, please contact your system administrator or Phantom PBX support team, or raise a support ticket via email at <a href="mailto:support@autocab.com">support@autocab.com</a>.</p>
                     </div>
 
                     <h3>Useful Information to Provide</h3>
@@ -1254,13 +2311,24 @@
         const searchData = [
             { title: 'Installation', section: 'installation', content: 'Install Connect365 PWA on desktop or mobile' },
             { title: 'First Setup', section: 'first-setup', content: 'Configure Phantom ID and SIP credentials' },
+            { title: 'Agent Controls', section: 'agent-controls', content: 'Agent login logout queue pause buttons call center' },
+            { title: 'Agent Status', section: 'agent-status', content: 'Agent number name not logged in paused status display' },
+            { title: 'Login Button', section: 'agent-login-button', content: 'Agent login logout passcode DTMF' },
+            { title: 'Queue Button', section: 'agent-queue-button', content: 'Queue membership join leave call queues' },
+            { title: 'Pause Button', section: 'agent-pause-button', content: 'Pause resume unavailable break reason' },
             { title: 'Making Calls', section: 'making-calls', content: 'Place and receive calls using dialpad contacts' },
             { title: 'Outbound Calls', section: 'outbound-calls', content: 'Make calls using dialpad contacts history' },
             { title: 'Receiving Calls', section: 'receiving-calls', content: 'Answer reject incoming calls notifications' },
             { title: 'Call Controls', section: 'call-controls', content: 'Mute hold transfer DTMF call management' },
             { title: 'Contacts', section: 'contacts', content: 'Add edit delete search contacts' },
             { title: 'Call History', section: 'call-history', content: 'View recent calls call back activity' },
+            { title: 'BLF Monitoring', section: 'blf-monitoring', content: 'Busy Lamp Field extension status speed dial transfer' },
+            { title: 'Voicemail', section: 'voicemail', content: 'Voicemail indicator new messages access code *97' },
+            { title: 'Company Numbers', section: 'company-numbers', content: 'CLI caller ID outbound number selector switch' },
             { title: 'Connection Settings', section: 'connection-settings', content: 'SIP settings Phantom ID credentials' },
+            { title: 'Interface Settings', section: 'interface-settings', content: 'Theme language BLF panels visible tabs notifications' },
+            { title: 'Call Settings', section: 'call-settings', content: 'Auto answer notifications transfer method' },
+            { title: 'Queues Settings', section: 'queues-settings', content: 'Queue groups create manage login' },
             { title: 'Audio Settings', section: 'audio-settings', content: 'Microphone speaker ringtone device selection' },
             { title: 'Common Issues', section: 'common-issues', content: 'Troubleshooting registration audio problems' },
             { title: 'Verbose Logging', section: 'verbose-logging', content: 'Enable debugging console logs SIP messages' },
