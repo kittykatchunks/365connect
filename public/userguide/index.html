@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a202c" media="(prefers-color-scheme: dark)">
-    <title>Connect365 - User Guide</title>
+    <title data-i18n="meta.title">Connect365 - User Guide</title>
     <link rel="icon" type="image/svg+xml" href="/icons/icon-512x512.png">
     <style>
         :root {
@@ -166,6 +166,28 @@
         .theme-toggle svg {
             width: 20px;
             height: 20px;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .language-selector:hover {
+            border-color: var(--primary-color);
+        }
+
+        .language-selector:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
         }
 
         /* Sidebar */
@@ -595,7 +617,7 @@
             </a>
             <div class="header-actions">
                 <div class="search-box">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search documentation...">
+                    <input type="text" class="search-input" id="searchInput" data-i18n-placeholder="meta.search_placeholder" placeholder="Search documentation...">
                     <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
@@ -606,6 +628,18 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                     </svg>
                 </button>
+                <!-- Language Selector -->
+                <select class="language-selector" id="languageSelector" onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="es-419">Español (Latinoamérica)</option>
+                    <option value="fi-FI">Suomi</option>
+                    <option value="fr">Français</option>
+                    <option value="fr-CA">Français (Canada)</option>
+                    <option value="nl">Nederlands</option>
+                    <option value="pt">Português</option>
+                    <option value="pt-BR">Português (Brasil)</option>
+                </select>
             </div>
         </div>
     </div>
@@ -2239,6 +2273,165 @@
     </div>
 
     <script>
+        // Internationalization (i18n) System
+        const SUPPORTED_LANGUAGES = ['en', 'es', 'es-419', 'fi-FI', 'fr', 'fr-CA', 'nl', 'pt', 'pt-BR'];
+        const DEFAULT_LANGUAGE = 'en';
+        let currentTranslations = {};
+        let currentLanguage = DEFAULT_LANGUAGE;
+
+        // Get nested translation by key path (e.g., "content.overview.title")
+        function getTranslation(key) {
+            const keys = key.split('.');
+            let value = currentTranslations;
+            for (const k of keys) {
+                if (value && typeof value === 'object' && k in value) {
+                    value = value[k];
+                } else {
+                    return null; // Key not found
+                }
+            }
+            return typeof value === 'string' ? value : null;
+        }
+
+        // Apply translations to all elements with data-i18n attributes
+        function applyTranslations() {
+            // Update document title
+            const titleEl = document.querySelector('title[data-i18n]');
+            if (titleEl) {
+                const translation = getTranslation(titleEl.getAttribute('data-i18n'));
+                if (translation) titleEl.textContent = translation;
+            }
+
+            // Update html lang attribute
+            document.documentElement.lang = currentLanguage;
+
+            // Update placeholder attributes
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const translation = getTranslation(el.getAttribute('data-i18n-placeholder'));
+                if (translation) el.placeholder = translation;
+            });
+
+            // Update search "no results" message
+            updateSearchNoResults();
+        }
+
+        // Update search "no results" text
+        function updateSearchNoResults() {
+            const noResultsText = getTranslation('search.no_results') || 'No results found';
+            window.searchNoResultsText = noResultsText;
+        }
+
+        // Detect language from URL parameter, localStorage, or browser
+        function detectLanguage() {
+            // 1. Check URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const langParam = urlParams.get('lang');
+            if (langParam && SUPPORTED_LANGUAGES.includes(langParam)) {
+                return langParam;
+            }
+
+            // 2. Check localStorage (user's previous selection)
+            const savedLang = localStorage.getItem('userguide-language');
+            if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
+                return savedLang;
+            }
+
+            // 3. Check parent app settings (if available)
+            try {
+                const settingsStore = localStorage.getItem('settings-store');
+                if (settingsStore) {
+                    const settings = JSON.parse(settingsStore);
+                    if (settings?.state?.language && SUPPORTED_LANGUAGES.includes(settings.state.language)) {
+                        return settings.state.language;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not read parent app settings:', e);
+            }
+
+            // 4. Check browser language
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang) {
+                // Try exact match first
+                if (SUPPORTED_LANGUAGES.includes(browserLang)) {
+                    return browserLang;
+                }
+                // Try base language (e.g., "es" from "es-MX")
+                const baseLang = browserLang.split('-')[0];
+                if (SUPPORTED_LANGUAGES.includes(baseLang)) {
+                    return baseLang;
+                }
+                // Map Latin American Spanish variants to es-419
+                if (baseLang === 'es' && browserLang !== 'es-ES') {
+                    return 'es-419';
+                }
+            }
+
+            return DEFAULT_LANGUAGE;
+        }
+
+        // Load translations for a language
+        async function loadTranslations(lang) {
+            try {
+                const response = await fetch(`/userguide/locales/${lang}.json`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.warn(`Failed to load translations for ${lang}:`, error);
+                // Fallback to English if not already trying English
+                if (lang !== DEFAULT_LANGUAGE) {
+                    return loadTranslations(DEFAULT_LANGUAGE);
+                }
+                return {};
+            }
+        }
+
+        // Change language
+        async function changeLanguage(lang) {
+            if (!SUPPORTED_LANGUAGES.includes(lang)) {
+                lang = DEFAULT_LANGUAGE;
+            }
+
+            // Update URL without reloading
+            const url = new URL(window.location);
+            url.searchParams.set('lang', lang);
+            window.history.replaceState({}, '', url);
+
+            // Save to localStorage
+            localStorage.setItem('userguide-language', lang);
+
+            // Load and apply translations
+            currentLanguage = lang;
+            currentTranslations = await loadTranslations(lang);
+            applyTranslations();
+
+            // Update language selector
+            const selector = document.getElementById('languageSelector');
+            if (selector) {
+                selector.value = lang;
+            }
+
+            console.log(`Language changed to: ${lang}`);
+        }
+
+        // Initialize i18n
+        async function initI18n() {
+            const lang = detectLanguage();
+            currentLanguage = lang;
+            currentTranslations = await loadTranslations(lang);
+            applyTranslations();
+
+            // Update language selector
+            const selector = document.getElementById('languageSelector');
+            if (selector) {
+                selector.value = lang;
+            }
+
+            console.log(`User guide initialized with language: ${lang}`);
+        }
+
         // Theme Toggle
         function toggleTheme() {
             const html = document.documentElement;
@@ -2353,7 +2546,8 @@
             );
 
             if (results.length === 0) {
-                searchResults.innerHTML = '<div class="no-results">No results found</div>';
+                const noResultsText = window.searchNoResultsText || 'No results found';
+                searchResults.innerHTML = '<div class="no-results">' + noResultsText + '</div>';
                 searchResults.classList.add('show');
                 return;
             }
@@ -2398,6 +2592,7 @@
 
         // Initialize
         initTheme();
+        initI18n(); // Initialize internationalization
         window.addEventListener('scroll', updateActiveLink);
         updateActiveLink();
     </script>

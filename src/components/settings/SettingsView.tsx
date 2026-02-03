@@ -79,7 +79,7 @@ function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBu
 }
 
 export function SettingsView() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   // Store bindings
   const settings = useSettingsStore((state) => state.settings);
@@ -460,6 +460,7 @@ export function SettingsView() {
     { value: 'en', label: 'English' },
     { value: 'es', label: 'Español' },
     { value: 'es-419', label: 'Español (Latinoamérica)' },
+    { value: 'fi-FI', label: 'Suomi' },
     { value: 'fr', label: 'Français' },
     { value: 'fr-CA', label: 'Français (Canada)' },
     { value: 'nl', label: 'Nederlands' },
@@ -616,7 +617,10 @@ export function SettingsView() {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => window.open('/userguide/index.html', '_blank', 'width=1000,height=800,noopener,noreferrer')}
+              onClick={() => {
+                const currentLang = i18n.language || 'en';
+                window.open(`/userguide/index.html?lang=${currentLang}`, '_blank', 'width=1000,height=800,noopener,noreferrer');
+              }}
               title={t('settings.user_guide_title', 'Open User Guide')}
             >
               <BookOpen className="w-4 h-4" />

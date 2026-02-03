@@ -16,6 +16,7 @@ import frCA from './locales/fr-CA.json';
 import nl from './locales/nl.json';
 import pt from './locales/pt.json';
 import ptBR from './locales/pt-BR.json';
+import fiFI from './locales/fi-FI.json';
 
 const resources = {
   en: { translation: en },
@@ -25,7 +26,8 @@ const resources = {
   'fr-CA': { translation: frCA },
   nl: { translation: nl },
   pt: { translation: pt },
-  'pt-BR': { translation: ptBR }
+  'pt-BR': { translation: ptBR },
+  'fi-FI': { translation: fiFI }
 };
 
 // Latin American countries that should use es-419
@@ -128,7 +130,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    supportedLngs: ['en', 'es', 'es-419', 'fr', 'fr-CA', 'nl', 'pt', 'pt-BR'],
+    supportedLngs: ['en', 'es', 'es-419', 'fr', 'fr-CA', 'nl', 'pt', 'pt-BR', 'fi-FI'],
     
     detection: {
       order: ['customBrowserDetector'],
@@ -162,6 +164,7 @@ export const availableLanguages = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'es', name: 'Spanish', nativeName: 'Español' },
   { code: 'es-419', name: 'Spanish (Latin America)', nativeName: 'Español (Latinoamérica)' },
+  { code: 'fi-FI', name: 'Finnish', nativeName: 'Suomi' },
   { code: 'fr', name: 'French', nativeName: 'Français' },
   { code: 'fr-CA', name: 'French (Canada)', nativeName: 'Français (Canada)' },
   { code: 'nl', name: 'Dutch', nativeName: 'Nederlands' },
