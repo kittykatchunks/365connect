@@ -57,7 +57,7 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: false,
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallbackDenylist: [/^\/api/, /^\/userguide/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.phantomapi\.net/,
