@@ -54,6 +54,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,mp3}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB - increased for unminified builds
         clientsClaim: true,
         skipWaiting: false,
         navigateFallback: '/index.html',
@@ -86,6 +87,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  build: {
+    minify: false
   },
   server: {
     port: 3000
