@@ -173,6 +173,30 @@ export function SettingsView() {
     }
   }, []);
   
+  // Sync custom ringtone state on mount - validate that custom ringtone data exists if selected
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const hasCustom = audioService.hasCustomRingtone();
+    
+    if (verboseLogging) {
+      console.log('[SettingsView] 🎵 Custom ringtone sync check:', {
+        settingsRingtoneFile: settings.audio.ringtoneFile,
+        hasCustomRingtoneData: hasCustom
+      });
+    }
+    
+    // Update state to match audioService
+    setHasCustomRingtone(hasCustom);
+    
+    // If ringtone is set to 'custom' but no custom ringtone data exists, reset to default
+    if (settings.audio.ringtoneFile === 'custom' && !hasCustom) {
+      if (verboseLogging) {
+        console.log('[SettingsView] ⚠️ Custom ringtone selected but no data exists, resetting to default');
+      }
+      setRingtoneFile('Ringtone_1.mp3');
+    }
+  }, []); // Run only on mount
+  
   // Sync local state with store on mount (for persisted values after refresh)
   useEffect(() => {
     setLocalPhantomId(settings.connection.phantomId);

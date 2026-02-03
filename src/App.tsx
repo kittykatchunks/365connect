@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
 import { SIPProvider, PhantomAPIProvider, BusylightProvider, QueueMonitorSocketProvider, usePhantomAPI } from '@/contexts';
-import { phantomApiService } from '@/services';
+import { phantomApiService, audioService } from '@/services';
 import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback, isVerboseLoggingEnabled } from '@/utils';
 import { useNetworkStatus } from '@/hooks';
 import { 
@@ -581,6 +581,38 @@ function App() {
           if (verboseLogging) {
             console.log('[App] ⚠️ No PhantomID found, PhantomApiService not initialized');
           }
+        }
+        
+        // Sync audio settings with AudioService
+        const audioSettings = useSettingsStore.getState().settings.audio;
+        if (verboseLogging) {
+          console.log('[App] 🎵 Syncing audio settings with AudioService:', {
+            ringtoneFile: audioSettings.ringtoneFile,
+            ringerDevice: audioSettings.ringerDevice,
+            hasCustomRingtone: audioService.hasCustomRingtone()
+          });
+        }
+        
+        // Set ringtone - validate custom ringtone exists before setting
+        if (audioSettings.ringtoneFile === 'custom') {
+          if (audioService.hasCustomRingtone()) {
+            audioService.setRingtone('custom');
+          } else {
+            // Custom ringtone selected but data missing - reset to default
+            if (verboseLogging) {
+              console.log('[App] ⚠️ Custom ringtone selected but no data exists, using default');
+            }
+            audioService.setRingtone('Ringtone_1.mp3');
+            // Also update the store to avoid mismatch
+            useSettingsStore.getState().setRingtoneFile('Ringtone_1.mp3');
+          }
+        } else if (audioSettings.ringtoneFile) {
+          audioService.setRingtone(audioSettings.ringtoneFile);
+        }
+        
+        // Set ringer device
+        if (audioSettings.ringerDevice) {
+          audioService.setRingerDevice(audioSettings.ringerDevice);
         }
         
         // Simulate additional initialization if needed
