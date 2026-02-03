@@ -54,13 +54,17 @@ import {
   getNextQueueGroupId 
 } from '@/utils/queueGroupStorage';
 import type { QueueGroup, AvailableQueue } from '@/types/queue-monitor';
+import type { BusylightDeviceInfo as BusylightDeviceInfoType } from '@/hooks/useBusylight';
 import { phantomApiService } from '@/services';
 import audioService from '@/services/AudioService';
 
-// Helper component to display device info
-function BusylightDeviceInfo({ busylight }: { busylight: ReturnType<typeof useBusylightContext> }) {
+// Helper component to display device info - defined OUTSIDE SettingsView to avoid re-creation on each render
+interface BusylightDeviceInfoDisplayProps {
+  deviceInfo: BusylightDeviceInfoType | null;
+}
+
+function BusylightDeviceInfoDisplay({ deviceInfo }: BusylightDeviceInfoDisplayProps) {
   const { t } = useTranslation();
-  const { deviceInfo } = busylight;
   
   if (!deviceInfo) {
     return <span style={{ color: '#999' }}>{t('settings.busylight_checking', 'Checking...')}</span>;
@@ -1244,7 +1248,7 @@ export function SettingsView() {
                           {busylight.isConnected ? (
                             <>
                               {t('settings.busylight_device', 'Busylight Device')}:{' '}
-                              <BusylightDeviceInfo busylight={busylight} />
+                              <BusylightDeviceInfoDisplay deviceInfo={busylight.deviceInfo} />
                             </>
                           ) : (
                             t('settings.busylight_not_connected', 'Bridge not connected - ensure bridge client is running')
