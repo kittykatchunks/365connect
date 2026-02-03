@@ -527,9 +527,10 @@ export class PhantomApiService {
    * @param agent - Agent number from login modal
    * @param phone - SIP username from connection settings
    * @param queues - Optional comma-separated list of queues to join
+   * @param options - Optional timeout configuration
    * @returns 'success' or 'failure'
    */
-  async agentLogon(agent: string, phone: string, queues?: string): Promise<{ success: boolean; response: AgentApiResponse }> {
+  async agentLogon(agent: string, phone: string, queues?: string, options?: { timeout?: number }): Promise<{ success: boolean; response: AgentApiResponse }> {
     if (this.verboseLogging) {
       console.log('[PhantomApiService] 🔐 Agent login via API...', {
         agent,
@@ -549,7 +550,7 @@ export class PhantomApiService {
         console.log('[PhantomApiService] 📤 GhostLogon request:', requestData);
       }
 
-      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('GhostLogon', requestData);
+      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('GhostLogon', requestData, options);
 
       if (this.verboseLogging) {
         console.log('[PhantomApiService] 📥 GhostLogon response:', response);
@@ -584,9 +585,10 @@ export class PhantomApiService {
    * Logout agent via API (Primary method)
    * Endpoint: /api/GhostLogoff (Basic Auth)
    * @param agent - Agent number to log off
+   * @param options - Optional timeout configuration
    * @returns 'success' or 'failure'
    */
-  async agentLogoff(agent: string): Promise<{ success: boolean; response: AgentApiResponse }> {
+  async agentLogoff(agent: string, options?: { timeout?: number }): Promise<{ success: boolean; response: AgentApiResponse }> {
     if (this.verboseLogging) {
       console.log('[PhantomApiService] 🚪 Agent logout via API...', { agent });
     }
@@ -598,7 +600,7 @@ export class PhantomApiService {
         console.log('[PhantomApiService] 📤 GhostLogoff request:', requestData);
       }
 
-      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('GhostLogoff', requestData);
+      const response = await this.post<AgentApiResponse | AgentApiResponseWrapper>('GhostLogoff', requestData, options);
 
       if (this.verboseLogging) {
         console.log('[PhantomApiService] 📥 GhostLogoff response:', response);
@@ -633,9 +635,10 @@ export class PhantomApiService {
    * Get list of queues that an agent is currently logged into
    * Endpoint: /api/QueueMemberList (Basic Auth)
    * @param agent - Agent number to query
+   * @param options - Optional timeout configuration
    * @returns Array of queue memberships or empty array on failure
    */
-  async getQueueMemberList(agent: string): Promise<{ success: boolean; queues: QueueMemberItem[] }> {
+  async getQueueMemberList(agent: string, options?: { timeout?: number }): Promise<{ success: boolean; queues: QueueMemberItem[] }> {
     if (this.verboseLogging) {
       console.log('[PhantomApiService] 📋 Fetching queue member list for agent:', agent);
     }
@@ -647,7 +650,7 @@ export class PhantomApiService {
         console.log('[PhantomApiService] 📤 QueueMemberList request:', requestData);
       }
 
-      const response = await this.post<QueueMemberListResponse>('QueueMemberList', requestData);
+      const response = await this.post<QueueMemberListResponse>('QueueMemberList', requestData, options);
 
       if (this.verboseLogging) {
         console.log('[PhantomApiService] 📥 QueueMemberList response:', response);

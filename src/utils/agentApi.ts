@@ -28,7 +28,7 @@ export async function queryAgentStatus(deviceExtension: string): Promise<AgentDa
     
     const result = await phantomApiService.postNoAuth<AgentStatusResponse>('AgentfromPhone', {
       phone: deviceExtension
-    });
+    }, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Agent status response:', result);
@@ -60,7 +60,7 @@ export async function fetchPauseReasons(deviceExtension: string): Promise<PauseR
     
     const result = await phantomApiService.post<PauseReasonsResponse>('WallBoardStats', {
       phone: deviceExtension
-    });
+    }, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Pause reasons response:', result);
@@ -136,7 +136,7 @@ export async function pauseAgentViaAPI(deviceExtension: string): Promise<boolean
     
     const result = await phantomApiService.postNoAuth('AgentpausefromPhone', {
       phone: deviceExtension
-    });
+    }, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Pause response:', result);
@@ -164,7 +164,7 @@ export async function unpauseAgentViaAPI(deviceExtension: string): Promise<boole
     
     const result = await phantomApiService.postNoAuth('AgentpausefromPhone', {
       phone: deviceExtension
-    });
+    }, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Unpause response:', result);
@@ -240,7 +240,7 @@ export async function loginAgentViaAPI(
       });
     }
     
-    const result = await phantomApiService.agentLogon(agentNumber, phone, queues);
+    const result = await phantomApiService.agentLogon(agentNumber, phone, queues, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Agent login API result:', result);
@@ -284,7 +284,7 @@ export async function logoffAgentViaAPI(agentNumber: string): Promise<AgentLogof
       console.log('[AgentAPI] 🚪 Attempting agent logout via API...', { agent: agentNumber });
     }
     
-    const result = await phantomApiService.agentLogoff(agentNumber);
+    const result = await phantomApiService.agentLogoff(agentNumber, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Agent logout API result:', result);
@@ -328,7 +328,7 @@ export async function fetchQueueMembership(agentNumber: string): Promise<QueueMe
       console.log('[AgentAPI] 📋 Fetching queue membership for agent:', agentNumber);
     }
     
-    const result = await phantomApiService.getQueueMemberList(agentNumber);
+    const result = await phantomApiService.getQueueMemberList(agentNumber, { timeout: 5000 });
     
     if (verboseLogging) {
       console.log('[AgentAPI] 📥 Queue membership result:', result);

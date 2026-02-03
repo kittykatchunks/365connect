@@ -675,6 +675,7 @@
                             <li><a href="#outbound-calls" class="sidebar-link" data-i18n="sidebar.outbound_calls">Outbound Calls</a></li>
                             <li><a href="#receiving-calls" class="sidebar-link" data-i18n="sidebar.receiving_calls">Receiving Calls</a></li>
                             <li><a href="#call-controls" class="sidebar-link" data-i18n="sidebar.call_controls">Call Controls</a></li>
+                            <li><a href="#line-keys" class="sidebar-link" data-i18n="sidebar.line_keys">Line Keys</a></li>
                         </ul>
                     </li>
                     <li><a href="#contacts" class="sidebar-link" data-i18n="sidebar.contacts">Contacts Management</a></li>
@@ -1164,6 +1165,151 @@
                         <div class="info-box-title" data-i18n="content.making_calls.transfer_tip_title">💡 Default Transfer Method</div>
                         <p data-i18n="content.making_calls.transfer_tip">You can set your preferred default transfer method in Settings > Call Settings. This default is used when pressing Enter in the transfer dialog or when transferring via BLF buttons.</p>
                     </div>
+
+                    <h3 id="line-keys" data-i18n="content.making_calls.line_keys_title">Line Keys</h3>
+                    <p data-i18n="content.making_calls.line_keys_intro">Line keys allow you to manage multiple simultaneous calls, similar to traditional desk phones. Each line represents a separate call session with its own state and controls.</p>
+
+                    <div class="screenshot">
+                        <img src="images/line-keys-overview.png" alt="Line keys interface showing multiple call states" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="screenshot-placeholder" style="display: none;">
+                            <svg class="screenshot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="screenshot-label" data-i18n="content.making_calls.line_keys_screenshot">Screenshot: Line keys overview with multiple call states</div>
+                        </div>
+                    </div>
+
+                    <h4 data-i18n="content.making_calls.line_keys_states_title">Line Key States</h4>
+                    <p data-i18n="content.making_calls.line_keys_states_intro">Each line key displays different visual indicators depending on its current state:</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="table_headers.state">State</th>
+                                <th data-i18n="table_headers.icon">Icon</th>
+                                <th data-i18n="table_headers.description">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong data-i18n="content.making_calls.line_state_idle">Idle</strong></td>
+                                <td>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" style="vertical-align: middle;">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                </td>
+                                <td data-i18n="content.making_calls.line_state_idle_desc">Line is available and ready for a new call</td>
+                            </tr>
+                            <tr>
+                                <td><strong data-i18n="content.making_calls.line_state_ringing_in">Ringing (Incoming)</strong></td>
+                                <td>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" style="vertical-align: middle;">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: -6px; transform: translate(15px, -33px);">
+                                        <line x1="20" y1="4" x2="8" y2="16"></line>
+                                        <polyline points="12 16 8 16 8 12"></polyline>
+                                    </svg>
+                                </td>
+                                <td data-i18n="content.making_calls.line_state_ringing_in_desc">Incoming call waiting to be answered. Shows incoming caller ID or contact name</td>
+                            </tr>
+                            <tr>
+                                <td><strong data-i18n="content.making_calls.line_state_ringing_out">Ringing (Outgoing)</strong></td>
+                                <td>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" style="vertical-align: middle; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: -6px; transform: translate(15px, -33px); filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));">
+                                        <line x1="8" y1="16" x2="20" y2="4"></line>
+                                        <polyline points="16 4 20 4 20 8"></polyline>
+                                    </svg>
+                                </td>
+                                <td data-i18n="content.making_calls.line_state_ringing_out_desc">Outgoing call dialing. Shows the number being called</td>
+                            </tr>
+                            <tr>
+                                <td><strong data-i18n="content.making_calls.line_state_active">Active</strong></td>
+                                <td>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" style="vertical-align: middle;">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                </td>
+                                <td data-i18n="content.making_calls.line_state_active_desc">Call is connected and in progress. Shows call CLI</td>
+                            </tr>
+                            <tr>
+                                <td><strong data-i18n="content.making_calls.line_state_held">On Hold</strong></td>
+                                <td>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" style="vertical-align: middle;">
+                                        <rect x="6" y="4" width="4" height="16" fill="#F59E0B"></rect>
+                                        <rect x="14" y="4" width="4" height="16" fill="#F59E0B"></rect>
+                                    </svg>
+                                </td>
+                                <td data-i18n="content.making_calls.line_state_held_desc">Call is on hold. Shows CLI with yellow "HOLD" text</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 data-i18n="content.making_calls.line_keys_info_title">Line Key Information Display</h4>
+                    <p data-i18n="content.making_calls.line_keys_info_intro">Each line key shows relevant information about the call:</p>
+                    <ul>
+                        <li data-i18n-html="content.making_calls.line_keys_info_caller"><strong>Caller Identification:</strong> Shows the contact name if saved, otherwise displays the phone number</li>
+                        <li data-i18n-html="content.making_calls.line_keys_info_direction"><strong>Call Direction:</strong> Indicates if the call is inbound (↓) or outbound (↑)</li>
+                        <li data-i18n-html="content.making_calls.line_keys_info_status"><strong>Call Status:</strong> Current state (Ringing, Connected, On Hold)</li>
+                    </ul>
+
+                    <h4 data-i18n="content.making_calls.line_keys_switching_title">Switching Between Lines</h4>
+                    <p data-i18n="content.making_calls.line_keys_switching_intro">When managing multiple calls, you can easily switch between line keys by clicking on them:</p>
+                    <ol>
+                        <li data-i18n="content.making_calls.line_keys_switching_step1">Click on any line key to make it the active line</li>
+                        <li data-i18n="content.making_calls.line_keys_switching_step2">The currently selected line is highlighted with a border or background color</li>
+                        <li data-i18n="content.making_calls.line_keys_switching_step3">Call controls (mute, hold, transfer, hangup) apply to the currently selected line</li>
+                    </ol>
+
+                    <h4 data-i18n="content.making_calls.line_keys_autohold_title">Automatic Hold Feature</h4>
+                    <p data-i18n="content.making_calls.line_keys_autohold_intro">Connect365 includes an intelligent automatic hold feature that manages your calls when switching between lines:</p>
+
+                    <div class="info-box">
+                        <div class="info-box-title" data-i18n="content.making_calls.line_keys_autohold_how_title">🔄 How Auto-Hold Works</div>
+                        <p data-i18n="content.making_calls.line_keys_autohold_how_desc">When you switch from an active call to another line (to answer a new call or to make an outgoing call), the current call is automatically placed on hold. This prevents the other party from hearing your conversation on the new line.</p>
+                    </div>
+
+                    <p data-i18n="content.making_calls.line_keys_autohold_example_title"><strong data-i18n="content.making_calls.line_keys_autohold_example_heading">Example Scenario:</strong></p>
+                    <ol>
+                        <li data-i18n="content.making_calls.line_keys_autohold_example_step1">You're on an active call with a customer on Line 1</li>
+                        <li data-i18n="content.making_calls.line_keys_autohold_example_step2">A new call comes in on Line 2</li>
+                        <li data-i18n="content.making_calls.line_keys_autohold_example_step3">You click on Line 2 to answer the incoming call</li>
+                        <li data-i18n="content.making_calls.line_keys_autohold_example_step4"><strong>Automatically:</strong> Line 1 is placed on hold, and Line 2 becomes active</li>
+                        <li data-i18n="content.making_calls.line_keys_autohold_example_step5">Line 1 now shows the "On Hold" state with the pause icon ⏸️</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <div class="info-box-title" data-i18n="content.making_calls.line_keys_unhold_title">⚠️ Important: Manual Unhold Required</div>
+                        <p data-i18n="content.making_calls.line_keys_unhold_intro">When you switch back to a line that was automatically placed on hold, you must manually resume the call:</p>
+                        <ol>
+                            <li data-i18n="content.making_calls.line_keys_unhold_step1">Click on the line key that is on hold to select it</li>
+                            <li data-i18n-html="content.making_calls.line_keys_unhold_step2">Click the <strong>Resume</strong> or <strong>Unhold</strong> button to reconnect with the caller</li>
+                            <li data-i18n="content.making_calls.line_keys_unhold_step3">The line will return to the active state, and you can continue your conversation</li>
+                        </ol>
+                        <p data-i18n="content.making_calls.line_keys_unhold_note"><em>Note: The call does not automatically resume when you click on a held line. This gives you time to prepare before reconnecting with the caller.</em></p>
+                    </div>
+
+                    <h4 data-i18n="content.making_calls.line_keys_tips_title">Line Key Tips</h4>
+                    <ul>
+                        <li data-i18n-html="content.making_calls.line_keys_tip_limits"><strong>Line Limits:</strong> Connect365 supports 3 simultaneous call lines</li>
+                        <li data-i18n-html="content.making_calls.line_keys_tip_overflow"><strong>Line Full:</strong> If all lines are in use, you won't be able to make a new call until a line becomes available</li>
+                        <li data-i18n-html="content.making_calls.line_keys_tip_call_waiting"><strong>Multiple Queue Calls:</strong> To receive more than one incoming queue call simultaneously, call waiting must be enabled on your agent profile</li>
+                        <li data-i18n-html="content.making_calls.line_keys_tip_monitoring"><strong>Visual Monitoring:</strong> Keep an eye on all line keys to see incoming calls and held calls at a glance</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-title" data-i18n="content.making_calls.line_keys_call_waiting_title">🔔 Call Waiting Behavior</div>
+                        <p data-i18n="content.making_calls.line_keys_call_waiting_desc">When you receive a second or third incoming call while already on an active call:</p>
+                        <ul>
+                            <li data-i18n-html="content.making_calls.line_keys_call_waiting_beep"><strong>Audio Alert:</strong> You will hear a call waiting beep instead of a full ringtone</li>
+                            <li data-i18n-html="content.making_calls.line_keys_call_waiting_no_tray"><strong>No Tray Notifications:</strong> Desktop/taskbar notifications will not appear for call waiting calls</li>
+                            <li data-i18n-html="content.making_calls.line_keys_call_waiting_visual"><strong>Visual Indicator:</strong> The Dial tab will flash red to alert you of the incoming call, providing an additional visual cue along with the call waiting tone</li>
+                        </ul>
+                        <p data-i18n="content.making_calls.line_keys_call_waiting_note"><em>This behavior helps distinguish between your first incoming call (which rings normally with full notifications) and subsequent calls waiting on other lines.</em></p>
+                    </div>
                 </section>
 
                 <!-- Contacts Section -->
@@ -1595,7 +1741,7 @@
                 <!-- Settings Sections -->
                 <section id="connection-settings">
                     <h2 data-i18n="content.connection_settings.title">Connection Settings</h2>
-                    <p data-i18n-html="content.connection_settings.intro">Configure your SIP connection credentials in <strong>Settings</strong> > <strong>Connection</strong>. These settings determine which Phantom PBX server you connect to and your agent identity.</p>
+                    <p data-i18n-html="content.connection_settings.intro">Configure your SIP connection credentials in <strong>Settings</strong> > <strong>Connection</strong>. These settings determine which Phantom PBX server you connect to and your device identity.</p>
 
                     <table>
                         <thead>
@@ -1611,7 +1757,7 @@
                             </tr>
                             <tr>
                                 <td><strong data-i18n="content.connection_settings.username">Username</strong></td>
-                                <td data-i18n="content.connection_settings.username_desc">Your SIP username (device number). This is the identity used when registering with the PBX.</td>
+                                <td data-i18n="content.connection_settings.username_desc">Your SIP username (device number). This is the identity used when registering with the Phantom PBX server.</td>
                             </tr>
                             <tr>
                                 <td><strong data-i18n="content.connection_settings.password">Password</strong></td>
@@ -1619,7 +1765,7 @@
                             </tr>
                             <tr>
                                 <td><strong data-i18n="content.connection_settings.voicemail">Voicemail Access</strong></td>
-                                <td data-i18n-html="content.connection_settings.voicemail_desc">The number to dial to access your voicemail. Default is <code>*97</code>. When you click the voicemail button, this number is dialled automatically.</td>
+                                <td data-i18n-html="content.connection_settings.voicemail_desc">The number to dial to access your voicemail. Default is <code>*97</code>. When you click the voicemail icon, this number is dialled automatically.</td>
                             </tr>
                         </tbody>
                     </table>

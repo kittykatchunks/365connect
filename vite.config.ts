@@ -89,7 +89,7 @@ export default defineConfig({
     }
   },
   build: {
-    minify: false
+    minify: true
   },
   server: {
     port: 3000
