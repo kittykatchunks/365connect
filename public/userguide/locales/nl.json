@@ -571,7 +571,13 @@
       "audio_item1": "Controleer uw audioapparaatinstellingen",
       "audio_item2": "Zorg dat microfoonmachtigingen zijn verleend",
       "audio_item3": "Probeer een ander audioapparaat te selecteren",
-      "audio_item4": "Controleer de volumeniveaus van uw systeem"
+      "audio_item4": "Controleer de volumeniveaus van uw systeem",
+      "other_party_title": "De andere partij kan mij niet horen",
+      "other_party_solutions": "<strong>Oplossingen:</strong>",
+      "other_party_item1": "Controleer of u gedempt bent (zoek naar het demppictogram)",
+      "other_party_item2": "Controleer de microfoonrechten",
+      "other_party_item3": "Test uw microfoon in Instellingen > Audio",
+      "other_party_item4": "Probeer een ander microfoonapparaat"
     },
     "verbose_logging": {
       "title": "Uitgebreide logboekregistratie inschakelen",
@@ -640,7 +646,21 @@
       "email_title": "E-mail ondersteuning",
       "email_desc": "Neem contact met ons op via <a href=\"mailto:support@autocab.com\">support@autocab.com</a>",
       "feedback_title": "Feedback",
-      "feedback_desc": "Wij waarderen uw feedback! Laat ons weten hoe we Connect365 kunnen verbeteren."
+      "feedback_desc": "Wij waarderen uw feedback! Laat ons weten hoe we Connect365 kunnen verbeteren.",
+      "useful_info_title": "Nuttige informatie om te verstrekken",
+      "useful_info_desc": "Geef bij contact met ondersteuning het volgende op:",
+      "useful_info_item1": "Uw Phantom ID",
+      "useful_info_item2": "Browsernaam en versie",
+      "useful_info_item3": "Besturingssysteem",
+      "useful_info_item4": "Beschrijving van het probleem",
+      "useful_info_item5": "Console-logs (indien uitgebreide logging is ingeschakeld)",
+      "useful_info_item6": "Stappen om het probleem te reproduceren",
+      "browser_title": "Browservereisten",
+      "browser_desc": "Connect365 vereist een moderne browser met WebRTC-ondersteuning:",
+      "browser_chrome": "Google Chrome 70+",
+      "browser_edge": "Microsoft Edge 79+",
+      "browser_safari": "Safari 14+",
+      "browser_firefox": "Firefox 70+"
     },
     "search": {
       "no_results": "Geen resultaten gevonden"

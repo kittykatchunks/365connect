@@ -571,7 +571,13 @@
       "audio_item1": "Tarkista äänilaitteiden asetukset",
       "audio_item2": "Varmista että mikrofonin käyttöoikeudet on myönnetty",
       "audio_item3": "Kokeile valita eri äänilaite",
-      "audio_item4": "Tarkista järjestelmän äänenvoimakkuustasot"
+      "audio_item4": "Tarkista järjestelmän äänenvoimakkuustasot",
+      "other_party_title": "Toinen osapuoli ei kuule minua",
+      "other_party_solutions": "<strong>Ratkaisut:</strong>",
+      "other_party_item1": "Tarkista, oletko mykistetty (etsi mykistyskuvake)",
+      "other_party_item2": "Tarkista mikrofonin käyttöoikeudet",
+      "other_party_item3": "Testaa mikrofoni kohdassa Asetukset > Ääni",
+      "other_party_item4": "Kokeile toista mikrofonilaitetta"
     },
     "verbose_logging": {
       "title": "Yksityiskohtaisen kirjauksen käyttöönotto",
@@ -723,7 +729,21 @@
       "email_title": "Sähköpostituki",
       "email_desc": "Ota yhteyttä osoitteessa <a href=\"mailto:support@autocab.com\">support@autocab.com</a>",
       "feedback_title": "Palaute",
-      "feedback_desc": "Arvostamme palautettasi! Kerro meille miten voimme parantaa Connect365:tä."
+      "feedback_desc": "Arvostamme palautettasi! Kerro meille miten voimme parantaa Connect365:tä.",
+      "useful_info_title": "Hyödyllisiä tietoja annettavaksi",
+      "useful_info_desc": "Kun otat yhteyttä tukeen, anna seuraavat tiedot:",
+      "useful_info_item1": "Phantom ID:si",
+      "useful_info_item2": "Selaimen nimi ja versio",
+      "useful_info_item3": "Käyttöjärjestelmä",
+      "useful_info_item4": "Ongelman kuvaus",
+      "useful_info_item5": "Konsolilokit (jos tarkka kirjaus on käytössä)",
+      "useful_info_item6": "Vaiheet ongelman toistamiseksi",
+      "browser_title": "Selainvaatimukset",
+      "browser_desc": "Connect365 vaatii modernin selaimen WebRTC-tuella:",
+      "browser_chrome": "Google Chrome 70+",
+      "browser_edge": "Microsoft Edge 79+",
+      "browser_safari": "Safari 14+",
+      "browser_firefox": "Firefox 70+"
     },
     "search": {
       "no_results": "Ei tuloksia"

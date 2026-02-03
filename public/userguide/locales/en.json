@@ -697,7 +697,13 @@
       "audio_item1": "Check your audio device settings",
       "audio_item2": "Ensure microphone permissions are granted",
       "audio_item3": "Try selecting a different audio device",
-      "audio_item4": "Check your system volume levels"
+      "audio_item4": "Check your system volume levels",
+      "other_party_title": "Other Party Cannot Hear Me",
+      "other_party_solutions": "<strong>Solutions:</strong>",
+      "other_party_item1": "Check if you're muted (look for the mute icon)",
+      "other_party_item2": "Verify microphone permissions",
+      "other_party_item3": "Test your microphone in Settings > Audio",
+      "other_party_item4": "Try a different microphone device"
     },
     "verbose_logging": {
       "title": "Enabling Verbose Logging",
@@ -723,7 +729,21 @@
       "email_title": "Email Support",
       "email_desc": "Contact us at <a href=\"mailto:support@autocab.com\">support@autocab.com</a>",
       "feedback_title": "Feedback",
-      "feedback_desc": "We value your feedback! Let us know how we can improve Connect365."
+      "feedback_desc": "We value your feedback! Let us know how we can improve Connect365.",
+      "useful_info_title": "Useful Information to Provide",
+      "useful_info_desc": "When contacting support, please provide:",
+      "useful_info_item1": "Your Phantom ID",
+      "useful_info_item2": "Browser name and version",
+      "useful_info_item3": "Operating system",
+      "useful_info_item4": "Description of the issue",
+      "useful_info_item5": "Console logs (if verbose logging is enabled)",
+      "useful_info_item6": "Steps to reproduce the problem",
+      "browser_title": "Browser Requirements",
+      "browser_desc": "Connect365 requires a modern browser with WebRTC support:",
+      "browser_chrome": "Google Chrome 70+",
+      "browser_edge": "Microsoft Edge 79+",
+      "browser_safari": "Safari 14+",
+      "browser_firefox": "Firefox 70+"
     },
     "search": {
       "no_results": "No results found",

@@ -654,7 +654,13 @@
       "audio_item1": "Compruebe su configuración de dispositivos de audio",
       "audio_item2": "Asegúrese de que los permisos de micrófono estén otorgados",
       "audio_item3": "Intente seleccionar un dispositivo de audio diferente",
-      "audio_item4": "Compruebe los niveles de volumen de su sistema"
+      "audio_item4": "Compruebe los niveles de volumen de su sistema",
+      "other_party_title": "La otra parte no puede escucharme",
+      "other_party_solutions": "<strong>Soluciones:</strong>",
+      "other_party_item1": "Verifique si está silenciado (busque el icono de silencio)",
+      "other_party_item2": "Verifique los permisos del micrófono",
+      "other_party_item3": "Pruebe su micrófono en Configuración > Audio",
+      "other_party_item4": "Pruebe un dispositivo de micrófono diferente"
     },
     "verbose_logging": {
       "title": "Habilitar Registro Detallado",
@@ -723,7 +729,21 @@
       "email_title": "Soporte por Email",
       "email_desc": "Contáctenos en <a href=\"mailto:support@autocab.com\">support@autocab.com</a>",
       "feedback_title": "Comentarios",
-      "feedback_desc": "¡Valoramos sus comentarios! Háganos saber cómo podemos mejorar Connect365."
+      "feedback_desc": "¡Valoramos sus comentarios! Háganos saber cómo podemos mejorar Connect365.",
+      "useful_info_title": "Información útil para proporcionar",
+      "useful_info_desc": "Al contactar soporte, proporcione:",
+      "useful_info_item1": "Su ID de Phantom",
+      "useful_info_item2": "Nombre y versión del navegador",
+      "useful_info_item3": "Sistema operativo",
+      "useful_info_item4": "Descripción del problema",
+      "useful_info_item5": "Registros de consola (si el registro detallado está habilitado)",
+      "useful_info_item6": "Pasos para reproducir el problema",
+      "browser_title": "Requisitos del navegador",
+      "browser_desc": "Connect365 requiere un navegador moderno con soporte WebRTC:",
+      "browser_chrome": "Google Chrome 70+",
+      "browser_edge": "Microsoft Edge 79+",
+      "browser_safari": "Safari 14+",
+      "browser_firefox": "Firefox 70+"
     },
     "search": {
       "no_results": "No se encontraron resultados",

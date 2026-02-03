@@ -654,7 +654,13 @@
       "audio_item1": "Vérifiez les paramètres de vos périphériques audio",
       "audio_item2": "Assurez-vous que les autorisations de microphone sont accordées",
       "audio_item3": "Essayez de sélectionner un périphérique audio différent",
-      "audio_item4": "Vérifiez les niveaux de volume de votre système"
+      "audio_item4": "Vérifiez les niveaux de volume de votre système",
+      "other_party_title": "L'autre partie ne peut pas m'entendre",
+      "other_party_solutions": "<strong>Solutions:</strong>",
+      "other_party_item1": "Vérifiez si vous êtes en sourdine (recherchez l'icône de sourdine)",
+      "other_party_item2": "Vérifiez les autorisations du microphone",
+      "other_party_item3": "Testez votre microphone dans Paramètres > Audio",
+      "other_party_item4": "Essayez un autre périphérique microphone"
     },
     "verbose_logging": {
       "title": "Activer la journalisation détaillée",
@@ -723,7 +729,21 @@
       "email_title": "Support par email",
       "email_desc": "Contactez-nous à <a href=\"mailto:support@autocab.com\">support@autocab.com</a>",
       "feedback_title": "Commentaires",
-      "feedback_desc": "Nous apprécions vos commentaires ! Dites-nous comment nous pouvons améliorer Connect365."
+      "feedback_desc": "Nous apprécions vos commentaires ! Dites-nous comment nous pouvons améliorer Connect365.",
+      "useful_info_title": "Informations utiles à fournir",
+      "useful_info_desc": "Lors du contact avec le support, veuillez fournir:",
+      "useful_info_item1": "Votre ID Phantom",
+      "useful_info_item2": "Nom et version du navigateur",
+      "useful_info_item3": "Système d'exploitation",
+      "useful_info_item4": "Description du problème",
+      "useful_info_item5": "Journaux de console (si la journalisation détaillée est activée)",
+      "useful_info_item6": "Étapes pour reproduire le problème",
+      "browser_title": "Configuration requise du navigateur",
+      "browser_desc": "Connect365 nécessite un navigateur moderne avec support WebRTC:",
+      "browser_chrome": "Google Chrome 70+",
+      "browser_edge": "Microsoft Edge 79+",
+      "browser_safari": "Safari 14+",
+      "browser_firefox": "Firefox 70+"
     },
     "search": {
       "no_results": "Aucun résultat trouvé",

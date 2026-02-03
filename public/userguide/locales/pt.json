@@ -571,7 +571,13 @@
       "audio_item1": "Verifique as definições dos seus dispositivos de áudio",
       "audio_item2": "Certifique-se que as permissões de microfone estão concedidas",
       "audio_item3": "Tente selecionar um dispositivo de áudio diferente",
-      "audio_item4": "Verifique os níveis de volume do seu sistema"
+      "audio_item4": "Verifique os níveis de volume do seu sistema",
+      "other_party_title": "A outra parte não consegue me ouvir",
+      "other_party_solutions": "<strong>Soluções:</strong>",
+      "other_party_item1": "Verifique se está silenciado (procure o ícone de silenciar)",
+      "other_party_item2": "Verifique as permissões do microfone",
+      "other_party_item3": "Teste seu microfone em Configurações > Áudio",
+      "other_party_item4": "Tente um dispositivo de microfone diferente"
     },
     "verbose_logging": {
       "title": "Ativar Registo Detalhado",
@@ -640,7 +646,21 @@
       "email_title": "Suporte por Email",
       "email_desc": "Contacte-nos em <a href=\"mailto:support@autocab.com\">support@autocab.com</a>",
       "feedback_title": "Feedback",
-      "feedback_desc": "Valorizamos o seu feedback! Diga-nos como podemos melhorar o Connect365."
+      "feedback_desc": "Valorizamos o seu feedback! Diga-nos como podemos melhorar o Connect365.",
+      "useful_info_title": "Informações úteis para fornecer",
+      "useful_info_desc": "Ao contactar o suporte, forneça:",
+      "useful_info_item1": "O seu ID Phantom",
+      "useful_info_item2": "Nome e versão do navegador",
+      "useful_info_item3": "Sistema operativo",
+      "useful_info_item4": "Descrição do problema",
+      "useful_info_item5": "Registos da consola (se o registo detalhado estiver ativado)",
+      "useful_info_item6": "Passos para reproduzir o problema",
+      "browser_title": "Requisitos do navegador",
+      "browser_desc": "O Connect365 requer um navegador moderno com suporte WebRTC:",
+      "browser_chrome": "Google Chrome 70+",
+      "browser_edge": "Microsoft Edge 79+",
+      "browser_safari": "Safari 14+",
+      "browser_firefox": "Firefox 70+"
     },
     "search": {
       "no_results": "Nenhum resultado encontrado"
