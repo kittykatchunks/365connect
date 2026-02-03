@@ -693,15 +693,41 @@ export function AgentKeys({ className }: AgentKeysProps) {
     // Join queues as comma-separated string
     const queuesCSV = selectedQueues.join(',');
     
-    if (verboseLogging) {
-      console.log('[AgentKeys] 📤 Calling GhostLogon API:', {
-        agent: agentNumber,
-        phone: sipUsername,
-        queues: queuesCSV
-      });
-    }
-    
     try {
+      // Step 1: Call GhostLogoff first to clear currently logged-in queues
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📤 Calling GhostLogoff API first to clear current queues:', {
+          agent: agentNumber
+        });
+      }
+      
+      const logoffResult = await phantomApiService.agentLogoff(agentNumber);
+      
+      if (!logoffResult.success) {
+        if (verboseLogging) {
+          console.warn('[AgentKeys] ⚠️ Queue logoff API failed, but continuing with login...');
+        }
+      } else {
+        if (verboseLogging) {
+          console.log('[AgentKeys] ✅ Queue logoff API successful');
+        }
+      }
+      
+      // Step 2: Wait 500ms before calling GhostLogon
+      if (verboseLogging) {
+        console.log('[AgentKeys] ⏱️ Waiting 500ms before calling GhostLogon...');
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Step 3: Call GhostLogon with new queues
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📤 Calling GhostLogon API:', {
+          agent: agentNumber,
+          phone: sipUsername,
+          queues: queuesCSV
+        });
+      }
+      
       const result = await phantomApiService.agentLogon(agentNumber, sipUsername, queuesCSV);
       
       if (result.success) {
