@@ -22,6 +22,7 @@ interface BLFState {
   // Computed
   getLeftButtons: () => BLFButton[];
   getRightButtons: () => BLFButton[];
+  getAllButtons: () => BLFButton[];
   getConfiguredExtensions: () => string[];
   isButtonConfigured: (index: number) => boolean;
 }
@@ -89,6 +90,10 @@ export const useBLFStore = create<BLFState>()(
         
         getRightButtons: () => {
           return get().buttons.filter(b => b.index > BLF_LEFT_COUNT);
+        },
+        
+        getAllButtons: () => {
+          return get().buttons;
         },
         
         getConfiguredExtensions: () => {

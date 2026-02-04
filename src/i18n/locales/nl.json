@@ -453,6 +453,9 @@
         "installed": "App Geïnstalleerd"
     },
     "blf": {
+        "title": "BLF-knoppen",
+        "button_label": "BLF-knoppen",
+        "open_modal": "BLF-knoppen openen",
         "right_click_to_configure": "Rechtsklik om te configureren",
         "click_to_configure": "Klik om te configureren",
         "available": "Beschikbaar",

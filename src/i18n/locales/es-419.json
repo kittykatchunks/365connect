@@ -450,8 +450,9 @@
         "install": "Instalar Aplicación",
         "installed": "Aplicación Instalada"
     },
-    "blf": {
-        "right_click_to_configure": "Clic derecho para configurar",
+    "blf": {        "title": "Botones BLF",
+        "button_label": "Botones BLF",
+        "open_modal": "Abrir botones BLF",        "right_click_to_configure": "Clic derecho para configurar",
         "click_to_configure": "Clic para configurar",
         "available": "Disponible",
         "busy": "Ocupado",

@@ -521,6 +521,9 @@
         "installed": "App Installed"
     },
     "blf": {
+        "title": "BLF Buttons",
+        "button_label": "BLF Buttons",
+        "open_modal": "Open BLF Buttons",
         "right_click_to_configure": "Right-click to configure",
         "click_to_configure": "Click to configure",
         "available": "Available",

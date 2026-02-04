@@ -9,7 +9,7 @@ import { DialInput } from './DialInput';
 import { Dialpad } from './Dialpad';
 import { LineKeys } from './LineKeys';
 import { CallActionButtons } from './CallActionButtons';
-import { BLFButtonGrid } from './BLFButtonGrid';
+import { BLFModal } from './BLFModal';
 import { CLISelector } from './CLISelector';
 import { AgentKeys } from './AgentKeys';
 import { CallInfoDisplay } from './CallInfoDisplay';
@@ -27,6 +27,7 @@ export function DialView() {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferTarget, setTransferTarget] = useState<string | undefined>(undefined);
   const [autoStartAttended, setAutoStartAttended] = useState(false);
+  const [showBLFModal, setShowBLFModal] = useState(false);
   
   // Keypad visibility state (persisted)
   const [showKeypad, setShowKeypad] = useLocalStorage('ShowDialpad', false);
@@ -737,11 +738,6 @@ export function DialView() {
       />
       
       <div className="dial-view-layout">
-        {/* Left BLF Panel */}
-        {blfEnabled && (
-          <BLFButtonGrid side="left" className="dial-blf-left" onTransferRequest={handleBLFTransfer} />
-        )}
-        
         <div className="dial-view-content">
           {/* Agent Keys */}
           <AgentKeys />
@@ -797,13 +793,27 @@ export function DialView() {
             hasRedialNumber={!!lastDialedNumber}
             className="dial-action-buttons"
           />
+          
+          {/* BLF Trigger Button */}
+          {blfEnabled && (
+            <button
+              type="button"
+              className="blf-trigger-btn"
+              onClick={() => setShowBLFModal(true)}
+              aria-label={t('blf.open_modal', 'Open BLF Buttons')}
+            >
+              {t('blf.button_label', 'BLF Buttons')}
+            </button>
+          )}
         </div>
-        
-        {/* Right BLF Panel */}
-        {blfEnabled && (
-          <BLFButtonGrid side="right" className="dial-blf-right" onTransferRequest={handleBLFTransfer} />
-        )}
       </div>
+      
+      {/* BLF Modal */}
+      <BLFModal
+        isOpen={showBLFModal}
+        onClose={() => setShowBLFModal(false)}
+        onTransferRequest={handleBLFTransfer}
+      />
       
       {/* Transfer Modal */}
       <TransferModal

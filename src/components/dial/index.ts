@@ -10,6 +10,7 @@ export { CallControls, VolumeIndicator } from './CallControls';
 export { CallActionButtons } from './CallActionButtons';
 export { BLFButton, BLFButtonPlaceholder } from './BLFButton';
 export { BLFButtonGrid, BLFButtonPanel } from './BLFButtonGrid';
+export { BLFModal } from './BLFModal';
 export { CLISelector } from './CLISelector';
 export { AgentKeys } from './AgentKeys';
 export { CallInfoDisplay } from './CallInfoDisplay';

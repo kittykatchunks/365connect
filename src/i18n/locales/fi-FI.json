@@ -509,6 +509,9 @@
         "installed": "Sovellus asennettu"
     },
     "blf": {
+        "title": "BLF-painikkeet",
+        "button_label": "BLF-painikkeet",
+        "open_modal": "Avaa BLF-painikkeet",
         "right_click_to_configure": "Napsauta hiiren oikealla painikkeella määrittääksesi",
         "click_to_configure": "Napsauta määrittääksesi",
         "available": "Saatavilla",
