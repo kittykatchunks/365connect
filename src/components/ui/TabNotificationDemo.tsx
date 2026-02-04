@@ -3,11 +3,12 @@
 // Test component to demonstrate tab notification functionality
 // ============================================
 
-import { useTabNotification } from '@/hooks';
+import { useTabNotification, useTopBarAlert } from '@/hooks';
 import type { ViewType } from '@/types';
 
 export function TabNotificationDemo() {
   const { setTabAlert, clearTabAlert, clearAllAlerts, getTabState } = useTabNotification();
+  const { alertInfo, hasAlert } = useTopBarAlert();
   
   const tabs: ViewType[] = ['dial', 'contacts', 'activity', 'companyNumbers', 'queueMonitor', 'settings'];
   
@@ -73,12 +74,32 @@ export function TabNotificationDemo() {
       </div>
       
       <div style={{ marginTop: '30px', padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
+        <h3 style={{ marginTop: 0 }}>Top Bar Alert (NEW)</h3>
+        <div style={{ padding: '10px', backgroundColor: hasAlert ? '#fef3c7' : '#e5e7eb', borderRadius: '4px', marginBottom: '10px' }}>
+          <strong>Status:</strong> {hasAlert ? '🔔 Active' : '✅ No Alert'}
+          {alertInfo && (
+            <div style={{ marginTop: '5px', fontSize: '14px' }}>
+              <div><strong>Tab:</strong> {alertInfo.tabId}</div>
+              <div><strong>State:</strong> {alertInfo.state}</div>
+              <div><strong>Priority:</strong> {alertInfo.priority}</div>
+            </div>
+          )}
+        </div>
+        <p style={{ marginTop: 0, fontSize: '14px' }}>
+          The top bar (main panel header) flashes with the highest priority alert. 
+          Click the flashing top bar to navigate to the alerting tab.
+        </p>
+      </div>
+      
+      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
         <h3 style={{ marginTop: 0 }}>Instructions</h3>
         <ul style={{ marginBottom: 0 }}>
           <li><strong>Warning State:</strong> Slow yellow flash (2 seconds)</li>
           <li><strong>Error State:</strong> Fast red flash (0.5 seconds)</li>
           <li><strong>Persistence:</strong> Alerts survive page refresh</li>
           <li><strong>Priority:</strong> Error state overrides warning if set on same tab</li>
+          <li><strong>Tab Priority:</strong> Dial (incoming calls) {'>'} Other tabs {'>'} Queue Monitor</li>
+          <li><strong>Top Bar:</strong> Flashes with highest priority alert, click to navigate</li>
           <li><strong>Navigation:</strong> Switch between tabs to see the effect continues</li>
           <li><strong>Verbose Logging:</strong> Enable in Settings {'->'} Advanced Settings to see logs</li>
         </ul>

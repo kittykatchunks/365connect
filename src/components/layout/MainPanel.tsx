@@ -2,7 +2,7 @@
 // Main Panel - Contains tabs and content views
 // ============================================
 
-import { type ReactNode } from 'react';
+import { type ReactNode, type CSSProperties, type MouseEvent } from 'react';
 import { cn } from '@/utils';
 
 interface MainPanelProps {
@@ -21,11 +21,17 @@ export function MainPanel({ children, className }: MainPanelProps) {
 interface MainPanelHeaderProps {
   children: ReactNode;
   className?: string;
+  onClick?: (event: MouseEvent<HTMLDivElement>) => void;
+  style?: CSSProperties;
 }
 
-export function MainPanelHeader({ children, className }: MainPanelHeaderProps) {
+export function MainPanelHeader({ children, className, onClick, style }: MainPanelHeaderProps) {
   return (
-    <div className={cn('main-panel-header', className)}>
+    <div 
+      className={cn('main-panel-header', className)}
+      onClick={onClick}
+      style={style}
+    >
       {children}
     </div>
   );

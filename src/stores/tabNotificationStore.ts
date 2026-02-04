@@ -14,12 +14,30 @@ interface TabAlertConfig {
   timestamp: number;
 }
 
+// Priority mapping for tab alerts (higher number = higher priority)
+// Dial/ringing calls always take priority over queue monitor
+const TAB_ALERT_PRIORITY: Record<ViewType, number> = {
+  dial: 100,              // Highest - incoming/active calls
+  contacts: 50,
+  activity: 50,
+  companyNumbers: 50,
+  queueMonitor: 10,       // Lower - queue alerts
+  settings: 0
+};
+
+export interface TopBarAlertInfo {
+  state: TabAlertState;
+  tabId: ViewType;
+  priority: number;
+}
+
 interface TabNotificationState {
   alerts: Map<ViewType, TabAlertConfig>;
   setTabAlert: (tabId: ViewType, state: TabAlertState) => void;
   clearTabAlert: (tabId: ViewType) => void;
   clearAllAlerts: () => void;
   getTabState: (tabId: ViewType) => TabAlertState;
+  getTopBarAlert: () => TopBarAlertInfo | null;
 }
 
 export const useTabNotificationStore = create<TabNotificationState>()(
@@ -97,6 +115,56 @@ export const useTabNotificationStore = create<TabNotificationState>()(
       getTabState: (tabId: ViewType): TabAlertState => {
         const alert = get().alerts.get(tabId);
         return alert ? alert.state : 'default';
+      },
+
+      getTopBarAlert: (): TopBarAlertInfo | null => {
+        const verboseLogging = isVerboseLoggingEnabled();
+        const alerts = get().alerts;
+        
+        if (alerts.size === 0) {
+          if (verboseLogging) {
+            console.log('[TabNotificationStore] 📊 No active alerts for top bar');
+          }
+          return null;
+        }
+
+        // Find the highest priority alert
+        let highestPriority = -1;
+        let highestPriorityTab: ViewType | null = null;
+        let highestPriorityState: TabAlertState = 'default';
+
+        alerts.forEach((config, tabId) => {
+          const priority = TAB_ALERT_PRIORITY[tabId];
+          
+          // Error state takes priority over warning at same priority level
+          const effectivePriority = config.state === 'error' 
+            ? priority + 0.5 
+            : priority;
+
+          if (effectivePriority > highestPriority) {
+            highestPriority = effectivePriority;
+            highestPriorityTab = tabId;
+            highestPriorityState = config.state;
+          }
+        });
+
+        if (highestPriorityTab) {
+          if (verboseLogging) {
+            console.log('[TabNotificationStore] 📊 Top bar alert:', {
+              tabId: highestPriorityTab,
+              state: highestPriorityState,
+              priority: highestPriority
+            });
+          }
+
+          return {
+            state: highestPriorityState,
+            tabId: highestPriorityTab,
+            priority: highestPriority
+          };
+        }
+
+        return null;
       }
     }),
     {

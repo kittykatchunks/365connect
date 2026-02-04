@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore, useUIStore, useSettingsStore, initializeThemeWatcher } from '@/stores';
 import { SIPProvider, PhantomAPIProvider, BusylightProvider, QueueMonitorSocketProvider, usePhantomAPI } from '@/contexts';
 import { phantomApiService, audioService } from '@/services';
-import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback, isVerboseLoggingEnabled } from '@/utils';
-import { useNetworkStatus } from '@/hooks';
+import { initializeVersionTracking, setPhantomAPIKey, setPhantomAPIRefreshCallback, isVerboseLoggingEnabled, cn } from '@/utils';
+import { useNetworkStatus, useTopBarAlert } from '@/hooks';
 import { 
   LoadingScreen, 
   LoadingSpinner,
@@ -205,6 +205,9 @@ function MainLayout() {
   const setOpenSettingsWithConnection = useAppStore((state) => state.setOpenSettingsWithConnection);
   const [overlayMenuOpen, setOverlayMenuOpen] = useState(false);
   
+  // Top bar alert management
+  const { alertClass, hasAlert, handleClick: handleTopBarClick } = useTopBarAlert();
+  
   // Check if first time setup (no PhantomID or credentials)
   const [showWelcome, setShowWelcome] = useState(() => {
     // Check if we've shown welcome before
@@ -245,7 +248,11 @@ function MainLayout() {
       
       {/* Main Panel - Navigation and Content */}
       <MainPanel>
-        <MainPanelHeader>
+        <MainPanelHeader 
+          className={cn(alertClass, hasAlert && 'top-bar-alerting')}
+          onClick={hasAlert ? handleTopBarClick : undefined}
+          style={{ cursor: hasAlert ? 'pointer' : 'default' }}
+        >
           <div className="header-left">
             <button 
               className="app-brand app-brand-clickable" 
