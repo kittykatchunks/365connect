@@ -48,7 +48,7 @@ export function SIPStatusIcon() {
     switch (registrationState) {
       case 'registered':
         return {
-          icon: Phone,
+          icon: Wifi,
           label: t('status.registered', 'Registered'),
           className: 'sip-icon-registered',
           clickable: true,

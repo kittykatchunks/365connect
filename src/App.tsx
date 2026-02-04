@@ -253,7 +253,6 @@ function MainLayout() {
               aria-label="Toggle menu"
             >
               <img src="/icons/pwa-192x192.png" alt="" className="brand-logo" />
-              <span className="brand-name">Connect365</span>
             </button>
             <AgentStatusInfo />
           </div>

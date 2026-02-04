@@ -12,11 +12,16 @@ import { cn } from '@/utils';
 export function VoicemailIndicator() {
   const { t } = useTranslation();
   const { makeCall } = useSIP();
-  const { voicemailCount, hasNewVoicemail } = useSIPStore();
+  const { voicemailCount, hasNewVoicemail, registrationState } = useSIPStore();
   const { settings } = useSettingsStore();
   const addNotification = useUIStore((state) => state.addNotification);
   
   const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Don't show voicemail indicator when not registered
+  if (registrationState !== 'registered') {
+    return null;
+  }
   
   const handleVoicemailClick = async () => {
     if (verboseLogging) {
