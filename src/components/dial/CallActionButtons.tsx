@@ -4,7 +4,7 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
-import { Phone, PhoneOff, PhoneOutgoing, Mic, MicOff, Pause, Play, PhoneForwarded } from 'lucide-react';
+import { Phone, PhoneOff, PhoneOutgoing, Mic, MicOff, Pause, Play, PhoneForwarded, Grid3x3 } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled } from '@/utils';
 import { Button } from '@/components/ui';
 
@@ -28,6 +28,7 @@ interface CallActionButtonsProps {
   onMuteToggle: () => void;
   onHoldToggle: () => void;
   onTransfer: () => void;
+  onKeypadToggle?: () => void;
   
   // State
   disabled?: boolean;
@@ -53,6 +54,7 @@ export function CallActionButtons({
   onMuteToggle,
   onHoldToggle,
   onTransfer,
+  onKeypadToggle,
   disabled = false,
   isDialing = false,
   hasDialValue = false,
@@ -245,6 +247,24 @@ export function CallActionButtons({
         className="hangup-button uppercase"
       >
         <PhoneOff className="icon" />
+      </Button>
+      
+      {/* Keypad Toggle Button */}
+      <Button
+        variant="secondary"
+        size="lg"
+        onClick={() => {
+          if (verboseLogging) {
+            console.log('[CallActionButtons] 🔢 Keypad toggle button clicked');
+          }
+          onKeypadToggle?.();
+        }}
+        disabled={disabled}
+        aria-label={t('dialpad.toggle', 'Toggle Keypad')}
+        title={t('dialpad.toggle', 'Toggle Keypad')}
+        className="keypad-toggle-btn"
+      >
+        <Grid3x3 className="icon" />
       </Button>
       </div>
     </div>

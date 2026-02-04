@@ -7,6 +7,25 @@
         "queue_monitor": "Moniteur Files",
         "settings": "Paramètres"
     },
+    "menu": {
+        "navigation": "Menu de navigation",
+        "phone": "Téléphone",
+        "activity": "Activité",
+        "contacts": "Contacts",
+        "company_numbers": "Numéros Entreprise",
+        "queue_monitor": "Moniteur Files",
+        "settings": "Paramètres",
+        "user_guide": "Guide de l'Utilisateur",
+        "theme_toggle": "Changer le thème",
+        "pin": "Épingler le menu",
+        "unpin": "Détacher le menu",
+        "close": "Fermer le menu"
+    },
+    "theme": {
+        "light": "Clair",
+        "dark": "Sombre",
+        "auto": "Automatique"
+    },
     "common": {
         "cancel": "Annuler",
         "confirm": "Confirmer",

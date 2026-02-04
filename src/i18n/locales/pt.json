@@ -7,6 +7,25 @@
         "queue_monitor": "Monitor Filas",
         "settings": "Definições"
     },
+    "menu": {
+        "navigation": "Menu de navegação",
+        "phone": "Telefone",
+        "activity": "Actividade",
+        "contacts": "Contactos",
+        "company_numbers": "Números Empresa",
+        "queue_monitor": "Monitor Filas",
+        "settings": "Definições",
+        "user_guide": "Guia do Utilizador",
+        "theme_toggle": "Alternar tema",
+        "pin": "Fixar menu",
+        "unpin": "Desafixar menu",
+        "close": "Fechar menu"
+    },
+    "theme": {
+        "light": "Claro",
+        "dark": "Escuro",
+        "auto": "Automático"
+    },
     "common": {
         "cancel": "Cancelar",
         "confirm": "Confirmar",

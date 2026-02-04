@@ -14,7 +14,6 @@ import { CLISelector } from './CLISelector';
 import { AgentKeys } from './AgentKeys';
 import { CallInfoDisplay } from './CallInfoDisplay';
 import { TransferModal } from '@/components/modals';
-import { VoicemailIndicator } from './VoicemailIndicator';
 import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
@@ -24,19 +23,17 @@ import type { SessionData } from '@/types';
 export function DialView() {
   const { t } = useTranslation();
   const [dialValue, setDialValue] = useState('');
-  // const [showInCallDialpad, setShowInCallDialpad] = useState(false);
   const [isDialing, setIsDialing] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferTarget, setTransferTarget] = useState<string | undefined>(undefined);
   const [autoStartAttended, setAutoStartAttended] = useState(false);
   
+  // Keypad visibility state (persisted)
+  const [showKeypad, setShowKeypad] = useLocalStorage('ShowDialpad', false);
+  
   // Last dialed number for redial functionality (persisted)
   const [lastDialedNumber, setLastDialedNumber] = useLocalStorage('LastDialedNumber', '');
   
-  // Agent state for status display
-  const agentState = useAppStore((state) => state.agentState);
-  const agentNumber = useAppStore((state) => state.agentNumber);
-  const agentName = useAppStore((state) => state.agentName);
   const pendingDialNumber = useAppStore((state) => state.pendingDialNumber);
   const setPendingDialNumber = useAppStore((state) => state.setPendingDialNumber);
   const autoDialNumber = useAppStore((state) => state.autoDialNumber);
@@ -731,55 +728,12 @@ export function DialView() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleDigit, handleBackspace, handleCall, isInCall, dialValue]);
   
-  // Get subtitle based on registration and agent state
-  const getStatusSubtitle = (): string | React.ReactNode => {
-    if (!isRegistered) {
-      return t('dial.not_connected', 'Not connected to Phantom - Not registered');
-    }
-    
-    if (agentState === 'logged-out') {
-      return (
-        <div className="status-subtitle-row">
-          <div className="status-subtitle-left">
-            <span className="agent-prefix">Agent: </span>
-            <span className="status-not-logged-in">Not Logged In</span>
-          </div>
-          <VoicemailIndicator />
-        </div>
-      );
-    }
-    
-    const agentDisplay = agentName ? `${agentNumber} - ${agentName}` : agentNumber;
-    
-    if (agentState === 'paused') {
-      return (
-        <div className="status-subtitle-row">
-          <div className="status-subtitle-left">
-            <span className="agent-prefix">Agent: </span>
-            <span className="status-paused">[PAUSED] {agentDisplay}</span>
-          </div>
-          <VoicemailIndicator />
-        </div>
-      );
-    }
-    
-    return (
-      <div className="status-subtitle-row">
-        <div className="status-subtitle-left">
-          <span className="agent-prefix">Agent: </span>
-          <span className="status-connected">{agentDisplay}</span>
-        </div>
-        <VoicemailIndicator />
-      </div>
-    );
-  };
-  
   return (
     <div className="dial-view">
       <PanelHeader 
         title=""
-        subtitle={getStatusSubtitle()}
-        subtitleClassName="panel-header-title"
+        subtitle={<LineKeys />}
+        subtitleClassName="panel-header-line-keys"
       />
       
       <div className="dial-view-layout">
@@ -794,9 +748,6 @@ export function DialView() {
           
           {/* CLI Selector */}
           <CLISelector />
-          
-          {/* Line Keys */}
-          <LineKeys />
           
           {/* Call Info Display OR Dial Input - based on selected line state */}
           {showCallInfo ? (
@@ -814,8 +765,8 @@ export function DialView() {
             />
           )}
           
-          {/* Dialpad - always shown, sends DTMF during active call */}
-          {(!isSelectedLineInCall || true) && (
+          {/* Dialpad - shown/hidden by toggle button, sends DTMF during active call */}
+          {showKeypad && (
             <Dialpad
               onDigit={handleDigit}
               onLongPress={handleLongPress}
@@ -839,6 +790,7 @@ export function DialView() {
             onMuteToggle={handleMuteToggle}
             onHoldToggle={handleHoldToggle}
             onTransfer={handleTransfer}
+            onKeypadToggle={() => setShowKeypad(!showKeypad)}
             disabled={!isRegistered}
             isDialing={isDialing || !!isOutboundDialing}
             hasDialValue={!!dialValue.trim()}

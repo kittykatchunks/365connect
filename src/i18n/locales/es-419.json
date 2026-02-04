@@ -7,6 +7,25 @@
         "queue_monitor": "Monitor de Cola",
         "settings": "Configuración"
     },
+    "menu": {
+        "navigation": "Menú de navegación",
+        "phone": "Teléfono",
+        "activity": "Actividad",
+        "contacts": "Contactos",
+        "company_numbers": "Números de Empresa",
+        "queue_monitor": "Monitor de Cola",
+        "settings": "Configuración",
+        "user_guide": "Guía del Usuario",
+        "theme_toggle": "Cambiar tema",
+        "pin": "Fijar menú",
+        "unpin": "Desfijar menú",
+        "close": "Cerrar menú"
+    },
+    "theme": {
+        "light": "Claro",
+        "dark": "Oscuro",
+        "auto": "Automático"
+    },
     "common": {
         "cancel": "Cancelar",
         "confirm": "Confirmar",

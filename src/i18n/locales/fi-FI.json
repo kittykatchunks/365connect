@@ -7,6 +7,25 @@
         "queue_monitor": "Jononvalvonta",
         "settings": "Asetukset"
     },
+    "menu": {
+        "navigation": "Navigointivalikko",
+        "phone": "Puhelin",
+        "activity": "Toiminta",
+        "contacts": "Yhteystiedot",
+        "company_numbers": "Yrityksen numerot",
+        "queue_monitor": "Jononvalvonta",
+        "settings": "Asetukset",
+        "user_guide": "Käyttöopas",
+        "theme_toggle": "Vaihda teemaa",
+        "pin": "Kiinnitä valikko",
+        "unpin": "Irrota valikko",
+        "close": "Sulje valikko"
+    },
+    "theme": {
+        "light": "Vaalea",
+        "dark": "Tumma",
+        "auto": "Automaattinen"
+    },
     "common": {
         "cancel": "Peruuta",
         "confirm": "Vahvista",

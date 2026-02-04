@@ -7,6 +7,25 @@
         "queue_monitor": "Queue Monitor",
         "settings": "Settings"
     },
+    "menu": {
+        "navigation": "Navigation menu",
+        "phone": "Phone",
+        "activity": "Activity",
+        "contacts": "Contacts",
+        "company_numbers": "Company Numbers",
+        "queue_monitor": "Queue Monitor",
+        "settings": "Settings",
+        "user_guide": "User Guide",
+        "theme_toggle": "Toggle theme",
+        "pin": "Pin menu",
+        "unpin": "Unpin menu",
+        "close": "Close menu"
+    },
+    "theme": {
+        "light": "Light",
+        "dark": "Dark",
+        "auto": "Auto"
+    },
     "common": {
         "cancel": "Cancel",
         "confirm": "Confirm",
@@ -61,6 +80,9 @@
     },
     "dial": {
         "not_connected": "Not connected to server"
+    },
+    "dialpad": {
+        "toggle": "Toggle Keypad"
     },
     "call": {
         "call": "Call",
@@ -131,6 +153,7 @@
     "agent": {
         "login": "Login",
         "logout": "Logout",
+        "not_logged_in": "Not Logged In",
         "login_title": "Agent Login",
         "number_label": "Agent Number",
         "number_placeholder": "Enter agent number",

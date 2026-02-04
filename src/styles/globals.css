@@ -293,12 +293,42 @@ a {
   justify-content: space-between;
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
+  gap: var(--spacing-md);
+  min-height: 60px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
 }
 
 .app-brand {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.app-brand-clickable {
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  margin: calc(var(--spacing-xs) * -1);
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-fast);
+}
+
+.app-brand-clickable:hover {
+  background-color: var(--surface-color-hover);
 }
 
 .brand-logo {
@@ -309,6 +339,111 @@ a {
 .brand-name {
   font-weight: 600;
   font-size: 1.125rem;
+}
+
+/* Agent Status Info */
+.agent-status-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-prefix {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.agent-status-text {
+  font-weight: 500;
+}
+
+.agent-status-text.status-disconnected {
+  color: var(--text-color-muted);
+}
+
+.agent-status-text.status-not-logged-in {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.agent-status-text.status-connected {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.agent-status-text.status-paused {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+/* SIP Status Icon Button */
+.sip-status-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-color-hover);
+  transition: all var(--transition-fast);
+  border: 2px solid transparent;
+}
+
+.sip-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.sip-icon-clickable {
+  cursor: pointer;
+}
+
+.sip-icon-clickable:hover:not(:disabled) {
+  background-color: var(--surface-color);
+  border-color: var(--border-color);
+  transform: scale(1.05);
+}
+
+.sip-icon-clickable:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sip-status-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sip-icon-registered .sip-icon {
+  color: var(--success-color);
+}
+
+.sip-icon-connecting .sip-icon,
+.sip-icon-registering .sip-icon {
+  color: var(--warning-color);
+}
+
+.sip-icon-unregistered {
+  animation: flash-red-icon 2s ease-in-out infinite;
+}
+
+.sip-icon-unregistered .sip-icon {
+  color: var(--danger-color);
+}
+
+/* Flash animation for unregistered icon */
+@keyframes flash-red-icon {
+  0%, 100% {
+    opacity: 1;
+    border-color: transparent;
+  }
+  50% {
+    opacity: 0.5;
+    border-color: var(--danger-color);
+  }
 }
 
 .main-panel-content {
@@ -360,6 +495,191 @@ a {
   margin-top: 2px;
 }
 
+
+/* ============================================
+   5. OVERLAY MENU
+   ============================================ */
+
+/* Backdrop */
+.overlay-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Menu Container */
+.overlay-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background-color: var(--surface-color);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.overlay-menu-open {
+  transform: translateX(0);
+}
+
+.overlay-menu-pinned {
+  position: relative;
+  transform: translateX(0);
+  box-shadow: none;
+}
+
+/* Menu Header */
+.overlay-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.overlay-menu-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.overlay-menu-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.overlay-menu-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.overlay-menu-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.overlay-menu-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius);
+  color: var(--text-color-muted);
+  transition: all var(--transition-fast);
+}
+
+.overlay-menu-control-btn:hover {
+  background-color: var(--surface-color-hover);
+  color: var(--text-color);
+}
+
+/* Navigation Items */
+.overlay-menu-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm) 0;
+}
+
+.overlay-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--text-color);
+  transition: all var(--transition-fast);
+  width: 100%;
+  text-align: left;
+  border-left: 3px solid transparent;
+}
+
+.overlay-menu-item:hover {
+  background-color: var(--surface-color-hover);
+}
+
+.overlay-menu-item-active {
+  background-color: var(--primary-color-light);
+  border-left-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.overlay-menu-item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.overlay-menu-item-label {
+  font-size: 0.938rem;
+  font-weight: 500;
+}
+
+/* Bottom Actions */
+.overlay-menu-actions {
+  border-top: 1px solid var(--border-color);
+  padding: var(--spacing-sm) 0;
+}
+
+.overlay-menu-action-placeholder {
+  min-height: 48px;
+}
+
+.overlay-menu-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--text-color);
+  transition: all var(--transition-fast);
+  width: 100%;
+  text-align: left;
+}
+
+.overlay-menu-action-btn:hover {
+  background-color: var(--surface-color-hover);
+}
+
+.overlay-menu-action-btn-active {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+.overlay-menu-action-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.overlay-menu-action-label {
+  font-size: 0.938rem;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .overlay-menu {
+    width: 260px;
+  }
+}
+
+
 /* Panel Header */
 .panel-header {
   display: flex;
@@ -408,6 +728,22 @@ a {
 
 .panel-header-subtitle.status-disconnected {
   color: var(--text-color-muted);
+}
+
+/* Line Keys in Panel Header */
+.panel-header-line-keys {
+  margin-top: var(--spacing-sm);
+}
+
+.panel-header-line-keys .line-keys {
+  display: flex;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.panel-header-line-keys .line-key {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Status Subtitle Row for Voicemail Indicator */
@@ -511,6 +847,27 @@ a {
   border-radius: var(--radius-full);
   font-size: 0.75rem;
   background-color: var(--surface-color-hover);
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.sip-status-clickable {
+  cursor: pointer;
+}
+
+.sip-status-clickable:hover:not(:disabled) {
+  background-color: var(--surface-color);
+  border-color: var(--border-color);
+  transform: scale(1.02);
+}
+
+.sip-status-clickable:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.sip-status:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .sip-status-icon {
@@ -535,6 +892,23 @@ a {
 .status-failed .sip-status-icon,
 .status-failed .sip-status-label {
   color: var(--danger-color);
+  animation: flash-red 2s ease-in-out infinite;
+}
+
+.status-unregistered .sip-status-icon,
+.status-unregistered .sip-status-label {
+  color: var(--danger-color);
+  animation: flash-red 2s ease-in-out infinite;
+}
+
+/* Flash animation for disconnected/unregistered states */
+@keyframes flash-red {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 
@@ -1623,10 +1997,10 @@ a {
   padding: var(--spacing-sm) 0;
 }
 
-/* Dial Actions (idle state) - 2 buttons side by side (Call + Hangup) */
+/* Dial Actions (idle state) - 3 buttons side by side (Call + Hangup + Keypad Toggle) */
 .dial-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: clamp(0.25rem, 0.8vw, 0.5rem);
   width: 50%;
   max-width: 100%;
@@ -2733,7 +3107,6 @@ a {
   display: flex;
   gap: var(--spacing-sm);
   padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-color);
 }
 
 .agent-key-btn {

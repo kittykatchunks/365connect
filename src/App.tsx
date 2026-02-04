@@ -17,14 +17,16 @@ import {
   MainPanel,
   MainPanelHeader,
   MainPanelContent,
-  NavigationTabs,
-  SIPStatusDisplay,
+  OverlayMenu,
+  AgentStatusInfo,
+  SIPStatusIcon,
   WelcomeOverlay,
   UpdatePrompt,
   ViewErrorBoundary
 } from '@/components';
 import { VersionUpdateModal } from '@/components/modals';
 import { DialView } from '@/components/dial';
+import { VoicemailIndicator } from '@/components/dial/VoicemailIndicator';
 import '@/styles/globals.css';
 
 // Lazy load non-critical views for better initial load time
@@ -201,6 +203,7 @@ function MainLayout() {
   const sipConfig = useSettingsStore((state) => state.sipConfig);
   const setCurrentView = useAppStore((state) => state.setCurrentView);
   const setOpenSettingsWithConnection = useAppStore((state) => state.setOpenSettingsWithConnection);
+  const [overlayMenuOpen, setOverlayMenuOpen] = useState(false);
   
   // Check if first time setup (no PhantomID or credentials)
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -221,19 +224,44 @@ function MainLayout() {
     setCurrentView('settings');
   }, [setCurrentView, setOpenSettingsWithConnection]);
   
+  // Handle logo click to toggle overlay menu
+  const handleLogoClick = useCallback(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log('[MainLayout] 📱 Logo clicked, toggling overlay menu');
+    }
+    
+    setOverlayMenuOpen((prev) => !prev);
+  }, []);
+  
   return (
     <MainContainer>
+      {/* Overlay Menu */}
+      <OverlayMenu 
+        isOpen={overlayMenuOpen}
+        onClose={() => setOverlayMenuOpen(false)}
+      />
+      
       {/* Main Panel - Navigation and Content */}
       <MainPanel>
         <MainPanelHeader>
-          <div className="app-brand">
-            <img src="/icons/pwa-192x192.png" alt="" className="brand-logo" />
-            <span className="brand-name">Connect365</span>
+          <div className="header-left">
+            <button 
+              className="app-brand app-brand-clickable" 
+              onClick={handleLogoClick}
+              aria-label="Toggle menu"
+            >
+              <img src="/icons/pwa-192x192.png" alt="" className="brand-logo" />
+              <span className="brand-name">Connect365</span>
+            </button>
+            <AgentStatusInfo />
           </div>
-          <SIPStatusDisplay />
+          <div className="header-right">
+            <VoicemailIndicator />
+            <SIPStatusIcon />
+          </div>
         </MainPanelHeader>
-        
-        <NavigationTabs />
         
         <MainPanelContent>
           <ViewRouter />

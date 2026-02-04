@@ -7,6 +7,25 @@
         "queue_monitor": "Wachtrij Monitor",
         "settings": "Instellingen"
     },
+    "menu": {
+        "navigation": "Navigatiemenu",
+        "phone": "Telefoon",
+        "activity": "Activiteit",
+        "contacts": "Contacten",
+        "company_numbers": "Bedrijfsnummers",
+        "queue_monitor": "Wachtrij Monitor",
+        "settings": "Instellingen",
+        "user_guide": "Gebruikershandleiding",
+        "theme_toggle": "Thema wisselen",
+        "pin": "Menu vastzetten",
+        "unpin": "Menu losmaken",
+        "close": "Menu sluiten"
+    },
+    "theme": {
+        "light": "Licht",
+        "dark": "Donker",
+        "auto": "Automatisch"
+    },
     "common": {
         "cancel": "Annuleren",
         "confirm": "Bevestigen",

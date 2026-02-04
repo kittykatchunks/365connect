@@ -1,5 +1,5 @@
 // ============================================
-// SIP Status Display - Connection and registration status
+// SIP Status Icon - Icon-only registration status for header
 // ============================================
 
 import { useState, useCallback } from 'react';
@@ -10,7 +10,7 @@ import { useSIPStore, useSettingsStore } from '@/stores';
 import { useSIPContext } from '@/contexts';
 import { ConfirmModal } from '@/components/modals';
 
-export function SIPStatusDisplay() {
+export function SIPStatusIcon() {
   const { t } = useTranslation();
   const [isConnecting, setIsConnecting] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
@@ -23,15 +23,13 @@ export function SIPStatusDisplay() {
   
   const isRegistered = registrationState === 'registered';
   
-  const getStatusConfig = () => {
+  const getStatusConfig = useCallback(() => {
     // Show disconnected if transport is down OR if registration is lost/failed
-    // This ensures the app shows disconnected when SIP connection is lost, not just WebRTC
     if (transportState === 'disconnected' || registrationState === 'unregistered' || registrationState === 'failed') {
       return {
         icon: WifiOff,
-        label: t('status.disconnected', 'Disconnected'),
-        className: 'status-disconnected',
-        color: 'text-error',
+        label: t('status.unregistered', 'Unregistered'),
+        className: 'sip-icon-unregistered',
         clickable: true,
         action: 'connect'
       };
@@ -41,22 +39,18 @@ export function SIPStatusDisplay() {
       return {
         icon: Wifi,
         label: t('status.connecting', 'Connecting...'),
-        className: 'status-connecting',
-        color: 'text-warning',
+        className: 'sip-icon-connecting',
         clickable: false,
         action: null
       };
     }
     
-    // At this point, registrationState can only be 'registered' or 'registering'
-    // ('unregistered' and 'failed' are handled above)
     switch (registrationState) {
       case 'registered':
         return {
           icon: Phone,
           label: t('status.registered', 'Registered'),
-          className: 'status-registered',
-          color: 'text-success',
+          className: 'sip-icon-registered',
           clickable: true,
           action: 'disconnect'
         };
@@ -64,8 +58,7 @@ export function SIPStatusDisplay() {
         return {
           icon: Phone,
           label: t('status.registering', 'Registering...'),
-          className: 'status-registering',
-          color: 'text-warning',
+          className: 'sip-icon-registering',
           clickable: false,
           action: null
         };
@@ -73,22 +66,21 @@ export function SIPStatusDisplay() {
         return {
           icon: PhoneOff,
           label: t('status.unregistered', 'Unregistered'),
-          className: 'status-unregistered',
-          color: 'text-muted',
+          className: 'sip-icon-unregistered',
           clickable: true,
           action: 'connect'
         };
     }
-  };
+  }, [registrationState, transportState, t]);
   
   const handleConnect = useCallback(async () => {
     if (!sipConfig) {
-      console.warn('[SIPStatusDisplay] No SIP config available');
+      console.warn('[SIPStatusIcon] No SIP config available');
       return;
     }
     
     if (verboseLogging) {
-      console.log('[SIPStatusDisplay] 🔌 Initiating connection to SIP server');
+      console.log('[SIPStatusIcon] 🔌 Initiating connection to SIP server');
     }
     
     setIsConnecting(true);
@@ -96,10 +88,10 @@ export function SIPStatusDisplay() {
     try {
       await connect();
       if (verboseLogging) {
-        console.log('[SIPStatusDisplay] ✅ Successfully connected to SIP server');
+        console.log('[SIPStatusIcon] ✅ Successfully connected to SIP server');
       }
     } catch (err) {
-      console.error('[SIPStatusDisplay] ❌ SIP connection error:', err);
+      console.error('[SIPStatusIcon] ❌ SIP connection error:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -107,7 +99,7 @@ export function SIPStatusDisplay() {
   
   const handleDisconnect = useCallback(async () => {
     if (verboseLogging) {
-      console.log('[SIPStatusDisplay] 🔌 Initiating disconnection from SIP server');
+      console.log('[SIPStatusIcon] 🔌 Initiating disconnection from SIP server');
     }
     
     setIsConnecting(true);
@@ -119,10 +111,10 @@ export function SIPStatusDisplay() {
       }
       await disconnect();
       if (verboseLogging) {
-        console.log('[SIPStatusDisplay] ✅ Successfully disconnected from SIP server');
+        console.log('[SIPStatusIcon] ✅ Successfully disconnected from SIP server');
       }
     } catch (err) {
-      console.error('[SIPStatusDisplay] ❌ SIP disconnect error:', err);
+      console.error('[SIPStatusIcon] ❌ SIP disconnect error:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -137,16 +129,16 @@ export function SIPStatusDisplay() {
     
     if (status.action === 'connect') {
       if (verboseLogging) {
-        console.log('[SIPStatusDisplay] 👆 Status clicked - attempting to connect');
+        console.log('[SIPStatusIcon] 👆 Icon clicked - attempting to connect');
       }
       handleConnect();
     } else if (status.action === 'disconnect') {
       if (verboseLogging) {
-        console.log('[SIPStatusDisplay] 👆 Status clicked - showing disconnect confirmation');
+        console.log('[SIPStatusIcon] 👆 Icon clicked - showing disconnect confirmation');
       }
       setShowDisconnectConfirm(true);
     }
-  }, [handleConnect, isConnecting, verboseLogging]);
+  }, [getStatusConfig, handleConnect, isConnecting, verboseLogging]);
   
   const status = getStatusConfig();
   const Icon = status.icon;
@@ -157,20 +149,14 @@ export function SIPStatusDisplay() {
     <>
       <button
         className={cn(
-          'sip-status',
+          'sip-status-icon-btn',
           status.className,
-          status.clickable && !isConnecting && 'sip-status-clickable',
-          !sipConfig && 'sip-status-disabled'
+          status.clickable && !isConnecting && 'sip-icon-clickable',
+          !sipConfig && 'sip-icon-disabled'
         )}
         onClick={handleStatusClick}
         disabled={!status.clickable || isConnecting || !sipConfig}
-        title={
-          status.action === 'connect' 
-            ? t('status.connect', 'Connect')
-            : status.action === 'disconnect'
-            ? t('status.disconnect', 'Disconnect')
-            : status.label
-        }
+        title={status.label}
         aria-label={
           status.action === 'connect' 
             ? t('status.connect', 'Connect')
@@ -180,11 +166,10 @@ export function SIPStatusDisplay() {
         }
       >
         {showSpinner ? (
-          <Loader2 className="sip-status-icon text-warning animate-spin" />
+          <Loader2 className="sip-icon animate-spin" />
         ) : (
-          <Icon className={cn('sip-status-icon', status.color)} />
+          <Icon className="sip-icon" />
         )}
-        <span className={cn('sip-status-label', status.color)}>{status.label}</span>
       </button>
       
       <ConfirmModal
