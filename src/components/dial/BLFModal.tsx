@@ -61,10 +61,11 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
     if (!extension || !isRegistered) return;
     try {
       await makeCall(extension);
+      onClose(); // Close modal after initiating call
     } catch (error) {
       console.error('[BLFModal] ❌ BLF dial error:', error);
     }
-  }, [makeCall, isRegistered]);
+  }, [makeCall, isRegistered, onClose]);
   
   const handleTransfer = useCallback(async (extension: string, button: BLFButtonType) => {
     if (!extension || !isInCall) return;
@@ -86,6 +87,7 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
           console.log(`[BLFModal] 📞 Performing blind transfer to ${extension}`);
         }
         await blindTransfer(extension);
+        onClose(); // Close modal after blind transfer
       } else {
         // Start attended transfer - open modal with pre-filled target
         if (verboseLogging) {
@@ -95,6 +97,7 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
         if (onTransferRequest) {
           // Use parent's transfer request handler to show modal with pre-filled target
           onTransferRequest(extension, true);
+          onClose(); // Close BLF modal when opening transfer modal
         } else {
           // Fallback
           console.warn('[BLFModal] ⚠️ onTransferRequest not provided, cannot initiate attended transfer');
@@ -103,7 +106,7 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
     } catch (error) {
       console.error('[BLFModal] ❌ BLF transfer error:', error);
     }
-  }, [blindTransfer, isInCall, preferBlindTransfer, onTransferRequest, verboseLogging]);
+  }, [blindTransfer, isInCall, preferBlindTransfer, onTransferRequest, verboseLogging, onClose]);
   
   const handleConfigure = useCallback((index: number) => {
     setConfigureIndex(index);

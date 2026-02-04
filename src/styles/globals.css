@@ -1552,6 +1552,7 @@ a {
   /* Add back horizontal padding for content */
   padding-left: 0;
   padding-right: 0;
+  position: relative;
 }
 
 /* When BLF is disabled, restrict content width */
@@ -2510,11 +2511,14 @@ a {
 
 /* --- BLF Trigger Button --- */
 .blf-trigger-btn {
+  position: fixed;
+  bottom: clamp(1rem, 2vh, 1.5rem);
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: clamp(0.375rem, 0.8vw, 0.5rem) clamp(0.875rem, 1.5vw, 1.25rem);
-  margin: clamp(0.5rem, 1vw, 1rem) auto;
   background-color: var(--primary-color);
   color: var(--primary-text-color);
   border: 2px solid var(--primary-color);
@@ -2525,18 +2529,20 @@ a {
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: all var(--transition-fast);
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .blf-trigger-btn:hover {
   background-color: var(--primary-color-hover);
   border-color: var(--primary-color-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .blf-trigger-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateX(-50%) translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* --- BLF Modal --- */
