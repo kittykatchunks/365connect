@@ -4,7 +4,7 @@
 
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useSettingsStore } from '@/stores';
+import { useSettingsStore, useUIStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 type Theme = 'light' | 'dark' | 'auto';
@@ -30,7 +30,8 @@ const themeConfig = {
 export function ThemeToggle() {
   const { t } = useTranslation();
   const theme = useSettingsStore((state) => state.settings.interface.theme);
-  const setTheme = useSettingsStore((state) => state.setTheme);
+  const setThemeInSettings = useSettingsStore((state) => state.setTheme);
+  const setThemeInUI = useUIStore((state) => state.setTheme);
   const verboseLogging = isVerboseLoggingEnabled();
   
   const handleThemeChange = () => {
@@ -44,7 +45,9 @@ export function ThemeToggle() {
       console.log(`[ThemeToggle] 🎨 Switching theme from ${theme} to ${nextTheme}`);
     }
     
-    setTheme(nextTheme);
+    // Update both stores to keep them in sync
+    setThemeInSettings(nextTheme);
+    setThemeInUI(nextTheme);
   };
   
   const config = themeConfig[theme];
