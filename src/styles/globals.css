@@ -417,6 +417,10 @@ a {
   cursor: not-allowed;
 }
 
+.sip-icon-registered {
+  border-color: var(--success-color);
+}
+
 .sip-icon-registered .sip-icon {
   color: var(--success-color);
 }
