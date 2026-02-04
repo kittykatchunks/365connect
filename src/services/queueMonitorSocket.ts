@@ -227,6 +227,13 @@ class QueueMonitorSocketService {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 queue status:', data);
       }
+      
+      // Validate queue status data
+      if (!data || typeof data !== 'object') {
+        console.warn('[QueueMonitorSocket] ⚠️ Invalid queue status received:', data);
+        return;
+      }
+      
       this.notifyListeners('queueStatus', data);
     });
 
@@ -234,6 +241,18 @@ class QueueMonitorSocketService {
       if (verboseLogging) {
         console.log('[QueueMonitorSocket] 📦 agent status:', data);
       }
+      
+      // Validate agent data before notifying listeners
+      if (!data || typeof data !== 'object') {
+        console.warn('[QueueMonitorSocket] ⚠️ Invalid agent status received (not an object):', data);
+        return;
+      }
+      
+      if (!data.extension) {
+        console.warn('[QueueMonitorSocket] ⚠️ Invalid agent status received (missing extension):', data);
+        return;
+      }
+      
       this.notifyListeners('agentStatus', data);
     });
 

@@ -154,8 +154,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to version event
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('version', (data) => {
-      const version = data as number;
-      setState(prev => ({ ...prev, version, lastUpdate: new Date() }));
+      try {
+        const version = data as number;
+        setState(prev => ({ ...prev, version, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing version:', error);
+      }
     });
 
     return unsubscribe;
@@ -164,8 +168,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to queue status events
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('queueStatus', (data) => {
-      const queues = data as SocketQueueStatus;
-      setState(prev => ({ ...prev, queues, lastUpdate: new Date() }));
+      try {
+        const queues = data as SocketQueueStatus;
+        setState(prev => ({ ...prev, queues, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing queue status:', error);
+      }
     });
 
     return unsubscribe;
@@ -173,27 +181,50 @@ export function QueueMonitorSocketProvider({
 
   // Subscribe to agent status events
   useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
     const unsubscribe = queueMonitorSocket.on('agentStatus', (data) => {
-      const agent = data as SocketAgentStatus;
-      // Validate agent data before processing
-      if (!agent || !agent.extension) {
-        console.warn('[QueueMonitorSocketContext] ⚠️ Invalid agent data received:', agent);
-        return;
-      }
-      
-      setState(prev => {
-        // Update or add agent to array
-        const existingIndex = prev.agents.findIndex(a => a.extension === agent.extension);
-        const newAgents = [...prev.agents];
+      try {
+        const agent = data as SocketAgentStatus;
         
-        if (existingIndex >= 0) {
-          newAgents[existingIndex] = agent;
-        } else {
-          newAgents.push(agent);
+        // Additional validation at context level (defensive programming)
+        if (!agent || typeof agent !== 'object') {
+          if (verboseLogging) {
+            console.warn('[QueueMonitorSocketContext] ⚠️ Invalid agent data type:', typeof agent);
+          }
+          return;
         }
+        
+        if (!agent.extension) {
+          if (verboseLogging) {
+            console.warn('[QueueMonitorSocketContext] ⚠️ Agent data missing extension:', agent);
+          }
+          return;
+        }
+        
+        setState(prev => {
+          try {
+            // Update or add agent to array
+            const existingIndex = prev.agents.findIndex(a => a.extension === agent.extension);
+            const newAgents = [...prev.agents];
+            
+            if (existingIndex >= 0) {
+              newAgents[existingIndex] = agent;
+            } else {
+              newAgents.push(agent);
+            }
 
-        return { ...prev, agents: newAgents, lastUpdate: new Date() };
-      });
+            return { ...prev, agents: newAgents, lastUpdate: new Date() };
+          } catch (stateError) {
+            console.error('[QueueMonitorSocketContext] ❌ Error updating agent state:', stateError);
+            // Return previous state unchanged if update fails
+            return prev;
+          }
+        });
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing agent status:', error);
+        // Don't let errors propagate - maintain socket connection
+      }
     });
 
     return unsubscribe;
@@ -202,8 +233,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to counters event
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('counters', (data) => {
-      const counters = data as SocketCounters;
-      setState(prev => ({ ...prev, counters, lastUpdate: new Date() }));
+      try {
+        const counters = data as SocketCounters;
+        setState(prev => ({ ...prev, counters, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing counters:', error);
+      }
     });
 
     return unsubscribe;
@@ -212,8 +247,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to live event
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('live', (data) => {
-      const live = data as SocketLiveStatus;
-      setState(prev => ({ ...prev, live, lastUpdate: new Date() }));
+      try {
+        const live = data as SocketLiveStatus;
+        setState(prev => ({ ...prev, live, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing live status:', error);
+      }
     });
 
     return unsubscribe;
@@ -222,8 +261,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to channels event
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('channels', (data) => {
-      const channels = data as SocketChannels;
-      setState(prev => ({ ...prev, channels, lastUpdate: new Date() }));
+      try {
+        const channels = data as SocketChannels;
+        setState(prev => ({ ...prev, channels, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing channels:', error);
+      }
     });
 
     return unsubscribe;
@@ -232,8 +275,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to trunk status event
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('trunkStatus', (data) => {
-      const trunks = data as SocketTrunkStatus;
-      setState(prev => ({ ...prev, trunks, lastUpdate: new Date() }));
+      try {
+        const trunks = data as SocketTrunkStatus;
+        setState(prev => ({ ...prev, trunks, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing trunk status:', error);
+      }
     });
 
     return unsubscribe;
@@ -242,8 +289,12 @@ export function QueueMonitorSocketProvider({
   // Subscribe to block event
   useEffect(() => {
     const unsubscribe = queueMonitorSocket.on('block', (data) => {
-      const blocks = data as SocketBlockSettings;
-      setState(prev => ({ ...prev, blocks, lastUpdate: new Date() }));
+      try {
+        const blocks = data as SocketBlockSettings;
+        setState(prev => ({ ...prev, blocks, lastUpdate: new Date() }));
+      } catch (error) {
+        console.error('[QueueMonitorSocketContext] ❌ Error processing block settings:', error);
+      }
     });
 
     return unsubscribe;
