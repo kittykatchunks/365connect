@@ -2,6 +2,7 @@
 // Confirm Modal - Generic Confirmation Dialog
 // ============================================
 
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -33,6 +34,20 @@ export function ConfirmModal({
     onConfirm();
     onClose();
   };
+  
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
   
   if (!isOpen) return null;
   

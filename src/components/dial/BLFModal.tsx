@@ -2,7 +2,7 @@
 // BLF Modal - 4x5 Grid of BLF Buttons
 // ============================================
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BLFButton } from './BLFButton';
@@ -115,6 +115,20 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
   const handleCloseConfig = useCallback(() => {
     setConfigureIndex(null);
   }, []);
+  
+  // Handle escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
   
   if (!isOpen) {
     return null;

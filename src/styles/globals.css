@@ -1553,6 +1553,7 @@ a {
   padding-left: 0;
   padding-right: 0;
   position: relative;
+  /* Ensure this is the positioning context for child elements */
 }
 
 /* When BLF is disabled, restrict content width */
@@ -2511,7 +2512,7 @@ a {
 
 /* --- BLF Trigger Button --- */
 .blf-trigger-btn {
-  position: fixed;
+  position: absolute;
   bottom: clamp(1rem, 2vh, 1.5rem);
   left: 50%;
   transform: translateX(-50%);

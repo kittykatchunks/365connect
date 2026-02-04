@@ -403,6 +403,20 @@ export function TransferModal({ isOpen, onClose, sessionId, initialTarget, autoS
     }
   }, [transferTarget, isInAttendedMode, handleBlindTransfer]);
   
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleClose]);
+  
   if (!isOpen) return null;
   
   return (
