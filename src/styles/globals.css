@@ -1531,9 +1531,6 @@ a {
   gap: var(--spacing-md);
   flex: 1;
   min-height: 0;
-  /* Negative margin to offset parent padding and allow BLF to reach edges */
-  margin-left: calc(var(--spacing-md) * -1);
-  margin-right: calc(var(--spacing-md) * -1);
 }
 
 /* When BLF panels are present, layout uses space-between */
