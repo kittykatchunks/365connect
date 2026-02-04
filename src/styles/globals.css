@@ -3076,7 +3076,7 @@ a {
   }
   
   .dialpad-key {
-    min-height: clamp(56px, 8vh, 72px); /* Doubled from 28-36px to 56-72px */
+    /* min-height: clamp(56px, 8vh, 72px);  Doubled from 28-36px to 56-72px */
     padding: clamp(0.75rem, 2vw, 1.25rem); /* Doubled padding */
   }
   
