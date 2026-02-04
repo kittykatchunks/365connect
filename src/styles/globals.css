@@ -2618,9 +2618,10 @@ a {
 }
 
 .blf-modal-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  /* gap: clamp(0.5rem, 1vw, 0.75rem); */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(0.5rem, 1vw, 0.75rem);
   max-width: 100%;
   margin: 0 auto;
 }
@@ -2744,7 +2745,6 @@ a {
   }
   
   .blf-modal-grid {
-    grid-template-columns: repeat(3, 1fr);
     gap: clamp(0.375rem, 0.8vw, 0.5rem);
   }
   
@@ -2756,7 +2756,6 @@ a {
 
 @media (max-width: 480px) {
   .blf-modal-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: clamp(0.375rem, 1.5vw, 0.5rem);
   }
   
