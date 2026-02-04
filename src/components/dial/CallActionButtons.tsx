@@ -4,7 +4,7 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
-import { Phone, PhoneOff, PhoneOutgoing, Mic, MicOff, Pause, Play, PhoneForwarded, Grid3x3 } from 'lucide-react';
+import { Phone, PhoneOff, PhoneOutgoing, Mic, MicOff, Pause, Play, PhoneForwarded, Grip } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled } from '@/utils';
 import { Button } from '@/components/ui';
 
@@ -147,7 +147,7 @@ export function CallActionButtons({
             title={t('dialpad.toggle', 'Toggle Keypad')}
             className="call-control-btn keypad-toggle-btn"
           >
-            <Grid3x3 className="icon" />
+            <Grip className="icon" />
           </Button>
           
           {/* End Call Button */}
@@ -282,7 +282,7 @@ export function CallActionButtons({
         title={t('dialpad.toggle', 'Toggle Keypad')}
         className="keypad-toggle-btn"
       >
-        <Grid3x3 className="icon" />
+        <Grip className="icon" />
       </Button>
       </div>
     </div>

@@ -2021,7 +2021,8 @@ a {
 /* Individual button styling for both states */
 .call-control-btn,
 .call-button,
-.hangup-button {
+.hangup-button,
+.keypad-toggle-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
