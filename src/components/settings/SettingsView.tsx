@@ -42,7 +42,7 @@ import {
 import { ImportExportModal, ConfirmModal } from '@/components/modals';
 import { QueueGroupModal } from './QueueGroupModal';
 import { useSettingsStore, useAppStore, useUIStore } from '@/stores';
-import { useAudioDevices, useMediaQuery } from '@/hooks';
+import { useAudioDevices } from '@/hooks';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBusylightContext } from '@/contexts';
 import { isVerboseLoggingEnabled, validateAndConvertAudioFile } from '@/utils';
