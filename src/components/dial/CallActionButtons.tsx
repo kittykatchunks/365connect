@@ -76,12 +76,12 @@ export function CallActionButtons({
       disabled,
       isDialing,
       hasDialValue,
-      displayState: isInCall ? 'call-actions (4 buttons)' : 'dial-actions (2 buttons)'
+      displayState: isInCall ? 'call-actions (5 buttons)' : 'dial-actions (3 buttons)'
     });
   }
   
-  // PWA Pattern: Show CALL/END buttons when idle or ringing
-  // Show MUTE/HOLD/TRANSFER/END when call is active
+  // PWA Pattern: Show CALL/END/KEYPAD buttons when idle or ringing
+  // Show MUTE/HOLD/TRANSFER/KEYPAD/END when call is active
   
   if (isInCall) {
     // Active call - show call control buttons in call-actions container
@@ -130,6 +130,24 @@ export function CallActionButtons({
             className="call-control-btn transfer-btn"
           >
             <PhoneForwarded className="icon" />
+          </Button>
+          
+          {/* Keypad Toggle Button */}
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => {
+              if (verboseLogging) {
+                console.log('[CallActionButtons] 🔢 Keypad toggle button clicked (active call)');
+              }
+              onKeypadToggle?.();
+            }}
+            disabled={disabled}
+            aria-label={t('dialpad.toggle', 'Toggle Keypad')}
+            title={t('dialpad.toggle', 'Toggle Keypad')}
+            className="call-control-btn keypad-toggle-btn"
+          >
+            <Grid3x3 className="icon" />
           </Button>
           
           {/* End Call Button */}
@@ -255,7 +273,7 @@ export function CallActionButtons({
         size="lg"
         onClick={() => {
           if (verboseLogging) {
-            console.log('[CallActionButtons] 🔢 Keypad toggle button clicked');
+            console.log('[CallActionButtons] 🔢 Keypad toggle button clicked (idle)');
           }
           onKeypadToggle?.();
         }}
