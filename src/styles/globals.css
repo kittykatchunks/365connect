@@ -2616,7 +2616,7 @@ a {
 .blf-modal-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(0.5rem, 1vw, 0.75rem);
+  /* gap: clamp(0.5rem, 1vw, 0.75rem); */
   max-width: 100%;
   margin: 0 auto;
 }
