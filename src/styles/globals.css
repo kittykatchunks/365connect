@@ -5052,6 +5052,15 @@ a {
   animation: tab-error-flash 0.5s ease-in-out infinite;
 }
 
+/* Tab error alerts - speed varies by tab type */
+.tab-alert-error-fast {
+  animation: tab-error-flash 0.5s ease-in-out infinite;
+}
+
+.tab-alert-error-slow {
+  animation: tab-error-flash 2s ease-in-out infinite;
+}
+
 /* Top Bar Alert States - Flashing for main panel header */
 @keyframes top-bar-warning-flash {
   0%, 100% { 
@@ -5078,6 +5087,16 @@ a {
 }
 
 .top-bar-alert-error {
+  animation: top-bar-error-flash 2s ease-in-out infinite;
+}
+
+/* Top bar error - fast variant for incoming calls (dial tab) */
+.top-bar-alert-error-fast {
+  animation: top-bar-error-flash 0.5s ease-in-out infinite;
+}
+
+/* Top bar error - slow variant for queue monitor alerts */
+.top-bar-alert-error-slow {
   animation: top-bar-error-flash 2s ease-in-out infinite;
 }
 

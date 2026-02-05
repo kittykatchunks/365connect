@@ -77,7 +77,7 @@ export function useTopBarAlert(): UseTopBarAlertReturn {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alerts, verboseLogging]);
   
-  // Determine CSS class based on alert state
+  // Determine CSS class based on alert state and tab type
   const alertClass = useMemo(() => {
     if (!alertInfo) return undefined;
     
@@ -86,7 +86,14 @@ export function useTopBarAlert(): UseTopBarAlertReturn {
     }
     
     if (alertInfo.state === 'error') {
-      return 'top-bar-alert-error';
+      // Dial tab (incoming calls) flashes fast, queue monitor flashes slow
+      if (alertInfo.tabId === 'dial') {
+        return 'top-bar-alert-error-fast';
+      } else if (alertInfo.tabId === 'queueMonitor') {
+        return 'top-bar-alert-error-slow';
+      }
+      // Other tabs use fast flash by default
+      return 'top-bar-alert-error-fast';
     }
     
     return undefined;

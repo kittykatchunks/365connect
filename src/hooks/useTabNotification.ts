@@ -108,7 +108,14 @@ export function useTabNotification(): UseTabNotificationReturn {
       return 'tab-alert-warning';
     }
     if (state === 'error') {
-      return 'tab-alert-error';
+      // Dial tab flashes fast (incoming calls), queue monitor flashes slow
+      if (tabId === 'dial') {
+        return 'tab-alert-error-fast';
+      } else if (tabId === 'queueMonitor') {
+        return 'tab-alert-error-slow';
+      }
+      // Other tabs use default fast flash
+      return 'tab-alert-error-fast';
     }
     
     return undefined;
