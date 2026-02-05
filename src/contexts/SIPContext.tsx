@@ -246,10 +246,14 @@ export function SIPProvider({ children }: SIPProviderProps) {
               await new Promise(resolve => setTimeout(resolve, 1000));
               
               try {
+                // Set flag to prevent AgentKeys from doing duplicate check
+                sessionStorage.setItem('autoReconnectHandlingAgent', 'true');
+                
                 const agentData = await queryAgentStatus(sipConfig.username);
                 
                 if (verboseLogging) {
                   console.log('[SIPContext] 📥 Agent status response:', agentData);
+                  console.log('[SIPContext] 🚩 Set autoReconnectHandlingAgent flag to prevent duplicate checks');
                 }
                 
                 if (agentData) {
@@ -388,9 +392,18 @@ export function SIPProvider({ children }: SIPProviderProps) {
                   message: 'SIP connection restored successfully.',
                   duration: 4000
                 });
+              } finally {
+                // Clear flag after handling completes
+                sessionStorage.removeItem('autoReconnectHandlingAgent');
+                if (verboseLogging) {
+                  console.log('[SIPContext] 🏁 Cleared autoReconnectHandlingAgent flag');
+                }
               }
             } catch (error) {
               console.error('[SIPContext] ❌ Auto-reconnect after page refresh failed:', error);
+              
+              // Clear flag on error too
+              sessionStorage.removeItem('autoReconnectHandlingAgent');
               
               // Show error notification
               addNotification({
