@@ -11,6 +11,7 @@ import {
   type PropsWithChildren 
 } from 'react';
 import { queueMonitorSocket } from '@/services/queueMonitorSocket';
+import { useSIPStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 import type {
   QueueMonitorSocketState,
@@ -34,12 +35,16 @@ interface QueueMonitorSocketProviderProps extends PropsWithChildren {
 
 /**
  * Provides real-time Socket.IO data for Queue Monitor
- * Only connects when enabled prop is true (tied to interface settings)
+ * Only connects when enabled prop is true (tied to interface settings) AND SIP is registered
  */
 export function QueueMonitorSocketProvider({ 
   children, 
   enabled 
 }: QueueMonitorSocketProviderProps) {
+  // Get SIP registration state
+  const registrationState = useSIPStore((state) => state.registrationState);
+  const isRegistered = registrationState === 'registered';
+  
   // State
   const [state, setState] = useState<QueueMonitorSocketState>({
     connectionState: 'disconnected',
@@ -67,6 +72,13 @@ export function QueueMonitorSocketProvider({
     if (!enabled) {
       if (verboseLogging) {
         console.log('[QueueMonitorSocketContext] ⚠️ Not connecting - Queue Monitor disabled');
+    if (!isRegistered) {
+      if (verboseLogging) {
+        console.log('[QueueMonitorSocketContext] ⚠️ Not connecting - SIP not registered');
+      }
+      return;
+    }
+
       }
       return;
     }
@@ -126,20 +138,28 @@ export function QueueMonitorSocketProvider({
         error: error instanceof Error ? error.message : 'Connection failed'
       }));
     }
-  }, [enabled]);
+  }, [enabled, isRegistered]);
 
-  // Connect on mount if enabled
+  // Connect/disconnect based on enabled state AND SIP registration
   useEffect(() => {
-    if (enabled) {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (enabled && isRegistered) {
+      if (verboseLogging) {
+        console.log('[QueueMonitorSocketContext] ✅ Conditions met - connecting (enabled + SIP registered)');
+      }
       fetchJWTAndConnect();
     } else {
+      if (verboseLogging) {
+        console.log('[QueueMonitorSocketContext] ⚠️ Disconnecting - enabled:', enabled, 'registered:', isRegistered);
+      }
       queueMonitorSocket.disconnect();
     }
 
     return () => {
       queueMonitorSocket.disconnect();
     };
-  }, [enabled, fetchJWTAndConnect]);
+  }, [enabled, isRegistered, fetchJWTAndConnect]);
 
   // Subscribe to connection state changes
   useEffect(() => {
