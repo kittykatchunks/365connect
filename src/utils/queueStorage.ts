@@ -231,6 +231,28 @@ export function deleteAllQueueConfigs(): QueueConfig[] {
 }
 
 /**
+ * Reset all alert statuses to normal (used when disconnecting from server)
+ */
+export function resetAllAlertStatuses(): void {
+  const verboseLogging = isVerboseLoggingEnabled();
+  const configs = loadQueueConfigs();
+  
+  // Reset all queues to normal state
+  const resetAlerts: QueueAlertStatus[] = configs.map(config => ({
+    queueNumber: config.queueNumber,
+    abandonedAlert: 'normal',
+    avgWaitTimeAlert: 'normal',
+    overallAlert: 'normal'
+  }));
+  
+  saveQueueAlertStatuses(resetAlerts);
+  
+  if (verboseLogging) {
+    console.log('[QueueStorage] 🔄 Reset all alert statuses to normal');
+  }
+}
+
+/**
  * Export queue monitoring data for backup/import-export
  */
 export function exportQueueMonitoringData(): string {

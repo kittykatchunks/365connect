@@ -18,7 +18,8 @@ import {
   saveQueueConfig, 
   deleteQueueConfig,
   deleteAllQueueConfigs,
-  updateQueueAlertStatus
+  updateQueueAlertStatus,
+  resetAllAlertStatuses
 } from '@/utils/queueStorage';
 import { isVerboseLoggingEnabled } from '@/utils';
 import { phantomApiService } from '@/services';
@@ -427,6 +428,27 @@ export function QueueMonitorView() {
       setQueueStats([]);
     }
   }, [queueConfigs, connectionState, fetchQueueStats, verboseLogging]);
+  
+  // Reset alerts when disconnected from server
+  useEffect(() => {
+    if (connectionState === 'disconnected' || connectionState === 'error') {
+      if (verboseLogging) {
+        console.log('[QueueMonitorView] 🔄 Server disconnected - resetting all alerts');
+      }
+      
+      // Reset alert statuses in storage
+      resetAllAlertStatuses();
+      
+      // Clear tab alert
+      setTabAlert('queueMonitor', 'default');
+      
+      // Reset queue stats to clear any displayed alerts
+      setQueueStats(prev => prev.map(stat => ({
+        ...stat,
+        alertState: 'normal'
+      })));
+    }
+  }, [connectionState, verboseLogging, setTabAlert]);
   
   // Handlers
   const handleAddQueue = () => {
