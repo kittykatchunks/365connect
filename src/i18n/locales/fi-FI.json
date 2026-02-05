@@ -601,12 +601,7 @@
     "notifications": {
         "network_lost": "Tarkista verkko/internet-yhteys",
         "network_lost_message": "Verkko- tai internet-yhteys näyttää katkenneen.",
-        "network_restored": "Verkko/internet palautettu",
-        "network_restored_message": "Varmista, että valitset YHDISTÄ yhdistääksesi uudelleen Phantomiin. Jos näkyy Agentti: Ei kirjautunut, sinun tarvitsee vain painaa Kirjaudu-painiketta normaalisti.",
         "sip_connection_lost": "SIP-yhteys katkennut",
-        "sip_reconnecting": "Yritetään yhdistää uudelleen Phantom-palvelimeen...",
-        "sip_reconnected": "SIP yhdistetty uudelleen",
-        "sip_reconnected_message": "Yhdistettiin onnistuneesti uudelleen Phantom-palvelimeen. Rekisteröidään...",
         "reconnecting": "Yhdistetään Uudelleen...",
         "reconnecting_message": "Yhteys katkennut. Yritetään yhdistää uudelleen Phantom-palvelimeen...",
         "reconnected": "Yhdistetty Uudelleen",

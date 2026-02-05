@@ -1,12 +1,11 @@
 /**
  * useNetworkStatus Hook
- * Monitors browser online/offline status and shows toast notifications
- * Disconnects SIP service when network is lost and prepares for reconnection when restored
+ * Monitors browser online/offline status for SIP management
+ * NOTE: Toast notifications are now handled by SIPContext's network monitoring
+ * This hook only manages SIP unregistration on network loss
  */
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useUIStore } from '@/stores';
 import { sipService } from '@/services/SIPService';
 import { isVerboseLoggingEnabled } from '@/utils';
 
@@ -33,12 +32,10 @@ async function checkInternetConnectivity(): Promise<boolean> {
 }
 
 export function useNetworkStatus() {
-  const { t } = useTranslation();
-  const addNotification = useUIStore((state) => state.addNotification);
   const wasOnlineRef = useRef(navigator.onLine);
   const checkIntervalRef = useRef<number | null>(null);
   
-  // Disconnect SIP service when network is lost
+  // Disconnect SIP service when network is lost (notifications handled by SIPContext)
   const handleNetworkLoss = useCallback(async () => {
     const verboseLogging = isVerboseLoggingEnabled();
     
@@ -67,25 +64,19 @@ export function useNetworkStatus() {
       }
     }
     
-    // Show persistent error notification - matches PWA implementation
-    addNotification({
-      type: 'error',
-      title: t('notifications.network_lost', 'Check Network/Internet Connection'),
-      message: t('notifications.network_lost_message', 'You appear to have lost network or internet connection.'),
-      persistent: true
-    });
-    
     wasOnlineRef.current = false;
-  }, [t, addNotification]);
-  
-  // Prepare for reconnection when network is restored
+    
+    // Notification is now handled by SIPContext network monitoring
+  }, []);
+
+  // Handle reconnection when network is restored (notifications handled by SIPContext)
   const handleNetworkRestoration = useCallback(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     
-    // Only show notification if we were previously offline
+    // Only update state if we were previously offline
     if (wasOnlineRef.current) {
       if (verboseLogging) {
-        console.log('[useNetworkStatus] Already online, skipping restoration notification');
+        console.log('[useNetworkStatus] Already online, skipping restoration');
       }
       return;
     }
@@ -95,17 +86,11 @@ export function useNetworkStatus() {
       console.log('[useNetworkStatus] Network/Internet connection restored');
     }
     
-    // Show persistent notification with reconnection instructions - matches PWA implementation
-    addNotification({
-      type: 'error', // PWA uses 'error' type for visibility even though it's a restoration message
-      title: t('notifications.network_restored', 'Network/Internet Restored'),
-      message: t('notifications.network_restored_message', 'Please ensure you select CONNECT to reconnect to Phantom. If Agent: Not Logged In shows, you just need to Login button as normal.'),
-      persistent: true
-    });
-    
     wasOnlineRef.current = true;
-  }, [t, addNotification]);
-  
+    
+    // Auto-reconnection is now handled by SIPContext network monitoring
+  }, []);
+
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
     

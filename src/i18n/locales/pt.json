@@ -543,12 +543,8 @@
     "notifications": {
         "network_lost": "Verificar Ligação de Rede/Internet",
         "network_lost_message": "Parece que perdeu a ligação de rede ou internet.",
-        "network_restored": "Rede/Internet Restaurada",
-        "network_restored_message": "Certifique-se de selecionar LIGAR para reconectar ao Phantom. Se Agente: Não Conectado aparecer, basta pressionar o botão Iniciar sessão normalmente.",
         "sip_connection_lost": "Ligação SIP Perdida",
-        "sip_reconnecting": "A tentar reconectar ao servidor Phantom...",
-        "sip_reconnected": "SIP Reconectado",
-        "sip_reconnected_message": "Reconectado com sucesso ao servidor Phantom. A registar novamente...",        "reconnecting": "A Reconectar...",
+        "reconnecting": "A Reconectar...",
         "reconnecting_message": "Conexão perdida. A tentar reconectar ao servidor Phantom...",
         "reconnected": "Reconectado",
         "reconnected_message": "Reconectado com sucesso ao servidor Phantom.",

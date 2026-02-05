@@ -613,12 +613,7 @@
     "notifications": {
         "network_lost": "Check Network/Internet Connection",
         "network_lost_message": "You appear to have lost network or internet connection.",
-        "network_restored": "Network/Internet Restored",
-        "network_restored_message": "Please ensure you select CONNECT to reconnect to Phantom. If Agent: Not Logged In shows, you just need to Login button as normal.",
         "sip_connection_lost": "SIP Connection Lost",
-        "sip_reconnecting": "Attempting to reconnect to Phantom server...",
-        "sip_reconnected": "SIP Reconnected",
-        "sip_reconnected_message": "Successfully reconnected to Phantom server. Re-registering...",
         "reconnecting": "Reconnecting...",
         "reconnecting_message": "Connection lost. Attempting to reconnect to Phantom server...",
         "reconnected": "Reconnected",
