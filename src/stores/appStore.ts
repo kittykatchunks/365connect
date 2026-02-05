@@ -159,7 +159,8 @@ export const useAppStore = create<AppState>()(
         name: 'app-store',
         partialize: (state) => ({
           agentNumber: state.agentNumber,
-          queueState: state.queueState,
+          // queueState should NOT be persisted - it must be fetched fresh on reconnection
+          // to ensure accurate queue membership status from the PBX
           selectedCLI: state.selectedCLI
         })
       }
