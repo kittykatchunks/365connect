@@ -635,10 +635,15 @@ a {
   font-weight: 500;
 }
 
-/* Bottom Actions */
+/* Bottom Actions - Float at bottom */
 .overlay-menu-actions {
+  position: sticky;
+  bottom: 0;
   border-top: 1px solid var(--border-color);
   padding: var(--spacing-sm) 0;
+  background-color: var(--surface-color);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 10;
 }
 
 .overlay-menu-action-placeholder {
