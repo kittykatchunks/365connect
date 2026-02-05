@@ -269,7 +269,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
                     }
                     
                     // Update agent state in appStore
-                    const { setAgentState, setAgentNumber, setAgentName, setQueueState } = useAppStore.getState();
+                    const { setAgentState, setAgentNumber, setAgentName, setQueueState, setLoggedInQueues } = useAppStore.getState();
                     
                     // Set agent number and name
                     setAgentNumber(agentData.num || '');
@@ -278,15 +278,49 @@ export function SIPProvider({ children }: SIPProviderProps) {
                     // Set agent state based on pause status
                     setAgentState(isPaused ? 'paused' : 'available');
                     
-                    // Set queue state (agent is in queue when logged in, regardless of pause)
-                    setQueueState('in-queue');
+                    // Check for actual logged-in queues instead of assuming
+                    if (verboseLogging) {
+                      console.log('[SIPContext] 🔍 Checking queue membership for agent:', agentData.num);
+                    }
+                    
+                    try {
+                      const { fetchQueueMembership } = await import('@/utils');
+                      const agentNum = agentData.num || '';
+                      const queueResult = await fetchQueueMembership(agentNum);
+                      
+                      if (queueResult.success) {
+                        if (queueResult.queues.length > 0) {
+                          if (verboseLogging) {
+                            console.log('[SIPContext] ✅ Agent is logged into', queueResult.queues.length, 'queue(s):', queueResult.queues);
+                          }
+                          setLoggedInQueues(queueResult.queues);
+                          setQueueState('in-queue');
+                        } else {
+                          if (verboseLogging) {
+                            console.log('[SIPContext] ℹ️ Agent logged in but not in any queues');
+                          }
+                          setLoggedInQueues([]);
+                          setQueueState('none');
+                        }
+                      } else {
+                        if (verboseLogging) {
+                          console.warn('[SIPContext] ⚠️ Failed to fetch queue membership');
+                        }
+                        setLoggedInQueues([]);
+                        setQueueState('none');
+                      }
+                    } catch (queueError) {
+                      console.error('[SIPContext] ❌ Error checking queue membership:', queueError);
+                      setLoggedInQueues([]);
+                      setQueueState('none');
+                    }
                     
                     if (verboseLogging) {
                       console.log('[SIPContext] 📝 Updated appStore agent state:', {
                         agentNumber: agentData.num,
                         agentName: agentData.name,
-                        agentState: isPaused ? 'paused' : 'available',
-                        queueState: 'in-queue'
+                        agentState: isPaused ? 'paused' : 'available'
+                        // queueState logged after queue check completes
                       });
                     }
                     

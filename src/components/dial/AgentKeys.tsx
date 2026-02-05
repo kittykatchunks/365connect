@@ -212,7 +212,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
         
         // Update agent state locally first
         if (verboseLogging) {
-          console.log('[AgentKeys] 🔄 Updating agent state to available and joining queue', {
+          console.log('[AgentKeys] 🔄 Updating agent state to available', {
             agentNumber: pendingLogin.agentNumber,
             previousState: agentState,
             previousQueueState: queueState
@@ -223,8 +223,8 @@ export function AgentKeys({ className }: AgentKeysProps) {
         
         useAppStore.setState({
           agentNumber: loginAgentNumber,
-          agentState: 'available',
-          queueState: 'in-queue' // Automatically join queue on login
+          agentState: 'available'
+          // queueState will be determined by queue membership check below
         });
         
         // Query API to get full agent info (name, cid, clip, etc.) AND fetch queue membership
@@ -266,23 +266,47 @@ export function AgentKeys({ className }: AgentKeysProps) {
             try {
               const queueResult = await fetchQueueMembership(loginAgentNumber);
               
-              if (queueResult.success && queueResult.queues.length > 0) {
-                if (verboseLogging) {
-                  console.log('[AgentKeys] ✅ Queue membership fetched after DTMF login:', queueResult.queues);
+              if (queueResult.success) {
+                if (queueResult.queues.length > 0) {
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] ✅ Queue membership fetched after DTMF login:', queueResult.queues);
+                  }
+                  
+                  // Update store with logged-in queues
+                  useAppStore.setState({
+                    loggedInQueues: queueResult.queues,
+                    queueState: 'in-queue'
+                  });
+                } else {
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
+                  }
+                  
+                  // Agent is logged in but not in any queues
+                  useAppStore.setState({
+                    loggedInQueues: [],
+                    queueState: 'none'
+                  });
                 }
-                
-                // Update store with logged-in queues
-                useAppStore.setState({
-                  loggedInQueues: queueResult.queues,
-                  queueState: 'in-queue'
-                });
               } else {
                 if (verboseLogging) {
-                  console.log('[AgentKeys] ℹ️ No queues found after DTMF login or fetch failed');
+                  console.warn('[AgentKeys] ⚠️ Failed to fetch queue membership after DTMF login');
                 }
+                
+                // Failed to fetch - set to none to be safe
+                useAppStore.setState({
+                  loggedInQueues: [],
+                  queueState: 'none'
+                });
               }
             } catch (queueError) {
               console.error('[AgentKeys] ❌ Error fetching queue membership after DTMF login:', queueError);
+              
+              // Error during fetch - set to none to be safe
+              useAppStore.setState({
+                loggedInQueues: [],
+                queueState: 'none'
+              });
             }
           }, 1000); // Wait 1s for PBX to process login
         }
@@ -358,33 +382,45 @@ export function AgentKeys({ className }: AgentKeysProps) {
     try {
       const result = await fetchQueueMembership(agentNum);
       
-      if (result.success && result.queues.length > 0) {
-        if (verboseLogging) {
-          console.log('[AgentKeys] ✅ Queue membership fetched successfully:', result.queues);
-        }
-        
-        // Update store with logged-in queues
-        setLoggedInQueues(result.queues);
-        
-        // Set queue state to 'in-queue' since agent is in at least one queue
-        setQueueState('in-queue');
-        
-        if (verboseLogging) {
-          console.log('[AgentKeys] 📊 Updated queue state to in-queue with', result.queues.length, 'queues');
+      if (result.success) {
+        if (result.queues.length > 0) {
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Queue membership fetched successfully:', result.queues);
+          }
+          
+          // Update store with logged-in queues
+          setLoggedInQueues(result.queues);
+          
+          // Set queue state to 'in-queue' since agent is in at least one queue
+          setQueueState('in-queue');
+          
+          if (verboseLogging) {
+            console.log('[AgentKeys] 📊 Updated queue state to in-queue with', result.queues.length, 'queues');
+          }
+        } else {
+          if (verboseLogging) {
+            console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
+          }
+          
+          // Agent is logged in but not in any queues
+          setLoggedInQueues([]);
+          setQueueState('none');
         }
       } else {
         if (verboseLogging) {
-          console.log('[AgentKeys] ℹ️ No queues found for agent or fetch failed');
+          console.warn('[AgentKeys] ⚠️ Failed to fetch queue membership');
         }
-        // Keep empty queues list but still set in-queue (agent logged in but no queue list available)
+        
+        // Failed to fetch - set to none to be safe
         setLoggedInQueues([]);
-        setQueueState('in-queue');
+        setQueueState('none');
       }
     } catch (error) {
       console.error('[AgentKeys] ❌ Error fetching queue membership:', error);
-      // Don't fail login if queue fetch fails, just set default state
+      
+      // Error during fetch - set to none to be safe
       setLoggedInQueues([]);
-      setQueueState('in-queue');
+      setQueueState('none');
     }
   }, [setLoggedInQueues, setQueueState]);
   
@@ -567,8 +603,8 @@ export function AgentKeys({ className }: AgentKeysProps) {
         // Update agent state
         useAppStore.setState({
           agentNumber: agentNum,
-          agentState: 'available',
-          queueState: 'in-queue'
+          agentState: 'available'
+          // queueState will be determined by queue membership check below
         });
         
         // Fetch queue membership after successful API login
