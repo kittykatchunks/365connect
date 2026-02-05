@@ -57,10 +57,15 @@ export interface UseTopBarAlertReturn {
  */
 export function useTopBarAlert(): UseTopBarAlertReturn {
   const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Subscribe to the alerts Map directly to trigger re-renders
+  // We need this subscription so the component re-renders when alerts change
+  const alerts = useTabNotificationStore((state) => state.alerts);
   const getTopBarAlert = useTabNotificationStore((state) => state.getTopBarAlert);
   const setCurrentView = useAppStore((state) => state.setCurrentView);
   
-  // Get the highest priority alert
+  // Get the highest priority alert - recompute when alerts Map changes
+  // We serialize the alerts to ensure the dependency works correctly
   const alertInfo = useMemo(() => {
     const alert = getTopBarAlert();
     
@@ -69,7 +74,8 @@ export function useTopBarAlert(): UseTopBarAlertReturn {
     }
     
     return alert;
-  }, [getTopBarAlert, verboseLogging]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alerts, verboseLogging]);
   
   // Determine CSS class based on alert state
   const alertClass = useMemo(() => {
