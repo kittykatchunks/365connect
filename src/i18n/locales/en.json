@@ -167,6 +167,7 @@
         "pause": "Pause",
         "paused": "Paused",
         "unpause": "Unpause",
+        "pause_disabled_no_queues": "Must be in a queue to pause",
         "select_pause_reason": "Select pause reason",
         "error_number_required": "Agent number is required",
         "error_login_failed": "Login failed",

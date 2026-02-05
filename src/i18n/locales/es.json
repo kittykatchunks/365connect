@@ -158,8 +158,7 @@
         "leave_queue": "Salir de Cola",
         "pause": "Pausar",
         "paused": "Pausado",
-        "unpause": "Reanudar",
-        "select_pause_reason": "Seleccionar motivo de pausa",
+        "unpause": "Reanudar",        "pause_disabled_no_queues": "Debe estar en una cola para pausar",        "select_pause_reason": "Seleccionar motivo de pausa",
         "error_number_required": "Se requiere número de agente",
         "error_login_failed": "Error de inicio de sesión"
     },

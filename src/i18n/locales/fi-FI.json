@@ -163,6 +163,7 @@
         "pause": "Tauko",
         "paused": "Tauolla",
         "unpause": "Lopeta tauko",
+        "pause_disabled_no_queues": "Täytyy olla jonossa tauon ottamiseksi",
         "select_pause_reason": "Valitse tauon syy",
         "error_number_required": "Agenttinumero vaaditaan",
         "error_login_failed": "Kirjautuminen epäonnistui",

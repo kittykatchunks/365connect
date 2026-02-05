@@ -159,6 +159,7 @@
         "pause": "Pauzeren",
         "paused": "Gepauzeerd",
         "unpause": "Hervatten",
+        "pause_disabled_no_queues": "Moet in een wachtrij zijn om te pauzeren",
         "select_pause_reason": "Selecteer pauze reden",
         "error_number_required": "Agent nummer vereist",
         "error_login_failed": "Inloggen mislukt"

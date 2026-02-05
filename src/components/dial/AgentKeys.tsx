@@ -28,6 +28,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const agentState = useAppStore((state) => state.agentState);
   const queueState = useAppStore((state) => state.queueState);
   const agentNumber = useAppStore((state) => state.agentNumber);
+  const loggedInQueues = useAppStore((state) => state.loggedInQueues);
   const setAgentState = useAppStore((state) => state.setAgentState);
   const setQueueState = useAppStore((state) => state.setQueueState);
   const setLoggedInQueues = useAppStore((state) => state.setLoggedInQueues);
@@ -54,6 +55,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   const isLoggedIn = agentState !== 'logged-out';
   const isPaused = agentState === 'paused';
   const isInQueue = queueState === 'in-queue';
+  const hasQueueMembership = loggedInQueues.length > 0;
   
   // Agent codes configuration
   // NOTE: Must match PWA implementation and PBX configuration
@@ -64,6 +66,134 @@ export function AgentKeys({ className }: AgentKeysProps) {
     pause: '*63',   // Pause with reason
     unpause: '*63'  // Unpause (same code, toggles)
   };
+  
+  // Helper function to check and update agent pause status from API
+  const checkAndUpdatePauseStatus = useCallback(async () => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (!sipUsername) {
+      if (verboseLogging) {
+        console.log('[AgentKeys] ⚠️ Cannot check pause status - no SIP username');
+      }
+      return;
+    }
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 🔍 Checking agent pause status and real-time queue membership from WallBoardStats');
+    }
+    
+    try {
+      // Get agent status first
+      const agentData = await queryAgentStatus(sipUsername);
+      
+      if (!agentData || !agentData.num) {
+        if (verboseLogging) {
+          console.log('[AgentKeys] ℹ️ No agent data returned from status query');
+        }
+        return;
+      }
+      
+      // Fetch real-time queue membership from WallBoardStats
+      const wallBoardResponse = await phantomApiService.fetchWallBoardStats();
+      
+      let realTimeQueueCount = 0;
+      let realTimeQueues: string[] = [];
+      
+      if (wallBoardResponse.success && wallBoardResponse.data?.agents) {
+        const agents = wallBoardResponse.data.agents as Record<string, any>;
+        const agentWallBoardData = agents[agentData.num];
+        
+        if (agentWallBoardData && agentWallBoardData.queues) {
+          // Parse CSV queues
+          realTimeQueues = agentWallBoardData.queues.split(',').map((q: string) => q.trim()).filter((q: string) => q);
+          realTimeQueueCount = realTimeQueues.length;
+          
+          if (verboseLogging) {
+            console.log('[AgentKeys] 📊 Real-time queue membership from WallBoardStats:', {
+              agentNumber: agentData.num,
+              queueCount: realTimeQueueCount,
+              queues: realTimeQueues
+            });
+          }
+        } else {
+          if (verboseLogging) {
+            console.log('[AgentKeys] ℹ️ Agent not in any queues (WallBoardStats)');
+          }
+        }
+      } else {
+        if (verboseLogging) {
+          console.warn('[AgentKeys] ⚠️ Failed to fetch WallBoardStats for queue membership check');
+        }
+      }
+      
+      const isPausedOnPBX = parseAgentPauseStatus(agentData.pause);
+      const hasQueues = realTimeQueueCount > 0;
+      
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📊 Agent status summary:', {
+          num: agentData.num,
+          pause: agentData.pause,
+          isPausedOnPBX,
+          realTimeQueueCount,
+          currentAgentState: agentState,
+          currentStoredQueueCount: loggedInQueues.length
+        });
+      }
+      
+      // Update agent state based on PBX pause status and real-time queue membership
+      if (!hasQueues) {
+        // Not in any queues - should not be paused
+        if (isPausedOnPBX) {
+          if (verboseLogging) {
+            console.log('[AgentKeys] ⚠️ Agent paused but not in any queues - unpausing');
+          }
+          // Unpause via API since agent is not in any queues
+          await unpauseAgentViaAPI(sipUsername);
+          setAgentState('available');
+        } else {
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Agent not paused and not in any queues');
+          }
+          if (agentState !== 'available') {
+            setAgentState('available');
+          }
+        }
+        
+        // Update stored queue state if it doesn't match reality
+        if (loggedInQueues.length > 0) {
+          if (verboseLogging) {
+            console.log('[AgentKeys] 🔄 Clearing stored queue list - agent not in queues');
+          }
+          setLoggedInQueues([]);
+          setQueueState('none');
+        }
+      } else {
+        // In queues - sync pause state from PBX
+        const newAgentState = isPausedOnPBX ? 'paused' : 'available';
+        if (agentState !== newAgentState) {
+          if (verboseLogging) {
+            console.log('[AgentKeys] 🔄 Updating agent state to match PBX:', newAgentState);
+          }
+          setAgentState(newAgentState);
+        }
+        
+        // Update stored queue list if it doesn't match reality
+        if (loggedInQueues.length !== realTimeQueueCount) {
+          if (verboseLogging) {
+            console.log('[AgentKeys] 🔄 Syncing stored queue list with WallBoardStats');
+          }
+          const updatedQueues = realTimeQueues.map(q => ({
+            queue: q,
+            queuelabel: q
+          }));
+          setLoggedInQueues(updatedQueues);
+          setQueueState('in-queue');
+        }
+      }
+    } catch (error) {
+      console.error('[AgentKeys] ❌ Error checking pause status:', error);
+    }
+  }, [sipUsername, agentState, loggedInQueues.length, setAgentState, setLoggedInQueues, setQueueState]);
   
   // Check agent status when SIP registers (similar to PWA checkAgentStatusAfterRegistration)
   useEffect(() => {
@@ -451,6 +581,30 @@ export function AgentKeys({ className }: AgentKeysProps) {
       }
     }
   }, [pendingLogout, currentSession, agentState, queueState, agentNumber]);
+  
+  // Monitor queue membership changes and update pause status accordingly
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (!isLoggedIn) {
+      // Not logged in as agent - nothing to check
+      return;
+    }
+    
+    if (verboseLogging) {
+      console.log('[AgentKeys] 🔄 Queue membership changed', {
+        hasQueueMembership,
+        queueCount: loggedInQueues.length,
+        queues: loggedInQueues.map(q => q.queue),
+        currentAgentState: agentState,
+        isPaused
+      });
+    }
+    
+    // Check and update pause status when queue membership changes
+    checkAndUpdatePauseStatus();
+    
+  }, [loggedInQueues.length, isLoggedIn, checkAndUpdatePauseStatus]);
   
   // Helper function to fetch and update queue membership after login
   const updateQueueMembership = useCallback(async (agentNum: string) => {
@@ -915,6 +1069,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
       
       if (verboseLogging) {
         console.log('[AgentKeys] ✅ Queue logout call initiated');
+        console.log('[AgentKeys] 🔍 Pause status will be checked after queue logout completes');
       }
     } else {
       if (verboseLogging) {
@@ -941,12 +1096,24 @@ export function AgentKeys({ className }: AgentKeysProps) {
       return;
     }
     
+    if (!hasQueueMembership) {
+      if (verboseLogging) {
+        console.log('[AgentKeys] ⚠️ Pause toggle blocked - agent not in any queues', {
+          loggedInQueues: loggedInQueues.length,
+          queueState
+        });
+      }
+      return;
+    }
+    
     if (verboseLogging) {
       console.log('[AgentKeys] ⏸️ Pause toggle clicked', {
         currentAgentState: agentState,
         isPaused,
         agentNumber,
-        sipUsername
+        sipUsername,
+        hasQueueMembership,
+        queueCount: loggedInQueues.length
       });
     }
     
@@ -1124,7 +1291,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
   };
   
   const getPauseButtonVariant = () => {
-    if (!isLoggedIn) return 'ghost';
+    if (!isLoggedIn || !hasQueueMembership) return 'ghost';
     if (isPaused) return 'warning';
     return 'secondary';
   };
@@ -1179,11 +1346,11 @@ export function AgentKeys({ className }: AgentKeysProps) {
         variant={getPauseButtonVariant()}
         size="sm"
         onClick={handlePause}
-        disabled={!isRegistered || !isLoggedIn || isLoading}
+        disabled={!isRegistered || !isLoggedIn || !hasQueueMembership || isLoading}
         className="agent-key-btn"
         title={isPaused 
           ? t('agent.unpause', 'Unpause') 
-          : t('agent.pause', 'Pause')
+          : (hasQueueMembership ? t('agent.pause', 'Pause') : t('agent.pause_disabled_no_queues', 'Must be in a queue to pause'))
         }
       >
         {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
