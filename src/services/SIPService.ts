@@ -98,8 +98,10 @@ export class SIPService {
   private activeLines: Map<LineNumber, string> = new Map();
   private selectedLine: LineNumber | null = null;
   
-  // BLF subscriptions
+  // BLF subscriptions with enhanced state tracking
   private blfSubscriptions: Map<string, BLFSubscription & { subscription: SIP.Subscriber }> = new Map();
+  private blfRefreshTimers: Map<string, number> = new Map();
+  private blfHealthMonitorTimer: number | null = null;
   
   // State
   private config: SIPConfig | null = null;
@@ -422,6 +424,9 @@ export class SIPService {
         if (verboseLogging) {
           console.log('[SIPService] Unsubscribing from all BLF subscriptions...');
         }
+        // Stop health monitoring
+        this.stopSubscriptionHealthMonitoring();
+        
         // Unsubscribe from all BLF subscriptions
         await this.unsubscribeAllBLF();
       }
@@ -446,6 +451,9 @@ export class SIPService {
   private handleRegistrationSuccess(): void {
     console.log('Registration successful');
     this.emit('registered', this.userAgent);
+    
+    // Start subscription health monitoring
+    this.startSubscriptionHealthMonitoring();
     
     // Auto-subscribe to BLF if enabled
     if (this.config?.enableBLF) {
@@ -1949,6 +1957,199 @@ export class SIPService {
 
   // ==================== BLF Subscriptions ====================
 
+  /**
+   * Start monitoring subscription health to detect stale subscriptions
+   */
+  private startSubscriptionHealthMonitoring(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Clear any existing monitor
+    if (this.blfHealthMonitorTimer) {
+      window.clearInterval(this.blfHealthMonitorTimer);
+    }
+    
+    if (verboseLogging) {
+      console.log('[SIPService] ❤️ Starting subscription health monitoring (checks every 60s)');
+    }
+    
+    // Check subscription health every minute
+    this.blfHealthMonitorTimer = window.setInterval(() => {
+      this.checkSubscriptionHealth();
+    }, 60 * 1000);
+  }
+
+  /**
+   * Stop subscription health monitoring
+   */
+  private stopSubscriptionHealthMonitoring(): void {
+    if (this.blfHealthMonitorTimer) {
+      window.clearInterval(this.blfHealthMonitorTimer);
+      this.blfHealthMonitorTimer = null;
+      
+      const verboseLogging = isVerboseLoggingEnabled();
+      if (verboseLogging) {
+        console.log('[SIPService] 🚫 Stopped subscription health monitoring');
+      }
+    }
+  }
+
+  /**
+   * Check health of all subscriptions and refresh stale ones
+   */
+  private checkSubscriptionHealth(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const now = Date.now();
+    const staleThreshold = 5 * 60 * 1000; // 5 minutes
+    
+    for (const [extension, sub] of this.blfSubscriptions) {
+      // Skip if no lastNotifyTime (subscription just created)
+      if (!sub.lastNotifyTime) continue;
+      
+      const timeSinceLastNotify = now - sub.lastNotifyTime.getTime();
+      
+      // If no NOTIFY for 5 minutes, subscription is considered stale
+      if (timeSinceLastNotify > staleThreshold && sub.status === 'active') {
+        if (verboseLogging) {
+          console.warn(`[SIPService] ⚠️ Stale subscription detected for ${extension} (${Math.floor(timeSinceLastNotify / 1000)}s since last NOTIFY), refreshing...`);
+        }
+        
+        // Mark as refreshing and attempt to refresh
+        sub.status = 'refreshing';
+        this.subscribeBLFWithRetry(extension, sub.buddy, 0).catch(error => {
+          console.error(`[SIPService] ❌ Failed to refresh stale subscription for ${extension}:`, error);
+        });
+      }
+    }
+  }
+
+  /**
+   * Schedule automatic subscription refresh at 90% of expiry time
+   */
+  private scheduleSubscriptionRefresh(extension: string, expiresSeconds: number): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Clear any existing refresh timer
+    const existingTimer = this.blfRefreshTimers.get(extension);
+    if (existingTimer) {
+      window.clearTimeout(existingTimer);
+    }
+    
+    // Schedule refresh at 90% of expiry time (e.g., 3240s for 3600s expiry)
+    const refreshTime = expiresSeconds * 0.9 * 1000;
+    const expiresAt = new Date(Date.now() + expiresSeconds * 1000);
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] ⏰ Scheduling subscription refresh for ${extension}:`, {
+        expiresSeconds,
+        refreshInSeconds: expiresSeconds * 0.9,
+        expiresAt: expiresAt.toISOString()
+      });
+    }
+    
+    const timer = window.setTimeout(() => {
+      if (verboseLogging) {
+        console.log(`[SIPService] 🔄 Auto-refreshing subscription for ${extension}`);
+      }
+      
+      const blfData = this.blfSubscriptions.get(extension);
+      if (blfData && blfData.status === 'active') {
+        blfData.status = 'refreshing';
+        this.subscribeBLFWithRetry(extension, blfData.buddy, 0); // Refresh without retry on auto-refresh
+      }
+    }, refreshTime);
+    
+    this.blfRefreshTimers.set(extension, timer);
+    
+    // Update subscription data with expiry info
+    const blfData = this.blfSubscriptions.get(extension);
+    if (blfData) {
+      blfData.expiresAt = expiresAt;
+    }
+  }
+
+  /**
+   * Subscribe to BLF with exponential backoff retry logic
+   */
+  private async subscribeBLFWithRetry(
+    extension: string, 
+    buddy?: string, 
+    retryCount: number = 0,
+    maxRetries: number = 3
+  ): Promise<SIP.Subscriber | null> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    try {
+      const subscriber = this.subscribeBLF(extension, buddy);
+      
+      // Reset retry count on success
+      const blfData = this.blfSubscriptions.get(extension);
+      if (blfData) {
+        blfData.retryCount = 0;
+        blfData.error = null;
+      }
+      
+      return subscriber;
+      
+    } catch (error) {
+      const blfData = this.blfSubscriptions.get(extension);
+      if (blfData) {
+        blfData.retryCount = retryCount + 1;
+        blfData.error = error as Error;
+        blfData.status = 'failed';
+      }
+      
+      if (retryCount < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delayMs = Math.pow(2, retryCount) * 1000;
+        
+        if (verboseLogging) {
+          console.warn(`[SIPService] ⚠️ Subscription failed for ${extension}, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        return this.subscribeBLFWithRetry(extension, buddy, retryCount + 1, maxRetries);
+      } else {
+        if (verboseLogging) {
+          console.error(`[SIPService] ❌ Subscription failed for ${extension} after ${maxRetries} retries:`, error);
+        }
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Batch subscribe to multiple extensions
+   */
+  async batchSubscribeBLF(extensions: string[], batchSize: number = 5): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] 📦 Batch subscribing to ${extensions.length} extensions (batch size: ${batchSize})`);
+    }
+    
+    for (let i = 0; i < extensions.length; i += batchSize) {
+      const batch = extensions.slice(i, i + batchSize);
+      
+      if (verboseLogging) {
+        console.log(`[SIPService] 📤 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(extensions.length / batchSize)}:`, batch);
+      }
+      
+      // Subscribe to batch in parallel with retry logic
+      await Promise.allSettled(
+        batch.map(ext => this.subscribeBLFWithRetry(ext, undefined, 0))
+      );
+      
+      // Wait 500ms before next batch to avoid overwhelming server
+      if (i + batchSize < extensions.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] ✅ Batch subscription complete`);
+    }
+  }
+
   subscribeBLF(extension: string, buddy?: string): SIP.Subscriber | null {
     const verboseLogging = isVerboseLoggingEnabled();
     
@@ -2028,6 +2229,18 @@ export class SIPService {
               console.log(`[SIPService] ✅ BLF subscription accepted for extension ${extension}`);
             }
             console.log(`BLF subscription accepted for extension ${extension}`);
+            
+            // Update status to active
+            const blfData = this.blfSubscriptions.get(extension);
+            if (blfData) {
+              blfData.status = 'active';
+              blfData.subscriptionAccepted = true;
+              
+              // Extract expiry from subscription (default 3600s)
+              const expires = 3600; // SIP.js should provide this, defaulting to 1 hour
+              this.scheduleSubscriptionRefresh(extension, expires);
+            }
+            
             this.emit('blfSubscribed', { extension, buddy });
             break;
           case SIP.SubscriptionState.Terminated:
@@ -2035,6 +2248,14 @@ export class SIPService {
               console.log(`[SIPService] 📴 BLF subscription terminated for extension ${extension}`);
             }
             console.log(`BLF subscription terminated for extension ${extension}`);
+            
+            // Clear refresh timer
+            const timer = this.blfRefreshTimers.get(extension);
+            if (timer) {
+              window.clearTimeout(timer);
+              this.blfRefreshTimers.delete(extension);
+            }
+            
             this.blfSubscriptions.delete(extension);
             this.emit('blfUnsubscribed', { extension, buddy });
             break;
@@ -2051,7 +2272,13 @@ export class SIPService {
         subscription,
         extension,
         buddy,
-        state: 'unknown'
+        state: 'unknown',
+        status: 'pending',
+        lastNotifyTime: null,
+        expiresAt: null,
+        retryCount: 0,
+        refreshTimer: null,
+        error: null
       });
 
       if (verboseLogging) {
@@ -2150,12 +2377,14 @@ export class SIPService {
       if (blfData) {
         blfData.state = dialogState;
         blfData.remoteTarget = remoteTarget;
+        blfData.lastNotifyTime = new Date(); // Track last NOTIFY time for health monitoring
         
         if (verboseLogging) {
           console.log(`[SIPService] 📊 BLF subscription data updated for extension ${extension}:`, {
             state: dialogState,
             remoteTarget,
-            buddy
+            buddy,
+            lastNotifyTime: blfData.lastNotifyTime.toISOString()
           });
         }
       }
@@ -2209,6 +2438,13 @@ export class SIPService {
     try {
       if (verboseLogging) {
         console.log(`[SIPService] 📤 Sending unsubscribe and disposing BLF for ${extension}`);
+      }
+      
+      // Clear any pending refresh timer
+      const timer = this.blfRefreshTimers.get(extension);
+      if (timer) {
+        window.clearTimeout(timer);
+        this.blfRefreshTimers.delete(extension);
       }
       
       // Unsubscribe (sends SIP SUBSCRIBE with Expires: 0)

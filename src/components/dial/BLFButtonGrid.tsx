@@ -38,10 +38,25 @@ export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonG
   const buttons = side === 'left' ? getLeftButtons() : getRightButtons();
   
   // Merge BLF states from SIP into button objects
-  const buttonsWithState: BLFButtonType[] = buttons.map((button) => ({
-    ...button,
-    state: (button.extension && blfStates.get(button.extension)) || button.state || 'inactive'
-  } as BLFButtonType));
+  // When not registered, show all BLF buttons as inactive (unsubscribed state)
+  // Speed dial buttons don't need presence state, so they keep their default
+  const buttonsWithState: BLFButtonType[] = buttons.map((button) => {
+    // Speed dial buttons don't have presence states
+    if (button.type === 'speeddial') {
+      return {
+        ...button,
+        state: 'inactive' // Speed dial has no presence, shows blue by default
+      } as BLFButtonType;
+    }
+    
+    // BLF buttons: show inactive when not registered, otherwise use runtime state
+    return {
+      ...button,
+      state: !isRegistered 
+        ? 'inactive' // Show unsubscribed/inactive when offline or not registered
+        : (button.extension && blfStates.get(button.extension)) || 'inactive'
+    } as BLFButtonType;
+  });
   
   // Get all configured BLF extensions (for both left and right sides)
   const configuredExtensions = getConfiguredExtensions();
@@ -125,7 +140,7 @@ export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonG
             onTransfer={handleTransfer}
             onConfigure={handleConfigure}
             isInCall={!!isInCall}
-            disabled={!isRegistered}
+            disabled={false}
           />
         ))}
       </div>

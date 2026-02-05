@@ -151,6 +151,15 @@ export type BLFPresenceState =
   | 'early'         // Dialog state (ringing)
   | 'confirmed';    // Dialog state (active call)
 
+// Subscription state machine
+export type SubscriptionStatus = 
+  | 'idle'           // Not subscribed
+  | 'pending'        // SUBSCRIBE sent, awaiting response
+  | 'active'         // Receiving NOTIFY messages
+  | 'refreshing'     // Re-SUBSCRIBE in progress
+  | 'failed'         // Subscription rejected
+  | 'expired';       // Server-side expiry
+
 export interface BLFSubscription {
   extension: string;
   buddy?: string;
@@ -160,6 +169,13 @@ export interface BLFSubscription {
   subscriptionAccepted?: boolean;
   subscriptionRejected?: boolean;
   rejectionCode?: number;
+  // State machine tracking
+  status?: SubscriptionStatus;
+  lastNotifyTime?: Date | null;
+  expiresAt?: Date | null;
+  retryCount?: number;
+  refreshTimer?: number | null;
+  error?: Error | null;
 }
 
 export interface BLFStateChangeData {

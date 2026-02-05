@@ -66,6 +66,7 @@ export interface UseSIPReturn {
   
   // BLF
   subscribeBLF: (extension: string, buddy?: string) => void;
+  batchSubscribeBLF: (extensions: string[], batchSize?: number) => Promise<void>;
   unsubscribeBLF: (extension: string) => void;
   
   // Line management
@@ -327,10 +328,14 @@ export function useSIP(): UseSIPReturn {
     sipContext.subscribeBLF(extension, buddy);
   }, [sipContext]);
   
+  const batchSubscribeBLF = useCallback(async (extensions: string[], batchSize?: number) => {
+    await sipContext.batchSubscribeBLF(extensions, batchSize);
+  }, [sipContext]);
+
   const unsubscribeBLF = useCallback((extension: string) => {
     sipContext.unsubscribeBLF(extension);
   }, [sipContext]);
-  
+
   // Line management
   const selectLine = useCallback(async (lineNumber: LineNumber) => {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -465,6 +470,7 @@ export function useSIP(): UseSIPReturn {
     completeAttendedTransfer,
     cancelAttendedTransfer,
     subscribeBLF,
+    batchSubscribeBLF,
     unsubscribeBLF,
     selectLine,
     selectLineWithSession,

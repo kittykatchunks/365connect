@@ -38,6 +38,8 @@ export function BLFButton({
       return; // Do nothing on left-click if not configured
     }
     
+    // onDial and onTransfer handlers already check isRegistered,
+    // so we can safely call them here
     if (isInCall) {
       // During call, initiate transfer directly (respecting button's override)
       onTransfer(button.extension, button);

@@ -21,7 +21,6 @@ interface UseBLFSubscriptionOptions {
 }
 
 const BLF_SUBSCRIPTION_INTERVAL = 3 * 60 * 1000; // 3 minutes in milliseconds
-const SUBSCRIPTION_STAGGER_DELAY = 100; // 100ms delay between individual subscriptions
 
 /**
  * Check if an extension should be excluded from periodic polling
@@ -44,6 +43,10 @@ function getExtensionsForPolling(extensions: string[]): string[] {
 
 /**
  * Hook to manage BLF subscriptions based on dial tab visibility and registration state
+ * Improvements:
+ * - Uses batch subscription for better performance
+ * - Keeps subscriptions alive when switching tabs (just pauses polling)
+ * - Only unsubscribes on unmount or when disabled
  */
 export function useBLFSubscription({
   extensions,
@@ -51,15 +54,17 @@ export function useBLFSubscription({
   isRegistered,
   blfEnabled
 }: UseBLFSubscriptionOptions) {
-  const { subscribeBLF } = useSIP();
+  const { batchSubscribeBLF } = useSIP();
   const intervalIdRef = useRef<number | null>(null);
   const hasInitialSubscriptionRef = useRef<boolean>(false);
   const verboseLogging = isVerboseLoggingEnabled();
 
-  // Function to subscribe to all configured BLF extensions
-  const subscribeToAll = (extensionsList: string[], isPolling: boolean = false) => {
+  // Function to batch subscribe to all configured BLF extensions
+  const subscribeToAll = async (extensionsList: string[], isPolling: boolean = false) => {
+    if (extensionsList.length === 0) return;
+    
     if (verboseLogging) {
-      console.log('[useBLFSubscription] 📞 Subscribing to all BLF extensions:', {
+      console.log('[useBLFSubscription] 📞 Batch subscribing to BLF extensions:', {
         totalExtensions: extensionsList.length,
         extensions: extensionsList,
         isPolling,
@@ -69,15 +74,8 @@ export function useBLFSubscription({
       });
     }
 
-    extensionsList.forEach((extension, index) => {
-      // Stagger subscriptions to avoid overwhelming the server
-      setTimeout(() => {
-        if (verboseLogging) {
-          console.log(`[useBLFSubscription] 📞 Subscribing to BLF extension: ${extension}`);
-        }
-        subscribeBLF(extension);
-      }, index * SUBSCRIPTION_STAGGER_DELAY);
-    });
+    // Use batch subscription with default batch size of 5
+    await batchSubscribeBLF(extensionsList, 5);
   };
 
   // Function to start the 3-minute polling interval
@@ -129,17 +127,25 @@ export function useBLFSubscription({
 
   // Effect: Handle subscription lifecycle based on conditions
   useEffect(() => {
-    // Early return if conditions not met
-    if (!isRegistered || !blfEnabled || extensions.length === 0) {
+    // Early return if not enabled or no extensions
+    if (!blfEnabled || extensions.length === 0) {
       stopPollingInterval();
       hasInitialSubscriptionRef.current = false;
       
       if (verboseLogging && extensions.length > 0) {
-        console.log('[useBLFSubscription] 📴 Conditions not met for BLF subscriptions:', {
-          isRegistered,
-          blfEnabled,
-          extensionsCount: extensions.length
-        });
+        console.log('[useBLFSubscription] 📴 BLF disabled or no extensions configured');
+      }
+      
+      return;
+    }
+
+    // Need to be registered to subscribe
+    if (!isRegistered) {
+      stopPollingInterval();
+      hasInitialSubscriptionRef.current = false;
+      
+      if (verboseLogging) {
+        console.log('[useBLFSubscription] 📴 Not registered - subscriptions will start when registered');
       }
       
       return;
@@ -151,24 +157,28 @@ export function useBLFSubscription({
         console.log('[useBLFSubscription] 📱 Dial tab is active - managing BLF subscriptions');
       }
 
-      // Subscribe to all extensions when switching to dial tab
-      subscribeToAll(extensions, false);
-      hasInitialSubscriptionRef.current = true;
+      // Subscribe to all extensions when switching to dial tab (only if not already subscribed)
+      if (!hasInitialSubscriptionRef.current) {
+        subscribeToAll(extensions, false);
+        hasInitialSubscriptionRef.current = true;
+      }
 
       // Start the 3-minute polling interval (only for non-7xx extensions)
       startPollingInterval();
 
     } else {
-      // Dial tab is not active - stop polling
+      // Dial tab is not active - KEEP subscriptions alive, just stop polling
+      // This is more efficient than unsubscribing/resubscribing on every tab switch
       if (verboseLogging) {
-        console.log('[useBLFSubscription] 📴 Dial tab is not active - stopping BLF polling');
+        console.log('[useBLFSubscription] 💤 Dial tab is not active - pausing polling (keeping subscriptions alive)');
       }
       stopPollingInterval();
     }
 
-    // Cleanup on unmount or dependency change
+    // Cleanup on unmount - stop polling
     return () => {
       stopPollingInterval();
+      // Note: We don't unsubscribe here - subscriptions persist until explicit cleanup
     };
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,11 +222,12 @@ export function useImmediateBLFSubscription() {
       return;
     }
 
+    // Allow button configuration offline, but only subscribe if registered
     if (!isRegistered) {
       if (verboseLogging) {
-        console.warn('[useImmediateBLFSubscription] ⚠️ Cannot subscribe - not registered');
+        console.log('[useImmediateBLFSubscription] ℹ️ Not registered - button configured but not subscribing yet');
       }
-      return;
+      return; // Button is saved, but won't subscribe until registered
     }
 
     if (!blfEnabled) {

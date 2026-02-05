@@ -64,6 +64,7 @@ interface SIPContextValue {
   
   // BLF
   subscribeBLF: (extension: string, buddy?: string) => void;
+  batchSubscribeBLF: (extensions: string[], batchSize?: number) => Promise<void>;
   unsubscribeBLF: (extension: string) => void;
   
   // Line management
@@ -1191,6 +1192,10 @@ export function SIPProvider({ children }: SIPProviderProps) {
     // BLF
     subscribeBLF: (extension: string, buddy?: string) => {
       serviceRef.current.subscribeBLF(extension, buddy);
+    },
+    
+    batchSubscribeBLF: async (extensions: string[], batchSize?: number) => {
+      await serviceRef.current.batchSubscribeBLF(extensions, batchSize);
     },
     
     unsubscribeBLF: (extension: string) => {
