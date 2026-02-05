@@ -12,8 +12,6 @@ export const DEFAULT_LINE = 1;
 
 // BLF configuration
 export const BLF_BUTTON_COUNT = 20;
-export const BLF_LEFT_COUNT = 10;
-export const BLF_RIGHT_COUNT = 10;
 
 // Timeouts
 export const REGISTRATION_TIMEOUT = 30000; // 30 seconds

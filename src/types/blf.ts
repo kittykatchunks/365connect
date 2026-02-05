@@ -28,8 +28,6 @@ export interface BLFButtonConfig {
 }
 
 export const BLF_BUTTON_COUNT = 20;
-export const BLF_LEFT_COUNT = 10;
-export const BLF_RIGHT_COUNT = 10;
 
 export function createEmptyBLFButtons(): BLFButton[] {
   return Array.from({ length: BLF_BUTTON_COUNT }, (_, i) => ({
@@ -39,14 +37,6 @@ export function createEmptyBLFButtons(): BLFButton[] {
     displayName: '',
     state: 'inactive' as BLFPresenceState
   }));
-}
-
-export function getLeftBLFButtons(buttons: BLFButton[]): BLFButton[] {
-  return buttons.filter(b => b.index <= BLF_LEFT_COUNT);
-}
-
-export function getRightBLFButtons(buttons: BLFButton[]): BLFButton[] {
-  return buttons.filter(b => b.index > BLF_LEFT_COUNT);
 }
 
 export function isButtonConfigured(button: BLFButton): boolean {

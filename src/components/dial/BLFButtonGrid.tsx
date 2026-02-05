@@ -1,5 +1,5 @@
 // ============================================
-// BLF Button Grid - Left and Right BLF Columns
+// BLF Button Grid - Modal-Based BLF Display
 // ============================================
 
 import { useCallback, useState } from 'react';
@@ -11,20 +11,18 @@ import { cn, isVerboseLoggingEnabled } from '@/utils';
 import type { BLFButton as BLFButtonType } from '@/types';
 
 interface BLFButtonGridProps {
-  side: 'left' | 'right';
   className?: string;
   onTransferRequest?: (target: string, autoStartAttended: boolean) => void;
 }
 
-export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonGridProps) {
+export function BLFButtonGrid({ className, onTransferRequest }: BLFButtonGridProps) {
   const [configureIndex, setConfigureIndex] = useState<number | null>(null);
   const verboseLogging = isVerboseLoggingEnabled();
   
   // Stores
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
   const preferBlindTransfer = useSettingsStore((state) => state.settings.call.preferBlindTransfer);
-  const getLeftButtons = useBLFStore((state) => state.getLeftButtons);
-  const getRightButtons = useBLFStore((state) => state.getRightButtons);
+  const getAllButtons = useBLFStore((state) => state.getAllButtons);
   const getConfiguredExtensions = useBLFStore((state) => state.getConfiguredExtensions);
   const blfStates = useSIPStore((state) => state.blfStates);
   const currentView = useAppStore((state) => state.currentView);
@@ -34,8 +32,8 @@ export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonG
   
   const isInCall = currentSession && currentSession.state !== 'terminated';
   
-  // Get buttons for this side
-  const buttons = side === 'left' ? getLeftButtons() : getRightButtons();
+  // Get all buttons
+  const buttons = getAllButtons();
   
   // Merge BLF states from SIP into button objects
   // When not registered, show all BLF buttons as inactive (unsubscribed state)
@@ -131,7 +129,7 @@ export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonG
   
   return (
     <>
-      <div className={cn('blf-grid', `blf-grid-${side}`, className)}>
+      <div className={cn('blf-grid', className)}>
         {buttonsWithState.map((button) => (
           <BLFButton
             key={button.index}
@@ -157,7 +155,7 @@ export function BLFButtonGrid({ side, className, onTransferRequest }: BLFButtonG
   );
 }
 
-// Combined component showing both sides
+// BLF Button Panel - now a single unified grid
 export function BLFButtonPanel() {
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
   
@@ -167,8 +165,7 @@ export function BLFButtonPanel() {
   
   return (
     <div className="blf-panel">
-      <BLFButtonGrid side="left" />
-      <BLFButtonGrid side="right" />
+      <BLFButtonGrid />
     </div>
   );
 }

@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { BLFButton, BLFButtonConfig, BLFPresenceState } from '@/types';
-import { createEmptyBLFButtons, BLF_BUTTON_COUNT, BLF_LEFT_COUNT } from '@/types';
+import { createEmptyBLFButtons, BLF_BUTTON_COUNT } from '@/types';
 
 interface BLFState {
   // Button configurations
@@ -20,8 +20,6 @@ interface BLFState {
   importButtons: (buttons: BLFButton[]) => void;
   
   // Computed
-  getLeftButtons: () => BLFButton[];
-  getRightButtons: () => BLFButton[];
   getAllButtons: () => BLFButton[];
   getConfiguredExtensions: () => string[];
   isButtonConfigured: (index: number) => boolean;
@@ -84,14 +82,6 @@ export const useBLFStore = create<BLFState>()(
         }),
         
         // Computed
-        getLeftButtons: () => {
-          return get().buttons.filter(b => b.index <= BLF_LEFT_COUNT);
-        },
-        
-        getRightButtons: () => {
-          return get().buttons.filter(b => b.index > BLF_LEFT_COUNT);
-        },
-        
         getAllButtons: () => {
           return get().buttons;
         },

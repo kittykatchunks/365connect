@@ -32,8 +32,6 @@ export type {
 } from './blf';
 export { 
   BLF_BUTTON_COUNT, 
-  BLF_LEFT_COUNT, 
-  BLF_RIGHT_COUNT, 
   createEmptyBLFButtons 
 } from './blf';
 

@@ -2395,68 +2395,39 @@ a {
   font-weight: 500;
 }
 
-.blf-grid-left .blf-btn-available { 
+/* Unified BLF button states (modal display) */
+.blf-grid .blf-btn-available { 
   border-left: 5px solid var(--success-color);
 }
 
-.blf-grid-left .blf-btn-busy { 
+.blf-grid .blf-btn-busy { 
   border-left: 5px solid var(--danger-color);
   background: rgba(220, 38, 38, 0.1);
 }
 
-.blf-grid-left .blf-btn-ringing { 
+.blf-grid .blf-btn-ringing { 
   border-left: 5px solid var(--danger-color);
   background: rgba(220, 38, 38, 0.1);
-  animation: blf-ringing-flash-left 0.5s ease-in-out infinite alternate;
+  animation: blf-ringing-flash 0.5s ease-in-out infinite alternate;
 }
 
-.blf-grid-left .blf-btn-hold { 
+.blf-grid .blf-btn-hold { 
   border-left: 5px solid var(--warning-color);
   background: rgba(251, 191, 36, 0.1);
-  animation: blf-hold-slow-left 2s ease-in-out infinite alternate;
+  animation: blf-hold-slow 2s ease-in-out infinite alternate;
 }
 
-.blf-grid-left .blf-btn-inactive { 
+.blf-grid .blf-btn-inactive { 
   border-left: 5px solid #6b7280;
 }
 
-/* Speed dial buttons in left grid - use primary color border */
-.blf-grid-left .blf-btn:not(.blf-btn-empty):not(.blf-btn-available):not(.blf-btn-busy):not(.blf-btn-ringing):not(.blf-btn-hold):not(.blf-btn-inactive) {
+/* Speed dial buttons - use primary color border */
+.blf-grid .blf-btn:not(.blf-btn-empty):not(.blf-btn-available):not(.blf-btn-busy):not(.blf-btn-ringing):not(.blf-btn-hold):not(.blf-btn-inactive) {
   border-left: 5px solid var(--primary-color);
 }
 
-.blf-grid-right .blf-btn-available { 
-  border-right: 5px solid var(--success-color);
-}
-
-.blf-grid-right .blf-btn-busy { 
-  border-right: 5px solid var(--danger-color);
-  background: rgba(220, 38, 38, 0.1);
-}
-
-.blf-grid-right .blf-btn-ringing { 
-  border-right: 5px solid var(--danger-color);
-  background: rgba(220, 38, 38, 0.1);
-  animation: blf-ringing-flash-right 0.5s ease-in-out infinite alternate;
-}
-
-.blf-grid-right .blf-btn-hold { 
-  border-right: 5px solid var(--warning-color);
-  background: rgba(251, 191, 36, 0.1);
-  animation: blf-hold-slow-right 2s ease-in-out infinite alternate;
-}
-
-.blf-grid-right .blf-btn-inactive { 
-  border-right: 5px solid #6b7280;
-}
-
-/* Speed dial buttons in right grid - use primary color border */
-.blf-grid-right .blf-btn:not(.blf-btn-empty):not(.blf-btn-available):not(.blf-btn-busy):not(.blf-btn-ringing):not(.blf-btn-hold):not(.blf-btn-inactive) {
-  border-right: 5px solid var(--primary-color);
-}
-
-/* BLF Animations - Left Grid (border-left) */
-@keyframes blf-ringing-flash-left {
+/* BLF Animations */
+@keyframes blf-ringing-flash {
   0% {
     border-left-color: var(--danger-color);
     background: rgba(220, 38, 38, 0.1);
@@ -2467,36 +2438,13 @@ a {
   }
 }
 
-@keyframes blf-hold-slow-left {
+@keyframes blf-hold-slow {
   0% {
     border-left-color: var(--warning-color);
     background: rgba(251, 191, 36, 0.1);
   }
   100% {
     border-left-color: #b45309;
-    background: rgba(251, 191, 36, 0.15);
-  }
-}
-
-/* BLF Animations - Right Grid (border-right) */
-@keyframes blf-ringing-flash-right {
-  0% {
-    border-right-color: var(--danger-color);
-    background: rgba(220, 38, 38, 0.1);
-  }
-  100% {
-    border-right-color: #991b1b;
-    background: rgba(220, 38, 38, 0.2);
-  }
-}
-
-@keyframes blf-hold-slow-right {
-  0% {
-    border-right-color: var(--warning-color);
-    background: rgba(251, 191, 36, 0.1);
-  }
-  100% {
-    border-right-color: #b45309;
     background: rgba(251, 191, 36, 0.15);
   }
 }
