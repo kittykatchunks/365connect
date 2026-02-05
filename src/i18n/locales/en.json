@@ -645,5 +645,14 @@
         "downgrade_warning": "You are running an older version of the app. Some features may not work as expected.",
         "current_version": "Current Version",
         "previous_version": "Previous Version"
+    },
+    "systemCodes": {
+        "toggle_auto_answer": "Toggle Auto Answer",
+        "agent_login_out": "Agent Login/Out",
+        "toggle_queue": "Toggle Queue In/Out",
+        "toggle_queue_specific": "Toggle Queue ${queue}",
+        "toggle_pause": "Toggle Pause",
+        "pause_with_reason": "Pause (Reason ${reason})",
+        "change_clip": "Change CLIP to ${clip}"
     }
 }

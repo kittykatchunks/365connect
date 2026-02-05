@@ -576,5 +576,14 @@
         "downgrade_warning": "U gebruikt een oudere versie van de app. Sommige functies werken mogelijk niet zoals verwacht.",
         "current_version": "Huidige Versie",
         "previous_version": "Vorige Versie"
+    },
+    "systemCodes": {
+        "toggle_auto_answer": "Automatisch Antwoord Schakelen",
+        "agent_login_out": "Agent Inloggen/Uitloggen",
+        "toggle_queue": "Wachtrij In/Uit Schakelen",
+        "toggle_queue_specific": "Wachtrij ${queue} Schakelen",
+        "toggle_pause": "Pauze Schakelen",
+        "pause_with_reason": "Pauze (Reden ${reason})",
+        "change_clip": "CLIP Wijzigen naar ${clip}"
     }
 }

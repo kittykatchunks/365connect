@@ -11,7 +11,7 @@ import { ConfirmModal } from '@/components/modals';
 import { useCallHistoryStore, useAppStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { formatCallDuration, type CallRecord } from '@/types/callHistory';
-import { isVerboseLoggingEnabled } from '@/utils';
+import { isVerboseLoggingEnabled, translateSystemCode } from '@/utils';
 
 type FilterType = 'all' | 'incoming' | 'outgoing' | 'missed';
 
@@ -136,10 +136,10 @@ export function ActivityView() {
                       
                       <div className="activity-info">
                         <div className="activity-number">
-                          {record.name || record.number}
+                          {record.name || translateSystemCode(record.number, t)}
                         </div>
                         {record.name && (
-                          <div className="activity-secondary">{record.number}</div>
+                          <div className="activity-secondary">{translateSystemCode(record.number, t)}</div>
                         )}
                         <div className="activity-meta">
                           <span className="activity-time">{formatTime(record.timestamp)}</span>

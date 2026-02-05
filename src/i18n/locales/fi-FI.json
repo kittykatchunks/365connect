@@ -632,5 +632,14 @@
         "feature_3": "Käyttöliittymän parannuksia",
         "downgrade_warning": "Käytät sovelluksen vanhempaa versiota. Jotkin ominaisuudet eivät välttämättä toimi odotetulla tavalla.",
         "current_version": "Nykyinen versio"
+    },
+    "systemCodes": {
+        "toggle_auto_answer": "Vaihda Automaattivastaus",
+        "agent_login_out": "Agentin Sisään/Uloskirjaus",
+        "toggle_queue": "Vaihda Jono Sisään/Ulos",
+        "toggle_queue_specific": "Vaihda Jono ${queue}",
+        "toggle_pause": "Vaihda Tauko",
+        "pause_with_reason": "Tauko (Syy ${reason})",
+        "change_clip": "Vaihda CLIP arvoon ${clip}"
     }
 }

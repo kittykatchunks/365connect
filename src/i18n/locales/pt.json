@@ -575,5 +575,14 @@
         "downgrade_warning": "Está a executar uma versão mais antiga da aplicação. Algumas funcionalidades podem não funcionar como esperado.",
         "current_version": "Versão Atual",
         "previous_version": "Versão Anterior"
+    },
+    "systemCodes": {
+        "toggle_auto_answer": "Alternar Resposta Automática",
+        "agent_login_out": "Login/Logout de Agente",
+        "toggle_queue": "Alternar Fila Dentro/Fora",
+        "toggle_queue_specific": "Alternar Fila ${queue}",
+        "toggle_pause": "Alternar Pausa",
+        "pause_with_reason": "Pausa (Motivo ${reason})",
+        "change_clip": "Alterar CLIP para ${clip}"
     }
 }
