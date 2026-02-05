@@ -136,10 +136,10 @@ export function ActivityView() {
                       
                       <div className="activity-info">
                         <div className="activity-number">
-                          {record.name || translateSystemCode(record.number, t)}
+                          {record.name || (translateSystemCode(record.number, t) !== record.number ? translateSystemCode(record.number, t) : record.number)}
                         </div>
-                        {record.name && (
-                          <div className="activity-secondary">{translateSystemCode(record.number, t)}</div>
+                        {(record.name || translateSystemCode(record.number, t) !== record.number) && (
+                          <div className="activity-secondary">{record.number}</div>
                         )}
                         <div className="activity-meta">
                           <span className="activity-time">{formatTime(record.timestamp)}</span>

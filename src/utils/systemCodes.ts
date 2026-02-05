@@ -35,8 +35,8 @@ export function translateSystemCode(dialedNumber: string, t?: (key: string, fall
     const queue = dialedNumber.substring(4); // Extract the queue number (6XX)
     translatedName = translate('systemCodes.toggle_queue_specific', `Toggle Queue ${queue}`).replace('${queue}', queue);
   }
-  // *82*XX - Change CLIP to XX (where XX is any two digits)
-  else if (/^\*82\*\d{2}$/.test(dialedNumber)) {
+  // *82*XX - Change CLIP to XX (where XX is one or two digits)
+  else if (/^\*82\*\d{1,2}$/.test(dialedNumber)) {
     const clip = dialedNumber.substring(4); // Extract the CLIP value
     translatedName = translate('systemCodes.change_clip', `Change CLIP to ${clip}`).replace('${clip}', clip);
   }
