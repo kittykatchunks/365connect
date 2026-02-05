@@ -129,6 +129,9 @@ export class SIPService {
   // Track intentional disconnection to avoid cleanup loops
   private isIntentionalDisconnect = false;
   
+  // Keep-alive mechanism
+  private keepAliveTimer: number | null = null;
+  
   // Event system
   private listeners: Map<SIPEventType, Set<SIPEventCallback>> = new Map();
 
@@ -281,7 +284,10 @@ export class SIPService {
         transportOptions: {
           server: serverUrl,
           traceSip: this.config.traceSip ?? false,
-          connectionTimeout: this.config.connectionTimeout ?? 20
+          connectionTimeout: this.config.connectionTimeout ?? 20,
+          maxReconnectionAttempts: this.config.maxReconnectionAttempts ?? 10,
+          reconnectionDelay: this.config.reconnectionDelay ?? 2,
+          reconnectionTimeout: this.config.reconnectionTimeout ?? 30
         },
         sessionDescriptionHandlerFactoryOptions: {
           peerConnectionConfiguration: {
@@ -376,6 +382,60 @@ export class SIPService {
 
   // ==================== Registration Management ====================
 
+  /**
+   * Register with retry logic and exponential backoff
+   * @param maxAttempts Maximum number of registration attempts (default: 3)
+   * @param initialDelayMs Initial delay between attempts in milliseconds (default: 2000)
+   * @returns Promise that resolves when registration succeeds or rejects after all attempts fail
+   */
+  async registerWithRetry(maxAttempts = 3, initialDelayMs = 2000): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        if (verboseLogging) {
+          console.log(`[SIPService] 📝 Registration attempt ${attempt}/${maxAttempts}`);
+        }
+        
+        await this.register();
+        
+        // Reset attempt counter on success (removed - not used)
+        
+        if (verboseLogging) {
+          console.log('[SIPService] ✅ Registration successful');
+        }
+        
+        return; // Success - exit retry loop
+        
+      } catch (error) {
+        if (verboseLogging) {
+          console.warn(`[SIPService] ⚠️ Registration attempt ${attempt}/${maxAttempts} failed:`, error);
+        }
+        
+        // If this was the last attempt, emit failure and throw
+        if (attempt === maxAttempts) {
+          this.emit('reconnectionFailed', { error: error as Error, attempts: maxAttempts });
+          
+          if (verboseLogging) {
+            console.error(`[SIPService] ❌ Registration failed after ${maxAttempts} attempts`);
+          }
+          
+          throw error;
+        }
+        
+        // Calculate exponential backoff delay: 2s, 4s, 8s...
+        const delayMs = initialDelayMs * Math.pow(2, attempt - 1);
+        
+        if (verboseLogging) {
+          console.log(`[SIPService] ⏳ Waiting ${delayMs}ms before retry attempt ${attempt + 1}`);
+        }
+        
+        // Wait before next attempt
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
   async register(): Promise<void> {
     if (!this.userAgent || !this.registerer) {
       throw new Error('UserAgent not created');
@@ -451,6 +511,9 @@ export class SIPService {
   private handleRegistrationSuccess(): void {
     console.log('Registration successful');
     this.emit('registered', this.userAgent);
+    
+    // Start keep-alive mechanism after successful registration
+    this.startKeepAlive();
     
     // Start subscription health monitoring
     this.startSubscriptionHealthMonitoring();
@@ -2594,11 +2657,11 @@ export class SIPService {
       }
     }
 
-    // Auto-start registration
+    // Auto-start registration with retry logic
     if (this.userAgent && this.registrationState !== 'registered' && this.registrationState !== 'registering') {
       setTimeout(() => {
-        this.register().catch(error => {
-          console.error('Auto-registration failed:', error);
+        this.registerWithRetry(3, 2000).catch(error => {
+          console.error('[SIPService] ❌ Auto-registration failed after retries:', error);
         });
       }, 500);
     }
@@ -2616,6 +2679,9 @@ export class SIPService {
         blfSubscriptions: this.blfSubscriptions.size
       });
     }
+    
+    // Stop keep-alive when disconnected
+    this.stopKeepAlive();
     
     this.transportState = 'disconnected';
     this.emit('transportStateChanged', 'disconnected');
@@ -2742,7 +2808,10 @@ export class SIPService {
         this.registerer = null;
       }
       
-      // 3. Dispose all BLF subscriptions
+      // 3. Stop keep-alive mechanism
+      this.stopKeepAlive();
+      
+      // 4. Dispose all BLF subscriptions
       if (verboseLogging) {
         console.log('[SIPService] 📞 Disposing BLF subscriptions:', this.blfSubscriptions.size);
       }
@@ -2759,7 +2828,7 @@ export class SIPService {
       }
       this.blfSubscriptions.clear();
       
-      // 4. Stop and dispose UserAgent
+      // 5. Stop and dispose UserAgent
       if (verboseLogging) {
         console.log('[SIPService] 🔌 Stopping UserAgent');
       }
@@ -2772,16 +2841,16 @@ export class SIPService {
       
       this.userAgent = null;
       
-      // 5. Update state
+      // 6. Update state
       this.transportState = 'disconnected';
       this.registrationState = 'unregistered';
       this.selectedLine = null;
       
-      // 6. Emit events
+      // 7. Emit events
       this.emit('transportStateChanged', 'disconnected');
       this.emit('registrationStateChanged', 'unregistered');
       
-      // 7. Reset the intentional disconnect flag
+      // 8. Reset the intentional disconnect flag
       this.isIntentionalDisconnect = false;
       
       if (verboseLogging) {
@@ -2886,6 +2955,80 @@ export class SIPService {
 
   hasActiveSessions(): boolean {
     return this.sessions.size > 0;
+  }
+
+  // ==================== Keep-Alive Mechanism ====================
+
+  /**
+   * Start keep-alive mechanism to detect dead connections
+   * Sends periodic OPTIONS requests to keep connection alive
+   */
+  private startKeepAlive(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    // Stop any existing timer
+    this.stopKeepAlive();
+    
+    // Get interval from config (default 90 seconds)
+    const intervalSeconds = this.config?.keepAliveInterval ?? 90;
+    const intervalMs = intervalSeconds * 1000;
+    
+    if (verboseLogging) {
+      console.log(`[SIPService] 💓 Starting keep-alive mechanism (interval: ${intervalSeconds}s)`);
+    }
+    
+    this.keepAliveTimer = window.setInterval(() => {
+      if (this.userAgent && this.registrationState === 'registered') {
+        try {
+          // Send OPTIONS request to server
+          const target = this.userAgent.configuration.uri;
+          
+          if (verboseLogging) {
+            console.log('[SIPService] 💓 Sending keep-alive OPTIONS request to:', target.toString());
+          }
+          
+          // Create OPTIONS request
+          const request = this.userAgent.userAgentCore.makeOutgoingRequestMessage(
+            'OPTIONS',
+            target,
+            target,
+            target,
+            {}
+          );
+          
+          // Send the request - OutgoingRequest doesn't return a promise
+          // The request is sent but we don't wait for response
+          this.userAgent.userAgentCore.request(request);
+          
+          if (verboseLogging) {
+            console.log('[SIPService] ✅ Keep-alive OPTIONS request sent');
+          }
+          
+        } catch (error: unknown) {
+          console.error('[SIPService] ❌ Failed to send keep-alive:', error);
+        }
+      } else {
+        if (verboseLogging) {
+          console.log('[SIPService] ⚠️ Keep-alive skipped - not registered');
+        }
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Stop keep-alive mechanism
+   */
+  private stopKeepAlive(): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    if (this.keepAliveTimer !== null) {
+      if (verboseLogging) {
+        console.log('[SIPService] 💓 Stopping keep-alive mechanism');
+      }
+      
+      window.clearInterval(this.keepAliveTimer);
+      this.keepAliveTimer = null;
+    }
   }
 }
 

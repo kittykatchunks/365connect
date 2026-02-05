@@ -26,7 +26,12 @@ export interface SIPConfig {
   // Connection settings
   connectionTimeout?: number;
   reconnectionAttempts?: number;
+  reconnectionDelay?: number;
+  maxReconnectionAttempts?: number;
   reconnectionTimeout?: number;
+  
+  // Keep-alive settings
+  keepAliveInterval?: number;  // Interval in seconds, default 90
   
   // WebRTC settings
   bundlePolicy?: 'balanced' | 'max-bundle' | 'max-compat';
@@ -276,6 +281,7 @@ export type SIPEventType =
   | 'transportStateChanged'
   | 'reconnectionAttempting'
   | 'reconnectionSuccess'
+  | 'reconnectionFailed'
   // Registration events
   | 'registered'
   | 'unregistered'
@@ -334,6 +340,7 @@ export interface SIPEventMap {
   transportStateChanged: TransportState;
   reconnectionAttempting: undefined;
   reconnectionSuccess: undefined;
+  reconnectionFailed: { error?: Error; attempts?: number };
   registered: unknown;
   unregistered: undefined;
   registrationFailed: { response?: unknown; statusCode?: number; error?: Error };

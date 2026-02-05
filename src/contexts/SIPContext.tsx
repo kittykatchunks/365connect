@@ -4,6 +4,7 @@
  */
 
 import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { callProgressToneService } from '../services/CallProgressToneService';
@@ -81,6 +82,7 @@ interface SIPProviderProps {
 
 export function SIPProvider({ children }: SIPProviderProps) {
   const serviceRef = useRef<SIPService>(sipService);
+  const { t } = useTranslation();
   
   // Get store actions
   const {
@@ -528,6 +530,47 @@ export function SIPProvider({ children }: SIPProviderProps) {
         }
         clearVoicemailMWI();
       }
+    });
+    
+    // Reconnection event handlers for notifications
+    const unsubReconnecting = service.on('reconnectionAttempting', () => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔄 reconnectionAttempting event received');
+      }
+      
+      addNotification({
+        type: 'warning',
+        title: t('reconnecting', 'Reconnecting...'),
+        message: t('reconnecting_message', 'Connection lost. Attempting to reconnect to Phantom server...'),
+        duration: 10000
+      });
+    });
+    
+    const unsubReconnectionSuccess = service.on('reconnectionSuccess', () => {
+      if (verboseLogging) {
+        console.log('[SIPContext] ✅ reconnectionSuccess event received');
+      }
+      
+      addNotification({
+        type: 'success',
+        title: t('reconnected', 'Reconnected'),
+        message: t('reconnected_message', 'Successfully reconnected to Phantom server.'),
+        duration: 5000
+      });
+    });
+    
+    const unsubReconnectionFailed = service.on('reconnectionFailed', (data: { error?: Error; attempts?: number }) => {
+      if (verboseLogging) {
+        console.error('[SIPContext] ❌ reconnectionFailed event received:', data);
+      }
+      
+      const attempts = data.attempts || 'multiple';
+      addNotification({
+        type: 'error',
+        title: t('reconnection_failed', 'Reconnection Failed'),
+        message: t('reconnection_failed_message', `Failed to reconnect after ${attempts} attempts. Please check your connection and try again.`),
+        duration: 8000
+      });
     });
     
     // Listen for unregistered event to clear BLF states
@@ -1021,6 +1064,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
       unsubAttendedTransferCompleted();
       unsubAttendedTransferCancelled();
       unsubNotifyReceived();
+      unsubReconnecting();
+      unsubReconnectionSuccess();
+      unsubReconnectionFailed();
     };
   }, [
     setRegistrationState,
@@ -1040,6 +1086,95 @@ export function SIPProvider({ children }: SIPProviderProps) {
     settings.call.autoFocusOnNotificationAnswer,
     settings.call.incomingCallNotifications
   ]);
+
+  // Network status monitoring - auto-reconnect when network comes back online
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    
+    const handleOnline = async () => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🌐 Network connection restored (online event)');
+      }
+      
+      // Check if we should auto-reconnect
+      const isDisconnected = serviceRef.current.getTransportState() === 'disconnected';
+      const hasConfig = sipConfig && 
+                       settings.connection.phantomId && 
+                       settings.connection.username && 
+                       settings.connection.password;
+      
+      if (isDisconnected && hasConfig) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔄 Auto-reconnecting after network restoration...');
+        }
+        
+        addNotification({
+          type: 'info',
+          title: t('network_restored', 'Network Restored'),
+          message: t('network_restored_reconnecting', 'Network connection restored. Reconnecting to Phantom server...'),
+          duration: 5000
+        });
+        
+        try {
+          const config = buildSIPConfig({
+            phantomId: sipConfig.phantomId,
+            username: sipConfig.username,
+            password: sipConfig.password
+          });
+          
+          await serviceRef.current.createUserAgent(config);
+          
+          if (verboseLogging) {
+            console.log('[SIPContext] ✅ Auto-reconnection after network restoration successful');
+          }
+        } catch (error) {
+          console.error('[SIPContext] ❌ Auto-reconnection after network restoration failed:', error);
+          
+          addNotification({
+            type: 'error',
+            title: t('reconnection_failed', 'Reconnection Failed'),
+            message: t('reconnection_failed_after_network', 'Failed to reconnect after network restoration. Please try manually.'),
+            duration: 6000
+          });
+        }
+      } else if (verboseLogging) {
+        console.log('[SIPContext] ℹ️ Skipping auto-reconnect:', {
+          isDisconnected,
+          hasConfig: !!hasConfig,
+          reason: !isDisconnected ? 'Already connected' : 'No valid config'
+        });
+      }
+    };
+    
+    const handleOffline = () => {
+      if (verboseLogging) {
+        console.log('[SIPContext] ⚠️ Network connection lost (offline event)');
+      }
+      
+      addNotification({
+        type: 'warning',
+        title: t('network_offline', 'Network Offline'),
+        message: t('network_offline_message', 'Internet connection lost. Will attempt to reconnect when online.'),
+        duration: 8000
+      });
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    if (verboseLogging) {
+      console.log('[SIPContext] 🌐 Network status monitoring enabled');
+    }
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      
+      if (verboseLogging) {
+        console.log('[SIPContext] 🌐 Network status monitoring disabled');
+      }
+    };
+  }, [settings.connection, sipConfig, addNotification, t]);
 
   // Context value with wrapped methods
   // Use useMemo to create value object to avoid accessing ref during render
