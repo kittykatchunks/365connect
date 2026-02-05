@@ -114,35 +114,61 @@ export function AgentKeys({ className }: AgentKeysProps) {
           
           // Check for actual logged-in queues
           if (verboseLogging) {
-            console.log('[AgentKeys] 🔍 Checking queue membership after registration...');
+            console.log('[AgentKeys] 🔍 Checking queue membership via WallBoardStats after registration...');
           }
           
           try {
-            const queueResult = await fetchQueueMembership(agentData.num);
+            const wallBoardResponse = await phantomApiService.fetchWallBoardStats();
             
-            if (queueResult.success) {
-              if (queueResult.queues.length > 0) {
-                if (verboseLogging) {
-                  console.log('[AgentKeys] ✅ Agent is logged into', queueResult.queues.length, 'queue(s):', queueResult.queues);
-                }
-                setLoggedInQueues(queueResult.queues);
-                setQueueState('in-queue');
-                if (verboseLogging) {
-                  console.log('[AgentKeys] 🔵 Queue state set to: in-queue (from registration check)');
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📥 WallBoardStats response:', wallBoardResponse);
+            }
+            
+            if (wallBoardResponse.success && wallBoardResponse.data?.agents) {
+              const agents = wallBoardResponse.data.agents as Record<string, any>;
+              const agentWallBoardData = agents[agentData.num];
+              
+              if (agentWallBoardData && agentWallBoardData.queues) {
+                // Parse CSV queues
+                const agentQueues = agentWallBoardData.queues.split(',').map((q: string) => q.trim()).filter((q: string) => q);
+                
+                if (agentQueues.length > 0) {
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] ✅ Agent is logged into', agentQueues.length, 'queue(s):', agentQueues);
+                  }
+                  // Convert to LoggedInQueue format
+                  const loggedInQueues = agentQueues.map((q: string) => ({
+                    queue: q,
+                    queuelabel: q
+                  }));
+                  setLoggedInQueues(loggedInQueues);
+                  setQueueState('in-queue');
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] 🔵 Queue state set to: in-queue (from registration check)');
+                  }
+                } else {
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
+                  }
+                  setLoggedInQueues([]);
+                  setQueueState('none');
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] 🔴 Queue state set to: none (no queues found)');
+                  }
                 }
               } else {
                 if (verboseLogging) {
-                  console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
+                  console.log('[AgentKeys] ℹ️ No queue data for agent in WallBoard');
                 }
                 setLoggedInQueues([]);
                 setQueueState('none');
                 if (verboseLogging) {
-                  console.log('[AgentKeys] 🔴 Queue state set to: none (no queues found)');
+                  console.log('[AgentKeys] 🔴 Queue state set to: none (no agent data)');
                 }
               }
             } else {
               if (verboseLogging) {
-                console.warn('[AgentKeys] ⚠️ Failed to fetch queue membership');
+                console.warn('[AgentKeys] ⚠️ Failed to fetch WallBoardStats');
               }
               setLoggedInQueues([]);
               setQueueState('none');

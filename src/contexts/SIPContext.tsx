@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode }
 import { SIPService, sipService } from '../services/SIPService';
 import { audioService } from '../services/AudioService';
 import { callProgressToneService } from '../services/CallProgressToneService';
+import { phantomApiService } from '../services/PhantomApiService';
 import { useSIPStore } from '../stores/sipStore';
 import { useBLFStore } from '../stores/blfStore';
 import { useCallHistoryStore } from '../stores/callHistoryStore';
@@ -284,37 +285,61 @@ export function SIPProvider({ children }: SIPProviderProps) {
                     
                     // Check for actual logged-in queues instead of assuming
                     if (verboseLogging) {
-                      console.log('[SIPContext] 🔍 Checking queue membership for agent:', agentData.num);
+                      console.log('[SIPContext] 🔍 Checking queue membership via WallBoardStats for agent:', agentData.num);
                     }
                     
                     try {
-                      const { fetchQueueMembership } = await import('@/utils');
-                      const agentNum = agentData.num || '';
-                      const queueResult = await fetchQueueMembership(agentNum);
+                      const wallBoardResponse = await phantomApiService.fetchWallBoardStats();
                       
-                      if (queueResult.success) {
-                        if (queueResult.queues.length > 0) {
-                          if (verboseLogging) {
-                            console.log('[SIPContext] ✅ Agent is logged into', queueResult.queues.length, 'queue(s):', queueResult.queues);
-                          }
-                          setLoggedInQueues(queueResult.queues);
-                          setQueueState('in-queue');
-                          if (verboseLogging) {
-                            console.log('[SIPContext] 🔵 Queue state set to: in-queue (from auto-reconnect)');
+                      if (verboseLogging) {
+                        console.log('[SIPContext] 📥 WallBoardStats response:', wallBoardResponse);
+                      }
+                      
+                      if (wallBoardResponse.success && wallBoardResponse.data?.agents) {
+                        const agents = wallBoardResponse.data.agents as Record<string, any>;
+                        const agentWallBoardData = agents[agentData.num || ''];
+                        
+                        if (agentWallBoardData && agentWallBoardData.queues) {
+                          // Parse CSV queues
+                          const agentQueues = agentWallBoardData.queues.split(',').map((q: string) => q.trim()).filter((q: string) => q);
+                          
+                          if (agentQueues.length > 0) {
+                            if (verboseLogging) {
+                              console.log('[SIPContext] ✅ Agent is logged into', agentQueues.length, 'queue(s):', agentQueues);
+                            }
+                            // Convert to LoggedInQueue format
+                            const loggedInQueues = agentQueues.map((q: string) => ({
+                              queue: q,
+                              queuelabel: q // WallBoard doesn't provide labels, use queue number
+                            }));
+                            setLoggedInQueues(loggedInQueues);
+                            setQueueState('in-queue');
+                            if (verboseLogging) {
+                              console.log('[SIPContext] 🔵 Queue state set to: in-queue (from auto-reconnect)');
+                            }
+                          } else {
+                            if (verboseLogging) {
+                              console.log('[SIPContext] ℹ️ Agent logged in but not in any queues');
+                            }
+                            setLoggedInQueues([]);
+                            setQueueState('none');
+                            if (verboseLogging) {
+                              console.log('[SIPContext] 🔴 Queue state set to: none (no queues found)');
+                            }
                           }
                         } else {
                           if (verboseLogging) {
-                            console.log('[SIPContext] ℹ️ Agent logged in but not in any queues');
+                            console.log('[SIPContext] ℹ️ No queue data for agent in WallBoard');
                           }
                           setLoggedInQueues([]);
                           setQueueState('none');
                           if (verboseLogging) {
-                            console.log('[SIPContext] 🔴 Queue state set to: none (no queues found)');
+                            console.log('[SIPContext] 🔴 Queue state set to: none (no agent data)');
                           }
                         }
                       } else {
                         if (verboseLogging) {
-                          console.warn('[SIPContext] ⚠️ Failed to fetch queue membership');
+                          console.warn('[SIPContext] ⚠️ Failed to fetch WallBoardStats');
                         }
                         setLoggedInQueues([]);
                         setQueueState('none');
