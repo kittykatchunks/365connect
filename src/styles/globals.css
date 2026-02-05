@@ -1558,6 +1558,19 @@ a {
   padding-right: 0;
   position: relative;
   /* Ensure this is the positioning context for child elements */
+  /* Base padding for BLF trigger button */
+  padding-bottom: clamp(3.5rem, 8vh, 5rem);
+  transition: padding-bottom var(--transition-normal);
+}
+
+/* Increase bottom padding when dialpad is shown to keep BLF button below */
+.dial-view-content:has(.dialpad) {
+  padding-bottom: clamp(4.5rem, 12vh, 6.5rem);
+}
+
+/* Additional padding when both CLI selector and dialpad are present */
+.dial-view-content:has(.cli-selector):has(.dialpad) {
+  padding-bottom: clamp(5rem, 14vh, 7.5rem);
 }
 
 /* When BLF is disabled, restrict content width */
@@ -1704,6 +1717,8 @@ a {
   gap: clamp(0.25rem, 1vw, 0.5rem);
   max-width: clamp(70%, 75%, 85%);
   margin: 0 auto;
+  /* Add bottom margin to create space above BLF button */
+  margin-bottom: var(--spacing-lg);
 }
 
 .dialpad-key {
