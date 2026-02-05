@@ -44,6 +44,7 @@ interface SettingsState {
   setMicrophoneDevice: (deviceId: string) => void;
   setRingerDevice: (deviceId: string) => void;
   setRingtoneFile: (file: string) => void;
+  setInternalRingtoneFile: (file: string) => void;
   
   // Actions - Advanced
   setSipMessagesEnabled: (enabled: boolean) => void;
@@ -240,6 +241,9 @@ export const useSettingsStore = create<SettingsState>()(
         })),
         setRingtoneFile: (ringtoneFile) => set((state) => ({
           settings: { ...state.settings, audio: { ...state.settings.audio, ringtoneFile } }
+        })),
+        setInternalRingtoneFile: (internalRingtoneFile) => set((state) => ({
+          settings: { ...state.settings, audio: { ...state.settings.audio, internalRingtoneFile } }
         })),
         
         // Advanced actions

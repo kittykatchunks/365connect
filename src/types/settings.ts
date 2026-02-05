@@ -37,7 +37,8 @@ export interface AudioSettings {
   speakerDevice: string;
   microphoneDevice: string;
   ringerDevice: string;
-  ringtoneFile: string;
+  ringtoneFile: string; // External ringtone (for calls with alert-info=external header)
+  internalRingtoneFile: string; // Internal ringtone (for calls without external/autoanswer header)
 }
 
 export interface AdvancedSettings {
@@ -92,7 +93,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     speakerDevice: 'default',
     microphoneDevice: 'default',
     ringerDevice: 'default',
-    ringtoneFile: 'Ringtone_1.mp3'
+    ringtoneFile: 'Ringtone_1.mp3',
+    internalRingtoneFile: 'Internal_1.mp3'
   },
   advanced: {
     sipMessagesEnabled: false,

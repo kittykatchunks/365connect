@@ -753,8 +753,10 @@ export class SIPService {
         });
       }
 
-      // Check for Alert-Info header for auto-answer
+      // Check for Alert-Info header for auto-answer and call type determination
       let headerAutoAnswer = false;
+      let callType: 'external' | 'internal' = 'internal'; // Default to internal
+      
       try {
         const alertInfoHeader = invitation.request.getHeader('Alert-Info');
         if (verboseLogging) {
@@ -763,10 +765,23 @@ export class SIPService {
           });
         }
         
-        if (alertInfoHeader && alertInfoHeader.toLowerCase().includes('autoanswer')) {
-          headerAutoAnswer = true;
-          if (verboseLogging) {
-            console.log('[SIPService] ✅ Alert-Info header contains autoanswer - will trigger auto-answer');
+        if (alertInfoHeader) {
+          const headerLower = alertInfoHeader.toLowerCase();
+          
+          // Check for autoanswer
+          if (headerLower.includes('autoanswer')) {
+            headerAutoAnswer = true;
+            if (verboseLogging) {
+              console.log('[SIPService] ✅ Alert-Info header contains autoanswer - will trigger auto-answer');
+            }
+          }
+          
+          // Check for external call type
+          if (headerLower.includes('external')) {
+            callType = 'external';
+            if (verboseLogging) {
+              console.log('[SIPService] 📞 Alert-Info header contains external - will use external ringtone');
+            }
           }
         }
       } catch (error) {
@@ -774,6 +789,9 @@ export class SIPService {
           console.warn('[SIPService] ⚠️ Error reading Alert-Info header:', error);
         }
       }
+      
+      // Set call type in session data
+      sessionData.callType = callType;
 
       // Auto-answer if configured (via settings or SIP header) and no other active calls
       const activeSessions = this.getActiveSessions();

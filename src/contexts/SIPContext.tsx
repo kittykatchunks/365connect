@@ -575,15 +575,19 @@ export function SIPProvider({ children }: SIPProviderProps) {
         const activeSessions = service.getActiveSessions();
         const useAlertTone = activeSessions.length > 0; // Any active call means use alert tone
         
+        // Determine call type from session data (default to internal if not specified)
+        const callType = session.callType || 'internal';
+        
         if (verboseLogging) {
           console.log('[SIPContext] 🎵 Ringtone selection:', {
             activeSessions: activeSessions.length,
             useAlertTone,
-            note: useAlertTone ? 'Call waiting (Alert.mp3)' : 'Normal ringtone'
+            callType,
+            note: useAlertTone ? 'Call waiting (Alert.mp3)' : `${callType} ringtone`
           });
         }
         
-        audioService.startRinging(useAlertTone).catch(error => {
+        audioService.startRinging(useAlertTone, callType).catch(error => {
           console.error('[SIPContext] ❌ Failed to start ringtone:', error);
         });
         

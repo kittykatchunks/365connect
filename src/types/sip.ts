@@ -80,6 +80,9 @@ export interface SessionData {
   callerID?: string;
   target?: string;
   
+  // Call type based on SIP headers
+  callType?: 'external' | 'internal'; // external if alert-info=external, internal otherwise
+  
   // Call state
   onHold: boolean;
   muted: boolean;

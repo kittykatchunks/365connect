@@ -622,26 +622,48 @@ function App() {
         if (verboseLogging) {
           console.log('[App] 🎵 Syncing audio settings with AudioService:', {
             ringtoneFile: audioSettings.ringtoneFile,
+            internalRingtoneFile: audioSettings.internalRingtoneFile,
             ringerDevice: audioSettings.ringerDevice,
-            hasCustomRingtone: audioService.hasCustomRingtone()
+            hasCustom1: audioService.hasCustomRingtone('custom1'),
+            hasCustom2: audioService.hasCustomRingtone('custom2'),
+            hasCustom3: audioService.hasCustomRingtone('custom3')
           });
         }
         
-        // Set ringtone - validate custom ringtone exists before setting
-        if (audioSettings.ringtoneFile === 'custom') {
-          if (audioService.hasCustomRingtone()) {
-            audioService.setRingtone('custom');
+        // Set external ringtone - validate custom ringtone exists before setting
+        if (audioSettings.ringtoneFile.startsWith('custom')) {
+          const slot = audioSettings.ringtoneFile as 'custom1' | 'custom2' | 'custom3';
+          if (audioService.hasCustomRingtone(slot)) {
+            audioService.setExternalRingtone(slot);
           } else {
             // Custom ringtone selected but data missing - reset to default
             if (verboseLogging) {
-              console.log('[App] ⚠️ Custom ringtone selected but no data exists, using default');
+              console.log('[App] ⚠️ External custom ringtone selected but no data exists, using default');
             }
-            audioService.setRingtone('Ringtone_1.mp3');
+            audioService.setExternalRingtone('Ringtone_1.mp3');
             // Also update the store to avoid mismatch
             useSettingsStore.getState().setRingtoneFile('Ringtone_1.mp3');
           }
         } else if (audioSettings.ringtoneFile) {
-          audioService.setRingtone(audioSettings.ringtoneFile);
+          audioService.setExternalRingtone(audioSettings.ringtoneFile);
+        }
+        
+        // Set internal ringtone - validate custom ringtone exists before setting
+        if (audioSettings.internalRingtoneFile.startsWith('custom')) {
+          const slot = audioSettings.internalRingtoneFile as 'custom1' | 'custom2' | 'custom3';
+          if (audioService.hasCustomRingtone(slot)) {
+            audioService.setInternalRingtone(slot);
+          } else {
+            // Custom ringtone selected but data missing - reset to default
+            if (verboseLogging) {
+              console.log('[App] ⚠️ Internal custom ringtone selected but no data exists, using default');
+            }
+            audioService.setInternalRingtone('Internal_1.mp3');
+            // Also update the store to avoid mismatch
+            useSettingsStore.getState().setInternalRingtoneFile('Internal_1.mp3');
+          }
+        } else if (audioSettings.internalRingtoneFile) {
+          audioService.setInternalRingtone(audioSettings.internalRingtoneFile);
         }
         
         // Set ringer device

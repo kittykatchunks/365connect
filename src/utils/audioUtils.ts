@@ -30,10 +30,10 @@ export async function validateAndConvertAudioFile(
     throw new Error('Invalid file type. Please upload an MP3 or WAV file.');
   }
   
-  // Check file size (max 5MB to prevent localStorage overflow)
-  const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+  // Check file size (max 2MB to prevent localStorage overflow)
+  const maxSizeBytes = 2 * 1024 * 1024; // 2MB
   if (file.size > maxSizeBytes) {
-    throw new Error('File too large. Please upload a file smaller than 5MB.');
+    throw new Error('File too large. Please upload a file smaller than 2MB.');
   }
   
   if (verboseLogging) {
