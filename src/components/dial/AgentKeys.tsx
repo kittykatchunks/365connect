@@ -93,13 +93,48 @@ export function AgentKeys({ className }: AgentKeysProps) {
             });
           }
           
-          // Restore agent state (keep existing queueState from storage)
+          // Restore agent state
           useAppStore.setState({
             agentNumber: agentData.num,
             agentName: agentData.name,
             agentState: isPaused ? 'paused' : 'available'
-            // queueState is NOT updated here - preserved from storage
+            // queueState will be determined by queue membership check below
           });
+          
+          // Check for actual logged-in queues
+          if (verboseLogging) {
+            console.log('[AgentKeys] 🔍 Checking queue membership after registration...');
+          }
+          
+          try {
+            const queueResult = await fetchQueueMembership(agentData.num);
+            
+            if (queueResult.success) {
+              if (queueResult.queues.length > 0) {
+                if (verboseLogging) {
+                  console.log('[AgentKeys] ✅ Agent is logged into', queueResult.queues.length, 'queue(s):', queueResult.queues);
+                }
+                setLoggedInQueues(queueResult.queues);
+                setQueueState('in-queue');
+              } else {
+                if (verboseLogging) {
+                  console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
+                }
+                setLoggedInQueues([]);
+                setQueueState('none');
+              }
+            } else {
+              if (verboseLogging) {
+                console.warn('[AgentKeys] ⚠️ Failed to fetch queue membership');
+              }
+              setLoggedInQueues([]);
+              setQueueState('none');
+            }
+          } catch (queueError) {
+            console.error('[AgentKeys] ❌ Error checking queue membership:', queueError);
+            setLoggedInQueues([]);
+            setQueueState('none');
+          }
           
           // Sync current CLI from agent data if Company Numbers tab is enabled
           const showCompanyNumbersTab = useSettingsStore.getState().settings.interface.showCompanyNumbersTab;
