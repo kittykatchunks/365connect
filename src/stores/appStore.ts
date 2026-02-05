@@ -122,7 +122,13 @@ export const useAppStore = create<AppState>()(
         
         // Agent actions
         setAgentState: (agentState) => set({ agentState }),
-        setQueueState: (queueState) => set({ queueState }),
+        setQueueState: (queueState) => {
+          const verboseLogging = typeof window !== 'undefined' && localStorage.getItem('verboseLogging') === 'true';
+          if (verboseLogging) {
+            console.log('[AppStore] 🔄 setQueueState called:', queueState, '| Stack:', new Error().stack?.split('\n')[2]);
+          }
+          set({ queueState });
+        },
         setAgentNumber: (agentNumber) => set({ agentNumber }),
         setAgentName: (agentName) => set({ agentName }),
         setLoggedInQueues: (loggedInQueues) => set({ loggedInQueues }),

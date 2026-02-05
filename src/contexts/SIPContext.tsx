@@ -295,12 +295,18 @@ export function SIPProvider({ children }: SIPProviderProps) {
                           }
                           setLoggedInQueues(queueResult.queues);
                           setQueueState('in-queue');
+                          if (verboseLogging) {
+                            console.log('[SIPContext] 🔵 Queue state set to: in-queue (from auto-reconnect)');
+                          }
                         } else {
                           if (verboseLogging) {
                             console.log('[SIPContext] ℹ️ Agent logged in but not in any queues');
                           }
                           setLoggedInQueues([]);
                           setQueueState('none');
+                          if (verboseLogging) {
+                            console.log('[SIPContext] 🔴 Queue state set to: none (no queues found)');
+                          }
                         }
                       } else {
                         if (verboseLogging) {
@@ -308,6 +314,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
                         }
                         setLoggedInQueues([]);
                         setQueueState('none');
+                        if (verboseLogging) {
+                          console.log('[SIPContext] 🔴 Queue state set to: none (fetch failed)');
+                        }
                       }
                     } catch (queueError) {
                       console.error('[SIPContext] ❌ Error checking queue membership:', queueError);

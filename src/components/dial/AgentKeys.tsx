@@ -116,12 +116,18 @@ export function AgentKeys({ className }: AgentKeysProps) {
                 }
                 setLoggedInQueues(queueResult.queues);
                 setQueueState('in-queue');
+                if (verboseLogging) {
+                  console.log('[AgentKeys] 🔵 Queue state set to: in-queue (from registration check)');
+                }
               } else {
                 if (verboseLogging) {
                   console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
                 }
                 setLoggedInQueues([]);
                 setQueueState('none');
+                if (verboseLogging) {
+                  console.log('[AgentKeys] 🔴 Queue state set to: none (no queues found)');
+                }
               }
             } else {
               if (verboseLogging) {
@@ -129,6 +135,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
               }
               setLoggedInQueues([]);
               setQueueState('none');
+              if (verboseLogging) {
+                console.log('[AgentKeys] 🔴 Queue state set to: none (fetch failed)');
+              }
             }
           } catch (queueError) {
             console.error('[AgentKeys] ❌ Error checking queue membership:', queueError);
