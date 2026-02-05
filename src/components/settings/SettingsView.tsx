@@ -21,7 +21,6 @@ import {
   Save,
   Check,
   Users,
-  BookOpen,
   Trash2,
   FileAudio,
   Plus,
@@ -83,7 +82,7 @@ function BusylightDeviceInfoDisplay({ deviceInfo }: BusylightDeviceInfoDisplayPr
 }
 
 export function SettingsView() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   
   // Store bindings
   const settings = useSettingsStore((state) => state.settings);
@@ -630,17 +629,6 @@ export function SettingsView() {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => {
-                const currentLang = i18n.language || 'en';
-                window.open(`/userguide/index.html?lang=${currentLang}`, '_blank', 'width=1000,height=800,noopener,noreferrer');
-              }}
-              title={t('settings.user_guide_title', 'Open User Guide')}
-            >
-              <BookOpen className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
               onClick={() => setIsImportExportOpen(true)}
               title={t('settings.import_export', 'Import/Export')}
             >
@@ -760,8 +748,8 @@ export function SettingsView() {
                 
                 <div className="setting-item">
                   <Toggle
-                    label={t('settings.blf_enabled', 'Enable BLF Panels')}
-                    description={t('settings.blf_enabled_desc', 'Show Busy Lamp Field panels on dial view')}
+                    label={t('settings.blf_enabled', 'Enable BLF/SPEEDDIAL Panel')}
+                    description={t('settings.blf_enabled_desc', 'Enable BLF/Speeddial panel access on phone view')}
                     checked={settings.interface.blfEnabled}
                     onChange={(checked) => setBLFEnabled(checked)}
                   />
@@ -769,7 +757,7 @@ export function SettingsView() {
                 <div className="setting-item">
                   <Toggle
                     label={t('settings.onscreen_notifications', 'On-screen Notifications')}
-                    description={t('settings.onscreen_notifications_desc', 'Show toast notifications for events')}
+                    description={t('settings.onscreen_notifications_desc', 'Show on-screen notifications for program events (error notifications always enabled)')}
                     checked={settings.interface.onscreenNotifications}
                     onChange={(checked) => setOnscreenNotifications(checked)}
                   />
@@ -821,7 +809,7 @@ export function SettingsView() {
                 <div className="setting-item">
                   <Toggle
                     label={t('settings.auto_answer', 'Auto Answer')}
-                    description={t('settings.auto_answer_desc', 'Automatically answer incoming calls')}
+                    description={t('settings.auto_answer_desc', 'Automatically answer ALL incoming calls')}
                     checked={settings.call.autoAnswer}
                     onChange={(checked) => setAutoAnswer(checked)}
                   />

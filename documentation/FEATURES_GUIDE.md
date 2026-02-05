@@ -813,7 +813,7 @@ The Settings tab uses an accordion layout with the following sections:
 - **Icon:** Phone
 - **Purpose:** Configure call behavior preferences
 - **Options:**
-  - **Auto Answer:** Automatically answer incoming calls
+  - **Auto Answer:** Automatically answer ALL incoming calls
   - **Prefer Blind Transfer:** Default transfer type (blind vs. attended)
 - **Behavior:**
   - Auto-save on change
