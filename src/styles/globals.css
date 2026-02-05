@@ -285,6 +285,9 @@ a {
   /* max-width: 420px; */
   background-color: var(--surface-color);
   border-right: 1px solid var(--border-color);
+  /* Allow panel to grow with content rather than fixed viewport height */
+  height: auto;
+  min-height: 100vh;
 }
 
 .main-panel-header {
@@ -1527,17 +1530,17 @@ a {
 .dial-view {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  /* Allow container to grow beyond 100% when content requires it */
+  /* Use auto height to grow with content */
+  height: auto;
   min-height: 100%;
 }
 
 .dial-view-layout {
   display: flex;
   gap: var(--spacing-md);
-  flex: 1;
-  /* Allow layout to grow with content */
-  min-height: min-content;
+  /* Allow layout to grow naturally with content */
+  flex: 0 1 auto;
+  min-height: fit-content;
 }
 
 /* When BLF panels are present, layout uses space-between */
@@ -1554,34 +1557,31 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   /* Add back horizontal padding for content */
   padding-left: 0;
   padding-right: 0;
   position: relative;
   /* Ensure this is the positioning context for child elements */
-  /* Base minimum height to accommodate BLF trigger button */
-  min-height: min-content;
+  /* Base padding for BLF trigger button */
   padding-bottom: clamp(3.5rem, 8vh, 5rem);
-  transition: min-height var(--transition-normal), padding-bottom var(--transition-normal);
+  transition: padding-bottom var(--transition-normal);
 }
 
-/* Dynamically increase container height when dialpad is shown */
+/* Increase bottom padding when dialpad is shown - window grows naturally */
 .dial-view-content:has(.dialpad) {
-  min-height: calc(100% + clamp(240px, 30vh, 320px));
   padding-bottom: clamp(4.5rem, 12vh, 6.5rem);
 }
 
-/* Additional height when both CLI selector and dialpad are present */
+/* Additional padding when both CLI selector and dialpad are present */
 .dial-view-content:has(.cli-selector):has(.dialpad) {
-  min-height: calc(100% + clamp(280px, 35vh, 380px));
   padding-bottom: clamp(5rem, 14vh, 7.5rem);
 }
 
-/* Slight height increase for CLI selector alone */
+/* Slight padding for CLI selector alone */
 .dial-view-content:has(.cli-selector):not(:has(.dialpad)) {
-  min-height: calc(100% + clamp(40px, 5vh, 60px));
+  padding-bottom: clamp(4rem, 9vh, 5.5rem);
 }
 
 /* When BLF is disabled, restrict content width */
