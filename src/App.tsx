@@ -631,7 +631,7 @@ function App() {
         }
         
         // Set external ringtone - validate custom ringtone exists before setting
-        if (audioSettings.ringtoneFile.startsWith('custom')) {
+        if (audioSettings.ringtoneFile && audioSettings.ringtoneFile.startsWith('custom')) {
           const slot = audioSettings.ringtoneFile as 'custom1' | 'custom2' | 'custom3';
           if (audioService.hasCustomRingtone(slot)) {
             audioService.setExternalRingtone(slot);
@@ -649,7 +649,8 @@ function App() {
         }
         
         // Set internal ringtone - validate custom ringtone exists before setting
-        if (audioSettings.internalRingtoneFile.startsWith('custom')) {
+        // Handle undefined for users with old settings (before internalRingtoneFile was added)
+        if (audioSettings.internalRingtoneFile && audioSettings.internalRingtoneFile.startsWith('custom')) {
           const slot = audioSettings.internalRingtoneFile as 'custom1' | 'custom2' | 'custom3';
           if (audioService.hasCustomRingtone(slot)) {
             audioService.setInternalRingtone(slot);
@@ -664,6 +665,10 @@ function App() {
           }
         } else if (audioSettings.internalRingtoneFile) {
           audioService.setInternalRingtone(audioSettings.internalRingtoneFile);
+        } else {
+          // Default for users with old settings (no internalRingtoneFile field)
+          audioService.setInternalRingtone('Internal_1.mp3');
+          useSettingsStore.getState().setInternalRingtoneFile('Internal_1.mp3');
         }
         
         // Set ringer device
