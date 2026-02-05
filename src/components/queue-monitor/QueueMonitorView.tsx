@@ -429,11 +429,11 @@ export function QueueMonitorView() {
     }
   }, [queueConfigs, connectionState, fetchQueueStats, verboseLogging]);
   
-  // Reset alerts when disconnected from server
+  // Reset alerts and stats when disconnected from server
   useEffect(() => {
     if (connectionState === 'disconnected' || connectionState === 'error') {
       if (verboseLogging) {
-        console.log('[QueueMonitorView] 🔄 Server disconnected - resetting all alerts');
+        console.log('[QueueMonitorView] 🔄 Server disconnected - resetting all alerts and stats');
       }
       
       // Reset alert statuses in storage
@@ -442,9 +442,19 @@ export function QueueMonitorView() {
       // Clear tab alert
       setTabAlert('queueMonitor', 'default');
       
-      // Reset queue stats to clear any displayed alerts
+      // Reset all queue stats to zero (they'll be refreshed on reconnection)
       setQueueStats(prev => prev.map(stat => ({
         ...stat,
+        // Reset all metrics to zero
+        agentsTotal: 0,
+        agentsFree: 0,
+        agentsBusy: 0,
+        agentsPaused: 0,
+        waitingCalls: 0,
+        answeredPercent: 0,
+        abandonedPercent: 0,
+        avgWaitTime: 0,
+        totalCalls: 0,
         alertState: 'normal'
       })));
     }
