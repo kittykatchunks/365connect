@@ -5078,7 +5078,7 @@ a {
 }
 
 .top-bar-alert-error {
-  animation: top-bar-error-flash 0.5s ease-in-out infinite;
+  animation: top-bar-error-flash 2s ease-in-out infinite;
 }
 
 /* Top bar when alerting - indicate it's clickable */
