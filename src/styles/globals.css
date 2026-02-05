@@ -1365,7 +1365,7 @@ a {
 /* Toast */
 .toast-container {
   position: fixed;
-  z-index: 100;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -2523,7 +2523,7 @@ a {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 9998;
+  z-index: 1198;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -2538,7 +2538,7 @@ a {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
-  z-index: 9999;
+  z-index: 1199;
   display: flex;
   flex-direction: column;
   animation: slideIn 0.3s ease-out;
@@ -3655,7 +3655,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 2000;
   padding: var(--spacing-md);
 }
 
@@ -4272,7 +4272,7 @@ a {
 .welcome-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4461,7 +4461,7 @@ a {
 .loading-screen {
   position: fixed;
   inset: 0;
-  z-index: 1001;
+  z-index: 1002;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4828,7 +4828,7 @@ a {
   bottom: var(--spacing-lg);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   align-items: center;
   gap: var(--spacing-md);

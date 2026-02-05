@@ -7,8 +7,6 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  /* Create new stacking context to prevent z-index conflicts with modals */
-  isolation: isolate;
 }
 
 .queue-monitor-header {
