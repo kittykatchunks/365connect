@@ -212,7 +212,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
     } catch (error) {
       console.error('[AgentKeys] ❌ Error checking pause status:', error);
     }
-  }, [sipUsername, agentState, loggedInQueues.length, setAgentState, setLoggedInQueues, setQueueState]);
+  }, [sipUsername, agentState, setAgentState, setLoggedInQueues, setQueueState]);
   
   // Check agent status when SIP registers (similar to PWA checkAgentStatusAfterRegistration)
   useEffect(() => {
@@ -620,10 +620,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
       });
     }
     
-    // Check and update pause status when queue membership changes
+    // Check and update pause status when login state changes
     checkAndUpdatePauseStatus();
     
-  }, [loggedInQueues.length, isLoggedIn, checkAndUpdatePauseStatus]);
+  }, [isLoggedIn, checkAndUpdatePauseStatus]);
   
   // Helper function to fetch and update queue membership after login
   const updateQueueMembership = useCallback(async (agentNum: string) => {
