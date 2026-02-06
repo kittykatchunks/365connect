@@ -104,8 +104,6 @@ export function SettingsView() {
   const setIncomingCallNotifications = useSettingsStore((state) => state.setIncomingCallNotifications);
   const setAutoFocusOnNotificationAnswer = useSettingsStore((state) => state.setAutoFocusOnNotificationAnswer);
   const setPreferBlindTransfer = useSettingsStore((state) => state.setPreferBlindTransfer);
-  // const setClickToDialEnabled = useSettingsStore((state) => state.setClickToDialEnabled);
-  // const setClickToDialBehavior = useSettingsStore((state) => state.setClickToDialBehavior);
   const setSpeakerDevice = useSettingsStore((state) => state.setSpeakerDevice);
   const setMicrophoneDevice = useSettingsStore((state) => state.setMicrophoneDevice);
   const setRingerDevice = useSettingsStore((state) => state.setRingerDevice);
@@ -912,66 +910,6 @@ export function SettingsView() {
                     onChange={(checked) => setPreferBlindTransfer(checked)}
                   />
                 </div>
-                
-                {/* Click-to-Dial Section - Hidden
-                <div className="setting-item">
-                  <Toggle
-                    label={t('settings.click_to_dial_enabled', 'Enable Click-to-Dial')}
-                    description={t('settings.click_to_dial_enabled_desc', 'Allow phone numbers in websites to open this application')}
-                    checked={settings.call.clickToDialEnabled}
-                    onChange={(checked) => setClickToDialEnabled(checked)}
-                  />
-                </div>
-                
-                {settings.call.clickToDialEnabled && (
-                  <div className="setting-item" style={{ paddingLeft: '2rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>
-                      {t('settings.click_to_dial_behavior', 'Behavior when phone number clicked')}
-                    </label>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                      {t('settings.click_to_dial_behavior_desc', 'Choose how the application responds to clicked phone numbers')}
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: settings.call.clickToDialBehavior === 'populate-only' ? 'var(--surface-color)' : 'transparent' }}>
-                        <input
-                          type="radio"
-                          name="clickToDialBehavior"
-                          value="populate-only"
-                          checked={settings.call.clickToDialBehavior === 'populate-only'}
-                          onChange={() => setClickToDialBehavior('populate-only')}
-                          style={{ marginTop: '0.25rem', marginRight: '0.5rem' }}
-                        />
-                        <div>
-                          <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>
-                            {t('settings.click_to_dial_populate', 'Populate number only')}
-                          </div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                            {t('settings.click_to_dial_populate_desc', 'Fill dial input and wait for agent to press Call button')}
-                          </div>
-                        </div>
-                      </label>
-                      <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: settings.call.clickToDialBehavior === 'auto-dial' ? 'var(--surface-color)' : 'transparent' }}>
-                        <input
-                          type="radio"
-                          name="clickToDialBehavior"
-                          value="auto-dial"
-                          checked={settings.call.clickToDialBehavior === 'auto-dial'}
-                          onChange={() => setClickToDialBehavior('auto-dial')}
-                          style={{ marginTop: '0.25rem', marginRight: '0.5rem' }}
-                        />
-                        <div>
-                          <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>
-                            {t('settings.click_to_dial_auto', 'Auto-dial immediately')}
-                          </div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                            {t('settings.click_to_dial_auto_desc', 'Automatically place call when clicking phone numbers')}
-                          </div>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                )}
-                */}
               </div>
             </AccordionContent>
           </AccordionItem>

@@ -25,12 +25,6 @@ export default defineConfig({
         launch_handler: {
           client_mode: ['navigate-existing', 'auto']
         },
-        protocol_handlers: [
-          {
-            protocol: 'tel',
-            url: '/?tel=%s'
-          }
-        ],
         icons: [
           {
             src: 'icons/pwa-192x192.png',
@@ -69,14 +63,6 @@ export default defineConfig({
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 // 1 hour
               }
-            }
-          },
-          {
-            urlPattern: /^.*\?tel=.*/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'tel-handler',
-              networkTimeoutSeconds: 3
             }
           }
         ]

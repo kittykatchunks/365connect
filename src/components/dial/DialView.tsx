@@ -37,12 +37,9 @@ export function DialView() {
   
   const pendingDialNumber = useAppStore((state) => state.pendingDialNumber);
   const setPendingDialNumber = useAppStore((state) => state.setPendingDialNumber);
-  const autoDialNumber = useAppStore((state) => state.autoDialNumber);
-  const setAutoDialNumber = useAppStore((state) => state.setAutoDialNumber);
   
   const addNotification = useUIStore((state) => state.addNotification);
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
-  const clickToDialBehavior = useSettingsStore((state) => state.settings.call.clickToDialBehavior);
   
   // Get selected line and line states from store
   const selectedLine = useSIPStore((state) => state.selectedLine);
@@ -313,95 +310,6 @@ export function DialView() {
       }
     }
   }, [pendingDialNumber, isSelectedLineIdle, setPendingDialNumber, verboseLogging]);
-  
-  // Handle auto-dial number from tel: URLs (click-to-dial)
-  useEffect(() => {
-    const verboseLogging = isVerboseLoggingEnabled();
-    
-    if (autoDialNumber) {
-      if (verboseLogging) {
-        console.log('[DialView] 📞 Click-to-dial number detected:', autoDialNumber, 'Behavior:', clickToDialBehavior);
-      }
-      
-      // Only populate if not currently in a call on selected line
-      if (isSelectedLineIdle) {
-        // Always populate the dial input
-        setDialValue(autoDialNumber);
-        
-        if (verboseLogging) {
-          console.log('[DialView] ✅ Populated dial input with click-to-dial number:', autoDialNumber);
-        }
-        
-        // Check behavior setting
-        if (clickToDialBehavior === 'auto-dial' && isRegistered) {
-          // Auto-dial mode - initiate call automatically
-          if (verboseLogging) {
-            console.log('[DialView] 🚀 Auto-dialing from click-to-dial');
-          }
-          
-          addNotification({
-            type: 'info',
-            title: t('notifications.click_to_dial_auto_dialing', 'Auto-dialing from web link'),
-            message: autoDialNumber,
-            duration: 3000
-          });
-          
-          // Save as last dialed number before making call
-          setLastDialedNumber(autoDialNumber);
-          
-          // Initiate call after a short delay to ensure UI updates
-          setTimeout(() => {
-            makeCall(autoDialNumber).catch((error) => {
-              console.error('[DialView] Auto-dial failed:', error);
-              addNotification({
-                type: 'error',
-                title: t('call.error', 'Call Error'),
-                message: error instanceof Error ? error.message : 'Failed to place call',
-                duration: 4000
-              });
-            });
-          }, 200);
-        } else {
-          // Populate-only mode - just show notification and wait for user
-          if (verboseLogging) {
-            console.log('[DialView] ⏸️ Populate-only mode - waiting for user to press Call');
-          }
-          
-          addNotification({
-            type: 'info',
-            title: t('notifications.click_to_dial_received', 'Number received from web link'),
-            message: t('notifications.click_to_dial_press_call', 'Press Call to dial {{number}}', { number: autoDialNumber }),
-            duration: 4000
-          });
-          
-          // Focus the dial input
-          setTimeout(() => {
-            const dialInput = document.querySelector<HTMLInputElement>('.dial-input');
-            if (dialInput) {
-              dialInput.focus();
-            }
-          }, 100);
-        }
-        
-        // Clear the auto-dial number after processing
-        setAutoDialNumber(null);
-      } else {
-        if (verboseLogging) {
-          console.log('[DialView] ⚠️ Cannot handle click-to-dial - call is active on selected line');
-        }
-        
-        addNotification({
-          type: 'warning',
-          title: t('notifications.line_busy', 'Line Busy'),
-          message: t('notifications.line_busy_desc', 'Complete or switch lines to dial {{number}}', { number: autoDialNumber }),
-          duration: 4000
-        });
-        
-        // Clear auto-dial number anyway
-        setAutoDialNumber(null);
-      }
-    }
-  }, [autoDialNumber, isSelectedLineIdle, clickToDialBehavior, isRegistered, setAutoDialNumber, setLastDialedNumber, makeCall, addNotification, t, verboseLogging]);
   
   // Handle digit press
   const handleDigit = useCallback(async (digit: string) => {
