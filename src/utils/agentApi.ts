@@ -316,7 +316,7 @@ export async function logoffAgentViaAPI(agentNumber: string): Promise<AgentLogof
 }
 
 /**
- * Fetch queue membership list for an agent
+ * Fetch queue membership list for an agent using WallBoardStats API
  * @param agentNumber - Agent number to query
  * @returns Result with queue memberships
  */
@@ -325,26 +325,40 @@ export async function fetchQueueMembership(agentNumber: string): Promise<QueueMe
   
   try {
     if (verboseLogging) {
-      console.log('[AgentAPI] 📋 Fetching queue membership for agent:', agentNumber);
+      console.log('[AgentAPI] 📋 Fetching queue membership for agent via WallBoardStats:', agentNumber);
     }
     
-    const result = await phantomApiService.getQueueMemberList(agentNumber, { timeout: 5000 });
+    const wallBoardResponse = await phantomApiService.fetchWallBoardStats();
     
     if (verboseLogging) {
-      console.log('[AgentAPI] 📥 Queue membership result:', result);
+      console.log('[AgentAPI] 📥 WallBoardStats response:', wallBoardResponse);
     }
     
-    if (result.success && result.queues) {
-      const queues = result.queues.map(q => ({ 
-        queue: q.queue, 
-        queuelabel: q.queuelabel 
-      }));
+    if (wallBoardResponse.success && wallBoardResponse.data?.agents) {
+      const agents = wallBoardResponse.data.agents as Record<string, any>;
+      const agentWallBoardData = agents[agentNumber];
       
-      if (verboseLogging) {
-        console.log('[AgentAPI] ✅ Queue membership fetched successfully:', queues.length, 'queues');
+      if (agentWallBoardData && agentWallBoardData.queues) {
+        // Parse CSV queues from WallBoardStats
+        const queueNumbers = agentWallBoardData.queues.split(',').map((q: string) => q.trim()).filter((q: string) => q);
+        
+        // Convert to LoggedInQueue format (WallBoardStats doesn't provide labels, use queue number)
+        const queues = queueNumbers.map((q: string) => ({ 
+          queue: q, 
+          queuelabel: q 
+        }));
+        
+        if (verboseLogging) {
+          console.log('[AgentAPI] ✅ Queue membership fetched successfully:', queues.length, 'queues', queues);
+        }
+        
+        return { success: true, queues };
+      } else {
+        if (verboseLogging) {
+          console.log('[AgentAPI] ℹ️ Agent not in any queues (WallBoardStats)');
+        }
+        return { success: true, queues: [] };
       }
-      
-      return { success: true, queues };
     } else {
       if (verboseLogging) {
         console.warn('[AgentAPI] ⚠️ Queue membership fetch failed or returned no data');

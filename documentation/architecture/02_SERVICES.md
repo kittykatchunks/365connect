@@ -311,8 +311,7 @@ interface PhantomApiConfig {
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `fetchQueueList` | none | `Promise<PhantomApiResponse<QueueListResponse>>` | Get available queues |
-| `fetchWallBoardStats` | none | `Promise<PhantomApiResponse<WallBoardStatsResponse>>` | Get queue statistics |
-| `fetchQueueMemberList` | `agent: string` | `Promise<PhantomApiResponse<QueueMemberListResponse>>` | Get agent's queue memberships |
+| `fetchWallBoardStats` | none | `Promise<PhantomApiResponse<WallBoardStatsResponse>>` | Get queue statistics and agent queue memberships |
 
 #### Agent Management
 

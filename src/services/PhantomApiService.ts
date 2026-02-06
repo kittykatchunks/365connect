@@ -127,28 +127,7 @@ export interface AgentApiResponseWrapper {
   response: AgentApiResponse;
 }
 
-export interface QueueMemberItem {
-  /** Queue number/extension */
-  queue: string;
-  /** Queue display name/label */
-  queuelabel: string;
-  /** Agent number */
-  agent: string;
-  /** Agent display name */
-  agentname: string;
-}
 
-export interface QueueMemberListRequest {
-  /** Agent number to query */
-  agent: string;
-}
-
-export interface QueueMemberListResponse {
-  /** Array of queue memberships */
-  aaData: QueueMemberItem[];
-  /** Response status */
-  response: 'success' | 'failure';
-}
 
 type PhantomApiEventType = 
   | 'initialized'
@@ -631,55 +610,7 @@ export class PhantomApiService {
     }
   }
 
-  /**
-   * Get list of queues that an agent is currently logged into
-   * Endpoint: /api/QueueMemberList (Basic Auth)
-   * @param agent - Agent number to query
-   * @param options - Optional timeout configuration
-   * @returns Array of queue memberships or empty array on failure
-   */
-  async getQueueMemberList(agent: string, options?: { timeout?: number }): Promise<{ success: boolean; queues: QueueMemberItem[] }> {
-    if (this.verboseLogging) {
-      console.log('[PhantomApiService] 📋 Fetching queue member list for agent:', agent);
-    }
 
-    try {
-      const requestData: QueueMemberListRequest = { agent };
-
-      if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📤 QueueMemberList request:', requestData);
-      }
-
-      const response = await this.post<QueueMemberListResponse>('QueueMemberList', requestData, options);
-
-      if (this.verboseLogging) {
-        console.log('[PhantomApiService] 📥 QueueMemberList response:', response);
-      }
-
-      if (response.success && response.data?.response === 'success' && response.data?.aaData) {
-        const queues = response.data.aaData;
-        
-        if (this.verboseLogging) {
-          console.log('[PhantomApiService] ✅ QueueMemberList successful, found queues:', queues.length);
-          queues.forEach((q) => {
-            console.log(`[PhantomApiService]   📌 Queue: ${q.queue} (${q.queuelabel}) - Agent: ${q.agent} (${q.agentname})`);
-          });
-        }
-        
-        return { success: true, queues };
-      } else {
-        if (this.verboseLogging) {
-          console.warn('[PhantomApiService] ⚠️ QueueMemberList returned failure or no data:', response.data);
-        }
-        return { success: false, queues: [] };
-      }
-    } catch (error) {
-      if (this.verboseLogging) {
-        console.error('[PhantomApiService] ❌ QueueMemberList API error:', error);
-      }
-      return { success: false, queues: [] };
-    }
-  }
 
   // ==================== Core Request Method ====================
 
