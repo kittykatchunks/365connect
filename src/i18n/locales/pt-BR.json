@@ -158,7 +158,9 @@
         "leave_queue": "Sair da Fila",
         "pause": "Pausar",
         "paused": "Pausado",
-        "unpause": "Retomar",        "pause_disabled_no_queues": "Deve estar em uma fila para pausar",        "select_pause_reason": "Selecionar motivo pausa",
+        "unpause": "Retomar",        "make_available": "Tornar Disponível",
+        "unpause_failed": "Falha ao retomar o agente",
+        "pause_disabled_no_queues": "Deve estar em uma fila para pausar",        "select_pause_reason": "Selecionar motivo pausa",
         "error_number_required": "Número agente obrigatório",
         "error_login_failed": "Falha no login"
     },

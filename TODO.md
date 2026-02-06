@@ -107,9 +107,7 @@ Thirdly, clarification of SIP call state and call-timer
 		- [X] When created each queue should be added into localstorage to allow export and import of programmed information, I have already added queue monitoring option in import export facility so link the created storage name to the selectable option in the import/export function.
 
 ### QUEUE GROUPS
-- Overview - To allow queues to be grouped together and selected to be queued in/out via single selection of button
-- [ ]
-
+- [X] To allow queues to be grouped together and selected to be queued in/out via single selection of button
 
 ### Issues to be resolved before release
 - [x] AgentpausefromPhone api should be requested with NoAuth
@@ -159,7 +157,10 @@ Thirdly, clarification of SIP call state and call-timer
 - [X] Validate the input field for extension in BLF button entry/edit modal to be 3-5 numerical characters only
 - [X] Validate the input field for Phone Number in sppeddial to be '+','*','#','0-9' characters only
 - [X] On exporting of settings change the default filename to be 'connect365-settings-{date(YYYY-MM-DD)}.json'
-- [X] Correct the spelling of call status 'Dialing' to 'Dialling' 
+- [X] Correct the spelling of call status 'Dialing' to 'Dialling'
+- [X] Sometimes when i pause with pause reason when the dtmf call finishs the pause button goes to unpaused state but then reverts to normal state. I think because AgentKeys log agent status summary is showing as not paused can we investigate why that might be 
+- [X] Also when an Agent is paused current flow attempts API but does not failover to dtmf for api failure.  It should dial *63 in the sameway as the pause method
+- [X] Update and improve blf subscription processes
 
 
 #### Mobile Device Usage - Investigation Only

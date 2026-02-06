@@ -158,7 +158,9 @@
         "leave_queue": "Salir de Cola",
         "pause": "Pausar",
         "paused": "Pausado",
-        "unpause": "Reanudar",        "pause_disabled_no_queues": "Debe estar en una cola para pausar",        "select_pause_reason": "Seleccionar motivo de pausa",
+        "unpause": "Reanudar",        "make_available": "Hacer Disponible",
+        "unpause_failed": "No se pudo reanudar el agente",
+        "pause_disabled_no_queues": "Debe estar en una cola para pausar",        "select_pause_reason": "Seleccionar motivo de pausa",
         "error_number_required": "Se requiere número de agente",
         "error_login_failed": "Error de inicio de sesión"
     },

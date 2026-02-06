@@ -2,7 +2,7 @@
 // Agent Keys - Call Center Agent Controls
 // ============================================
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LogIn, LogOut, Users, Pause, Play } from 'lucide-react';
 import { cn, isVerboseLoggingEnabled, queryAgentStatus, fetchPauseReasons, pauseAgentViaAPI, unpauseAgentViaAPI, parseAgentPauseStatus, loginAgentViaAPI, logoffAgentViaAPI, fetchQueueMembership } from '@/utils';
@@ -44,6 +44,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
   // Track if we've checked status on this registration session
   const [hasCheckedStatus, setHasCheckedStatus] = useState(false);
   
+  // Track last manual pause/unpause action to prevent premature API overwrites
+  const lastManualPauseActionRef = useRef<number>(0);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showQueueLoginModal, setShowQueueLoginModal] = useState(false);
@@ -74,6 +77,22 @@ export function AgentKeys({ className }: AgentKeysProps) {
     if (!sipUsername) {
       if (verboseLogging) {
         console.log('[AgentKeys] ⚠️ Cannot check pause status - no SIP username');
+      }
+      return;
+    }
+    
+    // Check if a manual pause/unpause action happened recently
+    // If so, skip this check to prevent premature API overwrite (PBX needs time to process DTMF)
+    const timeSinceLastManualAction = Date.now() - lastManualPauseActionRef.current;
+    const MANUAL_ACTION_PROTECTION_MS = 5000; // 5 seconds protection window
+    
+    if (timeSinceLastManualAction < MANUAL_ACTION_PROTECTION_MS) {
+      if (verboseLogging) {
+        console.log('[AgentKeys] ⏸️ Skipping pause status check - manual action happened recently', {
+          timeSinceLastAction: `${timeSinceLastManualAction}ms`,
+          protectionWindow: `${MANUAL_ACTION_PROTECTION_MS}ms`,
+          remainingProtection: `${MANUAL_ACTION_PROTECTION_MS - timeSinceLastManualAction}ms`
+        });
       }
       return;
     }
@@ -1124,24 +1143,74 @@ export function AgentKeys({ className }: AgentKeysProps) {
         return;
       }
       
+      const hasActiveCall = currentSession && currentSession.state !== 'terminated';
+      
       setIsLoading(true);
       try {
         if (verboseLogging) {
-          console.log('[AgentKeys] 📡 Unpausing via API');
+          console.log('[AgentKeys] 📡 Unpausing via API', {
+            hasActiveCall,
+            currentSessionId: currentSession?.id
+          });
         }
         
         const success = await unpauseAgentViaAPI(sipUsername);
         
         if (success) {
+          // Mark timestamp of manual action to protect from premature API overwrites
+          lastManualPauseActionRef.current = Date.now();
+          
           setAgentState('available');
           if (verboseLogging) {
-            console.log('[AgentKeys] ✅ Agent unpaused successfully');
+            console.log('[AgentKeys] ✅ Agent unpaused successfully via API');
+            if (hasActiveCall) {
+              console.log('[AgentKeys] ✅ Active call remains undisturbed (unpause via API only)');
+            }
           }
         } else {
           throw new Error('Unpause API call failed');
         }
       } catch (error) {
-        console.error('[AgentKeys] ❌ Unpause error:', error);
+        console.error('[AgentKeys] ❌ Unpause API error:', error);
+        
+        // API failed - fallback to DTMF *63
+        if (verboseLogging) {
+          console.log('[AgentKeys] 🔄 Falling back to DTMF *63 for unpause');
+        }
+        
+        try {
+          // Dial *63 to toggle pause state (unpause)
+          if (hasActiveCall) {
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📞 Dialing *63 on background line for unpause (active call will not be disrupted)');
+            }
+          } else {
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📞 Dialing *63 for unpause');
+            }
+          }
+          
+          await makeCall(AGENT_CODES.unpause);
+          
+          // Mark timestamp of manual action to protect from premature API overwrites
+          lastManualPauseActionRef.current = Date.now();
+          
+          // Update state to available immediately (DTMF call will disconnect automatically)
+          setAgentState('available');
+          
+          if (verboseLogging) {
+            console.log('[AgentKeys] ✅ Unpaused via DTMF *63');
+            if (hasActiveCall) {
+              console.log('[AgentKeys] ✅ Active call remains undisturbed');
+            }
+          }
+        } catch (dtmfError) {
+          console.error('[AgentKeys] ❌ DTMF unpause fallback failed:', dtmfError);
+          addNotification({
+            type: 'error',
+            title: t('agent.unpause_failed', 'Failed to unpause agent')
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -1184,6 +1253,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
           
           await makeCall(AGENT_CODES.pause);
           
+          // Mark timestamp of manual action to protect from premature API overwrites
+          lastManualPauseActionRef.current = Date.now();
+          
           // Update state to paused immediately (DTMF call will disconnect automatically after reason entry)
           setAgentState('paused');
           
@@ -1200,6 +1272,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
         const success = await pauseAgentViaAPI(sipUsername);
         
         if (success) {
+          // Mark timestamp of manual action to protect from premature API overwrites
+          lastManualPauseActionRef.current = Date.now();
+          
           setAgentState('paused');
           if (verboseLogging) {
             console.log('[AgentKeys] ✅ Agent paused successfully via API');
@@ -1261,6 +1336,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
       
       // makeCall will automatically use an available line (different from active call if one exists)
       await makeCall(dialCode);
+      
+      // Mark timestamp of manual action to protect from premature API overwrites
+      lastManualPauseActionRef.current = Date.now();
       
       // Update state immediately (DTMF call will disconnect automatically after sending the code)
       setAgentState('paused');

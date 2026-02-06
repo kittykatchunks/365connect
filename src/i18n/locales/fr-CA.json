@@ -158,7 +158,9 @@
         "leave_queue": "Quitter File",
         "pause": "Pause",
         "paused": "En pause",
-        "unpause": "Reprendre",        "pause_disabled_no_queues": "Doit être dans une file d'attente pour se mettre en pause",        "select_pause_reason": "Sélectionner raison pause",
+        "unpause": "Reprendre",        "make_available": "Rendre Disponible",
+        "unpause_failed": "Échec de la reprise de l'agent",
+        "pause_disabled_no_queues": "Doit être dans une file d'attente pour se mettre en pause",        "select_pause_reason": "Sélectionner raison pause",
         "error_number_required": "Numéro agent requis",
         "error_login_failed": "Échec connexion"
     },

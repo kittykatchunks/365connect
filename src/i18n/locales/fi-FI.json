@@ -163,6 +163,8 @@
         "pause": "Tauko",
         "paused": "Tauolla",
         "unpause": "Lopeta tauko",
+        "make_available": "Aseta Saataville",
+        "unpause_failed": "Agentin jatkaminen epäonnistui",
         "pause_disabled_no_queues": "Täytyy olla jonossa tauon ottamiseksi",
         "select_pause_reason": "Valitse tauon syy",
         "error_number_required": "Agenttinumero vaaditaan",

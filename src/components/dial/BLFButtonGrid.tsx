@@ -5,8 +5,8 @@
 import { useCallback, useState } from 'react';
 import { BLFButton } from './BLFButton';
 import { BLFConfigModal } from '@/components/modals';
-import { useBLFStore, useSIPStore, useSettingsStore, useAppStore } from '@/stores';
-import { useSIP, useBLFSubscription } from '@/hooks';
+import { useBLFStore, useSIPStore, useSettingsStore } from '@/stores';
+import { useSIP } from '@/hooks';
 import { cn, isVerboseLoggingEnabled } from '@/utils';
 import type { BLFButton as BLFButtonType } from '@/types';
 
@@ -23,9 +23,7 @@ export function BLFButtonGrid({ className, onTransferRequest }: BLFButtonGridPro
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
   const preferBlindTransfer = useSettingsStore((state) => state.settings.call.preferBlindTransfer);
   const getAllButtons = useBLFStore((state) => state.getAllButtons);
-  const getConfiguredExtensions = useBLFStore((state) => state.getConfiguredExtensions);
   const blfStates = useSIPStore((state) => state.blfStates);
-  const currentView = useAppStore((state) => state.currentView);
   
   // SIP
   const { makeCall, blindTransfer, currentSession, isRegistered } = useSIP();
@@ -54,17 +52,6 @@ export function BLFButtonGrid({ className, onTransferRequest }: BLFButtonGridPro
         ? 'inactive' // Show unsubscribed/inactive when offline or not registered
         : (button.extension && blfStates.get(button.extension)) || 'inactive'
     } as BLFButtonType;
-  });
-  
-  // Get all configured BLF extensions (for both left and right sides)
-  const configuredExtensions = getConfiguredExtensions();
-  
-  // Use BLF subscription hook - only manages subscriptions when on dial tab
-  useBLFSubscription({
-    extensions: configuredExtensions,
-    isDialTabActive: currentView === 'dial',
-    isRegistered,
-    blfEnabled
   });
   
   // Handlers

@@ -3,9 +3,8 @@
 // ============================================
 // Manages BLF subscription lifecycle based on:
 // 1. Immediate subscription when BLF button is saved
-// 2. Resubscription when switching to dial tab
-// 3. 3-minute interval resubscription while on dial tab
-// 4. Exclusion of extensions starting with 7 from polling
+// 2. Batch subscription when BLF modal is opened
+// 3. Health monitoring handles subscription freshness (no polling needed)
 // ============================================
 
 import { useEffect, useRef } from 'react';
@@ -15,60 +14,38 @@ import { isVerboseLoggingEnabled } from '@/utils';
 
 interface UseBLFSubscriptionOptions {
   extensions: string[];
-  isDialTabActive: boolean;
+  isModalOpen: boolean;
   isRegistered: boolean;
   blfEnabled: boolean;
 }
 
-const BLF_SUBSCRIPTION_INTERVAL = 3 * 60 * 1000; // 3 minutes in milliseconds
-
 /**
- * Check if an extension should be excluded from periodic polling
- * Extensions starting with 7 (701-799 range) are excluded from polling
- */
-function shouldExcludeFromPolling(extension: string): boolean {
-  if (!extension) return true;
-  
-  // Check if extension starts with 7
-  const firstChar = extension.charAt(0);
-  return firstChar === '7';
-}
-
-/**
- * Filter extensions that should be included in periodic polling
- */
-function getExtensionsForPolling(extensions: string[]): string[] {
-  return extensions.filter(ext => !shouldExcludeFromPolling(ext));
-}
-
-/**
- * Hook to manage BLF subscriptions based on dial tab visibility and registration state
+ * Hook to manage BLF subscriptions based on modal visibility and registration state
  * Improvements:
  * - Uses batch subscription for better performance
- * - Keeps subscriptions alive when switching tabs (just pauses polling)
- * - Only unsubscribes on unmount or when disabled
+ * - Subscribes when BLF modal opens (not on dial tab access)
+ * - Health monitoring handles subscription freshness (no polling needed)
+ * - Keeps subscriptions alive when modal closes
  */
 export function useBLFSubscription({
   extensions,
-  isDialTabActive,
+  isModalOpen,
   isRegistered,
   blfEnabled
 }: UseBLFSubscriptionOptions) {
   const { batchSubscribeBLF } = useSIP();
-  const intervalIdRef = useRef<number | null>(null);
-  const hasInitialSubscriptionRef = useRef<boolean>(false);
+  const hasSubscribedRef = useRef<boolean>(false);
   const verboseLogging = isVerboseLoggingEnabled();
 
   // Function to batch subscribe to all configured BLF extensions
-  const subscribeToAll = async (extensionsList: string[], isPolling: boolean = false) => {
+  const subscribeToAll = async (extensionsList: string[]) => {
     if (extensionsList.length === 0) return;
     
     if (verboseLogging) {
       console.log('[useBLFSubscription] 📞 Batch subscribing to BLF extensions:', {
         totalExtensions: extensionsList.length,
         extensions: extensionsList,
-        isPolling,
-        isDialTabActive,
+        isModalOpen,
         isRegistered,
         blfEnabled
       });
@@ -78,59 +55,11 @@ export function useBLFSubscription({
     await batchSubscribeBLF(extensionsList, 5);
   };
 
-  // Function to start the 3-minute polling interval
-  const startPollingInterval = () => {
-    // Clear any existing interval
-    if (intervalIdRef.current) {
-      window.clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
-    }
-
-    // Get extensions that should be polled (exclude those starting with 7)
-    const pollableExtensions = getExtensionsForPolling(extensions);
-
-    if (pollableExtensions.length === 0) {
-      if (verboseLogging) {
-        console.log('[useBLFSubscription] ⏰ No extensions to poll (all excluded or none configured)');
-      }
-      return;
-    }
-
-    if (verboseLogging) {
-      console.log('[useBLFSubscription] ⏰ Starting BLF polling interval:', {
-        intervalMs: BLF_SUBSCRIPTION_INTERVAL,
-        intervalSeconds: BLF_SUBSCRIPTION_INTERVAL / 1000,
-        pollableExtensionsCount: pollableExtensions.length,
-        pollableExtensions,
-        excludedExtensions: extensions.filter(ext => shouldExcludeFromPolling(ext))
-      });
-    }
-
-    intervalIdRef.current = window.setInterval(() => {
-      if (verboseLogging) {
-        console.log('[useBLFSubscription] ⏰ Polling BLF subscriptions (3-minute interval)');
-      }
-      subscribeToAll(pollableExtensions, true);
-    }, BLF_SUBSCRIPTION_INTERVAL);
-  };
-
-  // Function to stop the polling interval
-  const stopPollingInterval = () => {
-    if (intervalIdRef.current) {
-      if (verboseLogging) {
-        console.log('[useBLFSubscription] ⏰ Stopping BLF polling interval');
-      }
-      window.clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
-    }
-  };
-
-  // Effect: Handle subscription lifecycle based on conditions
+  // Effect: Subscribe when modal opens
   useEffect(() => {
     // Early return if not enabled or no extensions
     if (!blfEnabled || extensions.length === 0) {
-      stopPollingInterval();
-      hasInitialSubscriptionRef.current = false;
+      hasSubscribedRef.current = false;
       
       if (verboseLogging && extensions.length > 0) {
         console.log('[useBLFSubscription] 📴 BLF disabled or no extensions configured');
@@ -141,8 +70,7 @@ export function useBLFSubscription({
 
     // Need to be registered to subscribe
     if (!isRegistered) {
-      stopPollingInterval();
-      hasInitialSubscriptionRef.current = false;
+      hasSubscribedRef.current = false;
       
       if (verboseLogging) {
         console.log('[useBLFSubscription] 📴 Not registered - subscriptions will start when registered');
@@ -151,54 +79,39 @@ export function useBLFSubscription({
       return;
     }
 
-    // If dial tab is active
-    if (isDialTabActive) {
+    // If modal is open, subscribe to all extensions
+    if (isModalOpen) {
       if (verboseLogging) {
-        console.log('[useBLFSubscription] 📱 Dial tab is active - managing BLF subscriptions');
+        console.log('[useBLFSubscription] 📱 BLF modal opened - subscribing to all extensions');
       }
 
-      // Subscribe to all extensions when switching to dial tab (only if not already subscribed)
-      if (!hasInitialSubscriptionRef.current) {
-        subscribeToAll(extensions, false);
-        hasInitialSubscriptionRef.current = true;
-      }
-
-      // Start the 3-minute polling interval (only for non-7xx extensions)
-      startPollingInterval();
-
+      // Subscribe every time the modal opens to ensure fresh state
+      subscribeToAll(extensions);
+      hasSubscribedRef.current = true;
     } else {
-      // Dial tab is not active - KEEP subscriptions alive, just stop polling
-      // This is more efficient than unsubscribing/resubscribing on every tab switch
-      if (verboseLogging) {
-        console.log('[useBLFSubscription] 💤 Dial tab is not active - pausing polling (keeping subscriptions alive)');
+      // Modal closed - KEEP subscriptions alive
+      // Health monitoring will handle subscription freshness
+      if (verboseLogging && hasSubscribedRef.current) {
+        console.log('[useBLFSubscription] 💤 BLF modal closed - keeping subscriptions alive (health monitoring active)');
       }
-      stopPollingInterval();
     }
-
-    // Cleanup on unmount - stop polling
-    return () => {
-      stopPollingInterval();
-      // Note: We don't unsubscribe here - subscriptions persist until explicit cleanup
-    };
     
+    // No cleanup needed - subscriptions persist and health monitoring handles staleness
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDialTabActive, isRegistered, blfEnabled, extensions.length]);
+  }, [isModalOpen, isRegistered, blfEnabled, extensions.length]);
 
-  // Effect: Re-subscribe when extensions list changes (e.g., new extension added)
+  // Effect: Re-subscribe when extensions list changes while modal is open
   useEffect(() => {
-    if (!isRegistered || !blfEnabled || !isDialTabActive) {
+    if (!isRegistered || !blfEnabled || !isModalOpen) {
       return;
     }
 
-    // When extensions list changes and we're on dial tab, resubscribe
-    if (extensions.length > 0 && hasInitialSubscriptionRef.current) {
+    // When extensions list changes and modal is open, resubscribe
+    if (extensions.length > 0 && hasSubscribedRef.current) {
       if (verboseLogging) {
         console.log('[useBLFSubscription] 🔄 Extensions list changed - resubscribing');
       }
-      subscribeToAll(extensions, false);
-      
-      // Restart the polling interval with the updated extensions list
-      startPollingInterval();
+      subscribeToAll(extensions);
     }
     
     // eslint-disable-next-line react-hooks/exhaustive-deps

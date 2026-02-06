@@ -38,3 +38,8 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Mobile build artifacts
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/

@@ -167,6 +167,8 @@
         "pause": "Pause",
         "paused": "Paused",
         "unpause": "Unpause",
+        "make_available": "Make Available",
+        "unpause_failed": "Failed to unpause agent",
         "pause_disabled_no_queues": "Must be in a queue to pause",
         "select_pause_reason": "Select pause reason",
         "error_number_required": "Agent number is required",

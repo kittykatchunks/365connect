@@ -7,7 +7,7 @@ import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BLFButton } from './BLFButton';
 import { BLFConfigModal } from '@/components/modals';
-import { useBLFStore, useSIPStore, useSettingsStore, useAppStore } from '@/stores';
+import { useBLFStore, useSIPStore, useSettingsStore } from '@/stores';
 import { useSIP, useBLFSubscription } from '@/hooks';
 import { isVerboseLoggingEnabled } from '@/utils';
 import type { BLFButton as BLFButtonType } from '@/types';
@@ -29,7 +29,6 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
   const getAllButtons = useBLFStore((state) => state.getAllButtons);
   const getConfiguredExtensions = useBLFStore((state) => state.getConfiguredExtensions);
   const blfStates = useSIPStore((state) => state.blfStates);
-  const currentView = useAppStore((state) => state.currentView);
   
   // SIP
   const { makeCall, blindTransfer, currentSession, isRegistered } = useSIP();
@@ -48,10 +47,10 @@ export function BLFModal({ isOpen, onClose, onTransferRequest }: BLFModalProps) 
   // Get all configured BLF extensions
   const configuredExtensions = getConfiguredExtensions();
   
-  // Use BLF subscription hook - only manages subscriptions when on dial tab
+  // Use BLF subscription hook - subscribes when modal opens
   useBLFSubscription({
     extensions: configuredExtensions,
-    isDialTabActive: currentView === 'dial',
+    isModalOpen: isOpen,
     isRegistered,
     blfEnabled
   });

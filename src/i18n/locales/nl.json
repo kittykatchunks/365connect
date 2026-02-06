@@ -159,6 +159,8 @@
         "pause": "Pauzeren",
         "paused": "Gepauzeerd",
         "unpause": "Hervatten",
+        "make_available": "Beschikbaar Maken",
+        "unpause_failed": "Kan agent niet hervatten",
         "pause_disabled_no_queues": "Moet in een wachtrij zijn om te pauzeren",
         "select_pause_reason": "Selecteer pauze reden",
         "error_number_required": "Agent nummer vereist",
