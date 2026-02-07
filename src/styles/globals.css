@@ -2077,7 +2077,8 @@ a {
 /* Icon sizing */
 .call-control-btn .icon,
 .call-button .icon,
-.hangup-button .icon {
+.hangup-button .icon,
+.keypad-toggle-btn .icon {
   width: clamp(18px, 2.5vh, 24px);
   height: clamp(18px, 2.5vh, 24px);
   flex-shrink: 0;
@@ -2086,14 +2087,16 @@ a {
 /* Call control buttons - consistent background and hover for mute, hold, transfer */
 .mute-btn,
 .hold-btn,
-.transfer-btn {
+.transfer-btn,
+.keypad-toggle-btn {
   background-color: var(--surface-color-hover);
   color: var(--text-color);
 }
 
 .mute-btn:hover:not(:disabled),
 .hold-btn:hover:not(:disabled),
-.transfer-btn:hover:not(:disabled) {
+.transfer-btn:hover:not(:disabled),
+.keypad-toggle-btn:hover:not(:disabled) {
   background-color: var(--border-color);
 }
 
