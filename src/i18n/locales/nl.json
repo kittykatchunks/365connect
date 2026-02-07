@@ -15,8 +15,7 @@
         "company_numbers": "Bedrijfsnummers",
         "queue_monitor": "Wachtrij Monitor",
         "settings": "Instellingen",
-        "user_guide": "Gebruikershandleiding",
-        "theme_toggle": "Thema wisselen",
+        "user_guide": "Gebruikershandleiding",        "about": "Over",        "theme_toggle": "Thema wisselen",
         "pin": "Menu vastzetten",
         "unpin": "Menu losmaken",
         "close": "Menu sluiten"
@@ -44,6 +43,13 @@
         "future_development": "Toekomstige ontwikkeling",
         "actions": "Acties",
         "got_it": "Begrepen"
+    },
+    "about": {
+        "title": "Over",
+        "version": "Versie",
+        "author": "Auteur",
+        "support": "Ondersteuning",
+        "description": "WebRTC SIP-telefoon voor uw Autocab365-platform aangedreven door uw Autocab Phantom PBX"
     },
     "status": {
         "disconnected": "Niet Verbonden",

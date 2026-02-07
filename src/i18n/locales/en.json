@@ -16,6 +16,7 @@
         "queue_monitor": "Queue Monitor",
         "settings": "Settings",
         "user_guide": "User Guide",
+        "about": "About",
         "theme_toggle": "Toggle theme",
         "pin": "Pin menu",
         "unpin": "Unpin menu",
@@ -34,6 +35,7 @@
         "add": "Add",
         "delete": "Delete",
         "edit": "Edit",
+        "close": "Close",
         "error": "Error",
         "warning": "Warning",
         "success": "Success",
@@ -45,6 +47,13 @@
         "future_development": "Future development",
         "actions": "Actions",
         "got_it": "Got It"
+    },
+    "about": {
+        "title": "About",
+        "version": "Version",
+        "author": "Author",
+        "support": "Support",
+        "description": "WebRTC SIP Phone for your Autocab365 Platform powered by your Autocab Phantom PBX"
     },
     "status": {
         "disconnected": "Disconnected",

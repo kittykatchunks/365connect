@@ -15,8 +15,7 @@
         "company_numbers": "Numéros Entreprise",
         "queue_monitor": "Moniteur Files",
         "settings": "Paramètres",
-        "user_guide": "Guide de l'Utilisateur",
-        "theme_toggle": "Changer le thème",
+        "user_guide": "Guide de l'Utilisateur",        "about": "À propos",        "theme_toggle": "Changer le thème",
         "pin": "Épingler le menu",
         "unpin": "Détacher le menu",
         "close": "Fermer le menu"
@@ -44,6 +43,13 @@
         "future_development": "Développement futur",
         "actions": "Actions",
         "got_it": "Compris"
+    },
+    "about": {
+        "title": "À propos",
+        "version": "Version",
+        "author": "Auteur",
+        "support": "Assistance",
+        "description": "Téléphone SIP WebRTC pour votre plateforme Autocab365 alimenté par votre Autocab Phantom PBX"
     },
     "status": {
         "disconnected": "Déconnecté",

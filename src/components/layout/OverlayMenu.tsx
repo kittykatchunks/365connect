@@ -12,14 +12,16 @@ import {
   BarChart3, 
   Settings,
   BookOpen,
+  Info,
   Pin,
   PinOff,
   X
 } from 'lucide-react';
-import { cn, isVerboseLoggingEnabled } from '@/utils';
+import { cn, isVerboseLoggingEnabled, getCurrentVersion } from '@/utils';
 import { useAppStore, useSettingsStore } from '@/stores';
 import { useTabNotification } from '@/hooks';
 import { ThemeToggle } from './ThemeToggle';
+import { AboutModal } from '@/components/modals';
 import type { ViewType } from '@/types';
 
 interface MenuItem {
@@ -63,6 +65,7 @@ export function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
     // Load pinned state from localStorage
     return localStorage.getItem('overlayMenuPinned') === 'true';
   });
+  const [showAboutModal, setShowAboutModal] = useState(false);
   
   const verboseLogging = isVerboseLoggingEnabled();
   
@@ -121,6 +124,15 @@ export function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
     
     const currentLang = settings.interface.language;
     window.open(`/userguide/index.html?lang=${currentLang}`, '_blank', 'width=1000,height=800,noopener,noreferrer');
+  };
+  
+  // Handle about click
+  const handleAboutClick = () => {
+    if (verboseLogging) {
+      console.log('[OverlayMenu] ℹ️ Opening about modal');
+    }
+    
+    setShowAboutModal(true);
   };
   
   // Close menu on escape key (if not pinned)
@@ -238,6 +250,16 @@ export function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
             <span className="overlay-menu-action-label">{t('menu.user_guide', 'User Guide')}</span>
           </button>
           
+          {/* About */}
+          <button
+            className="overlay-menu-action-btn"
+            onClick={handleAboutClick}
+            title={t('menu.about', 'About')}
+          >
+            <Info className="overlay-menu-action-icon" />
+            <span className="overlay-menu-action-label">{t('menu.about', 'About')}</span>
+          </button>
+          
           {/* Settings */}
           <button
             className={cn(
@@ -252,6 +274,13 @@ export function OverlayMenu({ isOpen, onClose }: OverlayMenuProps) {
           </button>
         </div>
       </aside>
+      
+      {/* About Modal */}
+      <AboutModal 
+        isOpen={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+        version={getCurrentVersion()}
+      />
     </>
   );
 }

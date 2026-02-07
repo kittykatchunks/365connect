@@ -12,3 +12,4 @@ export { AgentLoginModal } from './AgentLoginModal';
 export { ApiSyncConfirmModal } from './ApiSyncConfirmModal';
 export { PauseReasonModal } from './PauseReasonModal';
 export { VersionUpdateModal } from './VersionUpdateModal';
+export { AboutModal } from './AboutModal';

@@ -15,8 +15,7 @@
         "company_numbers": "Yrityksen numerot",
         "queue_monitor": "Jononvalvonta",
         "settings": "Asetukset",
-        "user_guide": "Käyttöopas",
-        "theme_toggle": "Vaihda teemaa",
+        "user_guide": "Käyttöopas",        "about": "Tietoja",        "theme_toggle": "Vaihda teemaa",
         "pin": "Kiinnitä valikko",
         "unpin": "Irrota valikko",
         "close": "Sulje valikko"
@@ -45,6 +44,13 @@
         "future_development": "Tuleva kehitys",
         "actions": "Toiminnot",
         "got_it": "Selvä"
+    },
+    "about": {
+        "title": "Tietoja",
+        "version": "Versio",
+        "author": "Tekijä",
+        "support": "Tuki",
+        "description": "WebRTC SIP -puhelin Autocab365-alustallesi, jota käyttää Autocab Phantom PBX"
     },
     "status": {
         "disconnected": "Yhteys katkaistu",
