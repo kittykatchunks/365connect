@@ -96,7 +96,7 @@ export function AboutModal({ isOpen, onClose, version }: AboutModalProps) {
               <div className="version-info-item">
                 <span className="version-info-label">
                   <Smartphone size={16} className="inline mr-2" />
-                  {t('about.extension', 'Extension')}:
+                  {t('about.device_id', 'Device ID')}:
                 </span>
                 <span className="version-info-value">{username}</span>
               </div>

@@ -48,7 +48,7 @@
         "title": "Acerca de",
         "version": "Versión",
         "phantom_id": "ID de Phantom",
-        "extension": "Extensión",
+        "device_id": "ID de Dispositivo",
         "author": "Autor",
         "support": "Soporte",
         "description": "Teléfono SIP WebRTC para su plataforma Autocab365 impulsado por su Autocab Phantom PBX"

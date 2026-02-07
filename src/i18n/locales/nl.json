@@ -48,7 +48,7 @@
         "title": "Over",
         "version": "Versie",
         "phantom_id": "Phantom ID",
-        "extension": "Toestel",
+        "device_id": "Apparaat-ID",
         "author": "Auteur",
         "support": "Ondersteuning",
         "description": "WebRTC SIP-telefoon voor uw Autocab365-platform aangedreven door uw Autocab Phantom PBX"
