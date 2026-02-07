@@ -67,7 +67,7 @@ export function Dialpad({ onDigit, onLongPress, disabled, className }: DialpadPr
   
   return (
     <div className={cn('dialpad', className)}>
-      {dialpadKeys.map(({ digit, letters }) => (
+      {dialpadKeys.map(({ digit }) => (
         <button
           key={digit}
           type="button"
