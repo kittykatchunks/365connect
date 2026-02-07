@@ -39,17 +39,6 @@ export function AboutModal({ isOpen, onClose, version }: AboutModalProps) {
       size="md"
       className="about-modal"
     >
-      {/* Logo background with washed-out effect */}
-      <div className="about-modal-background">
-        <img 
-          src="/icons/pwa-512x512.png" 
-          alt="" 
-          className="about-modal-logo"
-          aria-hidden="true"
-        />
-      </div>
-      
-      {/* Content overlay */}
       <div className="about-modal-content">
         {/* App icon */}
         <div className="about-modal-icon">
