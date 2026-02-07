@@ -266,6 +266,7 @@
         "no_phantom_id": "Phantom ID no configurado",
         "up_to_date": "Actualizado",
         "not_synced": "No se pueden recuperar los números de empresa de Phantom",
+        "not_synced_banner": "Precaución: sus números de empresa no están sincronizados con Phantom",
         "sync_warning": "Esto reemplazará los datos locales",
         "sync_success": "Sincronizado exitosamente",
         "sync_failed": "Error de sincronización",

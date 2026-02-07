@@ -96,7 +96,7 @@ export function CompanyNumbersView() {
     const currentError = useCompanyNumbersStore.getState().error;
     
     if (currentError && !result.identical && !result.needsConfirmation) {
-      // API call failed - use translated message
+      // API call failed - use translated message for generic error, otherwise show specific API error
       const errorMessage = currentError === 'API_ERROR'
         ? t('company_numbers.not_synced', 'Unable to retrieve Company Numbers from Phantom')
         : currentError;
@@ -199,7 +199,10 @@ export function CompanyNumbersView() {
       
       {error && (
         <div className="error-banner">
-          {error}
+          {error === 'API_ERROR' 
+            ? t('company_numbers.not_synced_banner', 'Caution your Company Numbers are not synced to Phantom')
+            : error
+          }
         </div>
       )}
       

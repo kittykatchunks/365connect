@@ -283,6 +283,7 @@
         "no_phantom_id": "Phantom ID not configured",
         "up_to_date": "Up to date",
         "not_synced": "Unable to retrieve Company Numbers from Phantom",
+        "not_synced_banner": "Caution your Company Numbers are not synced to Phantom",
         "sync_warning": "This will replace local data",
         "sync_success": "Synced successfully",
         "sync_failed": "Sync failed",
