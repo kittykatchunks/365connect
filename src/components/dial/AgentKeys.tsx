@@ -1349,7 +1349,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn, isPaused, setAgentState, agentState, agentNumber, sipUsername, currentSession, makeCall]);
+  }, [isLoggedIn, isPaused, hasQueueMembership, loggedInQueues.length, queueState, setAgentState, agentState, agentNumber, sipUsername, currentSession, makeCall]);
   
   // Handle pause reason selection
   const handlePauseReasonSelect = useCallback(async (code: number, label: string) => {
