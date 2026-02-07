@@ -1761,7 +1761,7 @@ a {
 }
 
 .dialpad-digit {
-  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   font-weight: 600;
   line-height: 1;
 }
@@ -1774,6 +1774,7 @@ a {
   line-height: 1;
   margin-top: 2px;
   white-space: nowrap;
+  display: none;
 }
 
 

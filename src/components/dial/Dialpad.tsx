@@ -79,7 +79,6 @@ export function Dialpad({ onDigit, onLongPress, disabled, className }: DialpadPr
           aria-label={t('aria_label_dial_digit', 'Dial {{digit}}', { digit })}
         >
           <span className="dialpad-digit">{digit}</span>
-          {letters && <span className="dialpad-letters">{letters}</span>}
         </button>
       ))}
     </div>
