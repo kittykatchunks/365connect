@@ -47,6 +47,8 @@
     "about": {
         "title": "Sobre",
         "version": "Versão",
+        "phantom_id": "ID Phantom",
+        "extension": "Ramal",
         "author": "Autor",
         "support": "Suporte",
         "description": "Telefone SIP WebRTC para sua plataforma Autocab365 alimentado pelo seu Autocab Phantom PBX"

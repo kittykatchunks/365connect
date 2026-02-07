@@ -48,6 +48,8 @@
     "about": {
         "title": "Tietoja",
         "version": "Versio",
+        "phantom_id": "Phantom ID",
+        "extension": "Alanumero",
         "author": "Tekijä",
         "support": "Tuki",
         "description": "WebRTC SIP -puhelin Autocab365-alustallesi, jota käyttää Autocab Phantom PBX"

@@ -3,8 +3,9 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
-import { Info, Mail, Building2 } from 'lucide-react';
+import { Info, Mail, Building2, Server, Smartphone } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
+import { useSettingsStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 interface AboutModalProps {
@@ -15,6 +16,8 @@ interface AboutModalProps {
 
 export function AboutModal({ isOpen, onClose, version }: AboutModalProps) {
   const { t } = useTranslation();
+  const phantomId = useSettingsStore((state) => state.settings.connection.phantomId);
+  const username = useSettingsStore((state) => state.settings.connection.username);
   const verboseLogging = isVerboseLoggingEnabled();
   
   if (verboseLogging && isOpen) {
@@ -58,6 +61,24 @@ export function AboutModal({ isOpen, onClose, version }: AboutModalProps) {
           <span className="about-modal-info-label">{t('about.version', 'Version')}:</span>
           <span className="about-modal-info-value">{version}</span>
         </div>
+        
+        {/* Phantom ID */}
+        {phantomId && (
+          <div className="about-modal-info-row">
+            <Server size={18} className="about-modal-info-icon" />
+            <span className="about-modal-info-label">{t('about.phantom_id', 'Phantom ID')}:</span>
+            <span className="about-modal-info-value">{phantomId}</span>
+          </div>
+        )}
+        
+        {/* Extension / Device ID */}
+        {username && (
+          <div className="about-modal-info-row">
+            <Smartphone size={18} className="about-modal-info-icon" />
+            <span className="about-modal-info-label">{t('about.extension', 'Extension')}:</span>
+            <span className="about-modal-info-value">{username}</span>
+          </div>
+        )}
         
         {/* Author */}
         <div className="about-modal-info-row">

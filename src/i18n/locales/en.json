@@ -51,6 +51,8 @@
     "about": {
         "title": "About",
         "version": "Version",
+        "phantom_id": "Phantom ID",
+        "extension": "Extension",
         "author": "Author",
         "support": "Support",
         "description": "WebRTC SIP Phone for your Autocab365 Platform powered by your Autocab Phantom PBX"
