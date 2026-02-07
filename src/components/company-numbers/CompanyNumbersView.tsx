@@ -98,7 +98,7 @@ export function CompanyNumbersView() {
     if (currentError && !result.identical && !result.needsConfirmation) {
       // API call failed - translate if it's a translation key, otherwise use raw message
       const errorMessage = currentError.startsWith('company_numbers.') 
-        ? t(currentError, currentError) 
+        ? t(currentError, 'Unable to retrieve Company Numbers from Phantom') 
         : currentError;
       addNotification({
         type: 'error',

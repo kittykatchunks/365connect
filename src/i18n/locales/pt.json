@@ -264,7 +264,7 @@
         "refresh": "Actualizar do Servidor",
         "fetch_from_api": "Obter do Phantom",
         "no_phantom_id": "Phantom ID não configurado",
-        "up_to_date": "Actualizado",        "not_synced": "Atenção: os seus números de empresa não estão sincronizados com o Phantom",        "sync_warning": "Isto substituirá dados locais",
+        "up_to_date": "Actualizado",        "not_synced": "Não é possível recuperar os números da empresa do Phantom",        "sync_warning": "Isto substituirá dados locais",
         "sync_success": "Sincronizado com sucesso",
         "sync_failed": "Falha na sincronização",
         "confirm_sync": "Confirmar Sincronização",

@@ -282,7 +282,7 @@
         "fetch_from_api": "Fetch from Phantom",
         "no_phantom_id": "Phantom ID not configured",
         "up_to_date": "Up to date",
-        "not_synced": "Caution your company numbers are not synced to Phantom",
+        "not_synced": "Unable to retrieve Company Numbers from Phantom",
         "sync_warning": "This will replace local data",
         "sync_success": "Synced successfully",
         "sync_failed": "Sync failed",
