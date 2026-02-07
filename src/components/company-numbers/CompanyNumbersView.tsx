@@ -92,7 +92,17 @@ export function CompanyNumbersView() {
     
     const result = await syncWithConfirmation(phantomId);
     
-    if (result.identical) {
+    // Check for errors first
+    const currentError = useCompanyNumbersStore.getState().error;
+    
+    if (currentError && !result.identical && !result.needsConfirmation) {
+      // API call failed
+      addNotification({
+        type: 'error',
+        title: t('common.error', 'Error'),
+        message: currentError
+      });
+    } else if (result.identical) {
       // Data is up to date
       addNotification({
         type: 'success',
@@ -106,16 +116,8 @@ export function CompanyNumbersView() {
       }
       setApiSyncData(result.apiData);
       setIsSyncConfirmOpen(true);
-    } else if (!result.identical && !result.needsConfirmation) {
-      // Sync was attempted but failed or was cancelled
-      if (error) {
-        addNotification({
-          type: 'error',
-          title: t('common.error', 'Error'),
-          message: t('company_numbers.sync_failed', 'Failed to sync: {{error}}', { error })
-        });
-      }
     }
+    // Note: Error handling is done at the start of this function
   };
   
   const confirmApiSync = () => {

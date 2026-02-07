@@ -349,11 +349,12 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
             const result = await phantomApiService.get<{ company_numbers?: CompanyNumber[] }>('companyNumbers');
             
             if (!result.success || !result.data?.company_numbers) {
+              const errorMsg = result.error || 'Unable to retrieve company numbers from server';
               if (verboseLogging) {
-                console.warn('[CompanyNumbersStore] No company numbers returned from API');
+                console.warn('[CompanyNumbersStore] No company numbers returned from API:', errorMsg);
               }
-              set({ isSyncing: false });
-              return { needsConfirmation: false, identical: true };
+              set({ isSyncing: false, error: errorMsg });
+              return { needsConfirmation: false, identical: false };
             }
             
             const apiData = result.data.company_numbers;
