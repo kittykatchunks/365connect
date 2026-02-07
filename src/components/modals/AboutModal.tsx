@@ -3,8 +3,8 @@
 // ============================================
 
 import { useTranslation } from 'react-i18next';
-import { Info, Mail, Building2, Server, Smartphone } from 'lucide-react';
-import { Modal, Button } from '@/components/ui';
+import { Info, Mail, Building2, Server, Smartphone, X } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { useSettingsStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 
@@ -20,7 +20,9 @@ export function AboutModal({ isOpen, onClose, version }: AboutModalProps) {
   const username = useSettingsStore((state) => state.settings.connection.username);
   const verboseLogging = isVerboseLoggingEnabled();
   
-  if (verboseLogging && isOpen) {
+  if (!isOpen) return null;
+  
+  if (verboseLogging) {
     console.log('[AboutModal] 📋 About modal opened');
   }
   
@@ -34,73 +36,102 @@ export function AboutModal({ isOpen, onClose, version }: AboutModalProps) {
     window.location.href = `mailto:${email}`;
   };
   
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    // Close if clicking the backdrop (dialog element itself, not its children)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+  
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('about.title', 'About')}
-      size="md"
-      className="about-modal"
-    >
-      <div className="about-modal-content">
-        {/* App icon 
-        <div className="about-modal-icon">
-          <img 
-            src="/icons/pwa-192x192.png" 
-            alt="Connect365"
-            className="about-modal-app-icon"
-          />
-        </div>
-        */}
-        {/* App name */}
-        <h3 className="about-modal-app-name">Connect365</h3>
-        
-        {/* Version */}
-        <div className="about-modal-info-row">
-          <Info size={18} className="about-modal-info-icon" />
-          <span>{t('about.version', 'Version')}: {version}</span>
-        </div>
-        
-        {/* Phantom ID */}
-        {phantomId && (
-          <div className="about-modal-info-row">
-            <Server size={18} className="about-modal-info-icon" />
-            <span>{t('about.phantom_id', 'Phantom ID')}: {phantomId}</span>
+    <dialog open={isOpen} className="modal-backdrop" onClick={handleBackdropClick}>
+      <div className="modal-container modal-md">
+        <div className="modal-header">
+          <div className="flex items-center gap-3">
+            <img 
+              src="/icons/pwa-192x192.png" 
+              alt="Connect365" 
+              className="modal-header-icon company-icon" 
+              style={{ width: '48px', height: '48px', borderRadius: '8px' }} 
+            />
+            <div>
+              <h2 className="modal-title">{t('about.title', 'About')}</h2>
+              <p className="modal-description">Connect365</p>
+            </div>
           </div>
-        )}
+          <button
+            className="modal-close"
+            onClick={onClose}
+            aria-label={t('common.close', 'Close')}
+          >
+            <X />
+          </button>
+        </div>
         
-        {/* Extension / Device ID */}
-        {username && (
-          <div className="about-modal-info-row">
-            <Smartphone size={18} className="about-modal-info-icon" />
-            <span>{t('about.extension', 'Extension')}: {username}</span>
+        <div className="modal-content">
+          <div className="version-update-message">
+            <p>{t('about.description', 'WebRTC SIP Phone for your Autocab365 Platform powered by your Autocab Phantom PBX')}</p>
           </div>
-        )}
-        
-        {/* Author */}
-        <div className="about-modal-info-row">
-          <Building2 size={18} className="about-modal-info-icon" />
-          <span>{t('about.author', 'Author')}: Autocab Ltd</span>
+          
+          <div className="version-info">
+            <div className="version-info-item">
+              <span className="version-info-label">
+                <Info size={16} className="inline mr-2" />
+                {t('about.version', 'Version')}:
+              </span>
+              <span className="version-info-value">{version}</span>
+            </div>
+            
+            {phantomId && (
+              <div className="version-info-item">
+                <span className="version-info-label">
+                  <Server size={16} className="inline mr-2" />
+                  {t('about.phantom_id', 'Phantom ID')}:
+                </span>
+                <span className="version-info-value">{phantomId}</span>
+              </div>
+            )}
+            
+            {username && (
+              <div className="version-info-item">
+                <span className="version-info-label">
+                  <Smartphone size={16} className="inline mr-2" />
+                  {t('about.extension', 'Extension')}:
+                </span>
+                <span className="version-info-value">{username}</span>
+              </div>
+            )}
+            
+            <div className="version-info-item">
+              <span className="version-info-label">
+                <Building2 size={16} className="inline mr-2" />
+                {t('about.author', 'Author')}:
+              </span>
+              <span className="version-info-value">Autocab Ltd</span>
+            </div>
+            
+            <div className="version-info-item">
+              <span className="version-info-label">
+                <Mail size={16} className="inline mr-2" />
+                {t('about.support', 'Support')}:
+              </span>
+              <button 
+                className="about-modal-email-link"
+                onClick={handleSupportEmailClick}
+                type="button"
+              >
+                technical.support@autocab.com
+              </button>
+            </div>
+          </div>
         </div>
         
-        {/* Support email */}
-        <div className="about-modal-info-row">
-          <Mail size={18} className="about-modal-info-icon" />
-          <span>{t('about.support', 'Support')}: <button className="about-modal-email-link" onClick={handleSupportEmailClick} type="button">technical.support@autocab.com</button></span>
+        <div className="modal-footer">
+          <Button onClick={onClose} variant="primary">
+            {t('common.got_it', 'Got It')}
+          </Button>
         </div>
-        
-        {/* Description */}
-        <p className="about-modal-description">
-          {t('about.description', 'WebRTC SIP Phone for your Autocab365 Platform powered by your Autocab Phantom PBX')}
-        </p>
       </div>
-      
-      {/* Footer */}
-      <div className="about-modal-footer">
-        <Button onClick={onClose} variant="primary">
-          {t('common.close', 'Close')}
-        </Button>
-      </div>
-    </Modal>
+    </dialog>
   );
 }
