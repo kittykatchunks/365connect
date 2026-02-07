@@ -265,6 +265,7 @@
         "fetch_from_api": "Obtener de Phantom",
         "no_phantom_id": "Phantom ID no configurado",
         "up_to_date": "Actualizado",
+        "not_synced": "Precaución: sus números de empresa no están sincronizados con Phantom",
         "sync_warning": "Esto reemplazará los datos locales",
         "sync_success": "Sincronizado exitosamente",
         "sync_failed": "Error de sincronización",

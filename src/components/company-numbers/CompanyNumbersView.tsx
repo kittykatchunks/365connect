@@ -96,11 +96,14 @@ export function CompanyNumbersView() {
     const currentError = useCompanyNumbersStore.getState().error;
     
     if (currentError && !result.identical && !result.needsConfirmation) {
-      // API call failed
+      // API call failed - translate if it's a translation key, otherwise use raw message
+      const errorMessage = currentError.startsWith('company_numbers.') 
+        ? t(currentError, currentError) 
+        : currentError;
       addNotification({
         type: 'error',
         title: t('common.error', 'Error'),
-        message: currentError
+        message: errorMessage
       });
     } else if (result.identical) {
       // Data is up to date
