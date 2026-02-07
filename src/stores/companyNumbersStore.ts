@@ -349,8 +349,8 @@ export const useCompanyNumbersStore = create<CompanyNumbersState>()(
             const result = await phantomApiService.get<{ company_numbers?: CompanyNumber[] }>('companyNumbers');
             
             if (!result.success || !result.data?.company_numbers) {
-              // Use translation key for default error message
-              const errorMsg = result.error || 'company_numbers.not_synced';
+              // Set error flag - translation will be handled in UI
+              const errorMsg = result.error || 'API_ERROR';
               if (verboseLogging) {
                 console.warn('[CompanyNumbersStore] No company numbers returned from API:', errorMsg);
               }
