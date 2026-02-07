@@ -319,6 +319,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
                             setQueueState('in-queue');
                             if (verboseLogging) {
                               console.log('[SIPContext] 🔵 Queue state set to: in-queue (from auto-reconnect)');
+                              console.log('[SIPContext] 📊 Queue membership updated:', { queues: loggedInQueues.map((q: { queue: string; queuelabel: string }) => q.queue), queueCount: loggedInQueues.length, queueState: 'in-queue' });
                             }
                           } else {
                             if (verboseLogging) {
@@ -328,6 +329,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
                             setQueueState('none');
                             if (verboseLogging) {
                               console.log('[SIPContext] 🔴 Queue state set to: none (no queues found)');
+                              console.log('[SIPContext] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
                             }
                           }
                         } else {
@@ -338,6 +340,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
                           setQueueState('none');
                           if (verboseLogging) {
                             console.log('[SIPContext] 🔴 Queue state set to: none (no agent data)');
+                            console.log('[SIPContext] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
                           }
                         }
                       } else {
@@ -348,12 +351,16 @@ export function SIPProvider({ children }: SIPProviderProps) {
                         setQueueState('none');
                         if (verboseLogging) {
                           console.log('[SIPContext] 🔴 Queue state set to: none (fetch failed)');
+                          console.log('[SIPContext] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
                         }
                       }
                     } catch (queueError) {
                       console.error('[SIPContext] ❌ Error checking queue membership:', queueError);
                       setLoggedInQueues([]);
                       setQueueState('none');
+                      if (verboseLogging) {
+                        console.log('[SIPContext] 📊 Queue membership updated (error):', { queues: [], queueCount: 0, queueState: 'none' });
+                      }
                     }
                     
                     if (verboseLogging) {

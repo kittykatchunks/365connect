@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { ViewType } from '@/types';
+import { isVerboseLoggingEnabled } from '@/utils';
 
 // Agent state types
 type AgentState = 'logged-out' | 'available' | 'paused' | 'on-call';
@@ -134,13 +135,22 @@ export const useAppStore = create<AppState>()(
           agentName
         }),
         
-        agentLogout: () => set({ 
-          agentState: 'logged-out', 
-          queueState: 'none', 
-          agentNumber: '',
-          agentName: null,
-          loggedInQueues: []
-        }),
+        agentLogout: () => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          if (verboseLogging) {
+            console.log('[appStore] 🚪 Agent logout - clearing all agent state');
+          }
+          set({ 
+            agentState: 'logged-out', 
+            queueState: 'none', 
+            agentNumber: '',
+            agentName: null,
+            loggedInQueues: []
+          });
+          if (verboseLogging) {
+            console.log('[appStore] 📊 Queue membership updated (logout):', { queues: [], queueCount: 0, queueState: 'none' });
+          }
+        },
         
         // Company number actions
         setCompanyNumbers: (companyNumbers) => set({ companyNumbers }),

@@ -185,6 +185,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
           }
           setLoggedInQueues([]);
           setQueueState('none');
+          if (verboseLogging) {
+            console.log('[AgentKeys] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
+          }
         }
       } else {
         // In queues - sync pause state from PBX
@@ -207,6 +210,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
           }));
           setLoggedInQueues(updatedQueues);
           setQueueState('in-queue');
+          if (verboseLogging) {
+            console.log('[AgentKeys] 📊 Queue membership updated:', { queues: updatedQueues.map(q => q.queue), queueCount: updatedQueues.length, queueState: 'in-queue' });
+          }
         }
       }
     } catch (error) {
@@ -294,6 +300,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
                   setQueueState('in-queue');
                   if (verboseLogging) {
                     console.log('[AgentKeys] 🔵 Queue state set to: in-queue (from registration check)');
+                    console.log('[AgentKeys] 📊 Queue membership updated:', { queues: loggedInQueues.map((q: { queue: string; queuelabel: string }) => q.queue), queueCount: loggedInQueues.length, queueState: 'in-queue' });
                   }
                 } else {
                   if (verboseLogging) {
@@ -303,6 +310,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
                   setQueueState('none');
                   if (verboseLogging) {
                     console.log('[AgentKeys] 🔴 Queue state set to: none (no queues found)');
+                    console.log('[AgentKeys] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
                   }
                 }
               } else {
@@ -313,6 +321,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
                 setQueueState('none');
                 if (verboseLogging) {
                   console.log('[AgentKeys] 🔴 Queue state set to: none (no agent data)');
+                  console.log('[AgentKeys] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
                 }
               }
             } else {
@@ -323,12 +332,16 @@ export function AgentKeys({ className }: AgentKeysProps) {
               setQueueState('none');
               if (verboseLogging) {
                 console.log('[AgentKeys] 🔴 Queue state set to: none (fetch failed)');
+                console.log('[AgentKeys] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
               }
             }
           } catch (queueError) {
             console.error('[AgentKeys] ❌ Error checking queue membership:', queueError);
             setLoggedInQueues([]);
             setQueueState('none');
+            if (verboseLogging) {
+              console.log('[AgentKeys] 📊 Queue membership updated (error):', { queues: [], queueCount: 0, queueState: 'none' });
+            }
           }
           
           // Sync current CLI from agent data if Company Numbers tab is enabled
@@ -507,6 +520,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
                     loggedInQueues: queueResult.queues,
                     queueState: 'in-queue'
                   });
+                  
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] 📊 Queue membership updated (DTMF login):', { queues: queueResult.queues.map(q => q.queue), queueCount: queueResult.queues.length, queueState: 'in-queue' });
+                  }
                 } else {
                   if (verboseLogging) {
                     console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
@@ -517,6 +534,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
                     loggedInQueues: [],
                     queueState: 'none'
                   });
+                  
+                  if (verboseLogging) {
+                    console.log('[AgentKeys] 📊 Queue membership updated (DTMF, no queues):', { queues: [], queueCount: 0, queueState: 'none' });
+                  }
                 }
               } else {
                 if (verboseLogging) {
@@ -528,6 +549,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
                   loggedInQueues: [],
                   queueState: 'none'
                 });
+                
+                if (verboseLogging) {
+                  console.log('[AgentKeys] 📊 Queue membership updated (DTMF, fetch failed):', { queues: [], queueCount: 0, queueState: 'none' });
+                }
               }
             } catch (queueError) {
               console.error('[AgentKeys] ❌ Error fetching queue membership after DTMF login:', queueError);
@@ -537,6 +562,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
                 loggedInQueues: [],
                 queueState: 'none'
               });
+              
+              if (verboseLogging) {
+                console.log('[AgentKeys] 📊 Queue membership updated (error after DTMF):', { queues: [], queueCount: 0, queueState: 'none' });
+              }
             }
           }, 1000); // Wait 1s for PBX to process login
         }
@@ -650,6 +679,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
           
           if (verboseLogging) {
             console.log('[AgentKeys] 📊 Updated queue state to in-queue with', result.queues.length, 'queues');
+            console.log('[AgentKeys] 📊 Queue membership updated:', { queues: result.queues.map(q => q.queue), queueCount: result.queues.length, queueState: 'in-queue' });
           }
         } else {
           if (verboseLogging) {
@@ -659,6 +689,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
           // Agent is logged in but not in any queues
           setLoggedInQueues([]);
           setQueueState('none');
+          if (verboseLogging) {
+            console.log('[AgentKeys] 📊 Queue membership updated:', { queues: [], queueCount: 0, queueState: 'none' });
+          }
         }
       } else {
         if (verboseLogging) {
@@ -668,6 +701,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
         // Failed to fetch - set to none to be safe
         setLoggedInQueues([]);
         setQueueState('none');
+        if (verboseLogging) {
+          console.log('[AgentKeys] 📊 Queue membership updated (failed):', { queues: [], queueCount: 0, queueState: 'none' });
+        }
       }
     } catch (error) {
       console.error('[AgentKeys] ❌ Error fetching queue membership:', error);
@@ -675,6 +711,9 @@ export function AgentKeys({ className }: AgentKeysProps) {
       // Error during fetch - set to none to be safe
       setLoggedInQueues([]);
       setQueueState('none');
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📊 Queue membership updated (error):', { queues: [], queueCount: 0, queueState: 'none' });
+      }
     }
   }, [setLoggedInQueues, setQueueState]);
   
@@ -1029,6 +1068,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
         setQueueState('in-queue');
         setLoggedInQueues(selectedQueues.map(q => ({ queue: q, queuelabel: q })));
         
+        if (verboseLogging) {
+          console.log('[AgentKeys] 📊 Queue membership updated (login):', { queues: selectedQueues, queueCount: selectedQueues.length, queueState: 'in-queue' });
+        }
+        
         addNotification({
           type: 'success',
           title: t('queue_login.login_success', 'Queue Login Successful'),
@@ -1078,6 +1121,10 @@ export function AgentKeys({ className }: AgentKeysProps) {
       // Update state immediately (call will confirm)
       setQueueState('none');
       setLoggedInQueues([]);
+      
+      if (verboseLogging) {
+        console.log('[AgentKeys] 📊 Queue membership updated (logout):', { queues: [], queueCount: 0, queueState: 'none' });
+      }
       
       addNotification({
         type: 'info',
