@@ -502,71 +502,7 @@ export function AgentKeys({ className }: AgentKeysProps) {
             }
             
             // Fetch queue membership after DTMF login
-            if (verboseLogging) {
-              console.log('[AgentKeys] 📋 Fetching queue membership after DTMF login...');
-            }
-            
-            try {
-              const queueResult = await fetchQueueMembership(loginAgentNumber);
-              
-              if (queueResult.success) {
-                if (queueResult.queues.length > 0) {
-                  if (verboseLogging) {
-                    console.log('[AgentKeys] ✅ Queue membership fetched after DTMF login:', queueResult.queues);
-                  }
-                  
-                  // Update store with logged-in queues
-                  useAppStore.setState({
-                    loggedInQueues: queueResult.queues,
-                    queueState: 'in-queue'
-                  });
-                  
-                  if (verboseLogging) {
-                    console.log('[AgentKeys] 📊 Queue membership updated (DTMF login):', { queues: queueResult.queues.map(q => q.queue), queueCount: queueResult.queues.length, queueState: 'in-queue' });
-                  }
-                } else {
-                  if (verboseLogging) {
-                    console.log('[AgentKeys] ℹ️ Agent logged in but not in any queues');
-                  }
-                  
-                  // Agent is logged in but not in any queues
-                  useAppStore.setState({
-                    loggedInQueues: [],
-                    queueState: 'none'
-                  });
-                  
-                  if (verboseLogging) {
-                    console.log('[AgentKeys] 📊 Queue membership updated (DTMF, no queues):', { queues: [], queueCount: 0, queueState: 'none' });
-                  }
-                }
-              } else {
-                if (verboseLogging) {
-                  console.warn('[AgentKeys] ⚠️ Failed to fetch queue membership after DTMF login');
-                }
-                
-                // Failed to fetch - set to none to be safe
-                useAppStore.setState({
-                  loggedInQueues: [],
-                  queueState: 'none'
-                });
-                
-                if (verboseLogging) {
-                  console.log('[AgentKeys] 📊 Queue membership updated (DTMF, fetch failed):', { queues: [], queueCount: 0, queueState: 'none' });
-                }
-              }
-            } catch (queueError) {
-              console.error('[AgentKeys] ❌ Error fetching queue membership after DTMF login:', queueError);
-              
-              // Error during fetch - set to none to be safe
-              useAppStore.setState({
-                loggedInQueues: [],
-                queueState: 'none'
-              });
-              
-              if (verboseLogging) {
-                console.log('[AgentKeys] 📊 Queue membership updated (error after DTMF):', { queues: [], queueCount: 0, queueState: 'none' });
-              }
-            }
+            await updateQueueMembership(loginAgentNumber);
           }, 1000); // Wait 1s for PBX to process login
         }
         
