@@ -371,6 +371,8 @@
         "auto_focus_notification_desc": "Traer ventana al frente automáticamente al responder desde notificación",
         "prefer_blind_transfer": "Preferir Transferencia Ciega",
         "prefer_blind_transfer_desc": "Usar transferencia ciega por defecto en lugar de asistida",
+        "convert_plus_to_00": "Convertir + a 00",
+        "convert_plus_to_00_desc": "Reemplazar automáticamente + con 00 para llamadas internacionales",
         "speaker": "Altavoz",
         "microphone": "Micrófono",
         "mic_level": "Nivel de Entrada",

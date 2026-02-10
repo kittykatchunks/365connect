@@ -412,6 +412,8 @@
         "auto_focus_notification_desc": "Automatically bring window to front when answering from notification",
         "prefer_blind_transfer": "Prefer Blind Transfer",
         "prefer_blind_transfer_desc": "Use blind transfer by default instead of attended",
+        "convert_plus_to_00": "Convert + to 00",
+        "convert_plus_to_00_desc": "Automatically replace + with 00 for international calls",
         "speaker": "Speaker",
         "microphone": "Microphone",
         "mic_level": "Input Level",

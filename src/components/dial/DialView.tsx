@@ -17,6 +17,7 @@ import { TransferModal } from '@/components/modals';
 import { useSIP } from '@/hooks';
 import { useUIStore, useSettingsStore, useSIPStore, useAppStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
+import { normalizePhoneNumber } from '@/utils/phoneNumber';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { SessionData } from '@/types';
 
@@ -40,6 +41,7 @@ export function DialView() {
   
   const addNotification = useUIStore((state) => state.addNotification);
   const blfEnabled = useSettingsStore((state) => state.settings.interface.blfEnabled);
+  const convertPlusTo00 = useSettingsStore((state) => state.settings.call.convertPlusTo00);
   
   // Get selected line and line states from store
   const selectedLine = useSIPStore((state) => state.selectedLine);
@@ -364,14 +366,27 @@ export function DialView() {
     if (dialValue.trim()) {
       setIsDialing(true);
       try {
+        // Sanitize phone number - remove any invalid characters (keep only digits and +)
+        const originalValue = dialValue.trim();
+        const sanitizedValue = normalizePhoneNumber(originalValue, convertPlusTo00);
+        
         if (verboseLogging) {
-          console.log('[DialView] 📞 Making call to:', dialValue);
+          if (originalValue !== sanitizedValue) {
+            console.log('[DialView] 🧹 Sanitized phone number:', {
+              original: originalValue,
+              sanitized: sanitizedValue,
+              removed: originalValue.replace(/[0-9+]/g, ''),
+              convertPlusTo00Enabled: convertPlusTo00,
+              plusConverted: convertPlusTo00 && originalValue.includes('+')
+            });
+          }
+          console.log('[DialView] 📞 Making call to:', sanitizedValue);
         }
         
-        // Save as last dialed number before making call
-        setLastDialedNumber(dialValue.trim());
+        // Save sanitized number as last dialed number before making call
+        setLastDialedNumber(sanitizedValue);
         
-        await makeCall(dialValue.trim());
+        await makeCall(sanitizedValue);
         setDialValue('');
         
         // Don't reset isDialing here - let the session state effect handle it

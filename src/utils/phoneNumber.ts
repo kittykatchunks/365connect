@@ -4,9 +4,19 @@
 
 /**
  * Normalize a phone number by removing non-digit characters (except +)
+ * @param number - The phone number to normalize
+ * @param convertPlusTo00 - If true, replace + prefix with 00
  */
-export function normalizePhoneNumber(number: string): string {
-  return number.replace(/[^0-9+]/g, '');
+export function normalizePhoneNumber(number: string, convertPlusTo00: boolean = false): string {
+  // First, remove all non-digit characters except +
+  let normalized = number.replace(/[^0-9+]/g, '');
+  
+  // If convertPlusTo00 is enabled and number starts with +, replace it with 00
+  if (convertPlusTo00 && normalized.startsWith('+')) {
+    normalized = '00' + normalized.substring(1);
+  }
+  
+  return normalized;
 }
 
 /**

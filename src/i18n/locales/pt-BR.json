@@ -366,6 +366,8 @@
         "auto_focus_notification_desc": "Trazer janela para frente automaticamente",
         "prefer_blind_transfer": "Preferir Transferência Cega",
         "prefer_blind_transfer_desc": "Usar transferência cega por padrão",
+        "convert_plus_to_00": "Converter + para 00",
+        "convert_plus_to_00_desc": "Substituir automaticamente + por 00 para chamadas internacionais",
         "speaker": "Alto-falante",
         "microphone": "Microfone",
         "mic_level": "Nível de Entrada",

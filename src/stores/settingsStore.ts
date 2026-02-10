@@ -36,6 +36,7 @@ interface SettingsState {
   setIncomingCallNotifications: (enabled: boolean) => void;
   setAutoFocusOnNotificationAnswer: (enabled: boolean) => void;
   setPreferBlindTransfer: (enabled: boolean) => void;
+  setConvertPlusTo00: (enabled: boolean) => void;
   
   // Actions - Audio
   setSpeakerDevice: (deviceId: string) => void;
@@ -207,6 +208,9 @@ export const useSettingsStore = create<SettingsState>()(
         })),
         setPreferBlindTransfer: (preferBlindTransfer) => set((state) => ({
           settings: { ...state.settings, call: { ...state.settings.call, preferBlindTransfer } }
+        })),
+        setConvertPlusTo00: (convertPlusTo00) => set((state) => ({
+          settings: { ...state.settings, call: { ...state.settings.call, convertPlusTo00 } }
         })),
         
         // Audio actions

@@ -29,6 +29,7 @@ export interface CallSettings {
   incomingCallNotifications: boolean;
   autoFocusOnNotificationAnswer: boolean;
   preferBlindTransfer: boolean;
+  convertPlusTo00: boolean; // Convert + prefix to 00 when dialing
 }
 
 export interface AudioSettings {
@@ -83,7 +84,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     callWaiting: true,
     incomingCallNotifications: true,
     autoFocusOnNotificationAnswer: true,
-    preferBlindTransfer: false
+    preferBlindTransfer: false,
+    convertPlusTo00: false
   },
   audio: {
     speakerDevice: 'default',

@@ -371,6 +371,8 @@
         "auto_focus_notification_desc": "Mettre fenêtre au premier plan automatiquement",
         "prefer_blind_transfer": "Préférer Transfert Aveugle",
         "prefer_blind_transfer_desc": "Utiliser transfert aveugle par défaut",
+        "convert_plus_to_00": "Convertir + en 00",
+        "convert_plus_to_00_desc": "Remplacer automatiquement + par 00 pour les appels internationaux",
         "speaker": "Haut-parleur",
         "microphone": "Microphone",
         "mic_level": "Niveau d'entrée",

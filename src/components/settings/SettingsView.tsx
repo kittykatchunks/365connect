@@ -104,6 +104,7 @@ export function SettingsView() {
   const setIncomingCallNotifications = useSettingsStore((state) => state.setIncomingCallNotifications);
   const setAutoFocusOnNotificationAnswer = useSettingsStore((state) => state.setAutoFocusOnNotificationAnswer);
   const setPreferBlindTransfer = useSettingsStore((state) => state.setPreferBlindTransfer);
+  const setConvertPlusTo00 = useSettingsStore((state) => state.setConvertPlusTo00);
   const setSpeakerDevice = useSettingsStore((state) => state.setSpeakerDevice);
   const setMicrophoneDevice = useSettingsStore((state) => state.setMicrophoneDevice);
   const setRingerDevice = useSettingsStore((state) => state.setRingerDevice);
@@ -908,6 +909,14 @@ export function SettingsView() {
                     description={t('settings.prefer_blind_transfer_desc', 'Use blind transfer by default instead of attended')}
                     checked={settings.call.preferBlindTransfer}
                     onChange={(checked) => setPreferBlindTransfer(checked)}
+                  />
+                </div>
+                <div className="setting-item">
+                  <Toggle
+                    label={t('settings.convert_plus_to_00', 'Convert + to 00')}
+                    description={t('settings.convert_plus_to_00_desc', 'Automatically replace + with 00 for international calls')}
+                    checked={settings.call.convertPlusTo00}
+                    onChange={(checked) => setConvertPlusTo00(checked)}
                   />
                 </div>
               </div>

@@ -402,6 +402,8 @@
         "auto_focus_notification_desc": "Tuo ikkuna automaattisesti eteen vastatessa ilmoituksesta",
         "prefer_blind_transfer": "Suosi sokkosiirtoa",
         "prefer_blind_transfer_desc": "Käytä sokkosiirtoa oletuksena valvotun sijaan",
+        "convert_plus_to_00": "Muunna + muotoon 00",
+        "convert_plus_to_00_desc": "Korvaa automaattisesti + numerolla 00 kansainvälisissä puheluissa",
         "speaker": "Kaiutin",
         "microphone": "Mikrofoni",
         "mic_level": "Sisääntulotaso",

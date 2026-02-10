@@ -370,6 +370,8 @@
         "auto_focus_notification_desc": "Breng venster automatisch naar voren",
         "prefer_blind_transfer": "Voorkeur Blind Doorverbinden",
         "prefer_blind_transfer_desc": "Gebruik standaard blind doorverbinden",
+        "convert_plus_to_00": "Converteer + naar 00",
+        "convert_plus_to_00_desc": "Vervang automatisch + door 00 voor internationale gesprekken",
         "speaker": "Luidspreker",
         "microphone": "Microfoon",
         "mic_level": "Invoerniveau",
