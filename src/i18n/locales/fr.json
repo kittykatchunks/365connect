@@ -581,8 +581,7 @@
         "current_version": "Version Actuelle",
         "previous_version": "Version Précédente"
     },
-    "systemCodes": {
-        "toggle_auto_answer": "Basculer Réponse Automatique",
+    "systemCodes": {        "voicemail": "Messagerie Vocale",        "toggle_auto_answer": "Basculer Réponse Automatique",
         "agent_login_out": "Connexion/Déconnexion Agent",
         "toggle_queue": "Basculer File Dedans/Dehors",
         "toggle_queue_specific": "Basculer File ${queue}",

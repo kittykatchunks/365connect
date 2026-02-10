@@ -632,6 +632,7 @@
         "current_version": "Nykyinen versio"
     },
     "systemCodes": {
+        "voicemail": "Vastaaja",
         "toggle_auto_answer": "Vaihda Automaattivastaus",
         "agent_login_out": "Agentin Sisään/Uloskirjaus",
         "toggle_queue": "Vaihda Jono Sisään/Ulos",

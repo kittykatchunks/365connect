@@ -576,6 +576,7 @@
         "previous_version": "Vorige Versie"
     },
     "systemCodes": {
+        "voicemail": "Voicemail",
         "toggle_auto_answer": "Automatisch Antwoord Schakelen",
         "agent_login_out": "Agent Inloggen/Uitloggen",
         "toggle_queue": "Wachtrij In/Uit Schakelen",

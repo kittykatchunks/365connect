@@ -9,9 +9,14 @@ import { isVerboseLoggingEnabled } from './index';
  * Translates system feature codes (starting with *) to friendly names
  * @param dialedNumber - The dialed number/code to translate
  * @param t - Translation function from i18next
+ * @param voicemailCode - Optional voicemail access code from settings
  * @returns Friendly name if it's a system code, otherwise returns the original number
  */
-export function translateSystemCode(dialedNumber: string, t?: (key: string, fallback: string) => string): string {
+export function translateSystemCode(
+  dialedNumber: string, 
+  t?: (key: string, fallback: string) => string,
+  voicemailCode?: string
+): string {
   const verboseLogging = isVerboseLoggingEnabled();
   
   // Only process codes starting with *
@@ -24,9 +29,13 @@ export function translateSystemCode(dialedNumber: string, t?: (key: string, fall
   
   let translatedName: string | null = null;
   
+  // Check if this is the voicemail access code
+  if (voicemailCode && dialedNumber === voicemailCode) {
+    translatedName = translate('systemCodes.voicemail', 'Voicemail');
+  }
   // Match specific patterns
   // *63*X - Pause with reason X (where X is any digit)
-  if (/^\*63\*\d+$/.test(dialedNumber)) {
+  else if (/^\*63\*\d+$/.test(dialedNumber)) {
     const reason = dialedNumber.substring(4); // Extract the reason digit(s)
     translatedName = translate('systemCodes.pause_with_reason', `Pause (Reason ${reason})`).replace('${reason}', reason);
   }

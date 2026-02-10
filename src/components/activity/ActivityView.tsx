@@ -8,7 +8,7 @@ import { History, PhoneIncoming, PhoneOutgoing, PhoneMissed, Trash2, Phone } fro
 import { PanelHeader } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { ConfirmModal } from '@/components/modals';
-import { useCallHistoryStore, useAppStore } from '@/stores';
+import { useCallHistoryStore, useAppStore, useSettingsStore } from '@/stores';
 import { useSIP } from '@/hooks';
 import { formatCallDuration, type CallRecord } from '@/types/callHistory';
 import { isVerboseLoggingEnabled, translateSystemCode } from '@/utils';
@@ -26,6 +26,7 @@ export function ActivityView() {
   const groupedRecords = useCallHistoryStore((state) => state.groupedRecords);
   const totalCalls = useCallHistoryStore((state) => state.totalCalls);
   const clearHistory = useCallHistoryStore((state) => state.clearHistory);
+  const vmAccessCode = useSettingsStore((state) => state.settings.connection.vmAccess);
   
   // Local UI state
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
@@ -136,9 +137,9 @@ export function ActivityView() {
                       
                       <div className="activity-info">
                         <div className="activity-number">
-                          {record.name || (translateSystemCode(record.number, t) !== record.number ? translateSystemCode(record.number, t) : record.number)}
+                          {record.name || (translateSystemCode(record.number, t, vmAccessCode) !== record.number ? translateSystemCode(record.number, t, vmAccessCode) : record.number)}
                         </div>
-                        {(record.name || translateSystemCode(record.number, t) !== record.number) && (
+                        {(record.name || translateSystemCode(record.number, t, vmAccessCode) !== record.number) && (
                           <div className="activity-secondary">{record.number}</div>
                         )}
                         <div className="activity-meta">

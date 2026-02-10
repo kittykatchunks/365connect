@@ -572,8 +572,7 @@
         "current_version": "Versión Actual",
         "previous_version": "Versión Anterior"
     },
-    "systemCodes": {
-        "toggle_auto_answer": "Alternar Respuesta Automática",
+    "systemCodes": {        "voicemail": "Correo de Voz",        "toggle_auto_answer": "Alternar Respuesta Automática",
         "agent_login_out": "Iniciar/Cerrar Sesión de Agente",
         "toggle_queue": "Alternar Cola Dentro/Fuera",
         "toggle_queue_specific": "Alternar Cola ${queue}",
