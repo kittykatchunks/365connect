@@ -3,13 +3,13 @@
 // ============================================
 
 /**
- * Normalize a phone number by removing non-digit characters (except +)
+ * Normalize a phone number by removing non-digit characters (except +, *, #)
  * @param number - The phone number to normalize
  * @param convertPlusTo00 - If true, replace + prefix with 00
  */
 export function normalizePhoneNumber(number: string, convertPlusTo00: boolean = false): string {
-  // First, remove all non-digit characters except +
-  let normalized = number.replace(/[^0-9+]/g, '');
+  // First, remove all non-digit characters except +, *, # (valid DTMF tones)
+  let normalized = number.replace(/[^0-9+*#]/g, '');
   
   // If convertPlusTo00 is enabled and number starts with +, replace it with 00
   if (convertPlusTo00 && normalized.startsWith('+')) {

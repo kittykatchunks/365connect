@@ -366,7 +366,7 @@ export function DialView() {
     if (dialValue.trim()) {
       setIsDialing(true);
       try {
-        // Sanitize phone number - remove any invalid characters (keep only digits and +)
+        // Sanitize phone number - remove any invalid characters (keep only digits, +, *, #)
         const originalValue = dialValue.trim();
         const sanitizedValue = normalizePhoneNumber(originalValue, convertPlusTo00);
         
@@ -375,7 +375,7 @@ export function DialView() {
             console.log('[DialView] 🧹 Sanitized phone number:', {
               original: originalValue,
               sanitized: sanitizedValue,
-              removed: originalValue.replace(/[0-9+]/g, ''),
+              removed: originalValue.replace(/[0-9+*#]/g, ''),
               convertPlusTo00Enabled: convertPlusTo00,
               plusConverted: convertPlusTo00 && originalValue.includes('+')
             });
