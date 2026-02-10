@@ -365,22 +365,14 @@ class BusylightBridgeServer {
                 return;
             }
             
-            // Map client action names to bridge action names (same as HTTP middleware)
-            let bridgeAction = action;
-            if (action === 'busylightdevices') {
-                bridgeAction = 'devices';
-            } else if (action === 'currentpresence') {
-                bridgeAction = 'status';
-            }
-            
             // Extract parameters (remove action from params)
             const params = { ...message };
             delete params.action;
             
-            console.log(`[BusylightBridge] Client WS → Bridge: ${action} → ${bridgeAction}`, params);
+            console.log(`[BusylightBridge] Client WS → Bridge: ${action}`, params);
             
             // Send to bridge and get response
-            const result = await this.sendToBridge(null, bridgeAction, params);
+            const result = await this.sendToBridge(null, action, params);
             
             // Send response back to client
             const client = this.clients.get(clientId);
@@ -487,13 +479,6 @@ class BusylightBridgeServer {
                 let params = { ...queryParams };
                 delete params.action;
                 delete params.bridgeId; // Remove from params if present
-                
-                // Map Kuando HTTP API actions to bridge actions
-                if (action === 'busylightdevices') {
-                    action = 'devices';
-                } else if (action === 'currentpresence') {
-                    action = 'status';
-                }
                 
                 // Map HTTP endpoints to actions
                 if (!action) {
