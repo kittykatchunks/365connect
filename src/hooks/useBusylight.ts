@@ -416,7 +416,16 @@ export function useBusylight(options: UseBusylightOptions = {}) {
     if (!isConnected) return false;
     
     try {
-      console.log('[Busylight] Testing connection...');
+      const verboseLogging = isVerboseLoggingEnabled();
+      if (verboseLogging) {
+        console.log('[Busylight] Testing connection...');
+      }
+      
+      // Save the current state to restore after test
+      const originalState = currentState;
+      if (verboseLogging) {
+        console.log('[Busylight] Saved original state:', originalState);
+      }
       
       // Fetch device info during test
       await fetchDeviceInfo();
@@ -432,14 +441,21 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         await new Promise(r => setTimeout(r, 300));
       }
       
-      await turnOff();
-      console.log('[Busylight] Test completed');
+      // Restore original state instead of turning off
+      if (verboseLogging) {
+        console.log('[Busylight] Restoring original state:', originalState);
+      }
+      await applyState(originalState);
+      
+      if (verboseLogging) {
+        console.log('[Busylight] Test completed, state restored');
+      }
       return true;
     } catch (error) {
       console.error('[Busylight] Test failed:', error);
       return false;
     }
-  }, [isConnected, setLight, turnOff, fetchDeviceInfo]);
+  }, [isConnected, currentState, setLight, applyState, fetchDeviceInfo]);
   
   // Initialize connection
   const initialize = useCallback(async () => {
