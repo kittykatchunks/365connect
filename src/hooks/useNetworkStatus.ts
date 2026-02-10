@@ -153,7 +153,7 @@ export function useNetworkStatus() {
   }, []);
 
   // Handle reconnection when network is restored (notifications handled by SIPContext)
-  const handleNetworkRestoration = useCallback(() => {
+  const handleNetworkRestoration = useCallback(async () => {
     const verboseLogging = isVerboseLoggingEnabled();
     
     // Only update state if we were previously offline
@@ -171,7 +171,35 @@ export function useNetworkStatus() {
     
     wasOnlineRef.current = true;
     
-    // Auto-reconnection is now handled by SIPContext network monitoring
+    // Check if SIP is disconnected and trigger reconnection if needed
+    // This handles cases where network was down long enough for SIP.js to exhaust retry attempts
+    if (!sipService.isRegistered()) {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] 🔄 SIP is not registered after network restoration');
+        console.log('[useNetworkStatus] 🔄 Triggering manual reconnection attempt (SIP.js may have exhausted retries)');
+      }
+      
+      // Wait a moment for network to stabilize
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        // Attempt to register with retry logic
+        await sipService.registerWithRetry(3, 2000);
+        
+        if (verboseLogging) {
+          console.log('[useNetworkStatus] ✅ Manual reconnection successful after network restoration');
+        }
+      } catch (error) {
+        if (verboseLogging) {
+          console.error('[useNetworkStatus] ❌ Manual reconnection failed after network restoration:', error);
+        }
+        // Don't throw - SIP.js may still recover automatically
+      }
+    } else {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] ℹ️ SIP already registered, no manual reconnection needed');
+      }
+    }
   }, []);
 
   useEffect(() => {
