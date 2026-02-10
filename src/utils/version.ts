@@ -16,7 +16,7 @@ function isVerboseLoggingEnabled(): boolean {
 
 // Import version from VERSION file (will be bundled)
 // This should be updated in VERSION file for each release
-const CURRENT_VERSION = '0.7.79'; // This should match VERSION file
+const CURRENT_VERSION = '0.7.80'; // This should match VERSION file
 
 // Storage key for last known version
 const LAST_VERSION_KEY = 'LastKnownVersion';

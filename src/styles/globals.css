@@ -2084,26 +2084,18 @@ a {
   flex-shrink: 0;
 }
 
-/* Call control buttons - consistent background and hover for mute, hold, transfer */
+/* Call control buttons - consistent background and hover for mute, hold, transfer, keypad */
 .mute-btn,
 .hold-btn,
-.transfer-btn {
-  background-color: var(--surface-color-hover);
-  color: var(--text-color);
-}
-
-.mute-btn:hover:not(:disabled),
-.hold-btn:hover:not(:disabled),
-.transfer-btn:hover:not(:disabled) {
-  background-color: var(--border-color);
-}
-
-/* Keypad toggle button - matches dialpad styling */
+.transfer-btn,
 .keypad-toggle-btn {
   background-color: var(--surface-color);
   color: var(--text-color);
 }
 
+.mute-btn:hover:not(:disabled),
+.hold-btn:hover:not(:disabled),
+.transfer-btn:hover:not(:disabled),
 .keypad-toggle-btn:hover:not(:disabled) {
   background-color: var(--surface-color-hover);
 }
