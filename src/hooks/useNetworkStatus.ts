@@ -10,25 +10,108 @@ import { sipService } from '@/services/SIPService';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 /**
- * Check if we have actual internet connectivity by attempting a fetch
+ * Commercial-grade internet connectivity check
+ * Uses multiple redundant methods for reliability:
+ * 1. Quick checks against multiple well-known reliable endpoints (parallel)
+ * 2. WebRTC STUN check (tests connectivity needed for SIP calls)
+ * 
  * This is more reliable than just checking navigator.onLine
  */
 async function checkInternetConnectivity(): Promise<boolean> {
-  try {
-    // Use our own server's health check endpoint
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+  const verboseLogging = isVerboseLoggingEnabled();
+  
+  // Method 1: Quick checks against multiple reliable endpoints (parallel)
+  const quickCheck = async (): Promise<boolean> => {
+    const endpoints = [
+      'https://www.google.com/generate_204',        // Google's connectivity check (HTTP 204)
+      'https://1.1.1.1/cdn-cgi/trace',             // Cloudflare (99.99% uptime)
+      'https://dns.google/resolve?name=google.com&type=A' // Google DNS over HTTPS
+    ];
     
-    await fetch('/api/health', {
-      cache: 'no-cache',
-      signal: controller.signal
+    try {
+      // Race condition - first successful response wins
+      const checks = endpoints.map(url =>
+        fetch(url, {
+          method: 'HEAD',
+          cache: 'no-cache',
+          signal: AbortSignal.timeout(2000)
+        })
+        .then(() => true)
+        .catch(() => false)
+      );
+      
+      // Use Promise.race with Promise.any pattern for fastest response
+      const result = await Promise.race([
+        Promise.any(checks.map(p => p.then(success => success ? Promise.resolve(true) : Promise.reject()))),
+        new Promise<boolean>(resolve => setTimeout(() => resolve(false), 3000))
+      ]).catch(() => false);
+      
+      return result;
+    } catch {
+      return false;
+    }
+  };
+  
+  // Method 2: STUN check for WebRTC connectivity (what matters for SIP)
+  const stunCheck = async (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      try {
+        const pc = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        });
+        
+        const timeout = setTimeout(() => {
+          pc.close();
+          resolve(false);
+        }, 4000);
+        
+        let resolved = false;
+        pc.onicecandidate = (event) => {
+          // srflx (server reflexive) means we successfully reached STUN server
+          if (!resolved && event.candidate?.type === 'srflx') {
+            resolved = true;
+            clearTimeout(timeout);
+            pc.close();
+            resolve(true);
+          }
+        };
+        
+        pc.createDataChannel('connectivity-check');
+        pc.createOffer()
+          .then(offer => pc.setLocalDescription(offer))
+          .catch(() => {
+            clearTimeout(timeout);
+            pc.close();
+            resolve(false);
+          });
+      } catch {
+        resolve(false);
+      }
     });
-    
-    clearTimeout(timeoutId);
+  };
+  
+  // Try quick check first (faster, uses standard HTTP)
+  const hasQuickConnection = await quickCheck();
+  
+  if (hasQuickConnection) {
+    if (verboseLogging) {
+      console.log('[useNetworkStatus] ✅ Quick connectivity check passed (external endpoints reachable)');
+    }
     return true;
-  } catch {
-    return false;
   }
+  
+  // Quick check failed, try STUN (more relevant for WebRTC/SIP)
+  if (verboseLogging) {
+    console.log('[useNetworkStatus] ⚠️ Quick check failed, trying STUN connectivity check...');
+  }
+  
+  const hasSTUNConnection = await stunCheck();
+  
+  if (verboseLogging) {
+    console.log(`[useNetworkStatus] ${hasSTUNConnection ? '✅' : '❌'} STUN connectivity check ${hasSTUNConnection ? 'passed' : 'failed'} (WebRTC/SIP connectivity ${hasSTUNConnection ? 'available' : 'unavailable'})`);
+  }
+  
+  return hasSTUNConnection;
 }
 
 export function useNetworkStatus() {
