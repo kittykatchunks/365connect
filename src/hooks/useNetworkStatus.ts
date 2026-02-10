@@ -11,8 +11,8 @@ import { isVerboseLoggingEnabled } from '@/utils';
 
 /**
  * Commercial-grade internet connectivity check
- * Uses multiple redundant methods for reliability:
- * 1. Quick checks against multiple well-known reliable endpoints (parallel)
+ * Uses CORS-free methods for reliability:
+ * 1. Image loading test (no CORS restrictions)
  * 2. WebRTC STUN check (tests connectivity needed for SIP calls)
  * 
  * This is more reliable than just checking navigator.onLine
@@ -20,33 +20,42 @@ import { isVerboseLoggingEnabled } from '@/utils';
 async function checkInternetConnectivity(): Promise<boolean> {
   const verboseLogging = isVerboseLoggingEnabled();
   
-  // Method 1: Quick checks against multiple reliable endpoints (parallel)
-  const quickCheck = async (): Promise<boolean> => {
-    const endpoints = [
-      'https://www.google.com/generate_204',        // Google's connectivity check (HTTP 204)
-      'https://1.1.1.1/cdn-cgi/trace',             // Cloudflare (99.99% uptime)
-      'https://dns.google/resolve?name=google.com&type=A' // Google DNS over HTTPS
+  // Method 1: Image loading test (CORS-free, uses different CDN endpoints)
+  const imageCheck = async (): Promise<boolean> => {
+    // Use popular CDN/image endpoints that allow cross-origin loading
+    const imageUrls = [
+      'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png',
+      'https://www.gstatic.com/generate_204',  // Google static content
+      'https://cloudflare.com/favicon.ico',     // Cloudflare favicon
     ];
     
+    const testImage = (url: string): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const timeout = setTimeout(() => {
+          img.src = ''; // Cancel loading
+          resolve(false);
+        }, 2000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          resolve(true);
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          resolve(false);
+        };
+        
+        // Add timestamp to bypass cache
+        img.src = url + '?t=' + Date.now();
+      });
+    };
+    
     try {
-      // Race condition - first successful response wins
-      const checks = endpoints.map(url =>
-        fetch(url, {
-          method: 'HEAD',
-          cache: 'no-cache',
-          signal: AbortSignal.timeout(2000)
-        })
-        .then(() => true)
-        .catch(() => false)
-      );
-      
-      // Use Promise.race with Promise.any pattern for fastest response
-      const result = await Promise.race([
-        Promise.any(checks.map(p => p.then(success => success ? Promise.resolve(true) : Promise.reject()))),
-        new Promise<boolean>(resolve => setTimeout(() => resolve(false), 3000))
-      ]).catch(() => false);
-      
-      return result;
+      // Test all images in parallel, return true if any succeeds
+      const results = await Promise.all(imageUrls.map(url => testImage(url)));
+      return results.some(success => success === true);
     } catch {
       return false;
     }
@@ -57,13 +66,17 @@ async function checkInternetConnectivity(): Promise<boolean> {
     return new Promise((resolve) => {
       try {
         const pc = new RTCPeerConnection({
-          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ]
         });
         
         const timeout = setTimeout(() => {
           pc.close();
           resolve(false);
-        }, 4000);
+        }, 5000);
         
         let resolved = false;
         pc.onicecandidate = (event) => {
@@ -73,6 +86,17 @@ async function checkInternetConnectivity(): Promise<boolean> {
             clearTimeout(timeout);
             pc.close();
             resolve(true);
+          }
+        };
+        
+        // Also check for host candidates (local network)
+        pc.onicegatheringstatechange = () => {
+          if (!resolved && pc.iceGatheringState === 'complete') {
+            // If we got here without srflx, check if we at least have host candidates
+            // This means local network is working, which is a good sign
+            clearTimeout(timeout);
+            pc.close();
+            resolve(false); // But still return false as we need internet, not just LAN
           }
         };
         
@@ -90,19 +114,19 @@ async function checkInternetConnectivity(): Promise<boolean> {
     });
   };
   
-  // Try quick check first (faster, uses standard HTTP)
-  const hasQuickConnection = await quickCheck();
+  // Try image check first (faster, CORS-free)
+  const hasImageConnection = await imageCheck();
   
-  if (hasQuickConnection) {
+  if (hasImageConnection) {
     if (verboseLogging) {
-      console.log('[useNetworkStatus] ✅ Quick connectivity check passed (external endpoints reachable)');
+      console.log('[useNetworkStatus] ✅ Image connectivity check passed (CDN endpoints reachable)');
     }
     return true;
   }
   
-  // Quick check failed, try STUN (more relevant for WebRTC/SIP)
+  // Image check failed, try STUN (more relevant for WebRTC/SIP anyway)
   if (verboseLogging) {
-    console.log('[useNetworkStatus] ⚠️ Quick check failed, trying STUN connectivity check...');
+    console.log('[useNetworkStatus] ⚠️ Image check failed, trying STUN connectivity check...');
   }
   
   const hasSTUNConnection = await stunCheck();
