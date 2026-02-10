@@ -521,14 +521,24 @@ export function useBusylight(options: UseBusylightOptions = {}) {
         console.log('[Busylight] Bridge reconnected');
         setIsConnected(true);
         setRetryCount(0);
+        
+        // Fetch device info on reconnection
+        await fetchDeviceInfo();
+        
         await applyState(currentState);
       } else if (wasConnected && !connected) {
         console.warn('[Busylight] Bridge disconnected');
         setIsConnected(false);
         stopSlowFlash();
+      } else if (wasConnected && connected && !deviceInfo) {
+        // If connected but no device info, try fetching it
+        if (verboseLogging) {
+          console.log('[Busylight] Connected but missing device info - fetching...');
+        }
+        await fetchDeviceInfo();
       }
     }, monitoringInterval);
-  }, [enabled, checkConnection, isConnected, monitoringInterval, applyState, currentState, stopSlowFlash]);
+  }, [enabled, checkConnection, isConnected, monitoringInterval, applyState, currentState, stopSlowFlash, fetchDeviceInfo, deviceInfo]);
   
   // Stop monitoring
   const stopMonitoring = useCallback(() => {
