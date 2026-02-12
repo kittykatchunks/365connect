@@ -555,6 +555,8 @@
         "network_restored_reconnecting": "Conexão de rede restaurada. Reconectando ao servidor Phantom...",
         "network_offline": "Rede Offline",
         "network_offline_message": "Conexão à Internet perdida. Tentará reconectar quando estiver online.",
+        "unexpected_disconnection": "Desconexão Inesperada",
+        "unexpected_disconnection_wait_message": "Por favor, aguarde, tentaremos a reconexão automática em instantes",
         "incoming_call_with_name": "Chamada Recebida: {{name}}",
         "incoming_call_with_number": "Chamada Recebida: {{number}}",
         "tap_to_answer": "Toque para atender"

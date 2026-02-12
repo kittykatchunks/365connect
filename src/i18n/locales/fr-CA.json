@@ -563,7 +563,10 @@
         "reconnection_failed_after_network": "Échec de reconnexion après restauration du réseau. Veuillez réessayer manuellement.",
         "network_restored_reconnecting": "Connexion réseau restaurée. Reconnexion au serveur Phantom...",
         "network_offline": "Réseau Hors Ligne",
-        "network_offline_message": "Connexion Internet perdue. Tentera de se reconnecter lorsqu'il sera en ligne.",        "incoming_call_with_name": "Appel Entrant : {{name}}",
+        "network_offline_message": "Connexion Internet perdue. Tentera de se reconnecter lorsqu'il sera en ligne.",
+        "unexpected_disconnection": "Déconnexion Inattendue",
+        "unexpected_disconnection_wait_message": "Veuillez patienter, nous tenterons une reconnexion automatique très prochainement",
+        "incoming_call_with_name": "Appel Entrant : {{name}}",
         "incoming_call_with_number": "Appel Entrant : {{number}}",
         "tap_to_answer": "Appuyez pour répondre"
     },

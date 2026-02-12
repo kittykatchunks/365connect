@@ -557,7 +557,10 @@
         "reconnection_failed_after_network": "Kan niet opnieuw verbinden na netwerkherstel. Probeer het handmatig.",
         "network_restored_reconnecting": "Netwerkverbinding hersteld. Opnieuw verbinden met Phantom-server...",
         "network_offline": "Netwerk Offline",
-        "network_offline_message": "Internetverbinding verloren. Zal proberen opnieuw te verbinden wanneer online.",        "incoming_call_with_name": "Inkomend Gesprek: {{name}}",
+        "network_offline_message": "Internetverbinding verloren. Zal proberen opnieuw te verbinden wanneer online.",
+        "unexpected_disconnection": "Onverwachte Verbindingsonderbreking",
+        "unexpected_disconnection_wait_message": "Even geduld, we proberen zeer binnenkort automatisch opnieuw verbinding te maken",
+        "incoming_call_with_name": "Inkomend Gesprek: {{name}}",
         "incoming_call_with_number": "Inkomend Gesprek: {{number}}",
         "tap_to_answer": "Tik om te beantwoorden"
     },

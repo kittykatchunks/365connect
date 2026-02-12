@@ -109,6 +109,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
+  const networkLossTimestampRef = useRef<number | null>(null);
+  const delayedReconnectTimerRef = useRef<number | null>(null);
+  const delayedReconnectNoticeShownRef = useRef<boolean>(false);
   
   // Sync contacts with SIP service for caller ID lookup
   useEffect(() => {
@@ -1097,67 +1100,163 @@ export function SIPProvider({ children }: SIPProviderProps) {
   // Network status monitoring - auto-reconnect when network comes back online
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();
+    const minimumReconnectDelayMs = 35000;
+
+    const attemptReconnectAfterNetworkRestoration = async (): Promise<void> => {
+      const isDisconnected = serviceRef.current.getTransportState() === 'disconnected';
+      const hasConfig = sipConfig &&
+                       settings.connection.phantomId &&
+                       settings.connection.username &&
+                       settings.connection.password;
+
+      if (!isDisconnected || !hasConfig) {
+        if (verboseLogging) {
+          console.log('[SIPContext] ℹ️ Skipping auto-reconnect:', {
+            isDisconnected,
+            hasConfig: !!hasConfig,
+            reason: !isDisconnected ? 'Already connected' : 'No valid config'
+          });
+        }
+        return;
+      }
+
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔄 Starting auto-reconnect after network restoration');
+      }
+
+      addNotification({
+        type: 'info',
+        title: t('network_restored', 'Network Restored'),
+        message: t('network_restored_reconnecting', 'Network connection restored. Reconnecting to Phantom server...'),
+        duration: 5000
+      });
+
+      try {
+        const config = buildSIPConfig({
+          phantomId: sipConfig.phantomId,
+          username: sipConfig.username,
+          password: sipConfig.password
+        });
+
+        await serviceRef.current.createUserAgent(config);
+
+        if (verboseLogging) {
+          console.log('[SIPContext] ✅ Auto-reconnection after network restoration successful');
+        }
+      } catch (error) {
+        console.error('[SIPContext] ❌ Auto-reconnection after network restoration failed:', error);
+
+        addNotification({
+          type: 'error',
+          title: t('reconnection_failed', 'Reconnection Failed'),
+          message: t('reconnection_failed_after_network', 'Failed to reconnect after network restoration. Please try manually.'),
+          duration: 6000
+        });
+      }
+    };
     
     const handleOnline = async () => {
       if (verboseLogging) {
         console.log('[SIPContext] 🌐 Network connection restored (online event)');
       }
-      
-      // Check if we should auto-reconnect
-      const isDisconnected = serviceRef.current.getTransportState() === 'disconnected';
-      const hasConfig = sipConfig && 
-                       settings.connection.phantomId && 
-                       settings.connection.username && 
-                       settings.connection.password;
-      
-      if (isDisconnected && hasConfig) {
+
+      if (delayedReconnectTimerRef.current) {
+        window.clearTimeout(delayedReconnectTimerRef.current);
+        delayedReconnectTimerRef.current = null;
+
         if (verboseLogging) {
-          console.log('[SIPContext] 🔄 Auto-reconnecting after network restoration...');
+          console.log('[SIPContext] 🧹 Cleared pending delayed reconnect timer before scheduling a new one');
         }
-        
-        addNotification({
-          type: 'info',
-          title: t('network_restored', 'Network Restored'),
-          message: t('network_restored_reconnecting', 'Network connection restored. Reconnecting to Phantom server...'),
-          duration: 5000
-        });
-        
-        try {
-          const config = buildSIPConfig({
-            phantomId: sipConfig.phantomId,
-            username: sipConfig.username,
-            password: sipConfig.password
-          });
-          
-          await serviceRef.current.createUserAgent(config);
-          
-          if (verboseLogging) {
-            console.log('[SIPContext] ✅ Auto-reconnection after network restoration successful');
-          }
-        } catch (error) {
-          console.error('[SIPContext] ❌ Auto-reconnection after network restoration failed:', error);
-          
-          addNotification({
-            type: 'error',
-            title: t('reconnection_failed', 'Reconnection Failed'),
-            message: t('reconnection_failed_after_network', 'Failed to reconnect after network restoration. Please try manually.'),
-            duration: 6000
-          });
-        }
-      } else if (verboseLogging) {
-        console.log('[SIPContext] ℹ️ Skipping auto-reconnect:', {
-          isDisconnected,
-          hasConfig: !!hasConfig,
-          reason: !isDisconnected ? 'Already connected' : 'No valid config'
+      }
+
+      const now = Date.now();
+      const lossTimestamp = networkLossTimestampRef.current;
+      const elapsedSinceLoss = lossTimestamp ? now - lossTimestamp : minimumReconnectDelayMs;
+      const remainingDelayMs = Math.max(0, minimumReconnectDelayMs - elapsedSinceLoss);
+
+      if (verboseLogging) {
+        console.log('[SIPContext] ⏱️ Online reconnect delay calculation:', {
+          lossTimestamp,
+          elapsedSinceLossMs: elapsedSinceLoss,
+          minimumReconnectDelayMs,
+          remainingDelayMs
         });
       }
+
+      if (remainingDelayMs > 0) {
+        if (!delayedReconnectNoticeShownRef.current) {
+          addNotification({
+            type: 'warning',
+            title: t('unexpected_disconnection', 'Unexpected Disconnection'),
+            message: t('unexpected_disconnection_wait_message', 'Please wait, we will attempt automatic reconnection very shortly'),
+            duration: 7000
+          });
+          delayedReconnectNoticeShownRef.current = true;
+
+          if (verboseLogging) {
+            console.log('[SIPContext] 🔔 Displayed delayed reconnect notice for early network restoration');
+          }
+        } else if (verboseLogging) {
+          console.log('[SIPContext] ℹ️ Delayed reconnect notice already shown for current outage window');
+        }
+
+        delayedReconnectTimerRef.current = window.setTimeout(() => {
+          delayedReconnectTimerRef.current = null;
+          networkLossTimestampRef.current = null;
+          delayedReconnectNoticeShownRef.current = false;
+
+          if (verboseLogging) {
+            console.log('[SIPContext] ⏱️ Minimum reconnect delay elapsed, attempting reconnect now');
+          }
+
+          attemptReconnectAfterNetworkRestoration().catch((error) => {
+            console.error('[SIPContext] ❌ Delayed reconnect execution failed:', error);
+          });
+        }, remainingDelayMs);
+
+        if (verboseLogging) {
+          console.log('[SIPContext] ⏳ Delaying reconnect attempt after online event:', {
+            remainingDelayMs,
+            reconnectAtIso: new Date(now + remainingDelayMs).toISOString()
+          });
+        }
+
+        return;
+      }
+
+      networkLossTimestampRef.current = null;
+      delayedReconnectNoticeShownRef.current = false;
+      await attemptReconnectAfterNetworkRestoration();
     };
     
     const handleOffline = () => {
-      if (verboseLogging) {
-        console.log('[SIPContext] ⚠️ Network connection lost (offline event)');
+      const offlineTimestamp = Date.now();
+
+      if (networkLossTimestampRef.current === null) {
+        networkLossTimestampRef.current = offlineTimestamp;
+        delayedReconnectNoticeShownRef.current = false;
+
+        if (verboseLogging) {
+          console.log('[SIPContext] ⚠️ Network connection lost (offline event) - tracking initial loss timestamp', {
+            lossTimestamp: networkLossTimestampRef.current,
+            minimumReconnectDelayMs
+          });
+        }
+      } else if (verboseLogging) {
+        console.log('[SIPContext] ⚠️ Additional offline event received, keeping original loss timestamp', {
+          existingLossTimestamp: networkLossTimestampRef.current
+        });
       }
-      
+
+      if (delayedReconnectTimerRef.current) {
+        window.clearTimeout(delayedReconnectTimerRef.current);
+        delayedReconnectTimerRef.current = null;
+
+        if (verboseLogging) {
+          console.log('[SIPContext] 🧹 Cleared pending delayed reconnect timer due to new offline event');
+        }
+      }
+
       addNotification({
         type: 'warning',
         title: t('network_offline', 'Network Offline'),
@@ -1176,7 +1275,19 @@ export function SIPProvider({ children }: SIPProviderProps) {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      
+
+      if (delayedReconnectTimerRef.current) {
+        window.clearTimeout(delayedReconnectTimerRef.current);
+        delayedReconnectTimerRef.current = null;
+
+        if (verboseLogging) {
+          console.log('[SIPContext] 🧹 Cleared delayed reconnect timer during network monitoring cleanup');
+        }
+      }
+
+      networkLossTimestampRef.current = null;
+      delayedReconnectNoticeShownRef.current = false;
+
       if (verboseLogging) {
         console.log('[SIPContext] 🌐 Network status monitoring disabled');
       }

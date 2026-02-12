@@ -632,6 +632,8 @@
         "network_restored_reconnecting": "Network connection restored. Reconnecting to Phantom server...",
         "network_offline": "Network Offline",
         "network_offline_message": "Internet connection lost. Will attempt to reconnect when online.",
+        "unexpected_disconnection": "Unexpected Disconnection",
+        "unexpected_disconnection_wait_message": "Please wait, we will attempt automatic reconnection very shortly",
         "incoming_call_with_name": "Incoming Call: {{name}}",
         "incoming_call_with_number": "Incoming Call: {{number}}",
         "tap_to_answer": "Tap to answer"

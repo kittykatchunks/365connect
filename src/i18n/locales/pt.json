@@ -555,7 +555,10 @@
         "reconnection_failed_after_network": "Falha ao reconectar após restauração da rede. Por favor, tente manualmente.",
         "network_restored_reconnecting": "Conexão de rede restaurada. A reconectar ao servidor Phantom...",
         "network_offline": "Rede Offline",
-        "network_offline_message": "Conexão à Internet perdida. Tentará reconectar quando estiver online.",        "incoming_call_with_name": "Chamada Recebida: {{name}}",
+        "network_offline_message": "Conexão à Internet perdida. Tentará reconectar quando estiver online.",
+        "unexpected_disconnection": "Desconexão Inesperada",
+        "unexpected_disconnection_wait_message": "Por favor, aguarde, tentaremos a reconexão automática muito em breve",
+        "incoming_call_with_name": "Chamada Recebida: {{name}}",
         "incoming_call_with_number": "Chamada Recebida: {{number}}",
         "tap_to_answer": "Toque para atender"
     },

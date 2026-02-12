@@ -614,6 +614,8 @@
         "network_restored_reconnecting": "Verkkoyhteys palautettu. Yhdistetään Phantom-palvelimeen...",
         "network_offline": "Verkko Offline-tilassa",
         "network_offline_message": "Internet-yhteys katkennut. Yritetään yhdistää uudelleen, kun verkko on saatavilla.",
+        "unexpected_disconnection": "Odottamaton Katkeaminen",
+        "unexpected_disconnection_wait_message": "Odota hetki, yritämme automaattista uudelleenyhdistämistä pian",
         "incoming_call_with_name": "Saapuva puhelu: {{name}}",
         "incoming_call_with_number": "Saapuva puhelu: {{number}}",
         "tap_to_answer": "Napauta vastataksesi"
