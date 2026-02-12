@@ -19,8 +19,123 @@ import { buildSIPConfig } from '@/types/sip';
  * 
  * This is more reliable than just checking navigator.onLine
  */
-async function checkInternetConnectivity(): Promise<boolean> {
+async function checkInternetConnectivity(sipServerUrl?: string | null): Promise<boolean> {
   const verboseLogging = isVerboseLoggingEnabled();
+
+  if (verboseLogging) {
+    console.log('[useNetworkStatus] 🔎 checkInternetConnectivity called', {
+      sipServerUrl,
+      hasUserAgent: sipService.hasUserAgent(),
+      isRegistered: sipService.isRegistered(),
+      transportState: sipService.getTransportState()
+    });
+  }
+
+  const existingTransportState = sipService.getTransportState();
+  if (existingTransportState === 'connected') {
+    if (verboseLogging) {
+      console.log('[useNetworkStatus] ✅ Connectivity check passed (SIP transport is already connected)');
+    }
+    return true;
+  }
+
+  const sipServerConnectivityCheck = async (serverUrl: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const timeoutMs = 5000;
+      let resolved = false;
+
+      const finalize = (result: boolean) => {
+        if (resolved) {
+          return;
+        }
+        resolved = true;
+        resolve(result);
+      };
+
+      try {
+        const testSocket = new WebSocket(serverUrl, 'sip');
+
+        const timeout = window.setTimeout(() => {
+          if (verboseLogging) {
+            console.warn('[useNetworkStatus] ⚠️ SIP server connectivity check timed out', {
+              serverUrl,
+              timeoutMs
+            });
+          }
+
+          try {
+            testSocket.close();
+          } catch {
+            // No-op
+          }
+
+          finalize(false);
+        }, timeoutMs);
+
+        testSocket.onopen = () => {
+          window.clearTimeout(timeout);
+
+          if (verboseLogging) {
+            console.log('[useNetworkStatus] ✅ SIP server connectivity check passed', { serverUrl });
+          }
+
+          try {
+            testSocket.close();
+          } catch {
+            // No-op
+          }
+
+          finalize(true);
+        };
+
+        testSocket.onerror = (error) => {
+          window.clearTimeout(timeout);
+
+          if (verboseLogging) {
+            console.warn('[useNetworkStatus] ❌ SIP server connectivity check failed', {
+              serverUrl,
+              error
+            });
+          }
+
+          finalize(false);
+        };
+
+        testSocket.onclose = () => {
+          window.clearTimeout(timeout);
+
+          if (!resolved) {
+            if (verboseLogging) {
+              console.warn('[useNetworkStatus] ⚠️ SIP server connectivity socket closed before open', {
+                serverUrl
+              });
+            }
+            finalize(false);
+          }
+        };
+      } catch (error) {
+        if (verboseLogging) {
+          console.warn('[useNetworkStatus] ❌ SIP server connectivity check threw exception', {
+            serverUrl,
+            error
+          });
+        }
+        finalize(false);
+      }
+    });
+  };
+
+  // Priority 1: Check configured SIP server reachability.
+  // This supports deployments where only VPN-routed SIP traffic is allowed.
+  if (sipServerUrl) {
+    const canReachSipServer = await sipServerConnectivityCheck(sipServerUrl);
+    if (canReachSipServer) {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] ✅ Connectivity check passed (configured SIP server reachable)');
+      }
+      return true;
+    }
+  }
   
   // Method 1: Image loading test (CORS-free, uses different CDN endpoints)
   const imageCheck = async (): Promise<boolean> => {
@@ -122,6 +237,7 @@ async function checkInternetConnectivity(): Promise<boolean> {
   if (hasImageConnection) {
     if (verboseLogging) {
       console.log('[useNetworkStatus] ✅ Image connectivity check passed (CDN endpoints reachable)');
+      console.log('[useNetworkStatus] ✅ checkInternetConnectivity result: true');
     }
     return true;
   }
@@ -135,6 +251,10 @@ async function checkInternetConnectivity(): Promise<boolean> {
   
   if (verboseLogging) {
     console.log(`[useNetworkStatus] ${hasSTUNConnection ? '✅' : '❌'} STUN connectivity check ${hasSTUNConnection ? 'passed' : 'failed'} (WebRTC/SIP connectivity ${hasSTUNConnection ? 'available' : 'unavailable'})`);
+    console.log('[useNetworkStatus] ✅ checkInternetConnectivity completed', {
+      result: hasSTUNConnection,
+      sipServerUrl
+    });
   }
   
   return hasSTUNConnection;
@@ -144,6 +264,42 @@ export function useNetworkStatus() {
   const wasOnlineRef = useRef(navigator.onLine);
   const checkIntervalRef = useRef<number | null>(null);
   const sipConfig = useSettingsStore((state) => state.sipConfig);
+
+  const getCurrentSipServerUrl = useCallback((): string | null => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    const serviceConfig = sipService.getConfig();
+    if (serviceConfig?.server) {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] Using SIP server URL from SIPService config', {
+          server: serviceConfig.server
+        });
+      }
+      return serviceConfig.server;
+    }
+
+    if (!sipConfig?.phantomId || !sipConfig?.username || !sipConfig?.password) {
+      if (verboseLogging) {
+        console.log('[useNetworkStatus] No valid SIP config available to build server URL');
+      }
+      return null;
+    }
+
+    const builtConfig = buildSIPConfig({
+      phantomId: sipConfig.phantomId,
+      username: sipConfig.username,
+      password: sipConfig.password
+    });
+
+    if (verboseLogging) {
+      console.log('[useNetworkStatus] Built SIP server URL from settings store', {
+        phantomId: sipConfig.phantomId,
+        server: builtConfig.server
+      });
+    }
+
+    return builtConfig.server;
+  }, [sipConfig]);
   
   // Disconnect SIP service when network is lost (notifications handled by SIPContext)
   const handleNetworkLoss = useCallback(async () => {
@@ -263,7 +419,7 @@ export function useNetworkStatus() {
       }
       
       // Verify we actually have internet connectivity
-      const hasInternet = await checkInternetConnectivity();
+      const hasInternet = await checkInternetConnectivity(getCurrentSipServerUrl());
       
       if (hasInternet) {
         handleNetworkRestoration();
@@ -292,7 +448,7 @@ export function useNetworkStatus() {
       const verboseLogging = isVerboseLoggingEnabled();
       
       if (navigator.onLine && wasOnlineRef.current) {
-        const hasInternet = await checkInternetConnectivity();
+        const hasInternet = await checkInternetConnectivity(getCurrentSipServerUrl());
         
         if (!hasInternet && wasOnlineRef.current) {
           if (verboseLogging) {
@@ -304,7 +460,7 @@ export function useNetworkStatus() {
         // We thought we were offline but browser says we're online, verify
         // Only check if we've been offline for at least 5 seconds to avoid duplicate notifications
         // from the online event handler
-        const hasInternet = await checkInternetConnectivity();
+        const hasInternet = await checkInternetConnectivity(getCurrentSipServerUrl());
         
         if (hasInternet) {
           if (verboseLogging) {
@@ -328,7 +484,7 @@ export function useNetworkStatus() {
         clearInterval(checkIntervalRef.current);
       }
     };
-  }, [handleNetworkLoss, handleNetworkRestoration]);
+  }, [handleNetworkLoss, handleNetworkRestoration, getCurrentSipServerUrl]);
   
   return {
     isOnline: navigator.onLine
