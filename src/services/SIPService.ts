@@ -399,6 +399,10 @@ export class SIPService {
         }
         
         await this.register();
+
+        // register() resolving means request was accepted by SIP.js, not necessarily
+        // that server registration has completed. Wait for real state transition.
+        await this.waitForRegistrationCompletion(15000);
         
         // Reset attempt counter on success (removed - not used)
         
@@ -435,6 +439,70 @@ export class SIPService {
         await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
+  }
+
+  private waitForRegistrationCompletion(timeoutMs: number): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (this.registrationState === 'registered') {
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ waitForRegistrationCompletion immediate success (already registered)');
+      }
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      let settled = false;
+
+      const finish = (result: 'resolve' | 'reject', error?: Error) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        unsubscribe();
+        window.clearTimeout(timeoutId);
+
+        if (result === 'resolve') {
+          resolve();
+          return;
+        }
+
+        reject(error ?? new Error('[SIPService] Registration completion failed'));
+      };
+
+      const unsubscribe = this.on('registrationStateChanged', (state) => {
+        if (verboseLogging) {
+          console.log('[SIPService] ⏳ waitForRegistrationCompletion state update:', {
+            state,
+            timeoutMs
+          });
+        }
+
+        if (state === 'registered') {
+          finish('resolve');
+          return;
+        }
+
+        if (state === 'failed') {
+          finish('reject', new Error('[SIPService] Registration entered failed state while waiting for completion'));
+        }
+      });
+
+      const timeoutId = window.setTimeout(() => {
+        if (verboseLogging) {
+          console.warn('[SIPService] ⏰ waitForRegistrationCompletion timed out', {
+            timeoutMs,
+            registrationState: this.registrationState,
+            transportState: this.transportState
+          });
+        }
+
+        finish(
+          'reject',
+          new Error(`[SIPService] Registration did not reach 'registered' state within ${timeoutMs}ms`)
+        );
+      }, timeoutMs);
+    });
   }
 
   private isRegisterRequestInProgressError(error: unknown): boolean {
