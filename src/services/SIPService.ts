@@ -125,6 +125,8 @@ export class SIPService {
   
   // Reconnection tracking
   private wasReconnecting = false;
+  private reconnectDebugTraceId: string | null = null;
+  private reconnectDebugStartedAt: number | null = null;
   
   // Track intentional disconnection to avoid cleanup loops
   private isIntentionalDisconnect = false;
@@ -142,6 +144,19 @@ export class SIPService {
     this.handleTransportConnect = this.handleTransportConnect.bind(this);
     this.handleTransportDisconnect = this.handleTransportDisconnect.bind(this);
     this.handleIncomingInvitation = this.handleIncomingInvitation.bind(this);
+  }
+
+  private ensureReconnectDebugTraceId(): string {
+    if (!this.reconnectDebugTraceId) {
+      this.reconnectDebugTraceId = `reconnect_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      this.reconnectDebugStartedAt = Date.now();
+    }
+    return this.reconnectDebugTraceId;
+  }
+
+  private clearReconnectDebugTrace(): void {
+    this.reconnectDebugTraceId = null;
+    this.reconnectDebugStartedAt = null;
   }
 
   // ==================== Event System ====================
@@ -390,11 +405,30 @@ export class SIPService {
    */
   async registerWithRetry(maxAttempts = 3, initialDelayMs = 2000): Promise<void> {
     const verboseLogging = isVerboseLoggingEnabled();
+    const traceId = this.reconnectDebugTraceId;
+    const traceDurationMs = this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null;
+
+    if (verboseLogging && traceId) {
+      console.log('[SIPService][ReconnectTrace] 🧪 Starting registerWithRetry phase', {
+        traceId,
+        maxAttempts,
+        initialDelayMs,
+        traceDurationMs
+      });
+    }
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         if (verboseLogging) {
           console.log(`[SIPService] 📝 Registration attempt ${attempt}/${maxAttempts}`);
+          if (traceId) {
+            console.log('[SIPService][ReconnectTrace] 🧪 Register attempt started', {
+              traceId,
+              attempt,
+              maxAttempts,
+              traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+            });
+          }
         }
         
         await this.register();
@@ -403,6 +437,17 @@ export class SIPService {
         
         if (verboseLogging) {
           console.log('[SIPService] ✅ Registration successful');
+          if (traceId) {
+            console.log('[SIPService][ReconnectTrace] 🧪 Register phase succeeded', {
+              traceId,
+              attempt,
+              traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+            });
+          }
+        }
+
+        if (traceId) {
+          this.clearReconnectDebugTrace();
         }
         
         return; // Success - exit retry loop
@@ -410,6 +455,15 @@ export class SIPService {
       } catch (error) {
         if (verboseLogging) {
           console.warn(`[SIPService] ⚠️ Registration attempt ${attempt}/${maxAttempts} failed:`, error);
+          if (traceId) {
+            console.warn('[SIPService][ReconnectTrace] 🧪 Register attempt failed', {
+              traceId,
+              attempt,
+              maxAttempts,
+              error: error instanceof Error ? error.message : String(error),
+              traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+            });
+          }
         }
         
         // If this was the last attempt, emit failure and throw
@@ -418,6 +472,17 @@ export class SIPService {
           
           if (verboseLogging) {
             console.error(`[SIPService] ❌ Registration failed after ${maxAttempts} attempts`);
+            if (traceId) {
+              console.error('[SIPService][ReconnectTrace] 🧪 Reconnect trace ended in registration failure', {
+                traceId,
+                maxAttempts,
+                traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+              });
+            }
+          }
+
+          if (traceId) {
+            this.clearReconnectDebugTrace();
           }
           
           throw error;
@@ -2638,9 +2703,18 @@ export class SIPService {
 
   private handleTransportConnect(): void {
     const verboseLogging = isVerboseLoggingEnabled();
+    const traceId = this.reconnectDebugTraceId;
     
     if (verboseLogging) {
       console.log('[SIPService] ✅ SIP WebSocket transport connected');
+      if (traceId) {
+        console.log('[SIPService][ReconnectTrace] 🧪 Transport connected', {
+          traceId,
+          traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null,
+          wasReconnecting: this.wasReconnecting,
+          registrationState: this.registrationState
+        });
+      }
     }
     
     this.transportState = 'connected';
@@ -2654,11 +2728,25 @@ export class SIPService {
       
       if (verboseLogging) {
         console.log('[SIPService] Reconnection successful, emitting reconnectionSuccess event');
+        if (traceId) {
+          console.log('[SIPService][ReconnectTrace] 🧪 Reconnection success event emitted', {
+            traceId,
+            traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+          });
+        }
       }
     }
 
     // Auto-start registration with retry logic
     if (this.userAgent && this.registrationState !== 'registered' && this.registrationState !== 'registering') {
+      if (verboseLogging && traceId) {
+        console.log('[SIPService][ReconnectTrace] 🧪 Scheduling registerWithRetry after transport connect', {
+          traceId,
+          delayMs: 500,
+          traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+        });
+      }
+
       setTimeout(() => {
         this.registerWithRetry(3, 2000).catch(error => {
           console.error('[SIPService] ❌ Auto-registration failed after retries:', error);
@@ -2669,6 +2757,7 @@ export class SIPService {
 
   private handleTransportDisconnect(error?: Error): void {
     const verboseLogging = isVerboseLoggingEnabled();
+    const traceId = error ? this.ensureReconnectDebugTraceId() : this.reconnectDebugTraceId;
     
     if (verboseLogging) {
       console.log('[SIPService] ❌ SIP WebSocket transport disconnected', error?.message);
@@ -2678,6 +2767,15 @@ export class SIPService {
         activeLines: this.activeLines.size,
         blfSubscriptions: this.blfSubscriptions.size
       });
+      if (traceId) {
+        console.warn('[SIPService][ReconnectTrace] 🧪 Transport disconnected', {
+          traceId,
+          error: error?.message || null,
+          traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null,
+          registrationState: this.registrationState,
+          transportState: this.transportState
+        });
+      }
     }
     
     // Stop keep-alive when disconnected
@@ -2755,7 +2853,15 @@ export class SIPService {
 
     if (verboseLogging) {
       console.log('[SIPService] 🔌 Stopping SIP service and cleaning up...');
+      if (this.reconnectDebugTraceId) {
+        console.log('[SIPService][ReconnectTrace] 🧪 Clearing reconnect trace due to manual/intentional stop', {
+          traceId: this.reconnectDebugTraceId,
+          traceDurationMs: this.reconnectDebugStartedAt ? Date.now() - this.reconnectDebugStartedAt : null
+        });
+      }
     }
+
+    this.clearReconnectDebugTrace();
 
     try {
       // 1. Terminate all active sessions with dispose
