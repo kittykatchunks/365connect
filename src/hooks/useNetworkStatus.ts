@@ -263,6 +263,7 @@ async function checkInternetConnectivity(sipServerUrl?: string | null): Promise<
 export function useNetworkStatus() {
   const wasOnlineRef = useRef(navigator.onLine);
   const checkIntervalRef = useRef<number | null>(null);
+  const manualReconnectInProgressRef = useRef(false);
   const sipConfig = useSettingsStore((state) => state.sipConfig);
 
   const getCurrentSipServerUrl = useCallback((): string | null => {
@@ -357,6 +358,24 @@ export function useNetworkStatus() {
     // Check if SIP is disconnected and trigger reconnection if needed
     // This handles cases where network was down long enough for SIP.js to exhaust retry attempts
     if (!sipService.isRegistered()) {
+      const currentRegistrationState = sipService.getRegistrationState();
+
+      if (currentRegistrationState === 'registering') {
+        if (verboseLogging) {
+          console.log('[useNetworkStatus] ℹ️ SIP registration already in progress; skipping manual network-restoration reconnect');
+        }
+        return;
+      }
+
+      if (manualReconnectInProgressRef.current) {
+        if (verboseLogging) {
+          console.log('[useNetworkStatus] ℹ️ Manual reconnect already in progress; skipping duplicate trigger');
+        }
+        return;
+      }
+
+      manualReconnectInProgressRef.current = true;
+
       if (verboseLogging) {
         console.log('[useNetworkStatus] 🔄 SIP is not registered after network restoration');
         console.log('[useNetworkStatus] 🔄 Triggering manual reconnection attempt (SIP.js may have exhausted retries)');
@@ -366,6 +385,14 @@ export function useNetworkStatus() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       try {
+        const registrationStateAfterDelay = sipService.getRegistrationState();
+        if (registrationStateAfterDelay === 'registering') {
+          if (verboseLogging) {
+            console.log('[useNetworkStatus] ℹ️ SIP registration started during stabilization delay; skipping manual registerWithRetry call');
+          }
+          return;
+        }
+
         if (!sipService.hasUserAgent()) {
           const serviceConfig = sipService.getConfig();
           const configToUse = serviceConfig && serviceConfig.server && serviceConfig.username && serviceConfig.password
@@ -401,6 +428,12 @@ export function useNetworkStatus() {
           console.error('[useNetworkStatus] ❌ Manual reconnection failed after network restoration:', error);
         }
         // Don't throw - SIP.js may still recover automatically
+      } finally {
+        manualReconnectInProgressRef.current = false;
+
+        if (verboseLogging) {
+          console.log('[useNetworkStatus] 🔓 Manual reconnection lock released');
+        }
       }
     } else {
       if (verboseLogging) {

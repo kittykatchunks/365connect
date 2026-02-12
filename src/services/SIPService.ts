@@ -437,18 +437,51 @@ export class SIPService {
     }
   }
 
+  private isRegisterRequestInProgressError(error: unknown): boolean {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const normalizedMessage = errorMessage.toLowerCase();
+    const isInProgress =
+      normalizedMessage.includes('register request already in progress') ||
+      normalizedMessage.includes('registration already in progress');
+
+    if (verboseLogging) {
+      console.log('[SIPService] 🔍 Evaluating registration error type:', {
+        errorMessage,
+        isRegisterRequestInProgressError: isInProgress
+      });
+    }
+
+    return isInProgress;
+  }
+
   async register(): Promise<void> {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (verboseLogging) {
+      console.log('[SIPService] 📝 register() called:', {
+        hasUserAgent: !!this.userAgent,
+        hasRegisterer: !!this.registerer,
+        registrationState: this.registrationState,
+        transportState: this.transportState
+      });
+    }
+
     if (!this.userAgent || !this.registerer) {
       throw new Error('UserAgent not created');
     }
 
     if (this.registrationState === 'registering') {
-      console.log('Registration already in progress');
+      if (verboseLogging) {
+        console.log('[SIPService] ℹ️ register() skipped - registration state already registering');
+      }
       return;
     }
 
     if (this.registrationState === 'registered') {
-      console.log('Already registered');
+      if (verboseLogging) {
+        console.log('[SIPService] ℹ️ register() skipped - already registered');
+      }
       return;
     }
 
@@ -458,7 +491,26 @@ export class SIPService {
       
       await this.registerer.register();
 
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ register() request accepted by SIP.js registerer');
+      }
+
     } catch (error) {
+      if (this.isRegisterRequestInProgressError(error)) {
+        if (verboseLogging) {
+          console.warn('[SIPService] ⚠️ register() received in-progress registration error; preserving registering state and waiting for existing REGISTER transaction to complete', {
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+
+        if (this.registrationState !== 'registering') {
+          this.registrationState = 'registering';
+          this.emit('registrationStateChanged', 'registering');
+        }
+
+        return;
+      }
+
       this.registrationState = 'failed';
       this.emit('registrationStateChanged', 'failed');
       this.emit('registrationFailed', { error: error as Error });
