@@ -8,6 +8,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { sipService } from '@/services/SIPService';
 import { isVerboseLoggingEnabled } from '@/utils';
+import { useSettingsStore } from '@/stores';
+import { buildSIPConfig } from '@/types/sip';
 
 /**
  * Commercial-grade internet connectivity check
@@ -141,6 +143,7 @@ async function checkInternetConnectivity(): Promise<boolean> {
 export function useNetworkStatus() {
   const wasOnlineRef = useRef(navigator.onLine);
   const checkIntervalRef = useRef<number | null>(null);
+  const sipConfig = useSettingsStore((state) => state.sipConfig);
   
   // Disconnect SIP service when network is lost (notifications handled by SIPContext)
   const handleNetworkLoss = useCallback(async () => {
@@ -207,6 +210,30 @@ export function useNetworkStatus() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       try {
+        if (!sipService.hasUserAgent()) {
+          const serviceConfig = sipService.getConfig();
+          const configToUse = serviceConfig && serviceConfig.server && serviceConfig.username && serviceConfig.password
+            ? serviceConfig
+            : (sipConfig ? buildSIPConfig({
+                phantomId: sipConfig.phantomId,
+                username: sipConfig.username,
+                password: sipConfig.password
+              }) : null);
+
+          if (!configToUse) {
+            if (verboseLogging) {
+              console.warn('[useNetworkStatus] ⚠️ Cannot recreate UserAgent - no valid SIP config available');
+            }
+            return;
+          }
+
+          if (verboseLogging) {
+            console.log('[useNetworkStatus] 🛠️ UserAgent missing, creating a new UserAgent before manual registration retry');
+          }
+
+          await sipService.createUserAgent(configToUse);
+        }
+
         // Attempt to register with retry logic
         await sipService.registerWithRetry(3, 2000);
         
@@ -224,7 +251,7 @@ export function useNetworkStatus() {
         console.log('[useNetworkStatus] ℹ️ SIP already registered, no manual reconnection needed');
       }
     }
-  }, []);
+  }, [sipConfig]);
 
   useEffect(() => {
     const verboseLogging = isVerboseLoggingEnabled();

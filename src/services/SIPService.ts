@@ -130,6 +130,7 @@ export class SIPService {
   
   // Track intentional disconnection to avoid cleanup loops
   private isIntentionalDisconnect = false;
+  private pendingIntentionalUnregistration = false;
   
   // Keep-alive mechanism
   private keepAliveTimer: number | null = null;
@@ -543,6 +544,7 @@ export class SIPService {
 
     // Mark this as an intentional disconnect
     this.isIntentionalDisconnect = true;
+    this.pendingIntentionalUnregistration = true;
 
     try {
       if (!skipUnsubscribe) {
@@ -567,9 +569,15 @@ export class SIPService {
 
     } catch (error) {
       console.error('SIP unregistration error:', error);
-    } finally {
-      // Reset flag after unregister completes
+      this.pendingIntentionalUnregistration = false;
       this.isIntentionalDisconnect = false;
+    } finally {
+      if (verboseLogging) {
+        console.log('[SIPService] 🧭 unregister() completed - waiting for unregistration callback before resetting intent flags', {
+          pendingIntentionalUnregistration: this.pendingIntentionalUnregistration,
+          isIntentionalDisconnect: this.isIntentionalDisconnect
+        });
+      }
     }
   }
 
@@ -593,10 +601,13 @@ export class SIPService {
 
   private handleUnregistration(): void {
     const verboseLogging = isVerboseLoggingEnabled();
+    const isExpectedUnregistration = this.isIntentionalDisconnect || this.pendingIntentionalUnregistration;
     
     if (verboseLogging) {
       console.log('[SIPService] 📝 Unregistration occurred', {
         isIntentional: this.isIntentionalDisconnect,
+        pendingIntentionalUnregistration: this.pendingIntentionalUnregistration,
+        isExpectedUnregistration,
         transportState: this.transportState,
         registrationState: this.registrationState,
         activeSessions: this.sessions.size
@@ -621,7 +632,7 @@ export class SIPService {
     
     // Only trigger full cleanup if this is an unexpected unregistration
     // Intentional disconnects already handle cleanup in stop() or unregister()
-    if (!this.isIntentionalDisconnect && this.transportState === 'connected') {
+    if (!isExpectedUnregistration && this.transportState === 'connected') {
       if (verboseLogging) {
         console.log('[SIPService] 🔌 Unexpected unregistration detected - triggering full disconnect cleanup');
         console.log('[SIPService] 🔌 This ensures UI shows disconnected when SIP registration is lost');
@@ -638,6 +649,15 @@ export class SIPService {
           console.error('[SIPService] ❌ Error during registration loss cleanup:', error);
         }
       });
+    }
+
+    if (isExpectedUnregistration) {
+      this.pendingIntentionalUnregistration = false;
+      this.isIntentionalDisconnect = false;
+
+      if (verboseLogging) {
+        console.log('[SIPService] ✅ Expected unregistration processed - intent flags reset');
+      }
     }
     
     this.emit('unregistered', undefined);
@@ -3030,6 +3050,10 @@ export class SIPService {
 
   getTransportState(): TransportState {
     return this.transportState;
+  }
+
+  hasUserAgent(): boolean {
+    return !!this.userAgent;
   }
 
   getStats(): CallStats {
