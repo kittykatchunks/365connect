@@ -2708,30 +2708,17 @@ export class SIPService {
     }
     this.blfSubscriptions.clear();
     
-    // When losing connection, perform the same cleanup as manual disconnect
-    // This ensures all sessions are terminated, subscriptions cleared, and state reset
-    // Only do this if it's not already an intentional disconnect (to avoid loops)
+    // Important: DO NOT call stop() on unexpected transport failures.
+    // stop() disposes UserAgent/registerer/transport and can race with SIP.js built-in
+    // reconnect attempts, causing post-reconnect registration failures.
+    // We keep the UserAgent alive here so SIP.js transport reconnection can proceed.
     if (!this.isIntentionalDisconnect) {
       if (verboseLogging) {
-        console.log('[SIPService] 🧹 Performing full disconnect cleanup to match manual disconnect behavior');
+        console.log('[SIPService] 🔄 Preserving UserAgent/registerer for SIP.js transport reconnection attempts');
+        console.log('[SIPService] ℹ️ Full stop() cleanup is reserved for manual disconnect only');
       }
-      
-      // Call stop() asynchronously to perform full cleanup
-      // Use Promise.resolve() to avoid blocking the disconnect handler
-      Promise.resolve().then(async () => {
-        try {
-          if (verboseLogging) {
-            console.log('[SIPService] 📞 Executing stop() to cleanup after connection loss');
-          }
-          await this.stop();
-        } catch (error) {
-          console.error('[SIPService] ❌ Error during connection loss cleanup:', error);
-        }
-      });
-    } else {
-      if (verboseLogging) {
-        console.log('[SIPService] ℹ️ Skipping cleanup as this is part of intentional disconnect');
-      }
+    } else if (verboseLogging) {
+      console.log('[SIPService] ℹ️ Intentional disconnect detected - stop() flow handles full cleanup');
     }
     
     // Mark as reconnecting if there was an error
