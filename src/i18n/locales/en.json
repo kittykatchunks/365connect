@@ -493,6 +493,8 @@
         "feature_alpha_disabled": "This feature is disabled in the alpha release.",
         "verbose_logging": "Verbose Logging",
         "verbose_logging_desc": "Enable detailed console logging for debugging",
+        "keep_alive_interval": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold": "Sequential no-response failures treated as SIP connection failure",
         "sip_messages_enabled": "Enable SIP Message Console Logging",
         "sip_messages_enabled_desc": "Enable SIP.js protocol message logging in the console for debugging SIP communication",
         "user_guide": "User Guide",
@@ -535,6 +537,13 @@
         "reset_all": "Reset All Settings",
         "reset_all_title": "Reset All Settings",
         "reset_all_message": "ALL settings will be lost, including connection settings. Are you really sure this is what you want to do? This cannot be undone."
+    },
+    "advanced_options": {
+        "title": "Advanced Options",
+        "subtitle": "Manual configuration for non-day-to-day operational settings.",
+        "sip_settings_title": "SIP Settings",
+        "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure"
     },
     "pwa": {
         "install": "Install App",

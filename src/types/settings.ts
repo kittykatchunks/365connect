@@ -44,6 +44,8 @@ export interface AdvancedSettings {
   sipMessagesEnabled: boolean;
   verboseLogging: boolean;
   iceGatheringTimeout: number;
+  keepAliveInterval: number;
+  keepAliveMaxSequentialFailures: number;
 }
 
 export interface BusylightSettings {
@@ -97,7 +99,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   advanced: {
     sipMessagesEnabled: false,
     verboseLogging: false,
-    iceGatheringTimeout: 5000
+    iceGatheringTimeout: 5000,
+    keepAliveInterval: 90,
+    keepAliveMaxSequentialFailures: 1
   },
   busylight: {
     enabled: false,

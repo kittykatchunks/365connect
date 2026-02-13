@@ -432,6 +432,8 @@
         "feature_alpha_disabled": "Cette fonction est désactivée dans la version alpha.",
         "verbose_logging": "Journal Détaillé",
         "verbose_logging_desc": "Activer journal détaillé console",
+        "keep_alive_interval": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold": "Sequential no-response failures treated as SIP connection failure",
         "sip_messages_enabled": "Activer Journal des Messages SIP dans la Console",
         "sip_messages_enabled_desc": "Activer la journalisation des messages du protocole SIP.js dans la console pour déboguer la communication SIP",
         "user_guide": "Guide de l'Utilisateur",
@@ -466,6 +468,13 @@
         "reset_all": "Réinitialiser Tous Paramètres",
         "reset_all_title": "Réinitialiser Tous Paramètres",
         "reset_all_message": "TOUS les paramètres seront perdus, y compris les paramètres de connexion. Êtes-vous vraiment sûr que c'est ce que vous voulez faire ? Cette action ne peut pas être annulée."
+    },
+    "advanced_options": {
+        "title": "Advanced Options",
+        "subtitle": "Manual configuration for non-day-to-day operational settings.",
+        "sip_settings_title": "SIP Settings",
+        "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure"
     },
     "pwa": {
         "install": "Installer App",

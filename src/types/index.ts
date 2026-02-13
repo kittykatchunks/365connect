@@ -48,4 +48,4 @@ export * from './queue-monitor';
 export * from './socketio';
 
 // Common types
-export type ViewType = 'dial' | 'contacts' | 'activity' | 'companyNumbers' | 'queueMonitor' | 'settings';
+export type ViewType = 'dial' | 'contacts' | 'activity' | 'companyNumbers' | 'queueMonitor' | 'settings' | 'advanced';

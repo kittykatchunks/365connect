@@ -431,6 +431,8 @@
         "feature_alpha_disabled": "Deze functie is uitgeschakeld in de alpha-versie.",
         "verbose_logging": "Uitgebreide Logging",
         "verbose_logging_desc": "Schakel gedetailleerde console logging in",
+        "keep_alive_interval": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold": "Sequential no-response failures treated as SIP connection failure",
         "sip_messages_enabled": "SIP Berichten Console Logging Inschakelen",
         "sip_messages_enabled_desc": "Schakel SIP.js protocol berichten logging in de console in voor het debuggen van SIP communicatie",
         "user_guide": "Gebruikershandleiding",
@@ -461,6 +463,13 @@
         "reset_all": "Alle Instellingen Resetten",
         "reset_all_title": "Alle Instellingen Resetten",
         "reset_all_message": "ALLE instellingen gaan verloren, inclusief verbindingsinstellingen. Weet u zeker dat dit is wat u wilt doen? Dit kan niet ongedaan worden gemaakt."
+    },
+    "advanced_options": {
+        "title": "Advanced Options",
+        "subtitle": "Manual configuration for non-day-to-day operational settings.",
+        "sip_settings_title": "SIP Settings",
+        "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure"
     },
     "pwa": {
         "install": "App Installeren",

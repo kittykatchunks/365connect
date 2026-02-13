@@ -28,6 +28,7 @@ export interface SIPConfig {
   
   // Keep-alive settings
   keepAliveInterval?: number;  // Interval in seconds, default 90
+  keepAliveMaxSequentialFailures?: number; // Number of sequential failures before considering connection failed
   
   // WebRTC settings
   bundlePolicy?: 'balanced' | 'max-bundle' | 'max-compat';
@@ -403,6 +404,8 @@ export function buildSIPConfig(phantom: PhantomConfig): SIPConfig {
     displayName: `${phantom.username}-365Connect`,
     // Default settings
     connectionTimeout: 20,
+    keepAliveInterval: 90,
+    keepAliveMaxSequentialFailures: 1,
     registerExpires: 300,
     iceGatheringTimeout: 500,
     iceStopWaitingOnServerReflexive: true,

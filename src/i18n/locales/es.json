@@ -430,6 +430,8 @@
         "busylight_future": "Esta función estará disponible en una versión futura.",
         "queues_future": "Esta función estará disponible en una versión futura.",        "feature_alpha_disabled": "Esta función está deshabilitada en la versión alfa.",        "verbose_logging": "Registro Detallado",
         "verbose_logging_desc": "Habilitar registro detallado en consola para depuración",
+        "keep_alive_interval": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold": "Sequential no-response failures treated as SIP connection failure",
         "sip_messages_enabled": "Habilitar Registro de Mensajes SIP en Consola",
         "sip_messages_enabled_desc": "Habilitar registro de mensajes del protocolo SIP.js en la consola para depurar comunicación SIP",
         "user_guide": "Guía de Usuario",
@@ -460,6 +462,13 @@
         "reset_all": "Restablecer Toda la Configuración",
         "reset_all_title": "Restablecer Toda la Configuración",
         "reset_all_message": "TODA la configuración se perderá, incluyendo la configuración de conexión. ¿Está realmente seguro de que esto es lo que quiere hacer? Esto no se puede deshacer."
+    },
+    "advanced_options": {
+        "title": "Advanced Options",
+        "subtitle": "Manual configuration for non-day-to-day operational settings.",
+        "sip_settings_title": "SIP Settings",
+        "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure"
     },
     "pwa": {
         "install": "Instalar Aplicación",

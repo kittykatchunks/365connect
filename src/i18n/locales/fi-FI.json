@@ -483,6 +483,8 @@
         "feature_alpha_disabled": "Tämä ominaisuus on poistettu käytöstä alfa-versiossa.",
         "verbose_logging": "Yksityiskohtainen kirjaus",
         "verbose_logging_desc": "Ota yksityiskohtainen konsolikirjaus käyttöön virheenkorjausta varten",
+        "keep_alive_interval": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold": "Sequential no-response failures treated as SIP connection failure",
         "sip_messages_enabled": "Ota SIP-viestien konsolikirjaus käyttöön",
         "sip_messages_enabled_desc": "Ota SIP.js-protokollaviestien kirjaus käyttöön konsolissa SIP-viestinnän virheenkorjausta varten",
         "user_guide": "Käyttöopas",
@@ -517,6 +519,13 @@
         "reset_all": "Nollaa kaikki asetukset",
         "reset_all_title": "Nollaa kaikki asetukset",
         "reset_all_message": "KAIKKI asetukset menetetään, mukaan lukien yhteysasetukset. Oletko todella varma, että tätä haluat? Tätä ei voi perua."
+    },
+    "advanced_options": {
+        "title": "Advanced Options",
+        "subtitle": "Manual configuration for non-day-to-day operational settings.",
+        "sip_settings_title": "SIP Settings",
+        "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
+        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure"
     },
     "pwa": {
         "install": "Asenna sovellus",

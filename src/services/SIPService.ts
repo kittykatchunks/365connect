@@ -129,6 +129,8 @@ export class SIPService {
   
   // Keep-alive mechanism
   private keepAliveTimer: number | null = null;
+  private keepAliveSequentialFailures = 0;
+  private keepAliveRequestInFlight = false;
   
   // Event system
   private listeners: Map<SIPEventType, Set<SIPEventCallback>> = new Map();
@@ -197,11 +199,31 @@ export class SIPService {
   // ==================== Configuration ====================
 
   configure(config: Partial<SIPConfig>): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const previousKeepAliveInterval = this.config?.keepAliveInterval;
+    const previousKeepAliveMaxSequentialFailures = this.config?.keepAliveMaxSequentialFailures;
+
     this.config = { ...this.config, ...config } as SIPConfig;
     
     // Auto-generate display name if not set
     if (this.config.username && !config.displayName) {
       this.config.displayName = `${this.config.username}-365Connect`;
+    }
+
+    const keepAliveSettingsChanged =
+      previousKeepAliveInterval !== this.config.keepAliveInterval ||
+      previousKeepAliveMaxSequentialFailures !== this.config.keepAliveMaxSequentialFailures;
+
+    if (keepAliveSettingsChanged && this.registrationState === 'registered') {
+      if (verboseLogging) {
+        console.log('[SIPService] 💓 Keep-alive config changed while registered, restarting keep-alive timer', {
+          previousKeepAliveInterval,
+          nextKeepAliveInterval: this.config.keepAliveInterval,
+          previousKeepAliveMaxSequentialFailures,
+          nextKeepAliveMaxSequentialFailures: this.config.keepAliveMaxSequentialFailures
+        });
+      }
+      this.startKeepAlive();
     }
     
     this.emit('configChanged', this.config);
@@ -513,6 +535,8 @@ export class SIPService {
     this.emit('registered', this.userAgent);
     
     // Start keep-alive mechanism after successful registration
+    this.keepAliveSequentialFailures = 0;
+    this.keepAliveRequestInFlight = false;
     this.startKeepAlive();
     
     // Start subscription health monitoring
@@ -2937,21 +2961,44 @@ export class SIPService {
     this.stopKeepAlive();
     
     // Get interval from config (default 90 seconds)
-    const intervalSeconds = this.config?.keepAliveInterval ?? 90;
+    const intervalSeconds = Math.max(1, Math.floor(this.config?.keepAliveInterval ?? 90));
     const intervalMs = intervalSeconds * 1000;
+    const maxSequentialFailures = Math.max(1, Math.floor(this.config?.keepAliveMaxSequentialFailures ?? 1));
+
+    // Reset state whenever keep-alive starts/restarts
+    this.keepAliveSequentialFailures = 0;
+    this.keepAliveRequestInFlight = false;
     
     if (verboseLogging) {
-      console.log(`[SIPService] 💓 Starting keep-alive mechanism (interval: ${intervalSeconds}s)`);
+      console.log('[SIPService] 💓 Starting keep-alive mechanism', {
+        intervalSeconds,
+        maxSequentialFailures
+      });
     }
     
     this.keepAliveTimer = window.setInterval(() => {
       if (this.userAgent && this.registrationState === 'registered') {
+        if (this.keepAliveRequestInFlight) {
+          if (verboseLogging) {
+            console.warn('[SIPService] 💓 Keep-alive OPTIONS skipped - previous keep-alive request still in flight');
+          }
+          return;
+        }
+
         try {
           // Send OPTIONS request to server
           const target = this.userAgent.configuration.uri;
+          const sentAt = Date.now();
+          const keepAliveTimeoutMs = Math.max(2000, Math.min(Math.floor(intervalMs * 0.8), 15000));
+
+          this.keepAliveRequestInFlight = true;
           
           if (verboseLogging) {
-            console.log('[SIPService] 💓 Sending keep-alive OPTIONS request to:', target.toString());
+            console.log('[SIPService] 💓 Sending keep-alive OPTIONS request', {
+              target: target.toString(),
+              keepAliveTimeoutMs,
+              currentSequentialFailures: this.keepAliveSequentialFailures
+            });
           }
           
           // Create OPTIONS request
@@ -2962,17 +3009,103 @@ export class SIPService {
             target,
             {}
           );
+
+          let settled = false;
+
+          const markFailure = (reason: string, statusCode?: number, reasonPhrase?: string) => {
+            if (settled) {
+              return;
+            }
+
+            settled = true;
+            this.keepAliveRequestInFlight = false;
+            this.keepAliveSequentialFailures += 1;
+
+            if (verboseLogging) {
+              console.warn('[SIPService] ❌ Keep-alive OPTIONS failed', {
+                reason,
+                statusCode,
+                reasonPhrase,
+                sequentialFailures: this.keepAliveSequentialFailures,
+                maxSequentialFailures
+              });
+            }
+
+            if (this.keepAliveSequentialFailures >= maxSequentialFailures) {
+              const failureError = new Error(
+                `SIP keep-alive failed ${this.keepAliveSequentialFailures} consecutive time(s)`
+              );
+
+              if (verboseLogging) {
+                console.error('[SIPService] ❌ Keep-alive failure threshold reached; marking SIP connection as failed', {
+                  maxSequentialFailures,
+                  reason,
+                  statusCode,
+                  reasonPhrase
+                });
+              }
+
+              this.handleTransportDisconnect(failureError);
+            }
+          };
+
+          const markSuccess = (statusCode: number | undefined, reasonPhrase?: string) => {
+            if (statusCode === 200) {
+              if (settled) {
+                return;
+              }
+
+              settled = true;
+              this.keepAliveRequestInFlight = false;
+
+              if (verboseLogging) {
+                console.log('[SIPService] ✅ Keep-alive OPTIONS acknowledged with 200 OK', {
+                  statusCode,
+                  reasonPhrase,
+                  elapsedMs: Date.now() - sentAt,
+                  previousSequentialFailures: this.keepAliveSequentialFailures
+                });
+              }
+              this.keepAliveSequentialFailures = 0;
+              return;
+            }
+
+            markFailure('non-200-response', statusCode, reasonPhrase);
+          };
+
+          const timeoutId = window.setTimeout(() => {
+            markFailure('timeout');
+          }, keepAliveTimeoutMs);
           
-          // Send the request - OutgoingRequest doesn't return a promise
-          // The request is sent but we don't wait for response
-          this.userAgent.userAgentCore.request(request);
+          this.userAgent.userAgentCore.request(request, {
+            onAccept: (response: unknown) => {
+              window.clearTimeout(timeoutId);
+              const message = (response as { message?: { statusCode?: number; reasonPhrase?: string } })?.message;
+              markSuccess(message?.statusCode, message?.reasonPhrase);
+            },
+            onReject: (response: unknown) => {
+              window.clearTimeout(timeoutId);
+              const message = (response as { message?: { statusCode?: number; reasonPhrase?: string } })?.message;
+              markFailure('rejected-response', message?.statusCode, message?.reasonPhrase);
+            }
+          });
           
           if (verboseLogging) {
-            console.log('[SIPService] ✅ Keep-alive OPTIONS request sent');
+            console.log('[SIPService] ✅ Keep-alive OPTIONS request sent (awaiting response)');
           }
           
         } catch (error: unknown) {
+          this.keepAliveRequestInFlight = false;
+          this.keepAliveSequentialFailures += 1;
+
           console.error('[SIPService] ❌ Failed to send keep-alive:', error);
+
+          if (this.keepAliveSequentialFailures >= maxSequentialFailures) {
+            const failureError = new Error(
+              `SIP keep-alive send failure threshold reached (${this.keepAliveSequentialFailures})`
+            );
+            this.handleTransportDisconnect(failureError);
+          }
         }
       } else {
         if (verboseLogging) {
@@ -2996,6 +3129,9 @@ export class SIPService {
       window.clearInterval(this.keepAliveTimer);
       this.keepAliveTimer = null;
     }
+
+    this.keepAliveRequestInFlight = false;
+    this.keepAliveSequentialFailures = 0;
   }
 }
 

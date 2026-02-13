@@ -45,6 +45,9 @@ const QueueMonitorView = lazy(() =>
 const SettingsView = lazy(() => 
   import('@/components/settings/SettingsView').then(m => ({ default: m.SettingsView }))
 );
+const AdvancedOptionsView = lazy(() =>
+  import('@/components/advanced/AdvancedOptionsView').then(m => ({ default: m.AdvancedOptionsView }))
+);
 
 // Fallback loading component for lazy views
 function ViewLoadingFallback() {
@@ -183,6 +186,18 @@ function ViewRouter() {
           </Suspense>
         </ViewErrorBoundary>
       );
+    case 'advanced':
+      return (
+        <ViewErrorBoundary
+          viewName="Advanced Options"
+          onRecover={() => handleViewRecover('Advanced Options')}
+          onError={(error) => handleViewError('Advanced Options', error)}
+        >
+          <Suspense fallback={<ViewLoadingFallback />}>
+            <AdvancedOptionsView />
+          </Suspense>
+        </ViewErrorBoundary>
+      );
     default:
       return (
         <ViewErrorBoundary 
@@ -304,6 +319,7 @@ function App() {
   const initialized = useAppStore((state) => state.initialized);
   const loading = useAppStore((state) => state.loading);
   const loadingMessage = useAppStore((state) => state.loadingMessage);
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
   const setInitialized = useAppStore((state) => state.setInitialized);
   const setLoading = useAppStore((state) => state.setLoading);
   const effectiveTheme = useUIStore((state) => state.effectiveTheme);
@@ -322,6 +338,26 @@ function App() {
     const cleanup = initializeThemeWatcher();
     return cleanup;
   }, []);
+
+  // Support direct URL access to advanced options page
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/';
+
+    if (verboseLogging) {
+      console.log('[App] 🧭 Evaluating pathname for initial view routing:', {
+        pathname: window.location.pathname,
+        normalizedPath
+      });
+    }
+
+    if (normalizedPath === '/advanced') {
+      if (verboseLogging) {
+        console.log('[App] 🧭 Loading Advanced Options view from URL path');
+      }
+      setCurrentView('advanced');
+    }
+  }, [setCurrentView]);
   
   // Apply theme to document
   useEffect(() => {

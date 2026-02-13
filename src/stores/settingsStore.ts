@@ -48,6 +48,8 @@ interface SettingsState {
   // Actions - Advanced
   setSipMessagesEnabled: (enabled: boolean) => void;
   setVerboseLogging: (enabled: boolean) => void;
+  setKeepAliveInterval: (seconds: number) => void;
+  setKeepAliveMaxSequentialFailures: (count: number) => void;
   
   // Actions - Busylight
   setBusylightEnabled: (enabled: boolean) => void;
@@ -251,6 +253,48 @@ export const useSettingsStore = create<SettingsState>()(
         setVerboseLogging: (verboseLogging) => set((state) => ({
           settings: { ...state.settings, advanced: { ...state.settings.advanced, verboseLogging } }
         })),
+        setKeepAliveInterval: (seconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedSeconds = Math.max(1, Math.floor(seconds || 1));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting keep-alive interval (seconds):', {
+              input: seconds,
+              normalized: normalizedSeconds
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                keepAliveInterval: normalizedSeconds
+              }
+            }
+          }));
+        },
+        setKeepAliveMaxSequentialFailures: (count) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedCount = Math.max(1, Math.floor(count || 1));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting keep-alive max sequential failures:', {
+              input: count,
+              normalized: normalizedCount
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                keepAliveMaxSequentialFailures: normalizedCount
+              }
+            }
+          }));
+        },
         
         // Busylight actions
         setBusylightEnabled: (enabled) => set((state) => ({

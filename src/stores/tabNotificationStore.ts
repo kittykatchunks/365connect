@@ -22,7 +22,8 @@ const TAB_ALERT_PRIORITY: Record<ViewType, number> = {
   activity: 50,
   companyNumbers: 50,
   queueMonitor: 10,       // Lower - queue alerts
-  settings: 0
+  settings: 0,
+  advanced: 0
 };
 
 export interface TopBarAlertInfo {

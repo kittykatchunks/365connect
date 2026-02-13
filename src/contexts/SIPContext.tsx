@@ -117,6 +117,26 @@ export function SIPProvider({ children }: SIPProviderProps) {
     
     serviceRef.current.setContacts(contacts);
   }, [contacts]);
+
+  // Keep SIP advanced runtime config in sync
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (verboseLogging) {
+      console.log('[SIPContext] ⚙️ Syncing SIP advanced config to service', {
+        keepAliveInterval: settings.advanced.keepAliveInterval,
+        keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures
+      });
+    }
+
+    serviceRef.current.configure({
+      keepAliveInterval: settings.advanced.keepAliveInterval,
+      keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures
+    });
+  }, [
+    settings.advanced.keepAliveInterval,
+    settings.advanced.keepAliveMaxSequentialFailures
+  ]);
   
   // Request notification permissions on mount if enabled
   useEffect(() => {
@@ -710,6 +730,16 @@ export function SIPProvider({ children }: SIPProviderProps) {
         username: sipConfig.username,
         password: sipConfig.password
       });
+      config.keepAliveInterval = settings.advanced.keepAliveInterval;
+      config.keepAliveMaxSequentialFailures = settings.advanced.keepAliveMaxSequentialFailures;
+
+      if (verboseLogging) {
+        console.log('[SIPContext] ⚙️ Applying advanced keep-alive configuration on connect', {
+          keepAliveInterval: config.keepAliveInterval,
+          keepAliveMaxSequentialFailures: config.keepAliveMaxSequentialFailures
+        });
+      }
+
       await serviceRef.current.createUserAgent(config);
       await serviceRef.current.register();
 
