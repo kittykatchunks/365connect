@@ -25,10 +25,6 @@ export interface SIPConfig {
   
   // Connection settings
   connectionTimeout?: number;
-  reconnectionAttempts?: number;
-  reconnectionDelay?: number;
-  maxReconnectionAttempts?: number;
-  reconnectionTimeout?: number;
   
   // Keep-alive settings
   keepAliveInterval?: number;  // Interval in seconds, default 90
@@ -279,9 +275,6 @@ export type SIPEventType =
   | 'transportDisconnected'
   | 'transportError'
   | 'transportStateChanged'
-  | 'reconnectionAttempting'
-  | 'reconnectionSuccess'
-  | 'reconnectionFailed'
   // Registration events
   | 'registered'
   | 'unregistered'
@@ -338,9 +331,6 @@ export interface SIPEventMap {
   transportDisconnected: Error | null;
   transportError: Error;
   transportStateChanged: TransportState;
-  reconnectionAttempting: undefined;
-  reconnectionSuccess: undefined;
-  reconnectionFailed: { error?: Error; attempts?: number };
   registered: unknown;
   unregistered: undefined;
   registrationFailed: { response?: unknown; statusCode?: number; error?: Error };
@@ -413,8 +403,6 @@ export function buildSIPConfig(phantom: PhantomConfig): SIPConfig {
     displayName: `${phantom.username}-365Connect`,
     // Default settings
     connectionTimeout: 20,
-    reconnectionAttempts: 5,
-    reconnectionTimeout: 10,
     registerExpires: 300,
     iceGatheringTimeout: 500,
     iceStopWaitingOnServerReflexive: true,

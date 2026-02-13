@@ -123,9 +123,6 @@ export class SIPService {
     totalDuration: 0
   };
   
-  // Reconnection tracking
-  private wasReconnecting = false;
-  
   // Track intentional disconnection to avoid cleanup loops
   private isIntentionalDisconnect = false;
   private pendingIntentionalUnregistration = false;
@@ -285,10 +282,7 @@ export class SIPService {
         transportOptions: {
           server: serverUrl,
           traceSip: this.config.traceSip ?? false,
-          connectionTimeout: this.config.connectionTimeout ?? 20,
-          maxReconnectionAttempts: this.config.maxReconnectionAttempts ?? 10,
-          reconnectionDelay: this.config.reconnectionDelay ?? 2,
-          reconnectionTimeout: this.config.reconnectionTimeout ?? 30
+          connectionTimeout: this.config.connectionTimeout ?? 20
         },
         sessionDescriptionHandlerFactoryOptions: {
           peerConnectionConfiguration: {
@@ -382,128 +376,6 @@ export class SIPService {
   }
 
   // ==================== Registration Management ====================
-
-  /**
-   * Register with retry logic and exponential backoff
-   * @param maxAttempts Maximum number of registration attempts (default: 3)
-   * @param initialDelayMs Initial delay between attempts in milliseconds (default: 2000)
-   * @returns Promise that resolves when registration succeeds or rejects after all attempts fail
-   */
-  async registerWithRetry(maxAttempts = 3, initialDelayMs = 2000): Promise<void> {
-    const verboseLogging = isVerboseLoggingEnabled();
-    
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        if (verboseLogging) {
-          console.log(`[SIPService] 📝 Registration attempt ${attempt}/${maxAttempts}`);
-        }
-        
-        await this.register();
-
-        // register() resolving means request was accepted by SIP.js, not necessarily
-        // that server registration has completed. Wait for real state transition.
-        await this.waitForRegistrationCompletion(15000);
-        
-        // Reset attempt counter on success (removed - not used)
-        
-        if (verboseLogging) {
-          console.log('[SIPService] ✅ Registration successful');
-        }
-        
-        return; // Success - exit retry loop
-        
-      } catch (error) {
-        if (verboseLogging) {
-          console.warn(`[SIPService] ⚠️ Registration attempt ${attempt}/${maxAttempts} failed:`, error);
-        }
-        
-        // If this was the last attempt, emit failure and throw
-        if (attempt === maxAttempts) {
-          this.emit('reconnectionFailed', { error: error as Error, attempts: maxAttempts });
-          
-          if (verboseLogging) {
-            console.error(`[SIPService] ❌ Registration failed after ${maxAttempts} attempts`);
-          }
-          
-          throw error;
-        }
-        
-        // Calculate exponential backoff delay: 2s, 4s, 8s...
-        const delayMs = initialDelayMs * Math.pow(2, attempt - 1);
-        
-        if (verboseLogging) {
-          console.log(`[SIPService] ⏳ Waiting ${delayMs}ms before retry attempt ${attempt + 1}`);
-        }
-        
-        // Wait before next attempt
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-    }
-  }
-
-  private waitForRegistrationCompletion(timeoutMs: number): Promise<void> {
-    const verboseLogging = isVerboseLoggingEnabled();
-
-    if (this.registrationState === 'registered') {
-      if (verboseLogging) {
-        console.log('[SIPService] ✅ waitForRegistrationCompletion immediate success (already registered)');
-      }
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      let settled = false;
-
-      const finish = (result: 'resolve' | 'reject', error?: Error) => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        unsubscribe();
-        window.clearTimeout(timeoutId);
-
-        if (result === 'resolve') {
-          resolve();
-          return;
-        }
-
-        reject(error ?? new Error('[SIPService] Registration completion failed'));
-      };
-
-      const unsubscribe = this.on('registrationStateChanged', (state) => {
-        if (verboseLogging) {
-          console.log('[SIPService] ⏳ waitForRegistrationCompletion state update:', {
-            state,
-            timeoutMs
-          });
-        }
-
-        if (state === 'registered') {
-          finish('resolve');
-          return;
-        }
-
-        if (state === 'failed') {
-          finish('reject', new Error('[SIPService] Registration entered failed state while waiting for completion'));
-        }
-      });
-
-      const timeoutId = window.setTimeout(() => {
-        if (verboseLogging) {
-          console.warn('[SIPService] ⏰ waitForRegistrationCompletion timed out', {
-            timeoutMs,
-            registrationState: this.registrationState,
-            transportState: this.transportState
-          });
-        }
-
-        finish(
-          'reject',
-          new Error(`[SIPService] Registration did not reach 'registered' state within ${timeoutMs}ms`)
-        );
-      }, timeoutMs);
-    });
-  }
 
   private isRegisterRequestInProgressError(error: unknown): boolean {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -2786,25 +2658,6 @@ export class SIPService {
     this.transportState = 'connected';
     this.emit('transportStateChanged', 'connected');
     this.emit('transportConnected', undefined);
-    
-    // Show success toast if this was a reconnection
-    if (this.wasReconnecting) {
-      this.emit('reconnectionSuccess', undefined);
-      this.wasReconnecting = false;
-      
-      if (verboseLogging) {
-        console.log('[SIPService] Reconnection successful, emitting reconnectionSuccess event');
-      }
-    }
-
-    // Auto-start registration with retry logic
-    if (this.userAgent && this.registrationState !== 'registered' && this.registrationState !== 'registering') {
-      setTimeout(() => {
-        this.registerWithRetry(3, 2000).catch(error => {
-          console.error('[SIPService] ❌ Auto-registration failed after retries:', error);
-        });
-      }, 500);
-    }
   }
 
   private handleTransportDisconnect(error?: Error): void {
@@ -2848,27 +2701,10 @@ export class SIPService {
     }
     this.blfSubscriptions.clear();
     
-    // Important: DO NOT call stop() on unexpected transport failures.
-    // stop() disposes UserAgent/registerer/transport and can race with SIP.js built-in
-    // reconnect attempts, causing post-reconnect registration failures.
-    // We keep the UserAgent alive here so SIP.js transport reconnection can proceed.
-    if (!this.isIntentionalDisconnect) {
-      if (verboseLogging) {
-        console.log('[SIPService] 🔄 Preserving UserAgent/registerer for SIP.js transport reconnection attempts');
-        console.log('[SIPService] ℹ️ Full stop() cleanup is reserved for manual disconnect only');
-      }
+    if (!this.isIntentionalDisconnect && verboseLogging) {
+      console.log('[SIPService] ℹ️ Unexpected transport disconnect detected - awaiting manual reconnect action');
     } else if (verboseLogging) {
       console.log('[SIPService] ℹ️ Intentional disconnect detected - stop() flow handles full cleanup');
-    }
-    
-    // Mark as reconnecting if there was an error
-    if (error) {
-      this.wasReconnecting = true;
-      this.emit('reconnectionAttempting', undefined);
-      
-      if (verboseLogging) {
-        console.log('[SIPService] Transport disconnected with error, marked for reconnection');
-      }
     }
 
     if (error) {

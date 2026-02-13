@@ -225,17 +225,6 @@ export function AgentKeys({ className }: AgentKeysProps) {
     const verboseLogging = isVerboseLoggingEnabled();
     
     if (isRegistered && !hasCheckedStatus && sipUsername) {
-      // Check if auto-reconnect is already handling this
-      const autoReconnectHandling = sessionStorage.getItem('autoReconnectHandlingAgent') === 'true';
-      
-      if (autoReconnectHandling) {
-        if (verboseLogging) {
-          console.log('[AgentKeys] ⏭️ Skipping agent status check - auto-reconnect is handling it');
-        }
-        setHasCheckedStatus(true);
-        return;
-      }
-      
       if (verboseLogging) {
         console.log('[AgentKeys] 🔌 SIP registered, checking agent status from API');
       }
