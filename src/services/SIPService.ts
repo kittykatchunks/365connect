@@ -276,7 +276,11 @@ export class SIPService {
       }
       
       if (verboseLogging) {
-        console.log('[SIPService] 🔧 createUserAgent - SIP message logging:', enableSipLogging);
+        console.log('[SIPService] 🔧 createUserAgent - SIP message logging:', {
+          logBuiltinEnabled: enableSipLogging,
+          traceSip: this.config?.traceSip ?? enableSipLogging,
+          logConnectorEnabled: enableSipLogging
+        });
       }
 
       // Handle different server URL formats
@@ -300,10 +304,31 @@ export class SIPService {
         logConfiguration: false,
         logBuiltinEnabled: enableSipLogging,
         logLevel: enableSipLogging ? 'debug' : 'error',
+        logConnector: (level, category, label, content) => {
+          const runtimeVerboseLogging = isVerboseLoggingEnabled();
+          if (!runtimeVerboseLogging || !enableSipLogging) {
+            return;
+          }
+
+          const logContent = typeof content === 'string' ? content : '';
+          const sipStartLinePattern = /(^|\n)(SIP\/2\.0\s+\d{3}\s+.*|(?:INVITE|ACK|BYE|CANCEL|OPTIONS|REGISTER|MESSAGE|INFO|NOTIFY|SUBSCRIBE|REFER|PRACK|UPDATE|PUBLISH)\s+sip:[^\s]+\s+SIP\/2\.0)(\r?\n|$)/im;
+          const isRawSipMessage = sipStartLinePattern.test(logContent);
+
+          if (!isRawSipMessage) {
+            return;
+          }
+
+          console.log('[SIPService] 📡 Raw SIP message:', {
+            level,
+            category,
+            label,
+            content: logContent
+          });
+        },
         uri,
         transportOptions: {
           server: serverUrl,
-          traceSip: this.config.traceSip ?? false,
+          traceSip: this.config.traceSip ?? enableSipLogging,
           connectionTimeout: this.config.connectionTimeout ?? 20
         },
         sessionDescriptionHandlerFactoryOptions: {

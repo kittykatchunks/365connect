@@ -5,7 +5,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PanelHeader } from '@/components/layout';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Toggle } from '@/components/ui';
 import { useAppStore, useSettingsStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 
@@ -13,6 +13,7 @@ export function AdvancedOptionsView() {
   const { t } = useTranslation();
   const setCurrentView = useAppStore((state) => state.setCurrentView);
   const settings = useSettingsStore((state) => state.settings);
+  const setSipMessagesEnabled = useSettingsStore((state) => state.setSipMessagesEnabled);
   const setKeepAliveInterval = useSettingsStore((state) => state.setKeepAliveInterval);
   const setKeepAliveMaxSequentialFailures = useSettingsStore((state) => state.setKeepAliveMaxSequentialFailures);
   const setIceGatheringTimeout = useSettingsStore((state) => state.setIceGatheringTimeout);
@@ -102,6 +103,15 @@ export function AdvancedOptionsView() {
       <div className="settings-content" style={{ padding: 'var(--spacing-md)' }}>
         <div className="settings-group">
           <h3>{t('advanced_options.sip_settings_title', 'SIP Settings')}</h3>
+
+          <div className="setting-item">
+            <Toggle
+              label={t('settings.sip_messages_enabled', 'Enable SIP Message Console Logging')}
+              description={t('settings.sip_messages_enabled_desc', 'Enable SIP.js protocol message logging in the console for debugging SIP communication')}
+              checked={settings.advanced.sipMessagesEnabled}
+              onChange={(checked) => setSipMessagesEnabled(checked)}
+            />
+          </div>
 
           <div className="setting-item">
             <label htmlFor="advanced-keepalive-interval">

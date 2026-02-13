@@ -112,7 +112,6 @@ export function SettingsView() {
   const setRingtoneFile = useSettingsStore((state) => state.setRingtoneFile);
   const setInternalRingtoneFile = useSettingsStore((state) => state.setInternalRingtoneFile);
   const setVerboseLogging = useSettingsStore((state) => state.setVerboseLogging);
-  const setSipMessagesEnabled = useSettingsStore((state) => state.setSipMessagesEnabled);
   const setBusylightEnabled = useSettingsStore((state) => state.setBusylightEnabled);
   const resetSettings = useSettingsStore((state) => state.resetSettings);
   
@@ -1525,15 +1524,6 @@ export function SettingsView() {
                     description={t('settings.verbose_logging_desc', 'Enable detailed console logging for debugging')}
                     checked={settings.advanced.verboseLogging}
                     onChange={(checked) => setVerboseLogging(checked)}
-                  />
-                </div>
-                
-                <div className="setting-item">
-                  <Toggle
-                    label={t('settings.sip_messages_enabled', 'Enable SIP Message Console Logging')}
-                    description={t('settings.sip_messages_enabled_desc', 'Enable SIP.js protocol message logging in the console for debugging SIP communication')}
-                    checked={settings.advanced.sipMessagesEnabled}
-                    onChange={(checked) => setSipMessagesEnabled(checked)}
                   />
                 </div>
                 
