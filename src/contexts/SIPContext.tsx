@@ -126,19 +126,22 @@ export function SIPProvider({ children }: SIPProviderProps) {
       console.log('[SIPContext] ⚙️ Syncing SIP advanced config to service', {
         iceGatheringTimeout: settings.advanced.iceGatheringTimeout,
         keepAliveInterval: settings.advanced.keepAliveInterval,
-        keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures
+        keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures,
+        noAnswerTimeout: settings.advanced.noAnswerTimeout
       });
     }
 
     serviceRef.current.configure({
       iceGatheringTimeout: settings.advanced.iceGatheringTimeout,
       keepAliveInterval: settings.advanced.keepAliveInterval,
-      keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures
+      keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures,
+      noAnswerTimeout: settings.advanced.noAnswerTimeout
     });
   }, [
     settings.advanced.iceGatheringTimeout,
     settings.advanced.keepAliveInterval,
-    settings.advanced.keepAliveMaxSequentialFailures
+    settings.advanced.keepAliveMaxSequentialFailures,
+    settings.advanced.noAnswerTimeout
   ]);
   
   // Request notification permissions on mount if enabled
@@ -736,12 +739,14 @@ export function SIPProvider({ children }: SIPProviderProps) {
       config.iceGatheringTimeout = settings.advanced.iceGatheringTimeout;
       config.keepAliveInterval = settings.advanced.keepAliveInterval;
       config.keepAliveMaxSequentialFailures = settings.advanced.keepAliveMaxSequentialFailures;
+      config.noAnswerTimeout = settings.advanced.noAnswerTimeout;
 
       if (verboseLogging) {
         console.log('[SIPContext] ⚙️ Applying advanced keep-alive configuration on connect', {
           iceGatheringTimeout: config.iceGatheringTimeout,
           keepAliveInterval: config.keepAliveInterval,
-          keepAliveMaxSequentialFailures: config.keepAliveMaxSequentialFailures
+          keepAliveMaxSequentialFailures: config.keepAliveMaxSequentialFailures,
+          noAnswerTimeout: config.noAnswerTimeout
         });
       }
 
@@ -902,7 +907,8 @@ export function SIPProvider({ children }: SIPProviderProps) {
     sipConfig,
     settings.advanced.iceGatheringTimeout,
     settings.advanced.keepAliveInterval,
-    settings.advanced.keepAliveMaxSequentialFailures
+    settings.advanced.keepAliveMaxSequentialFailures,
+    settings.advanced.noAnswerTimeout
   ]); // Include advanced SIP settings since connect method uses them
 
   return (

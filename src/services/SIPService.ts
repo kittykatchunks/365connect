@@ -131,6 +131,7 @@ export class SIPService {
   private keepAliveTimer: number | null = null;
   private keepAliveSequentialFailures = 0;
   private keepAliveRequestInFlight = false;
+  private registrationRetryTimer: number | null = null;
   
   // Event system
   private listeners: Map<SIPEventType, Set<SIPEventCallback>> = new Map();
@@ -329,7 +330,7 @@ export class SIPService {
         transportOptions: {
           server: serverUrl,
           traceSip: this.config.traceSip ?? enableSipLogging,
-          connectionTimeout: this.config.connectionTimeout ?? 20
+          connectionTimeout: this.config.connectionTimeout ?? 12
         },
         sessionDescriptionHandlerFactoryOptions: {
           peerConnectionConfiguration: {
@@ -342,8 +343,9 @@ export class SIPService {
               { urls: 'stun:stun2.l.google.com:19302' }
             ]
           },
-          iceGatheringTimeout: this.config.iceGatheringTimeout ?? 500
+          iceGatheringTimeout: this.config.iceGatheringTimeout ?? 2000
         },
+        noAnswerTimeout: this.config.noAnswerTimeout ?? 120,
         contactName: this.config.contactName ?? this.config.username,
         displayName: this.config.displayName ?? `${this.config.username}-365Connect`,
         authorizationUsername: this.config.username,
@@ -360,6 +362,36 @@ export class SIPService {
 
       // Create UserAgent
       this.userAgent = new SIP.UserAgent(options);
+
+      this.userAgent.transport.stateChange.addListener((newState: SIP.TransportState) => {
+        const verboseLogging = isVerboseLoggingEnabled();
+        let mappedState: TransportState;
+
+        switch (newState) {
+          case SIP.TransportState.Connecting:
+            mappedState = 'connecting';
+            break;
+          case SIP.TransportState.Connected:
+            mappedState = 'connected';
+            break;
+          default:
+            mappedState = 'disconnected';
+            break;
+        }
+
+        if (verboseLogging) {
+          console.log('[SIPService] 🔌 Transport state changed (SIP.js state emitter):', {
+            sipTransportState: newState,
+            mappedTransportState: mappedState,
+            previousTransportState: this.transportState
+          });
+        }
+
+        if (this.transportState !== mappedState) {
+          this.transportState = mappedState;
+          this.emit('transportStateChanged', mappedState);
+        }
+      });
       
       // Create registerer
       await this.createRegisterer();
@@ -384,6 +416,7 @@ export class SIPService {
     const registererOptions: SIP.RegistererOptions = {
       logConfiguration: false,
       expires: this.config?.registerExpires ?? 300,
+      refreshFrequency: this.config?.registerRefreshFrequency ?? 85,
       extraHeaders: [],
       extraContactHeaderParams: []
     };
@@ -498,6 +531,17 @@ export class SIPService {
         return;
       }
 
+      const retryAfter = this.registerer?.retryAfter;
+      const shouldUseRetryAfter =
+        typeof retryAfter === 'number' &&
+        Number.isFinite(retryAfter) &&
+        retryAfter > 0 &&
+        this.transportState === 'connected';
+
+      if (shouldUseRetryAfter) {
+        this.scheduleRegisterRetryFromRetryAfter(retryAfter);
+      }
+
       this.registrationState = 'failed';
       this.emit('registrationStateChanged', 'failed');
       this.emit('registrationFailed', { error: error as Error });
@@ -519,6 +563,7 @@ export class SIPService {
     // Mark this as an intentional disconnect
     this.isIntentionalDisconnect = true;
     this.pendingIntentionalUnregistration = true;
+    this.clearScheduledRegisterRetry('unregister');
 
     try {
       if (!skipUnsubscribe) {
@@ -557,6 +602,7 @@ export class SIPService {
 
   private handleRegistrationSuccess(): void {
     console.log('Registration successful');
+    this.clearScheduledRegisterRetry('registration-success');
     this.emit('registered', this.userAgent);
     
     // Start keep-alive mechanism after successful registration
@@ -2724,6 +2770,7 @@ export class SIPService {
     
     // Stop keep-alive when disconnected
     this.stopKeepAlive();
+    this.clearScheduledRegisterRetry('transport-disconnect');
     
     this.transportState = 'disconnected';
     this.emit('transportStateChanged', 'disconnected');
@@ -2822,6 +2869,7 @@ export class SIPService {
       
       // 3. Stop keep-alive mechanism
       this.stopKeepAlive();
+      this.clearScheduledRegisterRetry('stop');
       
       // 4. Dispose all BLF subscriptions
       if (verboseLogging) {
@@ -2877,6 +2925,64 @@ export class SIPService {
   }
 
   // ==================== Utility Methods ====================
+
+  private clearScheduledRegisterRetry(reason: string): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (this.registrationRetryTimer !== null) {
+      if (verboseLogging) {
+        console.log('[SIPService] 🧹 Clearing scheduled register retry timer', { reason });
+      }
+
+      window.clearTimeout(this.registrationRetryTimer);
+      this.registrationRetryTimer = null;
+    }
+  }
+
+  private scheduleRegisterRetryFromRetryAfter(retryAfterSeconds: number): void {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const safeRetryAfterSeconds = Math.max(1, Math.floor(retryAfterSeconds));
+
+    this.clearScheduledRegisterRetry('reschedule-retry-after');
+
+    if (verboseLogging) {
+      console.warn('[SIPService] ⏱️ Scheduling registration retry from Retry-After header', {
+        retryAfterSeconds: safeRetryAfterSeconds,
+        transportState: this.transportState,
+        registrationState: this.registrationState
+      });
+    }
+
+    this.registrationRetryTimer = window.setTimeout(() => {
+      this.registrationRetryTimer = null;
+
+      const shouldRetry =
+        this.transportState === 'connected' &&
+        !this.isIntentionalDisconnect &&
+        this.registrationState !== 'registered' &&
+        !!this.registerer;
+
+      if (!shouldRetry) {
+        if (verboseLogging) {
+          console.log('[SIPService] ℹ️ Skipping scheduled registration retry (conditions no longer met)', {
+            transportState: this.transportState,
+            registrationState: this.registrationState,
+            isIntentionalDisconnect: this.isIntentionalDisconnect,
+            hasRegisterer: !!this.registerer
+          });
+        }
+        return;
+      }
+
+      if (verboseLogging) {
+        console.log('[SIPService] 🔁 Executing scheduled registration retry');
+      }
+
+      this.register().catch((retryError) => {
+        console.error('[SIPService] ❌ Scheduled registration retry failed:', retryError);
+      });
+    }, safeRetryAfterSeconds * 1000);
+  }
 
   private generateSessionId(): string {
     return `session_${++this.sessionCounter}_${Date.now()}`;
@@ -2985,10 +3091,10 @@ export class SIPService {
     // Stop any existing timer
     this.stopKeepAlive();
     
-    // Get interval from config (default 90 seconds)
-    const intervalSeconds = Math.max(1, Math.floor(this.config?.keepAliveInterval ?? 90));
+    // Get interval from config (default 30 seconds)
+    const intervalSeconds = Math.max(1, Math.floor(this.config?.keepAliveInterval ?? 30));
     const intervalMs = intervalSeconds * 1000;
-    const maxSequentialFailures = Math.max(1, Math.floor(this.config?.keepAliveMaxSequentialFailures ?? 1));
+    const maxSequentialFailures = Math.max(1, Math.floor(this.config?.keepAliveMaxSequentialFailures ?? 2));
 
     // Reset state whenever keep-alive starts/restarts
     this.keepAliveSequentialFailures = 0;

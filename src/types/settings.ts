@@ -46,6 +46,7 @@ export interface AdvancedSettings {
   iceGatheringTimeout: number;
   keepAliveInterval: number;
   keepAliveMaxSequentialFailures: number;
+  noAnswerTimeout: number;
 }
 
 export interface BusylightSettings {
@@ -101,7 +102,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     verboseLogging: false,
     iceGatheringTimeout: 5000,
     keepAliveInterval: 90,
-    keepAliveMaxSequentialFailures: 1
+    keepAliveMaxSequentialFailures: 1,
+    noAnswerTimeout: 120
   },
   busylight: {
     enabled: false,

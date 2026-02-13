@@ -27,7 +27,7 @@ export interface SIPConfig {
   connectionTimeout?: number;
   
   // Keep-alive settings
-  keepAliveInterval?: number;  // Interval in seconds, default 90
+  keepAliveInterval?: number;  // Interval in seconds, default 30
   keepAliveMaxSequentialFailures?: number; // Number of sequential failures before considering connection failed
   
   // WebRTC settings
@@ -38,6 +38,7 @@ export interface SIPConfig {
   
   // Registration settings
   registerExpires?: number;
+  registerRefreshFrequency?: number; // Percentage (50-99), default 85
   registerExtraHeaders?: Record<string, string>;
   registerExtraContactParams?: Record<string, string>;
   
@@ -412,7 +413,7 @@ export function buildSIPConfig(phantom: PhantomConfig): SIPConfig {
     hackIpInContact: true,
     userAgentString: 'Autocab365Connect React v1.0.0',
     autoAnswer: false,
-    noAnswerTimeout: 60,
+    noAnswerTimeout: 120,
     enableBLF: true
   };
 }

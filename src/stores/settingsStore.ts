@@ -51,6 +51,7 @@ interface SettingsState {
   setIceGatheringTimeout: (milliseconds: number) => void;
   setKeepAliveInterval: (seconds: number) => void;
   setKeepAliveMaxSequentialFailures: (count: number) => void;
+  setNoAnswerTimeout: (seconds: number) => void;
   
   // Actions - Busylight
   setBusylightEnabled: (enabled: boolean) => void;
@@ -313,6 +314,27 @@ export const useSettingsStore = create<SettingsState>()(
               advanced: {
                 ...state.settings.advanced,
                 keepAliveMaxSequentialFailures: normalizedCount
+              }
+            }
+          }));
+        },
+        setNoAnswerTimeout: (seconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedSeconds = Math.max(1, Math.floor(seconds || 120));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting no-answer timeout (seconds):', {
+              input: seconds,
+              normalized: normalizedSeconds
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                noAnswerTimeout: normalizedSeconds
               }
             }
           }));

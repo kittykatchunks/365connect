@@ -17,6 +17,7 @@ export function AdvancedOptionsView() {
   const setKeepAliveInterval = useSettingsStore((state) => state.setKeepAliveInterval);
   const setKeepAliveMaxSequentialFailures = useSettingsStore((state) => state.setKeepAliveMaxSequentialFailures);
   const setIceGatheringTimeout = useSettingsStore((state) => state.setIceGatheringTimeout);
+  const setNoAnswerTimeout = useSettingsStore((state) => state.setNoAnswerTimeout);
 
   const [keepAliveIntervalInput, setKeepAliveIntervalInput] = useState(
     String(settings.advanced.keepAliveInterval ?? 90)
@@ -26,6 +27,9 @@ export function AdvancedOptionsView() {
   );
   const [iceCompletionTimerInput, setIceCompletionTimerInput] = useState(
     String(settings.advanced.iceGatheringTimeout ?? 5000)
+  );
+  const [noAnswerTimeoutInput, setNoAnswerTimeoutInput] = useState(
+    String(settings.advanced.noAnswerTimeout ?? 120)
   );
 
   const handleReturnToSettings = useCallback(() => {
@@ -43,15 +47,18 @@ export function AdvancedOptionsView() {
     return (
       keepAliveIntervalInput !== String(settings.advanced.keepAliveInterval ?? 90) ||
       keepAliveFailureThresholdInput !== String(settings.advanced.keepAliveMaxSequentialFailures ?? 1) ||
-      iceCompletionTimerInput !== String(settings.advanced.iceGatheringTimeout ?? 5000)
+      iceCompletionTimerInput !== String(settings.advanced.iceGatheringTimeout ?? 5000) ||
+      noAnswerTimeoutInput !== String(settings.advanced.noAnswerTimeout ?? 120)
     );
   }, [
     iceCompletionTimerInput,
     keepAliveFailureThresholdInput,
     keepAliveIntervalInput,
+    noAnswerTimeoutInput,
     settings.advanced.iceGatheringTimeout,
     settings.advanced.keepAliveInterval,
-    settings.advanced.keepAliveMaxSequentialFailures
+    settings.advanced.keepAliveMaxSequentialFailures,
+    settings.advanced.noAnswerTimeout
   ]);
 
   const handleSave = () => {
@@ -60,25 +67,30 @@ export function AdvancedOptionsView() {
     const nextKeepAliveInterval = Math.max(1, Math.floor(Number(keepAliveIntervalInput) || 90));
     const nextFailureThreshold = Math.max(1, Math.floor(Number(keepAliveFailureThresholdInput) || 1));
     const nextIceCompletionTimer = Math.max(100, Math.floor(Number(iceCompletionTimerInput) || 5000));
+    const nextNoAnswerTimeout = Math.max(1, Math.floor(Number(noAnswerTimeoutInput) || 120));
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] 💾 Saving SIP advanced options', {
         keepAliveIntervalInput,
         keepAliveFailureThresholdInput,
         iceCompletionTimerInput,
+        noAnswerTimeoutInput,
         nextKeepAliveInterval,
         nextFailureThreshold,
-        nextIceCompletionTimer
+        nextIceCompletionTimer,
+        nextNoAnswerTimeout
       });
     }
 
     setKeepAliveInterval(nextKeepAliveInterval);
     setKeepAliveMaxSequentialFailures(nextFailureThreshold);
     setIceGatheringTimeout(nextIceCompletionTimer);
+    setNoAnswerTimeout(nextNoAnswerTimeout);
 
     setKeepAliveIntervalInput(String(nextKeepAliveInterval));
     setKeepAliveFailureThresholdInput(String(nextFailureThreshold));
     setIceCompletionTimerInput(String(nextIceCompletionTimer));
+    setNoAnswerTimeoutInput(String(nextNoAnswerTimeout));
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] ✅ SIP advanced options saved');
@@ -155,6 +167,20 @@ export function AdvancedOptionsView() {
               step={100}
               value={iceCompletionTimerInput}
               onChange={(event) => setIceCompletionTimerInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-no-answer-timeout">
+              {t('advanced_options.no_answer_timeout_label', 'No-answer timeout (seconds)')}
+            </label>
+            <Input
+              id="advanced-no-answer-timeout"
+              type="number"
+              min={1}
+              step={1}
+              value={noAnswerTimeoutInput}
+              onChange={(event) => setNoAnswerTimeoutInput(event.target.value)}
             />
           </div>
 
