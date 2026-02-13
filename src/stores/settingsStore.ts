@@ -52,6 +52,12 @@ interface SettingsState {
   setKeepAliveInterval: (seconds: number) => void;
   setKeepAliveMaxSequentialFailures: (count: number) => void;
   setNoAnswerTimeout: (seconds: number) => void;
+  setConnectivityHealthyIntervalMs: (milliseconds: number) => void;
+  setConnectivityDegradedIntervalMs: (milliseconds: number) => void;
+  setConnectivityInternetProbeTimeoutMs: (milliseconds: number) => void;
+  setConnectivitySipProbeTimeoutMs: (milliseconds: number) => void;
+  setConnectivityImageProbeUrls: (urls: string[]) => void;
+  setConnectivityNoCorsProbeUrls: (urls: string[]) => void;
   
   // Actions - Busylight
   setBusylightEnabled: (enabled: boolean) => void;
@@ -335,6 +341,138 @@ export const useSettingsStore = create<SettingsState>()(
               advanced: {
                 ...state.settings.advanced,
                 noAnswerTimeout: normalizedSeconds
+              }
+            }
+          }));
+        },
+        setConnectivityHealthyIntervalMs: (milliseconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedValue = Math.max(1000, Math.floor(milliseconds || 15000));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting connectivity healthy interval (ms):', {
+              input: milliseconds,
+              normalized: normalizedValue
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                connectivityHealthyIntervalMs: normalizedValue
+              }
+            }
+          }));
+        },
+        setConnectivityDegradedIntervalMs: (milliseconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedValue = Math.max(1000, Math.floor(milliseconds || 4000));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting connectivity degraded interval (ms):', {
+              input: milliseconds,
+              normalized: normalizedValue
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                connectivityDegradedIntervalMs: normalizedValue
+              }
+            }
+          }));
+        },
+        setConnectivityInternetProbeTimeoutMs: (milliseconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedValue = Math.max(1000, Math.floor(milliseconds || 4000));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting connectivity internet probe timeout (ms):', {
+              input: milliseconds,
+              normalized: normalizedValue
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                connectivityInternetProbeTimeoutMs: normalizedValue
+              }
+            }
+          }));
+        },
+        setConnectivitySipProbeTimeoutMs: (milliseconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedValue = Math.max(1000, Math.floor(milliseconds || 4500));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting connectivity SIP probe timeout (ms):', {
+              input: milliseconds,
+              normalized: normalizedValue
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                connectivitySipProbeTimeoutMs: normalizedValue
+              }
+            }
+          }));
+        },
+        setConnectivityImageProbeUrls: (urls) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedUrls = urls
+            .map((url) => url.trim())
+            .filter((url) => !!url);
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting connectivity image probe URLs:', {
+              inputCount: urls.length,
+              normalizedCount: normalizedUrls.length,
+              normalizedUrls
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                connectivityImageProbeUrls: normalizedUrls
+              }
+            }
+          }));
+        },
+        setConnectivityNoCorsProbeUrls: (urls) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedUrls = urls
+            .map((url) => url.trim())
+            .filter((url) => !!url);
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting connectivity no-cors probe URLs:', {
+              inputCount: urls.length,
+              normalizedCount: normalizedUrls.length,
+              normalizedUrls
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                connectivityNoCorsProbeUrls: normalizedUrls
               }
             }
           }));

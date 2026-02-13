@@ -5,6 +5,11 @@
 
 import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { SIPService, sipService } from '../services/SIPService';
+import {
+  connectivityMonitorService,
+  type ConnectivitySnapshot,
+  type ConnectivityStateChangedEvent
+} from '../services/ConnectivityMonitorService';
 import { audioService } from '../services/AudioService';
 import { callProgressToneService } from '../services/CallProgressToneService';
 import { useSIPStore } from '../stores/sipStore';
@@ -79,6 +84,7 @@ interface SIPProviderProps {
 
 export function SIPProvider({ children }: SIPProviderProps) {
   const serviceRef = useRef<SIPService>(sipService);
+  const connectivityMonitorRef = useRef(connectivityMonitorService);
   
   // Get store actions
   const {
@@ -104,6 +110,10 @@ export function SIPProvider({ children }: SIPProviderProps) {
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const reconnectInFlightRef = useRef(false);
+  const autoReconnectEnabledRef = useRef(false);
   
   // Sync contacts with SIP service for caller ID lookup
   useEffect(() => {
@@ -142,6 +152,260 @@ export function SIPProvider({ children }: SIPProviderProps) {
     settings.advanced.keepAliveInterval,
     settings.advanced.keepAliveMaxSequentialFailures,
     settings.advanced.noAnswerTimeout
+  ]);
+
+  // Browser-only network/internet/SIP connectivity monitoring and SIP auto-recovery
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    const clearReconnectTimer = (reason: string): void => {
+      if (reconnectTimerRef.current !== null) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🧹 Clearing scheduled SIP reconnect timer', { reason });
+        }
+
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+    };
+
+    const computeReconnectDelayMs = (attempt: number): number => {
+      const baseMs = Math.min(30000, Math.max(1000, 1000 * Math.pow(2, Math.max(0, attempt - 1))));
+      const jitterFactor = 0.8 + Math.random() * 0.4;
+      const delayMs = Math.floor(baseMs * jitterFactor);
+
+      if (verboseLogging) {
+        console.log('[SIPContext] ⏱️ Computed reconnect delay with jitter', {
+          attempt,
+          baseMs,
+          jitterFactor,
+          delayMs
+        });
+      }
+
+      return delayMs;
+    };
+
+    const buildReconnectConfig = () => {
+      if (!sipConfig?.phantomId || !sipConfig?.username || !sipConfig?.password) {
+        return null;
+      }
+
+      const nextConfig = buildSIPConfig({
+        phantomId: sipConfig.phantomId,
+        username: sipConfig.username,
+        password: sipConfig.password
+      });
+
+      nextConfig.iceGatheringTimeout = settings.advanced.iceGatheringTimeout;
+      nextConfig.keepAliveInterval = settings.advanced.keepAliveInterval;
+      nextConfig.keepAliveMaxSequentialFailures = settings.advanced.keepAliveMaxSequentialFailures;
+      nextConfig.noAnswerTimeout = settings.advanced.noAnswerTimeout;
+
+      return nextConfig;
+    };
+
+    const canAttemptReconnect = (snapshot: ConnectivitySnapshot): boolean => {
+      const transportState = serviceRef.current.getTransportState();
+      const registrationState = serviceRef.current.getRegistrationState();
+
+      const canAttempt =
+        autoReconnectEnabledRef.current &&
+        snapshot.browserOnline &&
+        snapshot.internetStatus === 'up' &&
+        snapshot.sipReachable === true &&
+        !reconnectInFlightRef.current &&
+        (transportState !== 'connected' || registrationState !== 'registered');
+
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔍 canAttemptReconnect evaluation', {
+          autoReconnectEnabled: autoReconnectEnabledRef.current,
+          browserOnline: snapshot.browserOnline,
+          internetStatus: snapshot.internetStatus,
+          sipReachable: snapshot.sipReachable,
+          reconnectInFlight: reconnectInFlightRef.current,
+          transportState,
+          registrationState,
+          canAttempt
+        });
+      }
+
+      return canAttempt;
+    };
+
+    const executeReconnect = async (trigger: string, snapshot: ConnectivitySnapshot): Promise<void> => {
+      const reconnectConfig = buildReconnectConfig();
+
+      if (!reconnectConfig) {
+        if (verboseLogging) {
+          console.log('[SIPContext] ℹ️ Reconnect skipped - missing SIP credentials/config', {
+            trigger,
+            hasSipConfig: !!sipConfig
+          });
+        }
+        return;
+      }
+
+      reconnectInFlightRef.current = true;
+
+      try {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🔄 Starting controlled SIP recovery', {
+            trigger,
+            attempt: reconnectAttemptRef.current,
+            snapshot
+          });
+        }
+
+        if (serviceRef.current.hasUserAgent()) {
+          if (verboseLogging) {
+            console.log('[SIPContext] 🔌 Existing UserAgent found - performing full stop before recreate');
+          }
+          await serviceRef.current.stop();
+        }
+
+        await serviceRef.current.createUserAgent(reconnectConfig);
+        await serviceRef.current.register();
+
+        reconnectAttemptRef.current = 0;
+
+        if (verboseLogging) {
+          console.log('[SIPContext] ✅ Controlled SIP recovery succeeded', {
+            trigger,
+            transportState: serviceRef.current.getTransportState(),
+            registrationState: serviceRef.current.getRegistrationState()
+          });
+        }
+      } catch (error) {
+        reconnectAttemptRef.current += 1;
+
+        if (verboseLogging) {
+          console.error('[SIPContext] ❌ Controlled SIP recovery failed', {
+            trigger,
+            attempt: reconnectAttemptRef.current,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+
+        const retryDelayMs = computeReconnectDelayMs(reconnectAttemptRef.current);
+
+        clearReconnectTimer('retry-reschedule');
+        reconnectTimerRef.current = window.setTimeout(() => {
+          reconnectTimerRef.current = null;
+          void scheduleReconnect('retry-timer-fired', snapshot);
+        }, retryDelayMs);
+      } finally {
+        reconnectInFlightRef.current = false;
+      }
+    };
+
+    const scheduleReconnect = async (trigger: string, snapshot: ConnectivitySnapshot): Promise<void> => {
+      if (!canAttemptReconnect(snapshot)) {
+        return;
+      }
+
+      clearReconnectTimer('new-reconnect-trigger');
+
+      const attemptNumber = reconnectAttemptRef.current + 1;
+      const delayMs = reconnectAttemptRef.current === 0 ? 250 : computeReconnectDelayMs(attemptNumber);
+
+      if (verboseLogging) {
+        console.log('[SIPContext] 🗓️ Scheduling controlled SIP recovery attempt', {
+          trigger,
+          delayMs,
+          attemptNumber
+        });
+      }
+
+      reconnectTimerRef.current = window.setTimeout(() => {
+        reconnectTimerRef.current = null;
+        void executeReconnect(trigger, snapshot);
+      }, delayMs);
+    };
+
+    const monitor = connectivityMonitorRef.current;
+
+    const monitorConfig = buildReconnectConfig();
+    if (!monitorConfig?.server) {
+      if (verboseLogging) {
+        console.log('[SIPContext] ℹ️ Connectivity monitor not started - SIP config/server unavailable');
+      }
+
+      return () => {
+        clearReconnectTimer('effect-cleanup-no-config');
+      };
+    }
+
+    if (verboseLogging) {
+      console.log('[SIPContext] 🌐 Starting connectivity monitor with SIP server URL', {
+        sipWebSocketUrl: monitorConfig.server
+      });
+    }
+
+    monitor.start({
+      sipWebSocketUrl: monitorConfig.server,
+      healthyIntervalMs: settings.advanced.connectivityHealthyIntervalMs,
+      degradedIntervalMs: settings.advanced.connectivityDegradedIntervalMs,
+      internetProbeTimeoutMs: settings.advanced.connectivityInternetProbeTimeoutMs,
+      sipProbeTimeoutMs: settings.advanced.connectivitySipProbeTimeoutMs,
+      imageProbeUrls: settings.advanced.connectivityImageProbeUrls,
+      noCorsProbeUrls: settings.advanced.connectivityNoCorsProbeUrls
+    });
+
+    const unsubscribeStateChanged = monitor.on('stateChanged', (eventData) => {
+      const data = eventData as ConnectivityStateChangedEvent;
+
+      if (verboseLogging) {
+        console.log('[SIPContext] 🌐 Connectivity stateChanged event', {
+          reason: data.reason,
+          previous: data.previous,
+          current: data.current
+        });
+      }
+
+      if (data.current.internetStatus === 'down') {
+        clearReconnectTimer('internet-down');
+      }
+
+      void scheduleReconnect(`connectivity-state:${data.reason}`, data.current);
+    });
+
+    const unsubscribePathChanged = monitor.on('networkPathChanged', (eventData) => {
+      if (verboseLogging) {
+        console.log('[SIPContext] 🔀 Connectivity network path changed', eventData);
+      }
+
+      reconnectAttemptRef.current = 0;
+      void scheduleReconnect('network-path-changed', monitor.getSnapshot());
+    });
+
+    const unsubscribeInternetDown = monitor.on('internetDown', (eventData) => {
+      if (verboseLogging) {
+        console.warn('[SIPContext] 📵 Connectivity internetDown event received', eventData);
+      }
+
+      clearReconnectTimer('internet-down-event');
+    });
+
+    return () => {
+      unsubscribeStateChanged();
+      unsubscribePathChanged();
+      unsubscribeInternetDown();
+      monitor.stop();
+      clearReconnectTimer('connectivity-monitor-cleanup');
+    };
+  }, [
+    sipConfig,
+    settings.advanced.iceGatheringTimeout,
+    settings.advanced.keepAliveInterval,
+    settings.advanced.keepAliveMaxSequentialFailures,
+    settings.advanced.noAnswerTimeout,
+    settings.advanced.connectivityHealthyIntervalMs,
+    settings.advanced.connectivityDegradedIntervalMs,
+    settings.advanced.connectivityInternetProbeTimeoutMs,
+    settings.advanced.connectivitySipProbeTimeoutMs,
+    settings.advanced.connectivityImageProbeUrls,
+    settings.advanced.connectivityNoCorsProbeUrls
   ]);
   
   // Request notification permissions on mount if enabled
@@ -753,6 +1017,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
       await serviceRef.current.createUserAgent(config);
       await serviceRef.current.register();
 
+      autoReconnectEnabledRef.current = true;
+      reconnectAttemptRef.current = 0;
+
       if (verboseLogging) {
         console.log('[SIPContext] ✅ Manual connect completed');
       }
@@ -763,6 +1030,17 @@ export function SIPProvider({ children }: SIPProviderProps) {
       
       if (verboseLogging) {
         console.log('[SIPContext] 🔌 Manual disconnect initiated');
+      }
+
+      autoReconnectEnabledRef.current = false;
+      reconnectAttemptRef.current = 0;
+
+      if (reconnectTimerRef.current !== null) {
+        if (verboseLogging) {
+          console.log('[SIPContext] 🧹 Clearing pending reconnect timer due to manual disconnect');
+        }
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
       }
       
       await serviceRef.current.stop();

@@ -47,6 +47,12 @@ export interface AdvancedSettings {
   keepAliveInterval: number;
   keepAliveMaxSequentialFailures: number;
   noAnswerTimeout: number;
+  connectivityHealthyIntervalMs: number;
+  connectivityDegradedIntervalMs: number;
+  connectivityInternetProbeTimeoutMs: number;
+  connectivitySipProbeTimeoutMs: number;
+  connectivityImageProbeUrls: string[];
+  connectivityNoCorsProbeUrls: string[];
 }
 
 export interface BusylightSettings {
@@ -103,7 +109,21 @@ export const DEFAULT_SETTINGS: AppSettings = {
     iceGatheringTimeout: 5000,
     keepAliveInterval: 90,
     keepAliveMaxSequentialFailures: 1,
-    noAnswerTimeout: 120
+    noAnswerTimeout: 120,
+    connectivityHealthyIntervalMs: 15000,
+    connectivityDegradedIntervalMs: 4000,
+    connectivityInternetProbeTimeoutMs: 4000,
+    connectivitySipProbeTimeoutMs: 4500,
+    connectivityImageProbeUrls: [
+      'https://www.google.com/favicon.ico',
+      'https://www.cloudflare.com/favicon.ico',
+      'https://www.microsoft.com/favicon.ico'
+    ],
+    connectivityNoCorsProbeUrls: [
+      'https://www.gstatic.com/generate_204',
+      'https://www.cloudflare.com/cdn-cgi/trace',
+      'https://www.msftconnecttest.com/connecttest.txt'
+    ]
   },
   busylight: {
     enabled: false,

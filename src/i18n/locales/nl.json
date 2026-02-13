@@ -471,7 +471,14 @@
         "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
         "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure",
         "ice_completion_timer_label": "ICE completion timer (milliseconds)",
-        "no_answer_timeout_label": "No-answer timeout (seconds)"
+        "no_answer_timeout_label": "No-answer timeout (seconds)",
+        "connectivity_settings_title": "Connectivity Monitor",
+        "connectivity_healthy_interval_label": "Healthy polling interval (milliseconds)",
+        "connectivity_degraded_interval_label": "Degraded polling interval (milliseconds)",
+        "connectivity_internet_timeout_label": "Internet probe timeout (milliseconds)",
+        "connectivity_sip_timeout_label": "SIP WebSocket probe timeout (milliseconds)",
+        "connectivity_image_probe_urls_label": "Image probe URLs (comma-separated)",
+        "connectivity_nocors_probe_urls_label": "no-cors probe URLs (comma-separated)"
     },
     "pwa": {
         "install": "App Installeren",

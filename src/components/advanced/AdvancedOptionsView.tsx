@@ -18,6 +18,12 @@ export function AdvancedOptionsView() {
   const setKeepAliveMaxSequentialFailures = useSettingsStore((state) => state.setKeepAliveMaxSequentialFailures);
   const setIceGatheringTimeout = useSettingsStore((state) => state.setIceGatheringTimeout);
   const setNoAnswerTimeout = useSettingsStore((state) => state.setNoAnswerTimeout);
+  const setConnectivityHealthyIntervalMs = useSettingsStore((state) => state.setConnectivityHealthyIntervalMs);
+  const setConnectivityDegradedIntervalMs = useSettingsStore((state) => state.setConnectivityDegradedIntervalMs);
+  const setConnectivityInternetProbeTimeoutMs = useSettingsStore((state) => state.setConnectivityInternetProbeTimeoutMs);
+  const setConnectivitySipProbeTimeoutMs = useSettingsStore((state) => state.setConnectivitySipProbeTimeoutMs);
+  const setConnectivityImageProbeUrls = useSettingsStore((state) => state.setConnectivityImageProbeUrls);
+  const setConnectivityNoCorsProbeUrls = useSettingsStore((state) => state.setConnectivityNoCorsProbeUrls);
 
   const [keepAliveIntervalInput, setKeepAliveIntervalInput] = useState(
     String(settings.advanced.keepAliveInterval ?? 90)
@@ -31,6 +37,31 @@ export function AdvancedOptionsView() {
   const [noAnswerTimeoutInput, setNoAnswerTimeoutInput] = useState(
     String(settings.advanced.noAnswerTimeout ?? 120)
   );
+  const [connectivityHealthyIntervalInput, setConnectivityHealthyIntervalInput] = useState(
+    String(settings.advanced.connectivityHealthyIntervalMs ?? 15000)
+  );
+  const [connectivityDegradedIntervalInput, setConnectivityDegradedIntervalInput] = useState(
+    String(settings.advanced.connectivityDegradedIntervalMs ?? 4000)
+  );
+  const [connectivityInternetProbeTimeoutInput, setConnectivityInternetProbeTimeoutInput] = useState(
+    String(settings.advanced.connectivityInternetProbeTimeoutMs ?? 4000)
+  );
+  const [connectivitySipProbeTimeoutInput, setConnectivitySipProbeTimeoutInput] = useState(
+    String(settings.advanced.connectivitySipProbeTimeoutMs ?? 4500)
+  );
+  const [connectivityImageProbeUrlsInput, setConnectivityImageProbeUrlsInput] = useState(
+    (settings.advanced.connectivityImageProbeUrls ?? []).join('\n')
+  );
+  const [connectivityNoCorsProbeUrlsInput, setConnectivityNoCorsProbeUrlsInput] = useState(
+    (settings.advanced.connectivityNoCorsProbeUrls ?? []).join('\n')
+  );
+
+  const parseUrlListInput = (input: string): string[] => {
+    return input
+      .split(/\r?\n|,/)
+      .map((url) => url.trim())
+      .filter((url) => !!url);
+  };
 
   const handleReturnToSettings = useCallback(() => {
     const verboseLogging = isVerboseLoggingEnabled();
@@ -48,13 +79,31 @@ export function AdvancedOptionsView() {
       keepAliveIntervalInput !== String(settings.advanced.keepAliveInterval ?? 90) ||
       keepAliveFailureThresholdInput !== String(settings.advanced.keepAliveMaxSequentialFailures ?? 1) ||
       iceCompletionTimerInput !== String(settings.advanced.iceGatheringTimeout ?? 5000) ||
-      noAnswerTimeoutInput !== String(settings.advanced.noAnswerTimeout ?? 120)
+      noAnswerTimeoutInput !== String(settings.advanced.noAnswerTimeout ?? 120) ||
+      connectivityHealthyIntervalInput !== String(settings.advanced.connectivityHealthyIntervalMs ?? 15000) ||
+      connectivityDegradedIntervalInput !== String(settings.advanced.connectivityDegradedIntervalMs ?? 4000) ||
+      connectivityInternetProbeTimeoutInput !== String(settings.advanced.connectivityInternetProbeTimeoutMs ?? 4000) ||
+      connectivitySipProbeTimeoutInput !== String(settings.advanced.connectivitySipProbeTimeoutMs ?? 4500) ||
+      connectivityImageProbeUrlsInput !== (settings.advanced.connectivityImageProbeUrls ?? []).join('\n') ||
+      connectivityNoCorsProbeUrlsInput !== (settings.advanced.connectivityNoCorsProbeUrls ?? []).join('\n')
     );
   }, [
+    connectivityDegradedIntervalInput,
+    connectivityHealthyIntervalInput,
+    connectivityImageProbeUrlsInput,
+    connectivityInternetProbeTimeoutInput,
+    connectivityNoCorsProbeUrlsInput,
+    connectivitySipProbeTimeoutInput,
     iceCompletionTimerInput,
     keepAliveFailureThresholdInput,
     keepAliveIntervalInput,
     noAnswerTimeoutInput,
+    settings.advanced.connectivityDegradedIntervalMs,
+    settings.advanced.connectivityHealthyIntervalMs,
+    settings.advanced.connectivityImageProbeUrls,
+    settings.advanced.connectivityInternetProbeTimeoutMs,
+    settings.advanced.connectivityNoCorsProbeUrls,
+    settings.advanced.connectivitySipProbeTimeoutMs,
     settings.advanced.iceGatheringTimeout,
     settings.advanced.keepAliveInterval,
     settings.advanced.keepAliveMaxSequentialFailures,
@@ -68,6 +117,12 @@ export function AdvancedOptionsView() {
     const nextFailureThreshold = Math.max(1, Math.floor(Number(keepAliveFailureThresholdInput) || 1));
     const nextIceCompletionTimer = Math.max(100, Math.floor(Number(iceCompletionTimerInput) || 5000));
     const nextNoAnswerTimeout = Math.max(1, Math.floor(Number(noAnswerTimeoutInput) || 120));
+    const nextConnectivityHealthyInterval = Math.max(1000, Math.floor(Number(connectivityHealthyIntervalInput) || 15000));
+    const nextConnectivityDegradedInterval = Math.max(1000, Math.floor(Number(connectivityDegradedIntervalInput) || 4000));
+    const nextConnectivityInternetProbeTimeout = Math.max(1000, Math.floor(Number(connectivityInternetProbeTimeoutInput) || 4000));
+    const nextConnectivitySipProbeTimeout = Math.max(1000, Math.floor(Number(connectivitySipProbeTimeoutInput) || 4500));
+    const nextConnectivityImageProbeUrls = parseUrlListInput(connectivityImageProbeUrlsInput);
+    const nextConnectivityNoCorsProbeUrls = parseUrlListInput(connectivityNoCorsProbeUrlsInput);
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] 💾 Saving SIP advanced options', {
@@ -75,10 +130,22 @@ export function AdvancedOptionsView() {
         keepAliveFailureThresholdInput,
         iceCompletionTimerInput,
         noAnswerTimeoutInput,
+        connectivityHealthyIntervalInput,
+        connectivityDegradedIntervalInput,
+        connectivityInternetProbeTimeoutInput,
+        connectivitySipProbeTimeoutInput,
+        connectivityImageProbeUrlsInput,
+        connectivityNoCorsProbeUrlsInput,
         nextKeepAliveInterval,
         nextFailureThreshold,
         nextIceCompletionTimer,
-        nextNoAnswerTimeout
+        nextNoAnswerTimeout,
+        nextConnectivityHealthyInterval,
+        nextConnectivityDegradedInterval,
+        nextConnectivityInternetProbeTimeout,
+        nextConnectivitySipProbeTimeout,
+        nextConnectivityImageProbeUrls,
+        nextConnectivityNoCorsProbeUrls
       });
     }
 
@@ -86,11 +153,23 @@ export function AdvancedOptionsView() {
     setKeepAliveMaxSequentialFailures(nextFailureThreshold);
     setIceGatheringTimeout(nextIceCompletionTimer);
     setNoAnswerTimeout(nextNoAnswerTimeout);
+    setConnectivityHealthyIntervalMs(nextConnectivityHealthyInterval);
+    setConnectivityDegradedIntervalMs(nextConnectivityDegradedInterval);
+    setConnectivityInternetProbeTimeoutMs(nextConnectivityInternetProbeTimeout);
+    setConnectivitySipProbeTimeoutMs(nextConnectivitySipProbeTimeout);
+    setConnectivityImageProbeUrls(nextConnectivityImageProbeUrls);
+    setConnectivityNoCorsProbeUrls(nextConnectivityNoCorsProbeUrls);
 
     setKeepAliveIntervalInput(String(nextKeepAliveInterval));
     setKeepAliveFailureThresholdInput(String(nextFailureThreshold));
     setIceCompletionTimerInput(String(nextIceCompletionTimer));
     setNoAnswerTimeoutInput(String(nextNoAnswerTimeout));
+    setConnectivityHealthyIntervalInput(String(nextConnectivityHealthyInterval));
+    setConnectivityDegradedIntervalInput(String(nextConnectivityDegradedInterval));
+    setConnectivityInternetProbeTimeoutInput(String(nextConnectivityInternetProbeTimeout));
+    setConnectivitySipProbeTimeoutInput(String(nextConnectivitySipProbeTimeout));
+    setConnectivityImageProbeUrlsInput(nextConnectivityImageProbeUrls.join('\n'));
+    setConnectivityNoCorsProbeUrlsInput(nextConnectivityNoCorsProbeUrls.join('\n'));
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] ✅ SIP advanced options saved');
@@ -181,6 +260,88 @@ export function AdvancedOptionsView() {
               step={1}
               value={noAnswerTimeoutInput}
               onChange={(event) => setNoAnswerTimeoutInput(event.target.value)}
+            />
+          </div>
+
+          <h3>{t('advanced_options.connectivity_settings_title', 'Connectivity Monitor')}</h3>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-connectivity-healthy-interval">
+              {t('advanced_options.connectivity_healthy_interval_label', 'Healthy polling interval (milliseconds)')}
+            </label>
+            <Input
+              id="advanced-connectivity-healthy-interval"
+              type="number"
+              min={1000}
+              step={500}
+              value={connectivityHealthyIntervalInput}
+              onChange={(event) => setConnectivityHealthyIntervalInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-connectivity-degraded-interval">
+              {t('advanced_options.connectivity_degraded_interval_label', 'Degraded polling interval (milliseconds)')}
+            </label>
+            <Input
+              id="advanced-connectivity-degraded-interval"
+              type="number"
+              min={1000}
+              step={500}
+              value={connectivityDegradedIntervalInput}
+              onChange={(event) => setConnectivityDegradedIntervalInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-connectivity-internet-timeout">
+              {t('advanced_options.connectivity_internet_timeout_label', 'Internet probe timeout (milliseconds)')}
+            </label>
+            <Input
+              id="advanced-connectivity-internet-timeout"
+              type="number"
+              min={1000}
+              step={500}
+              value={connectivityInternetProbeTimeoutInput}
+              onChange={(event) => setConnectivityInternetProbeTimeoutInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-connectivity-sip-timeout">
+              {t('advanced_options.connectivity_sip_timeout_label', 'SIP WebSocket probe timeout (milliseconds)')}
+            </label>
+            <Input
+              id="advanced-connectivity-sip-timeout"
+              type="number"
+              min={1000}
+              step={500}
+              value={connectivitySipProbeTimeoutInput}
+              onChange={(event) => setConnectivitySipProbeTimeoutInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-connectivity-image-urls">
+              {t('advanced_options.connectivity_image_probe_urls_label', 'Image probe URLs (comma-separated)')}
+            </label>
+            <Input
+              id="advanced-connectivity-image-urls"
+              type="text"
+              value={connectivityImageProbeUrlsInput}
+              onChange={(event) => setConnectivityImageProbeUrlsInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-connectivity-nocors-urls">
+              {t('advanced_options.connectivity_nocors_probe_urls_label', 'no-cors probe URLs (comma-separated)')}
+            </label>
+            <Input
+              id="advanced-connectivity-nocors-urls"
+              type="text"
+              value={connectivityNoCorsProbeUrlsInput}
+              onChange={(event) => setConnectivityNoCorsProbeUrlsInput(event.target.value)}
             />
           </div>
 
