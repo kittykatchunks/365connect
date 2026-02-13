@@ -124,16 +124,19 @@ export function SIPProvider({ children }: SIPProviderProps) {
 
     if (verboseLogging) {
       console.log('[SIPContext] ⚙️ Syncing SIP advanced config to service', {
+        iceGatheringTimeout: settings.advanced.iceGatheringTimeout,
         keepAliveInterval: settings.advanced.keepAliveInterval,
         keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures
       });
     }
 
     serviceRef.current.configure({
+      iceGatheringTimeout: settings.advanced.iceGatheringTimeout,
       keepAliveInterval: settings.advanced.keepAliveInterval,
       keepAliveMaxSequentialFailures: settings.advanced.keepAliveMaxSequentialFailures
     });
   }, [
+    settings.advanced.iceGatheringTimeout,
     settings.advanced.keepAliveInterval,
     settings.advanced.keepAliveMaxSequentialFailures
   ]);
@@ -730,11 +733,13 @@ export function SIPProvider({ children }: SIPProviderProps) {
         username: sipConfig.username,
         password: sipConfig.password
       });
+      config.iceGatheringTimeout = settings.advanced.iceGatheringTimeout;
       config.keepAliveInterval = settings.advanced.keepAliveInterval;
       config.keepAliveMaxSequentialFailures = settings.advanced.keepAliveMaxSequentialFailures;
 
       if (verboseLogging) {
         console.log('[SIPContext] ⚙️ Applying advanced keep-alive configuration on connect', {
+          iceGatheringTimeout: config.iceGatheringTimeout,
           keepAliveInterval: config.keepAliveInterval,
           keepAliveMaxSequentialFailures: config.keepAliveMaxSequentialFailures
         });
@@ -893,7 +898,12 @@ export function SIPProvider({ children }: SIPProviderProps) {
     selectLine: (lineNumber: 1 | 2 | 3) => {
       serviceRef.current.selectLine(lineNumber);
     }
-  }), [sipConfig]); // Include sipConfig since connect method uses it
+  }), [
+    sipConfig,
+    settings.advanced.iceGatheringTimeout,
+    settings.advanced.keepAliveInterval,
+    settings.advanced.keepAliveMaxSequentialFailures
+  ]); // Include advanced SIP settings since connect method uses them
 
   return (
     <SIPContext.Provider value={value}>

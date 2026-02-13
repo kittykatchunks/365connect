@@ -48,6 +48,7 @@ interface SettingsState {
   // Actions - Advanced
   setSipMessagesEnabled: (enabled: boolean) => void;
   setVerboseLogging: (enabled: boolean) => void;
+  setIceGatheringTimeout: (milliseconds: number) => void;
   setKeepAliveInterval: (seconds: number) => void;
   setKeepAliveMaxSequentialFailures: (count: number) => void;
   
@@ -253,6 +254,27 @@ export const useSettingsStore = create<SettingsState>()(
         setVerboseLogging: (verboseLogging) => set((state) => ({
           settings: { ...state.settings, advanced: { ...state.settings.advanced, verboseLogging } }
         })),
+        setIceGatheringTimeout: (milliseconds) => {
+          const verboseLogging = isVerboseLoggingEnabled();
+          const normalizedTimeout = Math.max(100, Math.floor(milliseconds || 5000));
+
+          if (verboseLogging) {
+            console.log('[SettingsStore] Setting ICE gathering timeout (ms):', {
+              input: milliseconds,
+              normalized: normalizedTimeout
+            });
+          }
+
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              advanced: {
+                ...state.settings.advanced,
+                iceGatheringTimeout: normalizedTimeout
+              }
+            }
+          }));
+        },
         setKeepAliveInterval: (seconds) => {
           const verboseLogging = isVerboseLoggingEnabled();
           const normalizedSeconds = Math.max(1, Math.floor(seconds || 1));

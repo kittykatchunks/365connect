@@ -2,18 +2,20 @@
 // Advanced Options View
 // ============================================
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PanelHeader } from '@/components/layout';
 import { Button, Input } from '@/components/ui';
-import { useSettingsStore } from '@/stores';
+import { useAppStore, useSettingsStore } from '@/stores';
 import { isVerboseLoggingEnabled } from '@/utils';
 
 export function AdvancedOptionsView() {
   const { t } = useTranslation();
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
   const settings = useSettingsStore((state) => state.settings);
   const setKeepAliveInterval = useSettingsStore((state) => state.setKeepAliveInterval);
   const setKeepAliveMaxSequentialFailures = useSettingsStore((state) => state.setKeepAliveMaxSequentialFailures);
+  const setIceGatheringTimeout = useSettingsStore((state) => state.setIceGatheringTimeout);
 
   const [keepAliveIntervalInput, setKeepAliveIntervalInput] = useState(
     String(settings.advanced.keepAliveInterval ?? 90)
@@ -21,15 +23,32 @@ export function AdvancedOptionsView() {
   const [keepAliveFailureThresholdInput, setKeepAliveFailureThresholdInput] = useState(
     String(settings.advanced.keepAliveMaxSequentialFailures ?? 1)
   );
+  const [iceCompletionTimerInput, setIceCompletionTimerInput] = useState(
+    String(settings.advanced.iceGatheringTimeout ?? 5000)
+  );
+
+  const handleReturnToSettings = useCallback(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (verboseLogging) {
+      console.log('[AdvancedOptionsView] 🧭 Returning to Settings view');
+    }
+
+    window.history.pushState({}, '', '/');
+    setCurrentView('settings');
+  }, [setCurrentView]);
 
   const hasChanges = useMemo(() => {
     return (
       keepAliveIntervalInput !== String(settings.advanced.keepAliveInterval ?? 90) ||
-      keepAliveFailureThresholdInput !== String(settings.advanced.keepAliveMaxSequentialFailures ?? 1)
+      keepAliveFailureThresholdInput !== String(settings.advanced.keepAliveMaxSequentialFailures ?? 1) ||
+      iceCompletionTimerInput !== String(settings.advanced.iceGatheringTimeout ?? 5000)
     );
   }, [
+    iceCompletionTimerInput,
     keepAliveFailureThresholdInput,
     keepAliveIntervalInput,
+    settings.advanced.iceGatheringTimeout,
     settings.advanced.keepAliveInterval,
     settings.advanced.keepAliveMaxSequentialFailures
   ]);
@@ -39,21 +58,26 @@ export function AdvancedOptionsView() {
 
     const nextKeepAliveInterval = Math.max(1, Math.floor(Number(keepAliveIntervalInput) || 90));
     const nextFailureThreshold = Math.max(1, Math.floor(Number(keepAliveFailureThresholdInput) || 1));
+    const nextIceCompletionTimer = Math.max(100, Math.floor(Number(iceCompletionTimerInput) || 5000));
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] 💾 Saving SIP advanced options', {
         keepAliveIntervalInput,
         keepAliveFailureThresholdInput,
+        iceCompletionTimerInput,
         nextKeepAliveInterval,
-        nextFailureThreshold
+        nextFailureThreshold,
+        nextIceCompletionTimer
       });
     }
 
     setKeepAliveInterval(nextKeepAliveInterval);
     setKeepAliveMaxSequentialFailures(nextFailureThreshold);
+    setIceGatheringTimeout(nextIceCompletionTimer);
 
     setKeepAliveIntervalInput(String(nextKeepAliveInterval));
     setKeepAliveFailureThresholdInput(String(nextFailureThreshold));
+    setIceCompletionTimerInput(String(nextIceCompletionTimer));
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] ✅ SIP advanced options saved');
@@ -68,6 +92,11 @@ export function AdvancedOptionsView() {
           'advanced_options.subtitle',
           'Manual configuration for non-day-to-day operational settings.'
         )}
+        actions={
+          <Button variant="ghost" size="sm" onClick={handleReturnToSettings}>
+            {t('settings.title', 'Settings')}
+          </Button>
+        }
       />
 
       <div className="settings-content" style={{ padding: 'var(--spacing-md)' }}>
@@ -102,6 +131,20 @@ export function AdvancedOptionsView() {
               step={1}
               value={keepAliveFailureThresholdInput}
               onChange={(event) => setKeepAliveFailureThresholdInput(event.target.value)}
+            />
+          </div>
+
+          <div className="setting-item">
+            <label htmlFor="advanced-ice-completion-timer">
+              {t('advanced_options.ice_completion_timer_label', 'ICE completion timer (milliseconds)')}
+            </label>
+            <Input
+              id="advanced-ice-completion-timer"
+              type="number"
+              min={100}
+              step={100}
+              value={iceCompletionTimerInput}
+              onChange={(event) => setIceCompletionTimerInput(event.target.value)}
             />
           </div>
 

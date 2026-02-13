@@ -543,7 +543,8 @@
         "subtitle": "Manual configuration for non-day-to-day operational settings.",
         "sip_settings_title": "SIP Settings",
         "keep_alive_interval_label": "Keep-alive OPTIONS timer (seconds)",
-        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure"
+        "keep_alive_failure_threshold_label": "Sequential no-response failures treated as SIP connection failure",
+        "ice_completion_timer_label": "ICE completion timer (milliseconds)"
     },
     "pwa": {
         "install": "Install App",

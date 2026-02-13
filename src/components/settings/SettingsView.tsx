@@ -86,6 +86,7 @@ export function SettingsView() {
   
   // Store bindings
   const settings = useSettingsStore((state) => state.settings);
+  const setCurrentView = useAppStore((state) => state.setCurrentView);
   const openWithConnection = useAppStore((state) => state.openSettingsWithConnection);
   const setOpenSettingsWithConnection = useAppStore((state) => state.setOpenSettingsWithConnection);
   const setPhantomID = useSettingsStore((state) => state.setPhantomID);
@@ -342,6 +343,17 @@ export function SettingsView() {
       setTimeout(() => setSaveStatus('idle'), 2000);
     }, 300);
   }, [localPhantomId, localUsername, localPassword, localVmAccess, setPhantomID, setSIPCredentials, setVMAccess]);
+
+  const handleOpenAdvancedOptions = useCallback(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (verboseLogging) {
+      console.log('[SettingsView] 🧭 Opening advanced options page from Settings > Advanced section');
+    }
+
+    window.history.pushState({}, '', '/advanced');
+    setCurrentView('advanced');
+  }, [setCurrentView]);
   
   // Handle accordion state changes
   const handleAccordionChange = useCallback((value: string | string[] | undefined) => {
@@ -1527,6 +1539,17 @@ export function SettingsView() {
                 
                 <div className="settings-divider" />
                 
+                <div className="setting-item">
+                  <Button
+                    variant="ghost"
+                    onClick={handleOpenAdvancedOptions}
+                    className="settings-action-btn"
+                  >
+                    <Cog className="w-4 h-4" />
+                    {t('advanced_options.title', 'Advanced Options')}
+                  </Button>
+                </div>
+
                 <div className="setting-item">
                   <Button 
                     variant="ghost" 
