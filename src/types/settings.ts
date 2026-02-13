@@ -122,7 +122,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     connectivityNoCorsProbeUrls: [
       'https://www.gstatic.com/generate_204',
       'https://www.cloudflare.com/cdn-cgi/trace',
-      'https://www.msftconnecttest.com/connecttest.txt'
+      'https://www.google.com/generate_204'
     ]
   },
   busylight: {

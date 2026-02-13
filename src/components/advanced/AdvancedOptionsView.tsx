@@ -25,6 +25,10 @@ export function AdvancedOptionsView() {
   const setConnectivityImageProbeUrls = useSettingsStore((state) => state.setConnectivityImageProbeUrls);
   const setConnectivityNoCorsProbeUrls = useSettingsStore((state) => state.setConnectivityNoCorsProbeUrls);
 
+  const formatUrlListInput = (urls: string[] | undefined): string => {
+    return (urls ?? []).join(', ');
+  };
+
   const [keepAliveIntervalInput, setKeepAliveIntervalInput] = useState(
     String(settings.advanced.keepAliveInterval ?? 90)
   );
@@ -50,10 +54,10 @@ export function AdvancedOptionsView() {
     String(settings.advanced.connectivitySipProbeTimeoutMs ?? 4500)
   );
   const [connectivityImageProbeUrlsInput, setConnectivityImageProbeUrlsInput] = useState(
-    (settings.advanced.connectivityImageProbeUrls ?? []).join('\n')
+    formatUrlListInput(settings.advanced.connectivityImageProbeUrls)
   );
   const [connectivityNoCorsProbeUrlsInput, setConnectivityNoCorsProbeUrlsInput] = useState(
-    (settings.advanced.connectivityNoCorsProbeUrls ?? []).join('\n')
+    formatUrlListInput(settings.advanced.connectivityNoCorsProbeUrls)
   );
 
   const parseUrlListInput = (input: string): string[] => {
@@ -84,8 +88,8 @@ export function AdvancedOptionsView() {
       connectivityDegradedIntervalInput !== String(settings.advanced.connectivityDegradedIntervalMs ?? 4000) ||
       connectivityInternetProbeTimeoutInput !== String(settings.advanced.connectivityInternetProbeTimeoutMs ?? 4000) ||
       connectivitySipProbeTimeoutInput !== String(settings.advanced.connectivitySipProbeTimeoutMs ?? 4500) ||
-      connectivityImageProbeUrlsInput !== (settings.advanced.connectivityImageProbeUrls ?? []).join('\n') ||
-      connectivityNoCorsProbeUrlsInput !== (settings.advanced.connectivityNoCorsProbeUrls ?? []).join('\n')
+      connectivityImageProbeUrlsInput !== formatUrlListInput(settings.advanced.connectivityImageProbeUrls) ||
+      connectivityNoCorsProbeUrlsInput !== formatUrlListInput(settings.advanced.connectivityNoCorsProbeUrls)
     );
   }, [
     connectivityDegradedIntervalInput,
@@ -168,8 +172,8 @@ export function AdvancedOptionsView() {
     setConnectivityDegradedIntervalInput(String(nextConnectivityDegradedInterval));
     setConnectivityInternetProbeTimeoutInput(String(nextConnectivityInternetProbeTimeout));
     setConnectivitySipProbeTimeoutInput(String(nextConnectivitySipProbeTimeout));
-    setConnectivityImageProbeUrlsInput(nextConnectivityImageProbeUrls.join('\n'));
-    setConnectivityNoCorsProbeUrlsInput(nextConnectivityNoCorsProbeUrls.join('\n'));
+    setConnectivityImageProbeUrlsInput(nextConnectivityImageProbeUrls.join(', '));
+    setConnectivityNoCorsProbeUrlsInput(nextConnectivityNoCorsProbeUrls.join(', '));
 
     if (verboseLogging) {
       console.log('[AdvancedOptionsView] ✅ SIP advanced options saved');

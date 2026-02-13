@@ -3,7 +3,7 @@
  * Provides SIP functionality to React components and syncs with Zustand store
  */
 
-import { createContext, useContext, useEffect, useRef, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useMemo, useCallback, type ReactNode } from 'react';
 import { SIPService, sipService } from '../services/SIPService';
 import {
   connectivityMonitorService,
@@ -85,9 +85,17 @@ interface SIPProviderProps {
 export function SIPProvider({ children }: SIPProviderProps) {
   const serviceRef = useRef<SIPService>(sipService);
   const connectivityMonitorRef = useRef(connectivityMonitorService);
+  const didRunRefreshRestoreRef = useRef(false);
+
+  const REFRESH_CONNECTED_FLAG_KEY = 'sipWasConnectedBeforeRefresh';
+  const REFRESH_CONNECTED_TIMESTAMP_KEY = 'sipConnectionTimestamp';
+  const REFRESH_LAST_VIEW_KEY = 'sipLastViewBeforeRefresh';
+  const REFRESH_LAST_LINE_KEY = 'sipLastSelectedLineBeforeRefresh';
+  const REFRESH_MAX_AGE_MS = 5 * 60 * 1000;
   
   // Get store actions
   const {
+    selectedLine,
     setRegistrationState,
     setTransportState,
     addSession,
@@ -106,7 +114,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
   const { showIncomingCallNotification, requestPermission } = useNotifications();
   const { contacts } = useContactsStore();
   const { resetAllButtonStates } = useBLFStore();
-  const { agentLogout } = useAppStore();
+  const { agentLogout, currentView, setCurrentView } = useAppStore();
   
   // Store active notification reference for cleanup
   const activeNotificationRef = useRef<Notification | null>(null);
@@ -114,6 +122,210 @@ export function SIPProvider({ children }: SIPProviderProps) {
   const reconnectAttemptRef = useRef(0);
   const reconnectInFlightRef = useRef(false);
   const autoReconnectEnabledRef = useRef(false);
+
+  const clearRefreshReconnectFlags = useCallback((reason: string): void => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    localStorage.removeItem(REFRESH_CONNECTED_FLAG_KEY);
+    localStorage.removeItem(REFRESH_CONNECTED_TIMESTAMP_KEY);
+    localStorage.removeItem(REFRESH_LAST_VIEW_KEY);
+    localStorage.removeItem(REFRESH_LAST_LINE_KEY);
+
+    if (verboseLogging) {
+      console.log('[SIPContext] 🧹 Cleared refresh reconnect flags', { reason });
+    }
+  }, []);
+
+  const persistRefreshReconnectState = useCallback((reason: string): void => {
+    const verboseLogging = isVerboseLoggingEnabled();
+    const registrationState = serviceRef.current.getRegistrationState();
+    const transportState = serviceRef.current.getTransportState();
+    const isConnected = registrationState === 'registered' || transportState === 'connected';
+
+    if (verboseLogging) {
+      console.log('[SIPContext] 💾 Persist refresh reconnect state requested', {
+        reason,
+        registrationState,
+        transportState,
+        isConnected,
+        autoReconnectEnabled: autoReconnectEnabledRef.current,
+        currentView,
+        selectedLine
+      });
+    }
+
+    if (!autoReconnectEnabledRef.current || !isConnected) {
+      if (verboseLogging) {
+        console.log('[SIPContext] ℹ️ Skip persisting refresh reconnect state - not connected or auto reconnect disabled', {
+          reason
+        });
+      }
+      return;
+    }
+
+    localStorage.setItem(REFRESH_CONNECTED_FLAG_KEY, 'true');
+    localStorage.setItem(REFRESH_CONNECTED_TIMESTAMP_KEY, Date.now().toString());
+    localStorage.setItem(REFRESH_LAST_VIEW_KEY, currentView);
+    localStorage.setItem(REFRESH_LAST_LINE_KEY, selectedLine.toString());
+
+    if (verboseLogging) {
+      console.log('[SIPContext] ✅ Persisted refresh reconnect state', {
+        reason,
+        view: currentView,
+        selectedLine
+      });
+    }
+  }, [currentView, selectedLine]);
+
+  const connectWithCurrentConfig = useCallback(async (trigger: string): Promise<void> => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (!sipConfig) {
+      throw new Error('SIP configuration not available');
+    }
+
+    if (verboseLogging) {
+      console.log('[SIPContext] 🔌 connectWithCurrentConfig invoked', {
+        trigger,
+        phantomId: sipConfig.phantomId,
+        username: sipConfig.username
+      });
+    }
+
+    const config = buildSIPConfig({
+      phantomId: sipConfig.phantomId,
+      username: sipConfig.username,
+      password: sipConfig.password
+    });
+    config.iceGatheringTimeout = settings.advanced.iceGatheringTimeout;
+    config.keepAliveInterval = settings.advanced.keepAliveInterval;
+    config.keepAliveMaxSequentialFailures = settings.advanced.keepAliveMaxSequentialFailures;
+    config.noAnswerTimeout = settings.advanced.noAnswerTimeout;
+
+    if (verboseLogging) {
+      console.log('[SIPContext] ⚙️ Applying advanced keep-alive configuration on connect', {
+        trigger,
+        iceGatheringTimeout: config.iceGatheringTimeout,
+        keepAliveInterval: config.keepAliveInterval,
+        keepAliveMaxSequentialFailures: config.keepAliveMaxSequentialFailures,
+        noAnswerTimeout: config.noAnswerTimeout
+      });
+    }
+
+    await serviceRef.current.createUserAgent(config);
+    await serviceRef.current.register();
+
+    autoReconnectEnabledRef.current = true;
+    reconnectAttemptRef.current = 0;
+
+    if (verboseLogging) {
+      console.log('[SIPContext] ✅ connectWithCurrentConfig completed', {
+        trigger,
+        registrationState: serviceRef.current.getRegistrationState(),
+        transportState: serviceRef.current.getTransportState()
+      });
+    }
+  }, [
+    settings.advanced.iceGatheringTimeout,
+    settings.advanced.keepAliveInterval,
+    settings.advanced.keepAliveMaxSequentialFailures,
+    settings.advanced.noAnswerTimeout,
+    sipConfig
+  ]);
+
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    const handlePageUnload = (): void => {
+      persistRefreshReconnectState('page-unload');
+    };
+
+    if (verboseLogging) {
+      console.log('[SIPContext] 🧩 Registering refresh persistence listeners');
+    }
+
+    window.addEventListener('beforeunload', handlePageUnload);
+    window.addEventListener('pagehide', handlePageUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handlePageUnload);
+      window.removeEventListener('pagehide', handlePageUnload);
+    };
+  }, [persistRefreshReconnectState]);
+
+  useEffect(() => {
+    const verboseLogging = isVerboseLoggingEnabled();
+
+    if (didRunRefreshRestoreRef.current) {
+      return;
+    }
+
+    didRunRefreshRestoreRef.current = true;
+
+    const wasConnected = localStorage.getItem(REFRESH_CONNECTED_FLAG_KEY) === 'true';
+    const timestampRaw = localStorage.getItem(REFRESH_CONNECTED_TIMESTAMP_KEY);
+    const lastViewRaw = localStorage.getItem(REFRESH_LAST_VIEW_KEY);
+    const lastLineRaw = localStorage.getItem(REFRESH_LAST_LINE_KEY);
+    const timestamp = timestampRaw ? Number(timestampRaw) : NaN;
+    const ageMs = Number.isFinite(timestamp) ? Date.now() - timestamp : Number.POSITIVE_INFINITY;
+    const isRecent = ageMs >= 0 && ageMs <= REFRESH_MAX_AGE_MS;
+
+    if (verboseLogging) {
+      console.log('[SIPContext] 🔄 Refresh auto-reconnect check', {
+        wasConnected,
+        hasTimestamp: !!timestampRaw,
+        ageMs,
+        isRecent,
+        hasSipConfig: !!sipConfig,
+        hasCredentials: !!sipConfig?.username && !!sipConfig?.password,
+        lastViewRaw,
+        lastLineRaw
+      });
+    }
+
+    if (!wasConnected || !isRecent) {
+      if (!isRecent && wasConnected) {
+        clearRefreshReconnectFlags('stale-refresh-flags');
+      }
+      return;
+    }
+
+    const restorableViews = new Set(['dial', 'contacts', 'activity', 'settings']);
+    if (lastViewRaw && restorableViews.has(lastViewRaw)) {
+      setCurrentView(lastViewRaw as 'dial' | 'contacts' | 'activity' | 'settings');
+    }
+
+    const parsedLine = Number(lastLineRaw);
+    if (parsedLine === 1 || parsedLine === 2 || parsedLine === 3) {
+      setSelectedLine(parsedLine);
+    }
+
+    if (!sipConfig?.phantomId || !sipConfig?.username || !sipConfig?.password) {
+      if (verboseLogging) {
+        console.warn('[SIPContext] ⚠️ Refresh auto-reconnect skipped - SIP config unavailable');
+      }
+      clearRefreshReconnectFlags('missing-sip-config-on-restore');
+      return;
+    }
+
+    autoReconnectEnabledRef.current = true;
+
+    const timerId = window.setTimeout(() => {
+      void connectWithCurrentConfig('refresh-auto-reconnect').then(() => {
+        clearRefreshReconnectFlags('refresh-auto-reconnect-success');
+      }).catch((error) => {
+        if (verboseLogging) {
+          console.error('[SIPContext] ❌ Refresh auto-reconnect immediate attempt failed, monitor retries remain enabled', {
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      });
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [clearRefreshReconnectFlags, connectWithCurrentConfig, setCurrentView, setSelectedLine, sipConfig]);
   
   // Sync contacts with SIP service for caller ID lookup
   useEffect(() => {
@@ -987,38 +1199,11 @@ export function SIPProvider({ children }: SIPProviderProps) {
     connect: async () => {
       const verboseLogging = isVerboseLoggingEnabled();
 
-      if (!sipConfig) {
-        throw new Error('SIP configuration not available');
-      }
-
       if (verboseLogging) {
         console.log('[SIPContext] 🔌 Manual connect initiated');
       }
 
-      const config = buildSIPConfig({
-        phantomId: sipConfig.phantomId,
-        username: sipConfig.username,
-        password: sipConfig.password
-      });
-      config.iceGatheringTimeout = settings.advanced.iceGatheringTimeout;
-      config.keepAliveInterval = settings.advanced.keepAliveInterval;
-      config.keepAliveMaxSequentialFailures = settings.advanced.keepAliveMaxSequentialFailures;
-      config.noAnswerTimeout = settings.advanced.noAnswerTimeout;
-
-      if (verboseLogging) {
-        console.log('[SIPContext] ⚙️ Applying advanced keep-alive configuration on connect', {
-          iceGatheringTimeout: config.iceGatheringTimeout,
-          keepAliveInterval: config.keepAliveInterval,
-          keepAliveMaxSequentialFailures: config.keepAliveMaxSequentialFailures,
-          noAnswerTimeout: config.noAnswerTimeout
-        });
-      }
-
-      await serviceRef.current.createUserAgent(config);
-      await serviceRef.current.register();
-
-      autoReconnectEnabledRef.current = true;
-      reconnectAttemptRef.current = 0;
+      await connectWithCurrentConfig('manual-connect');
 
       if (verboseLogging) {
         console.log('[SIPContext] ✅ Manual connect completed');
@@ -1034,6 +1219,7 @@ export function SIPProvider({ children }: SIPProviderProps) {
 
       autoReconnectEnabledRef.current = false;
       reconnectAttemptRef.current = 0;
+      clearRefreshReconnectFlags('manual-disconnect');
 
       if (reconnectTimerRef.current !== null) {
         if (verboseLogging) {
@@ -1182,12 +1368,9 @@ export function SIPProvider({ children }: SIPProviderProps) {
       serviceRef.current.selectLine(lineNumber);
     }
   }), [
-    sipConfig,
-    settings.advanced.iceGatheringTimeout,
-    settings.advanced.keepAliveInterval,
-    settings.advanced.keepAliveMaxSequentialFailures,
-    settings.advanced.noAnswerTimeout
-  ]); // Include advanced SIP settings since connect method uses them
+    clearRefreshReconnectFlags,
+    connectWithCurrentConfig
+  ]);
 
   return (
     <SIPContext.Provider value={value}>

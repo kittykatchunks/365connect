@@ -537,6 +537,35 @@ export const useSettingsStore = create<SettingsState>()(
         onRehydrateStorage: () => (state) => {
           // After rehydration, compute sipConfig from loaded settings
           if (state) {
+            state.settings = {
+              ...DEFAULT_SETTINGS,
+              ...state.settings,
+              connection: {
+                ...DEFAULT_SETTINGS.connection,
+                ...state.settings.connection
+              },
+              interface: {
+                ...DEFAULT_SETTINGS.interface,
+                ...state.settings.interface
+              },
+              call: {
+                ...DEFAULT_SETTINGS.call,
+                ...state.settings.call
+              },
+              audio: {
+                ...DEFAULT_SETTINGS.audio,
+                ...state.settings.audio
+              },
+              advanced: {
+                ...DEFAULT_SETTINGS.advanced,
+                ...state.settings.advanced
+              },
+              busylight: {
+                ...DEFAULT_SETTINGS.busylight,
+                ...state.settings.busylight
+              }
+            };
+
             const { connection } = state.settings;
             const hasPhantomId = !!(connection.phantomId && connection.phantomId.trim());
             const hasUsername = !!(connection.username && connection.username.trim());
@@ -561,6 +590,34 @@ export const useSettingsStore = create<SettingsState>()(
               localStorage.setItem('SipMessagesEnabled', sipMessagesEnabled ? 'true' : 'false');
             } catch (e) {
               console.error('[SettingsStore] Failed to sync SipMessagesEnabled on rehydration:', e);
+            }
+
+            // Migrate problematic connectivity test endpoints in persisted settings
+            const existingNoCorsProbeUrls = state.settings.advanced.connectivityNoCorsProbeUrls || [];
+            const migratedNoCorsProbeUrls = existingNoCorsProbeUrls.map((url) => {
+              const normalizedUrl = (url || '').trim().toLowerCase();
+              if (normalizedUrl.includes('msftconnecttest.com')) {
+                return 'https://www.google.com/generate_204';
+              }
+              return url;
+            });
+
+            const hasConnectivityProbeMigration =
+              JSON.stringify(existingNoCorsProbeUrls) !== JSON.stringify(migratedNoCorsProbeUrls);
+
+            if (hasConnectivityProbeMigration) {
+              state.settings = {
+                ...state.settings,
+                advanced: {
+                  ...state.settings.advanced,
+                  connectivityNoCorsProbeUrls: migratedNoCorsProbeUrls
+                }
+              };
+
+              console.log('[SettingsStore] ✅ Migrated connectivity no-cors probe URLs on rehydration', {
+                previous: existingNoCorsProbeUrls,
+                migrated: migratedNoCorsProbeUrls
+              });
             }
             
             // Sync language with i18next on rehydration

@@ -56,7 +56,7 @@ const DEFAULT_IMAGE_PROBE_URLS = [
 const DEFAULT_NOCORS_PROBE_URLS = [
   'https://www.gstatic.com/generate_204',
   'https://www.cloudflare.com/cdn-cgi/trace',
-  'https://www.msftconnecttest.com/connecttest.txt'
+  'https://www.google.com/generate_204'
 ];
 
 function withCacheBust(url: string): string {
